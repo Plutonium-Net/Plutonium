@@ -150,12 +150,21 @@ body {
   text-decoration: none;
   color: var(--muted);
   transition: color var(--nav-transition),
-              transform var(--nav-transition);
+              transform 0.15s ease,
+              font-size 0.15s ease;
+  transform-origin: center bottom;
+}
+
+#plu-nav[data-mode="topbar"] .plu-nav__link {
+  transform-origin: center top;
+}
+
+#plu-nav[data-mode="sidebar"] .plu-nav__link {
+  transform-origin: left center;
 }
 
 .plu-nav__link:hover {
   color: var(--nav-pink);
-  transform: translateY(-3px) scale(1.12);
 }
 
 .plu-nav__icon {
@@ -261,6 +270,9 @@ body {
   border-radius: var(--nav-radius-dock);
   padding: 4px 12px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 12px rgba(232,23,93,0.08);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 #plu-nav[data-mode="dock"] .plu-nav__list {
@@ -287,14 +299,17 @@ body {
   backdrop-filter: var(--nav-blur);
   -webkit-backdrop-filter: var(--nav-blur);
   border-radius: var(--nav-radius-dock);
-  padding: 16px 8px;
+  padding: 12px 4px;
   box-shadow: 4px 0 24px rgba(0,0,0,0.5), 0 0 12px rgba(232,23,93,0.08);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 #plu-nav[data-mode="sidebar"] .plu-nav__list {
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 /* ════════════════════════════════════════════════════════
@@ -313,15 +328,18 @@ body {
   backdrop-filter: var(--nav-blur);
   -webkit-backdrop-filter: var(--nav-blur);
   border-radius: var(--nav-radius-dock);
-  padding: 8px 16px;
+  padding: 4px 12px;
   box-shadow: 0 -4px 24px rgba(0,0,0,0.5), 0 0 12px rgba(232,23,93,0.08);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 #plu-nav[data-mode="topbar"] .plu-nav__list {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 4px;
 }
 
 
@@ -377,4 +395,103 @@ body {
 /* sidebar: clock sits below the icon column, centered */
 #plu-nav[data-mode="sidebar"] .plu-nav__clock {
   padding: 8px 0 2px;
+}
+
+/* ════════════════════════════════════════════════════════
+   NAV — collapse button
+   ════════════════════════════════════════════════════════ */
+.plu-nav__collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.7rem;
+  border-radius: 50%;
+  transition: color var(--nav-transition), background var(--nav-transition);
+}
+
+.plu-nav__collapse-btn:hover {
+  color: var(--nav-pink);
+  background: rgba(232, 23, 93, 0.1);
+}
+
+/* dock/topbar: button sits at the left end, separated by a small gap */
+#plu-nav[data-mode="dock"] .plu-nav__collapse-btn,
+#plu-nav[data-mode="topbar"] .plu-nav__collapse-btn {
+  margin-right: 6px;
+}
+
+/* sidebar: button sits at the top, separated by a small gap */
+#plu-nav[data-mode="sidebar"] .plu-nav__collapse-btn {
+  margin-bottom: 6px;
+}
+
+/* ════════════════════════════════════════════════════════
+   NAV — collapsed state
+   ════════════════════════════════════════════════════════ */
+.plu-nav--collapsed {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* ════════════════════════════════════════════════════════
+   NAV — ghost trigger
+   ════════════════════════════════════════════════════════ */
+#plu-nav-ghost {
+  position: fixed;
+  z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, box-shadow 0.3s ease;
+}
+
+#plu-nav-ghost.plu-nav-ghost--visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* dock: thin glowing strip at the bottom center */
+#plu-nav-ghost[data-mode="dock"] {
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(232, 23, 93, 0.25);
+  box-shadow: 0 0 12px 4px rgba(232, 23, 93, 0.5),
+              0 0 28px 8px rgba(232, 23, 93, 0.25);
+}
+
+/* topbar: thin glowing strip at the top center */
+#plu-nav-ghost[data-mode="topbar"] {
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(232, 23, 93, 0.25);
+  box-shadow: 0 0 12px 4px rgba(232, 23, 93, 0.5),
+              0 0 28px 8px rgba(232, 23, 93, 0.25);
+}
+
+/* sidebar: thin glowing strip on the left edge */
+#plu-nav-ghost[data-mode="sidebar"] {
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 120px;
+  border-radius: 3px;
+  background: rgba(232, 23, 93, 0.25);
+  box-shadow: 0 0 12px 4px rgba(232, 23, 93, 0.5),
+              0 0 28px 8px rgba(232, 23, 93, 0.25);
 }

@@ -35,9 +35,10 @@
     topbar:  { fa: 'fa-solid fa-table-columns',   label: 'Dock'     },
   };
 
-  let _mode  = 'dock';
-  let _items = DEFAULT_ITEMS;
-  let _nav   = null;
+  let _mode      = 'dock';
+  let _items     = DEFAULT_ITEMS;
+  let _nav       = null;
+  let _collapsed = false;
 
   /* ── Build DOM ─────────────────────────────────────────────────────── */
   function buildNav() {
@@ -47,6 +48,17 @@
     _nav = document.createElement('nav');
     _nav.id = 'plu-nav';
     _nav.setAttribute('data-mode', _mode);
+
+    // Collapse button — directional arrow, lives before the icon list
+    const collapseBtn = document.createElement('button');
+    collapseBtn.className = 'plu-nav__collapse-btn';
+    collapseBtn.setAttribute('aria-label', 'Hide navigation');
+    const collapseIcon = document.createElement('i');
+    collapseIcon.className = collapseArrowClass();
+    collapseIcon.setAttribute('aria-hidden', 'true');
+    collapseBtn.appendChild(collapseIcon);
+    collapseBtn.addEventListener('click', e => { e.preventDefault(); collapse(); });
+    _nav.appendChild(collapseBtn);
 
     const list = document.createElement('ul');
     list.className = 'plu-nav__list';
@@ -94,11 +106,89 @@
 
     document.body.appendChild(_nav);
 
+    // Re-apply collapsed state if it was set before a rebuild
+    if (_collapsed) _nav.classList.add('plu-nav--collapsed');
+
+    // Build ghost trigger (sits at the edge, glows pink, hover restores nav)
+    buildGhost();
+
     // Update special button icon to reflect next mode in cycle
     updateSpecialIcon();
 
     // Start clock
     startClock();
+
+    // Magnification
+    attachMagnification();
+  }
+
+  /* ── Collapse arrow direction by mode ───────────────────────────────── */
+  function collapseArrowClass() {
+    if (_mode === 'dock')    return 'fa-solid fa-chevron-down';
+    if (_mode === 'topbar')  return 'fa-solid fa-chevron-up';
+    if (_mode === 'sidebar') return 'fa-solid fa-chevron-left';
+  }
+
+  /* ── Ghost trigger ──────────────────────────────────────────────────── */
+  function buildGhost() {
+    const old = document.getElementById('plu-nav-ghost');
+    if (old) old.remove();
+
+    const ghost = document.createElement('div');
+    ghost.id = 'plu-nav-ghost';
+    ghost.setAttribute('data-mode', _mode);
+    ghost.addEventListener('mouseenter', expand);
+    document.body.appendChild(ghost);
+  }
+
+  /* ── Collapse / Expand ──────────────────────────────────────────────── */
+  function collapse() {
+    _collapsed = true;
+    _nav.classList.add('plu-nav--collapsed');
+    const ghost = document.getElementById('plu-nav-ghost');
+    if (ghost) ghost.classList.add('plu-nav-ghost--visible');
+  }
+
+  function expand() {
+    _collapsed = false;
+    _nav.classList.remove('plu-nav--collapsed');
+    const ghost = document.getElementById('plu-nav-ghost');
+    if (ghost) ghost.classList.remove('plu-nav-ghost--visible');
+  }
+
+  /* ── Magnification ──────────────────────────────────────────────────── */
+  // macOS-style: hovered icon scales to MAX, neighbours fall off with a
+  // gaussian-shaped curve over a REACH window either side.
+  const MAG_MAX   = 1.7;   // scale of the hovered icon
+  const MAG_REACH = 2.5;   // how many icons either side feel the effect
+
+  function attachMagnification() {
+    const items = Array.from(_nav.querySelectorAll('.plu-nav__item'));
+    const links = items.map(li => li.querySelector('.plu-nav__link'));
+    const isSidebar = _mode === 'sidebar';
+
+    function applyMag(hoveredIndex) {
+      links.forEach((link, i) => {
+        const dist  = Math.abs(i - hoveredIndex);
+        const t     = Math.max(0, 1 - dist / MAG_REACH);
+        const scale = 1 + (MAG_MAX - 1) * t * t; // quadratic falloff
+        link.style.transform = `scale(${scale.toFixed(3)})`;
+        link.style.color = dist === 0 ? 'var(--nav-pink)' : '';
+      });
+    }
+
+    function resetMag() {
+      links.forEach(link => {
+        link.style.transform = '';
+        link.style.color = '';
+      });
+    }
+
+    items.forEach((li, i) => {
+      li.addEventListener('mouseenter', () => applyMag(i));
+    });
+
+    _nav.addEventListener('mouseleave', resetMag);
   }
 
   /* ── Update special button icon ─────────────────────────────────────── */
