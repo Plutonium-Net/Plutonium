@@ -157,38 +157,47 @@
   }
 
   /* ── Magnification ──────────────────────────────────────────────────── */
-  // macOS-style: hovered icon scales to MAX, neighbours fall off with a
-  // gaussian-shaped curve over a REACH window either side.
-  const MAG_MAX   = 1.7;   // scale of the hovered icon
-  const MAG_REACH = 2.5;   // how many icons either side feel the effect
+  // Continuous mouse-position magnification: distance is measured in px
+  // from the cursor to each icon's center, not per-index steps.
+  const MAG_MAX    = 1.7;   // max scale at cursor
+  const MAG_RADIUS = 80;    // px radius of the magnification field
 
   function attachMagnification() {
-    const items = Array.from(_nav.querySelectorAll('.plu-nav__item'));
-    const links = items.map(li => li.querySelector('.plu-nav__link'));
-    const isSidebar = _mode === 'sidebar';
+    const links = Array.from(_nav.querySelectorAll('.plu-nav__link'));
+    const vertical = _mode === 'sidebar';
 
-    function applyMag(hoveredIndex) {
-      links.forEach((link, i) => {
-        const dist  = Math.abs(i - hoveredIndex);
-        const t     = Math.max(0, 1 - dist / MAG_REACH);
-        const scale = 1 + (MAG_MAX - 1) * t * t; // quadratic falloff
+    function applyMag(mouseX, mouseY) {
+      links.forEach(link => {
+        const rect   = link.getBoundingClientRect();
+        const cx     = rect.left + rect.width  / 2;
+        const cy     = rect.top  + rect.height / 2;
+        // use the axis that matters for this mode
+        const dist   = vertical ? Math.abs(mouseY - cy) : Math.abs(mouseX - cx);
+        const t      = Math.max(0, 1 - dist / MAG_RADIUS);
+        const scale  = 1 + (MAG_MAX - 1) * t * t;
         link.style.transform = `scale(${scale.toFixed(3)})`;
-        link.style.color = dist === 0 ? 'var(--nav-pink)' : '';
+        link.style.color     = t > 0.85 ? 'var(--nav-pink)' : '';
       });
     }
 
     function resetMag() {
       links.forEach(link => {
         link.style.transform = '';
-        link.style.color = '';
+        link.style.color     = '';
       });
+      _nav.style.boxShadow = '';
     }
 
-    items.forEach((li, i) => {
-      li.addEventListener('mouseenter', () => applyMag(i));
-    });
-
+    _nav.addEventListener('mousemove', e => applyMag(e.clientX, e.clientY));
     _nav.addEventListener('mouseleave', resetMag);
+
+    // Glow the bar on hover
+    _nav.addEventListener('mouseenter', () => {
+      _nav.style.boxShadow =
+        '0 0 0 1px rgba(232,23,93,0.35), ' +
+        '0 0 18px 4px rgba(232,23,93,0.30), ' +
+        '0 0 40px 8px rgba(232,23,93,0.12)';
+    });
   }
 
   /* ── Update special button icon ─────────────────────────────────────── */

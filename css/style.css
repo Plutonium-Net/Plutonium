@@ -272,7 +272,7 @@ body {
   box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 12px rgba(232,23,93,0.08);
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+  transition: opacity 0.25s ease, visibility 0.25s ease, box-shadow 0.2s ease;
 }
 
 #plu-nav[data-mode="dock"] .plu-nav__list {
@@ -303,7 +303,7 @@ body {
   box-shadow: 4px 0 24px rgba(0,0,0,0.5), 0 0 12px rgba(232,23,93,0.08);
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+  transition: opacity 0.25s ease, visibility 0.25s ease, box-shadow 0.2s ease;
 }
 
 #plu-nav[data-mode="sidebar"] .plu-nav__list {
@@ -332,7 +332,7 @@ body {
   box-shadow: 0 -4px 24px rgba(0,0,0,0.5), 0 0 12px rgba(232,23,93,0.08);
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+  transition: opacity 0.25s ease, visibility 0.25s ease, box-shadow 0.2s ease;
 }
 
 #plu-nav[data-mode="topbar"] .plu-nav__list {
