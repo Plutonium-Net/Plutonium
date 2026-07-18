@@ -124,8 +124,8 @@ body {
   --nav-bg:          rgba(10, 10, 10, 0.75);
   --nav-border:      rgba(232, 23, 93, 0.18);
   --nav-blur:        blur(14px);
-  --nav-radius-dock: 20px;
-  --nav-item-size:   52px;
+  --nav-radius-dock: 50px;
+  --nav-item-size:   40px;
   --nav-pink:        #e8175d;
   --nav-transition:  0.2s ease;
 }
@@ -140,11 +140,10 @@ body {
 }
 
 .plu-nav__link {
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   width: var(--nav-item-size);
   height: var(--nav-item-size);
   border-radius: 14px;
@@ -160,23 +159,35 @@ body {
 }
 
 .plu-nav__icon {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   line-height: 1;
   transition: text-shadow var(--nav-transition);
 }
 
+/* tooltip — base styles, shown above by default (dock) */
 .plu-nav__label {
-  font-size: 5px;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.65rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--text);
+  background: rgba(20, 20, 20, 0.92);
+  border: 1px solid var(--nav-border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  pointer-events: none;
   opacity: 0;
   transition: opacity var(--nav-transition),
-              text-shadow var(--nav-transition);
+              translate var(--nav-transition);
+  translate: 0 4px;
 }
 
-.plu-nav__link:hover .plu-nav__icon,
-.plu-nav__link:hover .plu-nav__label {
+.plu-nav__link:hover .plu-nav__icon {
   text-shadow:
     0 0 6px rgba(232, 23, 93, 0.9),
     0 0 12px rgba(232, 23, 93, 0.6),
@@ -185,6 +196,33 @@ body {
 
 .plu-nav__link:hover .plu-nav__label {
   opacity: 1;
+  translate: 0 0;
+}
+
+/* sidebar: tooltip pops out to the right */
+#plu-nav[data-mode="sidebar"] .plu-nav__label {
+  bottom: auto;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%);
+  translate: -4px 0;
+}
+
+#plu-nav[data-mode="sidebar"] .plu-nav__link:hover .plu-nav__label {
+  translate: 0 0;
+}
+
+/* topbar: tooltip drops down below the icon */
+#plu-nav[data-mode="topbar"] .plu-nav__label {
+  bottom: auto;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  translate: 0 -4px;
+}
+
+#plu-nav[data-mode="topbar"] .plu-nav__link:hover .plu-nav__label {
+  translate: 0 0;
 }
 
 /* special sidebar-toggle button */
@@ -197,13 +235,7 @@ body {
   opacity: 1;
 }
 
-/* in dock mode, special button label is always visible like topbar */
-#plu-nav[data-mode="dock"] .plu-nav__link--special .plu-nav__label {
-  opacity: 1;
-}
-
-.plu-nav__link--special:hover .plu-nav__icon,
-.plu-nav__link--special:hover .plu-nav__label {
+.plu-nav__link--special:hover .plu-nav__icon {
   text-shadow:
     0 0 6px rgba(232, 23, 93, 0.9),
     0 0 12px rgba(232, 23, 93, 0.6),
@@ -216,50 +248,30 @@ body {
    ════════════════════════════════════════════════════════ */
 #plu-nav[data-mode="dock"] {
   position: fixed;
-  /* nav box sits flush at the very bottom; arch SVG floats above it */
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  background: none;
-  border: none;
-  padding: 0;
-  width: 860px;
-}
-
-/* SVG extends upward from the nav box — the arch crown rises above the icons */
-#plu-nav[data-mode="dock"] .plu-nav__arch-wrap {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* tall enough to show full arch height above the list */
-  height: 90px;
-  top: auto;
-  pointer-events: none;
-  overflow: visible;
-}
-
-#plu-nav[data-mode="dock"] .plu-nav__arch-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6))
-          drop-shadow(0 0 10px rgba(232,23,93,0.15));
+  display: flex;
+  align-items: center;
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
+  backdrop-filter: var(--nav-blur);
+  -webkit-backdrop-filter: var(--nav-blur);
+  border-radius: var(--nav-radius-dock);
+  padding: 4px 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 12px rgba(232,23,93,0.08);
 }
 
 #plu-nav[data-mode="dock"] .plu-nav__list {
-  position: relative;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  /* vertically center icons within the bar body (below the arch crown) */
-  padding: 20px 40px 4px;
-  gap: 10px;
+  gap: 4px;
 }
 
 /* ════════════════════════════════════════════════════════
-   MODE: SIDEBAR — dock arch rotated 90° clockwise, bows right
+   MODE: SIDEBAR
    ════════════════════════════════════════════════════════ */
 #plu-nav[data-mode="sidebar"] {
   position: fixed;
@@ -267,50 +279,26 @@ body {
   left: 12px;
   transform: translateY(-50%);
   z-index: 100;
-  background: none;
-  border: none;
-  padding: 0;
-  width: 72px;
-}
-
-#plu-nav[data-mode="sidebar"] .plu-nav__arch-wrap {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  overflow: visible;
-}
-
-/* JS sets exact position/size/transform on this element */
-#plu-nav[data-mode="sidebar"] .plu-nav__arch-svg {
-  display: block;
-  position: absolute;
-  filter: drop-shadow(4px 0 20px rgba(0,0,0,0.6))
-          drop-shadow(0 0 10px rgba(232,23,93,0.15));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
+  backdrop-filter: var(--nav-blur);
+  -webkit-backdrop-filter: var(--nav-blur);
+  border-radius: var(--nav-radius-dock);
+  padding: 16px 8px;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.5), 0 0 12px rgba(232,23,93,0.08);
 }
 
 #plu-nav[data-mode="sidebar"] .plu-nav__list {
-  position: relative;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 10px 10px;
   gap: 6px;
 }
 
-#plu-nav[data-mode="sidebar"] .plu-nav__item {
-  transform: none !important;
-}
-
-#plu-nav[data-mode="sidebar"] .plu-nav__link {
-  width: var(--nav-item-size);
-  height: var(--nav-item-size);
-}
-
 /* ════════════════════════════════════════════════════════
-   MODE: TOPBAR — mirror of dock, arch flipped downward
+   MODE: TOPBAR
    ════════════════════════════════════════════════════════ */
 #plu-nav[data-mode="topbar"] {
   position: fixed;
@@ -318,42 +306,75 @@ body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  background: none;
-  border: none;
-  padding: 0;
-  width: 860px;
-}
-
-/* SVG extends downward — arch crown hangs below the icons */
-#plu-nav[data-mode="topbar"] .plu-nav__arch-wrap {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 90px;
-  bottom: auto;
-  pointer-events: none;
-  overflow: visible;
-}
-
-/* Flip the dock SVG upside-down, anchored at its own center so it doesn't shift */
-#plu-nav[data-mode="topbar"] .plu-nav__arch-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  transform: scaleY(-1);
-  transform-origin: center center;
-  filter: drop-shadow(0 -6px 20px rgba(0,0,0,0.6))
-          drop-shadow(0 0 10px rgba(232,23,93,0.15));
+  display: flex;
+  align-items: center;
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
+  backdrop-filter: var(--nav-blur);
+  -webkit-backdrop-filter: var(--nav-blur);
+  border-radius: var(--nav-radius-dock);
+  padding: 8px 16px;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.5), 0 0 12px rgba(232,23,93,0.08);
 }
 
 #plu-nav[data-mode="topbar"] .plu-nav__list {
-  position: relative;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 12px 40px 6px;
   gap: 10px;
 }
 
 
+
+/* ════════════════════════════════════════════════════════
+   NAV — clock widget
+   ════════════════════════════════════════════════════════ */
+.plu-nav__clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1;
+  transition: color var(--nav-transition);
+}
+
+/* line 1: HH:MM AM/PM */
+.plu-nav__clock-hm {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.plu-nav__clock-ampm {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+/* line 2: SS — larger than the HM line */
+.plu-nav__clock-s {
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--nav-pink);
+  opacity: 0.85;
+}
+
+/* dock & topbar: clock pushed to the far right of the flex row */
+#plu-nav[data-mode="dock"] .plu-nav__clock,
+#plu-nav[data-mode="topbar"] .plu-nav__clock {
+  margin-left: auto;
+  padding-left: 16px;
+}
+
+/* sidebar: clock sits below the icon column, centered */
+#plu-nav[data-mode="sidebar"] .plu-nav__clock {
+  padding: 8px 0 2px;
+}

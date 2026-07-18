@@ -30,9 +30,9 @@
   // Mode cycle order and the icon that represents the NEXT mode
   const MODE_CYCLE = ['dock', 'sidebar', 'topbar'];
   const MODE_NEXT_ICON = {
-    dock:    { fa: 'fa-solid fa-bars-staggered',  label: 'Sidebar'  },  // dock → next is sidebar
-    sidebar: { fa: 'fa-solid fa-window-maximize', label: 'Top Bar'  },  // sidebar → next is topbar
-    topbar:  { fa: 'fa-solid fa-table-columns',   label: 'Dock'     },  // topbar → next is dock
+    dock:    { fa: 'fa-solid fa-bars-staggered',  label: 'Sidebar'  },
+    sidebar: { fa: 'fa-solid fa-window-maximize', label: 'Top Bar'  },
+    topbar:  { fa: 'fa-solid fa-table-columns',   label: 'Dock'     },
   };
 
   let _mode  = 'dock';
@@ -47,18 +47,6 @@
     _nav = document.createElement('nav');
     _nav.id = 'plu-nav';
     _nav.setAttribute('data-mode', _mode);
-
-    if (_mode === 'dock' || _mode === 'topbar') {
-      const svgWrap = document.createElement('div');
-      svgWrap.className = 'plu-nav__arch-wrap';
-      svgWrap.innerHTML = buildArchSVG();
-      _nav.appendChild(svgWrap);
-    } else if (_mode === 'sidebar') {
-      const svgWrap = document.createElement('div');
-      svgWrap.className = 'plu-nav__arch-wrap';
-      svgWrap.innerHTML = buildArchSVG();
-      _nav.appendChild(svgWrap);
-    }
 
     const list = document.createElement('ul');
     list.className = 'plu-nav__list';
@@ -97,49 +85,25 @@
     });
 
     _nav.appendChild(list);
+
+    // Clock widget
+    const clock = document.createElement('div');
+    clock.className = 'plu-nav__clock';
+    clock.id = 'plu-nav-clock';
+    _nav.appendChild(clock);
+
     document.body.appendChild(_nav);
-
-    // Dock: nudge items up along arch; topbar: nudge items down (inverted)
-    if (_mode === 'dock')   applyItemArch(false);
-    if (_mode === 'topbar') applyItemArch(true);
-
-    // Sidebar: size the rotated SVG width to match the nav's rendered height
-    if (_mode === 'sidebar') sizeSidebarSVG();
 
     // Update special button icon to reflect next mode in cycle
     updateSpecialIcon();
-  }
 
-  /* ── Position sidebar SVG ───────────────────────────────────────────── */
-  // The arch SVG is naturally W×H (e.g. 700×90). We rotate it 90° clockwise
-  // so it becomes 90px wide × 700px tall visually. We then translate it so:
-  //   - its left visual edge aligns with the nav's left edge (x=0)
-  //   - it is vertically centered on the nav
-  function sizeSidebarSVG() {
-    const svg = _nav.querySelector('.plu-nav__arch-svg');
-    if (!svg) return;
-
-    const navH  = _nav.getBoundingClientRect().height || 500;
-    const svgW  = navH;   // after rotation, SVG visual height = nav height
-    const svgH  = 90;     // arch bar thickness (matches dock SVG height)
-
-    // Set the SVG's natural (pre-rotation) dimensions
-    svg.style.width  = svgW + 'px';
-    svg.style.height = svgH + 'px';
-
-    // After rotate(90deg) around its own center (svgW/2, svgH/2):
-    //   visual top-left corner moves to: (svgW/2 - svgH/2, svgH/2 - svgW/2)
-    // We want visual left=0, visual top = -(svgW - navH)/2 = 0 (since svgW=navH)
-    // So position the SVG so its center lands at (svgH/2, navH/2)
-    svg.style.left = (svgH / 2 - svgW / 2) + 'px';  // negative, pulls left
-    svg.style.top  = (navH / 2 - svgH / 2) + 'px';
-    svg.style.transform        = 'rotate(90deg)';
-    svg.style.transformOrigin  = 'center center';
+    // Start clock
+    startClock();
   }
 
   /* ── Update special button icon ─────────────────────────────────────── */
   function updateSpecialIcon() {
-    const specialIcon = _nav.querySelector('.plu-nav__link--special .plu-nav__icon');
+    const specialIcon  = _nav.querySelector('.plu-nav__link--special .plu-nav__icon');
     const specialLabel = _nav.querySelector('.plu-nav__link--special .plu-nav__label');
     if (!specialIcon) return;
     const next = MODE_NEXT_ICON[_mode];
@@ -147,142 +111,7 @@
     if (specialLabel) specialLabel.textContent = next.label;
   }
 
-  /* ── Per-item arch nudge ────────────────────────────────────────────── */
-  // Mirrors the SVG topRise (16px) as a gentle parabola across the items.
-  function applyItemArch(invert = false) {
-    const items = _nav.querySelectorAll('.plu-nav__item');
-    const count = items.length;
-    const peak  = 6; // max nudge at center in px
-
-    items.forEach((el, i) => {
-      const t    = count > 1 ? (i / (count - 1)) * 2 - 1 : 0;
-      const lift = peak * (1 - t * t);
-      // dock: items lift up; topbar: items push down to follow inverted arch
-      el.style.transform = invert
-        ? `translateY(${lift.toFixed(1)}px)`
-        : `translateY(-${lift.toFixed(1)}px)`;
-    });
-  }
-
-  /* ── SVG sidebar bar ────────────────────────────────────────────────── */
-  // D-shape: left edge straight, right edge bows outward (convex right).
-  // Top and bottom are rounded. Like a bracket ) shape.
-  function buildSidebarSVG() {
-    const W      = 70;   // viewBox width  — narrow pill
-    const H      = 700;  // viewBox height — CSS scales to actual height
-    const r      = 20;   // corner radius top/bottom
-    const bow    = 18;   // how far the right edge bows out at center
-
-    // left edge is straight at x=0
-    // right edge endpoints are at x = W - bow (corners), bows to x = W at center
-    const rx = W - bow; // right edge x at top/bottom corners
-
-    const d = [
-      // top-left corner
-      `M ${r} 0`,
-      // top edge straight →
-      `L ${rx - r} 0`,
-      // top-right rounded corner
-      `Q ${rx} 0 ${rx} ${r}`,
-      // right edge: cubic bezier bowing rightward at center
-      `C ${W + bow * 0.5} ${H * 0.25} ${W + bow * 0.5} ${H * 0.75} ${rx} ${H - r}`,
-      // bottom-right rounded corner
-      `Q ${rx} ${H} ${rx - r} ${H}`,
-      // bottom edge straight ←
-      `L ${r} ${H}`,
-      // bottom-left rounded corner
-      `Q 0 ${H} 0 ${H - r}`,
-      // left edge straight ↑
-      `L 0 ${r}`,
-      // top-left rounded corner close
-      `Q 0 0 ${r} 0`,
-      `Z`,
-    ].join(' ');
-
-    return `<svg class="plu-nav__arch-svg"
-      viewBox="0 0 ${W} ${H}"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="none">
-      <defs>
-        <filter id="nav-glow-sb" x="-40%" y="-10%" width="180%" height="120%">
-          <feGaussianBlur stdDeviation="4" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      <path d="${d}" fill="rgba(10,10,10,0.85)" />
-      <path d="${d}" fill="none"
-            stroke="rgba(232,23,93,0.40)" stroke-width="1.4"
-            filter="url(#nav-glow-sb)" />
-    </svg>`;
-  }
-
-  /* ── SVG arch bar ───────────────────────────────────────────────────── */
-  // Bridge shape: both top and bottom edges curve upward (convex up).
-  // The center of the bar is tallest; ends are shorter — like a stone arch.
-  //
-  //  top edge:    cubic bezier, control points ABOVE the endpoints  (bows up)
-  //  bottom edge: cubic bezier, control points ABOVE the endpoints  (bows up)
-  //  net result:  a lens/bridge shape, widest+tallest in the middle
-  function buildArchSVG() {
-    const W       = 700;  // viewBox width
-    const H       = 70;   // viewBox height — room for arch + corner radius
-    const r       = 16;   // corner radius at the four ends
-    const topRise = 16;   // top center lifts this many px above endpoints
-    const botRise = 8;    // bottom center lifts this many px above endpoints
-    const endH    = 38;   // bar thickness at the ends (left/right edges)
-
-    // The four corner points (before rounding):
-    const tly = H - endH;       // top-left  y  (and top-right y — symmetric)
-    const bly = H;               // bot-left  y  (and bot-right y)
-
-    // Bezier control-point Y values (both bow upward → smaller Y = higher)
-    const topMidY = tly - topRise;
-    const botMidY = bly - botRise;
-
-    // Path: rounded corners via Q, curved edges via C
-    // Start at top-left corner, go clockwise
-    const d = [
-      // top-left rounded corner — start slightly in from the left on the top edge
-      `M ${r} ${tly}`,
-      // top edge cubic bezier (bows up)
-      `C ${W * 0.25} ${topMidY} ${W * 0.75} ${topMidY} ${W - r} ${tly}`,
-      // top-right rounded corner
-      `Q ${W} ${tly} ${W} ${tly + r}`,
-      // right side — short vertical to bottom-right corner
-      `L ${W} ${bly - r}`,
-      // bottom-right rounded corner
-      `Q ${W} ${bly} ${W - r} ${bly}`,
-      // bottom edge cubic bezier (bows up)
-      `C ${W * 0.75} ${botMidY} ${W * 0.25} ${botMidY} ${r} ${bly}`,
-      // bottom-left rounded corner
-      `Q 0 ${bly} 0 ${bly - r}`,
-      // left side — short vertical back to top-left
-      `L 0 ${tly + r}`,
-      // top-left rounded corner close
-      `Q 0 ${tly} ${r} ${tly}`,
-      `Z`,
-    ].join(' ');
-
-    return `<svg class="plu-nav__arch-svg"
-      viewBox="0 0 ${W} ${H}"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="none">
-      <defs>
-        <filter id="nav-glow" x="-10%" y="-60%" width="120%" height="220%">
-          <feGaussianBlur stdDeviation="4" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      <path d="${d}" fill="rgba(10,10,10,0.85)" />
-      <path d="${d}" fill="none"
-            stroke="rgba(232,23,93,0.40)" stroke-width="1.4"
-            filter="url(#nav-glow)" />
-    </svg>`;
-  }
-
   /* ── Animated transition ────────────────────────────────────────────── */
-  // Exit: nav pops off (scale up + fade out toward its origin edge).
-  // Enter: new nav pops in from its destination edge.
   const EXIT_CLASS = {
     dock:    'plu-nav--exit-down',
     sidebar: 'plu-nav--exit-left',
@@ -294,21 +123,40 @@
     topbar:  'plu-nav--enter-up',
   };
 
-  const EXIT_DURATION = 320; // ms — must match animation duration in CSS
+  const EXIT_DURATION = 320;
 
   function animateTransition(nextMode) {
     if (!_nav) { setMode(nextMode); return; }
-
-    // Play exit animation on current nav, then swap after the duration
-    const exitClass = EXIT_CLASS[_mode];
-    _nav.classList.add(exitClass);
-
+    _nav.classList.add(EXIT_CLASS[_mode]);
     setTimeout(() => {
       setMode(nextMode);
-      // Play enter animation on the newly built nav
-      const enterClass = ENTER_CLASS[nextMode];
-      if (_nav) _nav.classList.add(enterClass);
+      if (_nav) _nav.classList.add(ENTER_CLASS[nextMode]);
     }, EXIT_DURATION);
+  }
+
+  /* ── Clock ──────────────────────────────────────────────────────────── */
+  let _clockTimer = null;
+
+  function startClock() {
+    if (_clockTimer) clearInterval(_clockTimer);
+    tickClock();
+    _clockTimer = setInterval(tickClock, 1000);
+  }
+
+  function tickClock() {
+    const el = document.getElementById('plu-nav-clock');
+    if (!el) return;
+    const now   = new Date();
+    let   h     = now.getHours();
+    const ampm  = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    const hStr  = String(h).padStart(2, '0');
+    const m     = String(now.getMinutes()).padStart(2, '0');
+    const s     = String(now.getSeconds()).padStart(2, '0');
+
+    el.innerHTML =
+      `<span class="plu-nav__clock-hm">${hStr}:${m} <span class="plu-nav__clock-ampm">${ampm}</span></span>` +
+      `<span class="plu-nav__clock-s">${s}</span>`;
   }
 
   /* ── Mode switching ─────────────────────────────────────────────────── */
