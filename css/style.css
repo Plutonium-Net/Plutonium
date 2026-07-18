@@ -1,0 +1,359 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --pink: #e8175d;
+  --pink-muted: #a81145;
+  --bg: #000000;
+  --text: #ffffff;
+  --muted: #a0a0a0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+/* ── Particles ── */
+#particles-js {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Layout ── */
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 200px 0 0 16vw;
+}
+
+.hero__inner {
+  max-width: 600px;
+}
+
+/* ── Logo ── */
+.hero__logo {
+  width: 90px;
+  height: 90px;
+  margin-bottom: 32px;
+}
+
+/* ── Heading ── */
+.hero__title {
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--pink);
+  line-height: 1.1;
+  margin-bottom: 18px;
+}
+
+/* ── Description ── */
+.hero__desc {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: var(--muted);
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+/* ════════════════════════════════════════════════════════
+   NAV — transition keyframes
+   ════════════════════════════════════════════════════════ */
+
+/* ── Exit animations (pop away to origin edge) ── */
+@keyframes nav-exit-down {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1);    }
+  40%  { opacity: 1; transform: translateX(-50%) translateY(-14px)  scale(1.04); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(60px)   scale(0.88); }
+}
+@keyframes nav-exit-left {
+  0%   { opacity: 1; transform: translateY(-50%) translateX(0)     scale(1);    }
+  40%  { opacity: 1; transform: translateY(-50%) translateX(8px)    scale(1.04); }
+  100% { opacity: 0; transform: translateY(-50%) translateX(-80px)  scale(0.88); }
+}
+@keyframes nav-exit-up {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0)      scale(1);    }
+  40%  { opacity: 1; transform: translateX(-50%) translateY(8px)     scale(1.04); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-40px)   scale(0.88); }
+}
+
+/* ── Enter animations (pop in from destination edge) ── */
+@keyframes nav-enter-down {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(50px)  scale(0.88); }
+  60%  { opacity: 1; transform: translateX(-50%) translateY(-8px)   scale(1.03); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1);    }
+}
+@keyframes nav-enter-left {
+  0%   { opacity: 0; transform: translateY(-50%) translateX(-60px) scale(0.88); }
+  60%  { opacity: 1; transform: translateY(-50%) translateX(6px)    scale(1.03); }
+  100% { opacity: 1; transform: translateY(-50%) translateX(0)     scale(1);    }
+}
+@keyframes nav-enter-up {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(-30px)  scale(0.88); }
+  60%  { opacity: 1; transform: translateX(-50%) translateY(4px)     scale(1.03); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0)       scale(1);    }
+}
+
+/* ── Apply classes ── */
+.plu-nav--exit-down  { animation: nav-exit-down  0.32s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+.plu-nav--exit-left  { animation: nav-exit-left  0.32s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+.plu-nav--exit-up    { animation: nav-exit-up    0.32s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+.plu-nav--enter-down { animation: nav-enter-down 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.plu-nav--enter-left { animation: nav-enter-left 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.plu-nav--enter-up   { animation: nav-enter-up   0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* ════════════════════════════════════════════════════════
+   NAV — shared tokens
+   ════════════════════════════════════════════════════════ */
+:root {
+  --nav-bg:          rgba(10, 10, 10, 0.75);
+  --nav-border:      rgba(232, 23, 93, 0.18);
+  --nav-blur:        blur(14px);
+  --nav-radius-dock: 20px;
+  --nav-item-size:   52px;
+  --nav-pink:        #e8175d;
+  --nav-transition:  0.2s ease;
+}
+
+/* ── Base link ── */
+.plu-nav__list {
+  list-style: none;
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.plu-nav__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: var(--nav-item-size);
+  height: var(--nav-item-size);
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--muted);
+  transition: color var(--nav-transition),
+              transform var(--nav-transition);
+}
+
+.plu-nav__link:hover {
+  color: var(--nav-pink);
+  transform: translateY(-3px) scale(1.12);
+}
+
+.plu-nav__icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: text-shadow var(--nav-transition);
+}
+
+.plu-nav__label {
+  font-size: 5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity var(--nav-transition),
+              text-shadow var(--nav-transition);
+}
+
+.plu-nav__link:hover .plu-nav__icon,
+.plu-nav__link:hover .plu-nav__label {
+  text-shadow:
+    0 0 6px rgba(232, 23, 93, 0.9),
+    0 0 12px rgba(232, 23, 93, 0.6),
+    0 0 24px rgba(232, 23, 93, 0.3);
+}
+
+.plu-nav__link:hover .plu-nav__label {
+  opacity: 1;
+}
+
+/* special sidebar-toggle button */
+.plu-nav__link--special {
+  color: var(--nav-pink);
+  opacity: 0.7;
+}
+
+.plu-nav__link--special:hover {
+  opacity: 1;
+}
+
+/* in dock mode, special button label is always visible like topbar */
+#plu-nav[data-mode="dock"] .plu-nav__link--special .plu-nav__label {
+  opacity: 1;
+}
+
+.plu-nav__link--special:hover .plu-nav__icon,
+.plu-nav__link--special:hover .plu-nav__label {
+  text-shadow:
+    0 0 6px rgba(232, 23, 93, 0.9),
+    0 0 12px rgba(232, 23, 93, 0.6),
+    0 0 24px rgba(232, 23, 93, 0.3);
+}
+
+
+/* ════════════════════════════════════════════════════════
+   MODE: DOCK (default)
+   ════════════════════════════════════════════════════════ */
+#plu-nav[data-mode="dock"] {
+  position: fixed;
+  /* nav box sits flush at the very bottom; arch SVG floats above it */
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 860px;
+}
+
+/* SVG extends upward from the nav box — the arch crown rises above the icons */
+#plu-nav[data-mode="dock"] .plu-nav__arch-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* tall enough to show full arch height above the list */
+  height: 90px;
+  top: auto;
+  pointer-events: none;
+  overflow: visible;
+}
+
+#plu-nav[data-mode="dock"] .plu-nav__arch-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6))
+          drop-shadow(0 0 10px rgba(232,23,93,0.15));
+}
+
+#plu-nav[data-mode="dock"] .plu-nav__list {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  /* vertically center icons within the bar body (below the arch crown) */
+  padding: 20px 40px 4px;
+  gap: 10px;
+}
+
+/* ════════════════════════════════════════════════════════
+   MODE: SIDEBAR — dock arch rotated 90° clockwise, bows right
+   ════════════════════════════════════════════════════════ */
+#plu-nav[data-mode="sidebar"] {
+  position: fixed;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  z-index: 100;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 72px;
+}
+
+#plu-nav[data-mode="sidebar"] .plu-nav__arch-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* JS sets exact position/size/transform on this element */
+#plu-nav[data-mode="sidebar"] .plu-nav__arch-svg {
+  display: block;
+  position: absolute;
+  filter: drop-shadow(4px 0 20px rgba(0,0,0,0.6))
+          drop-shadow(0 0 10px rgba(232,23,93,0.15));
+}
+
+#plu-nav[data-mode="sidebar"] .plu-nav__list {
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 10px;
+  gap: 6px;
+}
+
+#plu-nav[data-mode="sidebar"] .plu-nav__item {
+  transform: none !important;
+}
+
+#plu-nav[data-mode="sidebar"] .plu-nav__link {
+  width: var(--nav-item-size);
+  height: var(--nav-item-size);
+}
+
+/* ════════════════════════════════════════════════════════
+   MODE: TOPBAR — mirror of dock, arch flipped downward
+   ════════════════════════════════════════════════════════ */
+#plu-nav[data-mode="topbar"] {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 860px;
+}
+
+/* SVG extends downward — arch crown hangs below the icons */
+#plu-nav[data-mode="topbar"] .plu-nav__arch-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 90px;
+  bottom: auto;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Flip the dock SVG upside-down, anchored at its own center so it doesn't shift */
+#plu-nav[data-mode="topbar"] .plu-nav__arch-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: scaleY(-1);
+  transform-origin: center center;
+  filter: drop-shadow(0 -6px 20px rgba(0,0,0,0.6))
+          drop-shadow(0 0 10px rgba(232,23,93,0.15));
+}
+
+#plu-nav[data-mode="topbar"] .plu-nav__list {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 40px 6px;
+  gap: 10px;
+}
+
+
