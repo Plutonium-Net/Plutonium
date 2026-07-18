@@ -15,14 +15,14 @@
   'use strict';
 
   const DEFAULT_ITEMS = [
-    { id: 'home',     fa: 'fa-solid fa-house',          label: 'Home',             href: '#' },
-    { id: 'games',    fa: 'fa-solid fa-gamepad',         label: 'Games',            href: '#' },
-    { id: 'web',      fa: 'fa-solid fa-globe',           label: 'Web',              href: '#' },
-    { id: 'vms',      fa: 'fa-solid fa-server',          label: 'Virtual Machines', href: '#' },
-    { id: 'music',    fa: 'fa-solid fa-music',           label: 'Music',            href: '#' },
-    { id: 'ai',       fa: 'fa-solid fa-microchip',       label: 'AI',               href: '#' },
-    { id: 'cloud',    fa: 'fa-solid fa-cloud',           label: 'Cloud Gaming',     href: '#' },
-    { id: 'stream',   fa: 'fa-solid fa-circle-play',     label: 'Streaming',        href: '#' },
+    { id: 'home',     fa: 'fa-solid fa-house',          label: 'Home',             href: 'index.html' },
+    { id: 'games',    fa: 'fa-solid fa-gamepad',         label: 'Games',            href: 'games.html' },
+    { id: 'web',      fa: 'fa-solid fa-globe',           label: 'Web',              href: 'web.html' },
+    { id: 'vms',      fa: 'fa-solid fa-server',          label: 'Virtual Machines', href: 'vms.html' },
+    { id: 'music',    fa: 'fa-solid fa-music',           label: 'Music',            href: 'music.html' },
+    { id: 'ai',       fa: 'fa-solid fa-microchip',       label: 'AI',               href: 'ai.html' },
+    { id: 'cloud',    fa: 'fa-solid fa-cloud',           label: 'Cloud Gaming',     href: 'cloud.html' },
+    { id: 'stream',   fa: 'fa-solid fa-circle-play',     label: 'Streaming',        href: 'stream.html' },
     { id: 'settings', fa: 'fa-solid fa-gear',            label: 'Settings',         href: '#' },
     { id: 'sidebar',  fa: 'fa-solid fa-table-columns',   label: 'Layout',           href: '', special: true },
   ];
