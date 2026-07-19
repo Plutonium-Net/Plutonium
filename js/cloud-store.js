@@ -46,7 +46,7 @@
  *   Set PlutoniumStore.WORKER_URL before first use, e.g. in your page's
  *   <script> block or main.js:
  *
- *     PlutoniumStore.WORKER_URL = 'https://plutonium-firebase-proxy.craftedgamz.workers.dev';
+ *     PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
  *
  * ────────────────────────────────────────────────────────────────────────────
  */

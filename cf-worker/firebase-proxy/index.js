@@ -18,8 +18,8 @@
 
 export default {
   async fetch(request, env) {
-    const origin = request.headers.get('Origin') || '';
-    const allowed = env.ALLOWED_ORIGIN || '*';
+    const origin  = request.headers.get('Origin') || '';
+    const allowed = resolveAllowedOrigin(origin, env.ALLOWED_ORIGIN || '*');
 
     // ── CORS pre-flight ──────────────────────────────────────────────────
     if (request.method === 'OPTIONS') {
@@ -61,6 +61,31 @@ export default {
     }
   },
 };
+
+/* ── Origin allowlist helper ─────────────────────────────────────────────── */
+// ALLOWED_ORIGIN can be:
+//   "*"                        → allow all
+//   "https://example.com"      → exact match
+//   "*.example.com"            → any subdomain (and the apex) of example.com
+function resolveAllowedOrigin(origin, setting) {
+  if (!setting || setting === '*') return '*';
+
+  const entries = setting.split(',').map(s => s.trim());
+
+  for (const entry of entries) {
+    if (entry === origin) return origin;
+
+    // Wildcard subdomain pattern: *.example.com
+    if (entry.startsWith('*.')) {
+      const base = entry.slice(2);
+      if (origin === `https://${base}` || origin.endsWith(`.${base}`)) return origin;
+    }
+  }
+
+  // Origin not in allowlist — return the first entry so the browser
+  // gets a mismatch error rather than an opaque failure.
+  return entries[0];
+}
 
 /* ── /config ─────────────────────────────────────────────────────────────── */
 function handleConfig(env, allowed) {

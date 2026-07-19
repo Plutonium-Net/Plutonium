@@ -14,7 +14,7 @@ compatibility_date = "2024-01-01"
 # ALLOWED_ORIGIN can stay here (not secret).
 
 [vars]
-ALLOWED_ORIGIN = "*"
+ALLOWED_ORIGIN = "*.plutoniumnet.work,http://127.0.0.1:5500"
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 # Uncomment and fill in your Worker domain once deployed:

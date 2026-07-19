@@ -55,35 +55,103 @@
     /* ── Signed-out view ── */
     #view-signed-out { display: block; }
 
-    .account-card__sign-in-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 24px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 10px 0;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .auth-tab.active {
+      color: var(--pink);
+      border-bottom-color: var(--pink);
+    }
+
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    .auth-field {
+      margin-bottom: 14px;
+      text-align: left;
+    }
+
+    .auth-field label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .auth-field input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.88rem;
+      color: var(--text);
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+
+    .auth-field input:focus {
+      border-color: rgba(232, 23, 93, 0.5);
+    }
+
+    .auth-submit-btn {
+      width: 100%;
       background: var(--pink);
       color: #fff;
       border: none;
-      border-radius: 12px;
-      padding: 12px 28px;
+      border-radius: 10px;
+      padding: 11px;
       font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
-      letter-spacing: 0.02em;
+      margin-top: 6px;
       transition: background 0.18s ease, transform 0.12s ease;
     }
 
-    .account-card__sign-in-btn:hover {
-      background: #c41050;
-      transform: translateY(-1px);
+    .auth-submit-btn:hover { background: #c41050; transform: translateY(-1px); }
+    .auth-submit-btn:active { transform: translateY(0); }
+
+    .auth-forgot {
+      display: block;
+      margin-top: 12px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-decoration: underline;
     }
 
-    .account-card__sign-in-btn:active {
-      transform: translateY(0);
-    }
+    .auth-forgot:hover { color: var(--pink); }
 
     .account-card__sign-in-error {
       margin-top: 14px;
       font-size: 0.78rem;
       color: #ff6b6b;
+      min-height: 18px;
+    }
+
+    .auth-success {
+      margin-top: 14px;
+      font-size: 0.78rem;
+      color: #6bffb8;
       min-height: 18px;
     }
 
@@ -190,11 +258,44 @@
 
       <!-- Signed out -->
       <div id="view-signed-out">
-        <button class="account-card__sign-in-btn" id="btn-sign-in">
-          <i class="fa-brands fa-google"></i>
-          Sign in with Google
-        </button>
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="signin">Sign In</button>
+          <button class="auth-tab" data-tab="signup">Create Account</button>
+        </div>
+
+        <!-- Sign in panel -->
+        <div class="auth-panel active" id="panel-signin">
+          <div class="auth-field">
+            <label>Email</label>
+            <input type="email" id="signin-email" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <input type="password" id="signin-password" placeholder="••••••••" autocomplete="current-password" />
+          </div>
+          <button class="auth-submit-btn" id="btn-sign-in">Sign In</button>
+          <button class="auth-forgot" id="btn-forgot">Forgot password?</button>
+        </div>
+
+        <!-- Sign up panel -->
+        <div class="auth-panel" id="panel-signup">
+          <div class="auth-field">
+            <label>Display Name</label>
+            <input type="text" id="signup-name" placeholder="Your name" autocomplete="name" />
+          </div>
+          <div class="auth-field">
+            <label>Email</label>
+            <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <input type="password" id="signup-password" placeholder="Min. 6 characters" autocomplete="new-password" />
+          </div>
+          <button class="auth-submit-btn" id="btn-sign-up">Create Account</button>
+        </div>
+
         <p class="account-card__sign-in-error" id="sign-in-error"></p>
+        <p class="auth-success" id="sign-in-success"></p>
       </div>
 
       <!-- Signed in -->
@@ -215,7 +316,7 @@
   <script src="js/cloud-store.js"></script>
   <script>
     // ── Configure the store ─────────────────────────────────────────────────
-    PlutoniumStore.WORKER_URL = 'https://plutonium-firebase-proxy.craftedgamz.workers.dev';
+    PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
 
     // ── View helpers ────────────────────────────────────────────────────────
     const viewLoading   = document.getElementById('view-loading');
@@ -260,17 +361,67 @@
       }
     });
 
+    const successEl = document.getElementById('sign-in-success');
+
+    function clearMessages() {
+      errorEl.textContent = '';
+      successEl.textContent = '';
+    }
+
+    // ── Tabs ────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+        clearMessages();
+      });
+    });
+
     // ── Sign in ─────────────────────────────────────────────────────────────
     document.getElementById('btn-sign-in').addEventListener('click', async () => {
-      errorEl.textContent = '';
+      clearMessages();
+      const email    = document.getElementById('signin-email').value.trim();
+      const password = document.getElementById('signin-password').value;
+      if (!email || !password) { errorEl.textContent = 'Enter your email and password.'; return; }
       showView('loading');
       try {
-        await PlutoniumStore.signIn();
-        // onAuthChange callback will switch to signed-in view
+        await PlutoniumStore.signInWithEmail(email, password);
       } catch (e) {
         console.error(e);
-        errorEl.textContent = 'Sign-in failed — please try again.';
+        errorEl.textContent = friendlyError(e.message);
         showView('signed-out');
+      }
+    });
+
+    // ── Sign up ─────────────────────────────────────────────────────────────
+    document.getElementById('btn-sign-up').addEventListener('click', async () => {
+      clearMessages();
+      const name     = document.getElementById('signup-name').value.trim();
+      const email    = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      if (!email || !password) { errorEl.textContent = 'Enter your email and password.'; return; }
+      showView('loading');
+      try {
+        await PlutoniumStore.signUp(email, password, name);
+      } catch (e) {
+        console.error(e);
+        errorEl.textContent = friendlyError(e.message);
+        showView('signed-out');
+      }
+    });
+
+    // ── Forgot password ─────────────────────────────────────────────────────
+    document.getElementById('btn-forgot').addEventListener('click', async () => {
+      clearMessages();
+      const email = document.getElementById('signin-email').value.trim();
+      if (!email) { errorEl.textContent = 'Enter your email above first.'; return; }
+      try {
+        await PlutoniumStore.resetPassword(email);
+        successEl.textContent = 'Password reset email sent!';
+      } catch (e) {
+        errorEl.textContent = friendlyError(e.message);
       }
     });
 
@@ -278,6 +429,21 @@
     document.getElementById('btn-sign-out').addEventListener('click', async () => {
       await PlutoniumStore.signOut();
     });
+
+    // ── Error messages ───────────────────────────────────────────────────────
+    function friendlyError(msg) {
+      if (msg.includes('INVALID_LOGIN_CREDENTIALS') || msg.includes('INVALID_PASSWORD') || msg.includes('EMAIL_NOT_FOUND'))
+        return 'Incorrect email or password.';
+      if (msg.includes('EMAIL_EXISTS'))
+        return 'An account with this email already exists.';
+      if (msg.includes('WEAK_PASSWORD'))
+        return 'Password must be at least 6 characters.';
+      if (msg.includes('INVALID_EMAIL'))
+        return 'Invalid email address.';
+      if (msg.includes('TOO_MANY_ATTEMPTS'))
+        return 'Too many attempts — try again later.';
+      return 'Something went wrong — please try again.';
+    }
   </script>
   <script src="js/nav.js"></script>
   <script src="js/main.js"></script>
