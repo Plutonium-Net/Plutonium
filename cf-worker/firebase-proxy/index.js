@@ -7,14 +7,20 @@
  *   FIREBASE_DATABASE_URL   — e.g. "https://plutonium-xyz-default-rtdb.firebaseio.com"
  *   ALLOWED_ORIGIN          — e.g. "https://plutonium.example.com" (or "*" for dev)
  *   SITE_URL                — e.g. "https://plutoniumnet.work" (no trailing slash)
- *                             Used as the postMessage target after OAuth completes.
  *
- * OAuth setup (Firebase Console):
- *   Authentication → Sign-in method → Enable Google and/or GitHub.
- *   For GitHub you must also set the callback URL in your GitHub OAuth App to:
- *     https://<your-worker-domain>/auth/oauth/callback
- *   The worker redirect URI passed to Firebase is:
- *     https://<your-worker-domain>/auth/oauth/callback
+ * OAuth secrets (set via `wrangler secret put`):
+ *   GITHUB_CLIENT_ID        — from your GitHub OAuth App
+ *   GITHUB_CLIENT_SECRET    — from your GitHub OAuth App
+ *   GOOGLE_CLIENT_ID        — from Firebase project's Google OAuth client
+ *                             (Google Cloud Console → APIs & Services → Credentials
+ *                              → the "Web client (auto created by Google Service)" client ID)
+ *   GOOGLE_CLIENT_SECRET    — same credential entry, client secret
+ *
+ * OAuth setup:
+ *   Firebase Console → Authentication → Sign-in method → Enable Google and GitHub.
+ *   For GitHub: set the Authorization callback URL in your GitHub OAuth App to:
+ *     https://accounting.cdn.plutoniumnet.work/auth/oauth/callback
+ *   For Google: no extra setup — uses the auto-created web OAuth client from Firebase.
  *
  * Routes exposed to the browser:
  *   GET  /config                    → returns non-secret Firebase client config
@@ -261,79 +267,138 @@ async function handleAccountDelete(request, env, allowed) {
 
 /* ── /auth/oauth/start — redirect browser to Google or GitHub ───────────── */
 //
-// Strategy: use Firebase's own hosted auth page (firebaseapp.com/__/auth/handler)
-// as the OAuth redirect URI. This is the URL registered in both the Google Cloud
-// console and the GitHub OAuth app. After the provider redirects back there,
-// Firebase's page posts the credential to the popup opener via postMessage, and
-// our listener in cloud-store.js picks it up via /auth/oauth/callback (below).
+// Builds the provider's OAuth authorization URL and redirects the popup to it.
+// The redirect_uri is always the worker callback, which is registered in the
+// GitHub OAuth App. For Google, the redirect_uri is also registered as an
+// Authorised redirect URI on the Google OAuth client in Cloud Console.
 //
-// continueUri must be the worker callback so Firebase knows where to send the
-// tokenised result — but the actual OAuth redirect_uri sent to GitHub/Google is
-// always firebaseapp.com/__/auth/handler, which is what those providers expect.
+// We build the URL manually (rather than using createAuthUri) so we fully
+// control the redirect_uri — createAuthUri forces firebaseapp.com which only
+// works with the Firebase JS SDK.
 async function handleOAuthStart(request, env, url) {
-  const provider   = url.searchParams.get('provider');
-  const workerUrl  = new URL(request.url).origin;
+  const provider    = url.searchParams.get('provider');
+  const workerUrl   = new URL(request.url).origin;
   const callbackUri = `${workerUrl}/auth/oauth/callback`;
 
-  const providerMap = { google: 'google.com', github: 'github.com' };
-  const providerId  = providerMap[provider];
-  if (!providerId) return new Response('Unknown provider', { status: 400 });
+  // Use a random state value to prevent CSRF
+  const state = crypto.randomUUID();
 
-  const res = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${env.FIREBASE_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ providerId, continueUri: callbackUri }),
-    }
-  );
-  const data = await res.json();
-  if (!res.ok || !data.authUri) {
-    return new Response(`OAuth start failed: ${JSON.stringify(data)}`, { status: 500 });
+  // Encode provider into state so the callback knows which token endpoint to call
+  const encodedState = `${provider}:${state}`;
+
+  if (provider === 'github') {
+    if (!env.GITHUB_CLIENT_ID) return new Response('GITHUB_CLIENT_ID not configured', { status: 500 });
+    const authUrl = new URL('https://github.com/login/oauth/authorize');
+    authUrl.searchParams.set('client_id',    env.GITHUB_CLIENT_ID);
+    authUrl.searchParams.set('redirect_uri', callbackUri);
+    authUrl.searchParams.set('scope',        'read:user user:email');
+    authUrl.searchParams.set('state',        encodedState);
+    return Response.redirect(authUrl.toString(), 302);
   }
 
-  // Append our own state so the callback can verify the session
-  const sep      = data.authUri.includes('?') ? '&' : '?';
-  const redirect = data.authUri + sep + `state=${encodeURIComponent(data.sessionId)}`;
-  return Response.redirect(redirect, 302);
+  if (provider === 'google') {
+    if (!env.GOOGLE_CLIENT_ID) return new Response('GOOGLE_CLIENT_ID not configured', { status: 500 });
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id',     env.GOOGLE_CLIENT_ID);
+    authUrl.searchParams.set('redirect_uri',  callbackUri);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope',         'openid email profile');
+    authUrl.searchParams.set('state',         encodedState);
+    return Response.redirect(authUrl.toString(), 302);
+  }
+
+  return new Response('Unknown provider', { status: 400 });
 }
 
-/* ── /auth/oauth/callback — exchange redirect result for Firebase token ─── */
+/* ── /auth/oauth/callback — exchange code for token, sign in with Firebase ─ */
 async function handleOAuthCallback(request, env, url) {
-  const siteUrl    = (env.SITE_URL || '').replace(/\/$/, '');
-  const workerUrl  = new URL(request.url).origin;
+  const siteUrl     = (env.SITE_URL || '').replace(/\/$/, '');
+  const workerUrl   = new URL(request.url).origin;
   const callbackUri = `${workerUrl}/auth/oauth/callback`;
 
-  // signInWithIdp needs the full callback URL (including code/state params)
-  // AND the registered redirectUri so Firebase can validate them together.
-  const res = await fetch(
+  const code     = url.searchParams.get('code');
+  const error    = url.searchParams.get('error');
+  // State is "provider:uuid" encoded by /start
+  const provider = (url.searchParams.get('state') || '').split(':')[0];
+
+  if (error || !code) {
+    return oauthPopupPage(siteUrl, null, error || 'No code returned from provider');
+  }
+
+  let postBody = null;
+
+  // ── GitHub: exchange code for access_token ──
+  if (provider === 'github') {
+    const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        client_id:     env.GITHUB_CLIENT_ID,
+        client_secret: env.GITHUB_CLIENT_SECRET,
+        code,
+        redirect_uri:  callbackUri,
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    if (tokenData.access_token) {
+      postBody = `access_token=${encodeURIComponent(tokenData.access_token)}&providerId=github.com`;
+    }
+  }
+
+  // ── Google: exchange code for id_token ──
+  if (provider === 'google') {
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id:     env.GOOGLE_CLIENT_ID,
+        client_secret: env.GOOGLE_CLIENT_SECRET,
+        redirect_uri:  callbackUri,
+        grant_type:    'authorization_code',
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    if (tokenData.id_token) {
+      postBody = `id_token=${encodeURIComponent(tokenData.id_token)}&providerId=google.com`;
+    }
+  }
+
+  if (!postBody) {
+    return oauthPopupPage(siteUrl, null, 'Could not exchange code for token');
+  }
+
+  // ── Sign in with Firebase using the provider token ──
+  // requestUri must be an authorized domain in Firebase Console → Authentication → Authorized domains.
+  // We use SITE_URL (e.g. https://plutoniumnet.work) which is already authorized.
+  const idpRes = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${env.FIREBASE_API_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        requestUri:        request.url,
-        postBody:          '',
-        returnSecureToken: true,
+        postBody,
+        requestUri:          siteUrl || 'http://localhost',
+        returnSecureToken:   true,
         returnIdpCredential: true,
       }),
     }
   );
 
-  const data = await res.json();
+  const idpData = await idpRes.json();
 
-  if (!res.ok || !data.idToken) {
-    return oauthPopupPage(siteUrl, null, data.error?.message || 'OAuth sign-in failed');
+  if (!idpRes.ok || !idpData.idToken) {
+    return oauthPopupPage(siteUrl, null, idpData.error?.message || 'Firebase sign-in failed');
   }
 
   const user = {
-    uid:          data.localId,
-    idToken:      data.idToken,
-    refreshToken: data.refreshToken,
-    expiresIn:    data.expiresIn,
-    displayName:  data.displayName || '',
-    email:        data.email       || '',
-    photoUrl:     data.photoUrl    || '',
+    uid:          idpData.localId,
+    idToken:      idpData.idToken,
+    refreshToken: idpData.refreshToken,
+    expiresIn:    idpData.expiresIn,
+    displayName:  idpData.displayName || '',
+    email:        idpData.email       || '',
+    photoUrl:     idpData.photoUrl    || '',
   };
 
   return oauthPopupPage(siteUrl, user, null);

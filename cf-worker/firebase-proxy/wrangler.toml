@@ -13,11 +13,21 @@ compatibility_date = "2024-01-01"
 #
 # OAuth (Google + GitHub):
 #   Enable providers in Firebase Console → Authentication → Sign-in method.
-#   For GitHub, set the Authorization callback URL in your GitHub OAuth App to:
-#     https://accounting.cdn.plutoniumnet.work/auth/oauth/callback
-#   (NOT the firebaseapp.com URL — that is only for the Firebase JS SDK)
-#   Then add:
-#   wrangler secret put SITE_URL   (e.g. https://plutoniumnet.work)
+#
+#   GitHub:
+#     1. Create an OAuth App at github.com → Settings → Developer settings → OAuth Apps
+#     2. Set Authorization callback URL to:
+#          https://accounting.cdn.plutoniumnet.work/auth/oauth/callback
+#     3. wrangler secret put GITHUB_CLIENT_ID
+#        wrangler secret put GITHUB_CLIENT_SECRET
+#
+#   Google:
+#     1. In Google Cloud Console → APIs & Services → Credentials
+#        open the "Web client (auto created by Google Service)" OAuth client
+#     2. Add https://accounting.cdn.plutoniumnet.work/auth/oauth/callback
+#        to "Authorized redirect URIs" and save
+#     3. wrangler secret put GOOGLE_CLIENT_ID
+#        wrangler secret put GOOGLE_CLIENT_SECRET
 #
 # ALLOWED_ORIGIN can stay here (not secret).
 
