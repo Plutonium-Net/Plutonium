@@ -79,12 +79,31 @@
   }
 
   /* ── ScramJet initialisation ────────────────────────────────────────── */
-  // Always delete the $scramjet IDB before init() so ScramJet recreates it
-  // with the correct schema. init() reposts the config to the SW anyway.
-  function nukeScramjetDb() {
+  // Only delete the $scramjet IDB if stores are missing (stale schema).
+  // Do NOT delete unconditionally — deleteDatabase blocks if the SW still
+  // has the DB open, causing initScramjet() to hang and sjController to
+  // stay null on every reload after the first.
+  const SJ_DB      = '$scramjet';
+  const SJ_STORES  = ['config','cookies','redirectTrackers','referrerPolicies','publicSuffixList'];
+
+  function maybeRepairSjDb() {
     return new Promise(resolve => {
-      const req = indexedDB.deleteDatabase('$scramjet');
-      req.onsuccess = req.onerror = () => resolve();
+      // Open without a version so we never trigger onupgradeneeded ourselves
+      const req = indexedDB.open(SJ_DB);
+      req.onupgradeneeded = () => {
+        // DB didn't exist at all — abort, let ScramJet's own init() create it
+        req.transaction.abort();
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        const missing = SJ_STORES.filter(s => !db.objectStoreNames.contains(s));
+        db.close();
+        if (!missing.length) { resolve(); return; }
+        // Stale schema — delete and let init() rebuild
+        const del = indexedDB.deleteDatabase(SJ_DB);
+        del.onsuccess = del.onerror = del.onblocked = () => resolve();
+      };
+      req.onerror = () => resolve();
     });
   }
 
@@ -92,7 +111,7 @@
     // $scramjetLoadController is set as a global by sj/scramjet.bundle.js
     if (typeof $scramjetLoadController === 'undefined') return;
     try {
-      await nukeScramjetDb();
+      await maybeRepairSjDb();
       const { ScramjetController } = $scramjetLoadController();
       sjController = new ScramjetController({
         prefix: '/sj/service/',
