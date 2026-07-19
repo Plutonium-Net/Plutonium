@@ -11,6 +11,10 @@ export default {
     const path = url.pathname;
 
     try {
+      if (path === '/' && request.method === 'GET') {
+        return handleHomepage();
+      }
+
       if (path === '/config' && request.method === 'GET') {
         return handleConfig(env, allowed);
       }
@@ -381,6 +385,64 @@ async function proxiedResponse(upstreamResp, allowed) {
   return new Response(body, {
     status:  upstreamResp.status,
     headers: corsHeaders(allowed, { 'Content-Type': 'application/json' }),
+  });
+}
+
+function handleHomepage() {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Plutonium Firebase Proxy</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --pink: #e8175d; --bg: #000000; --text: #ffffff; --muted: #a0a0a0; }
+  html, body { height: 100%; }
+  body { background-color: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", system-ui, sans-serif; line-height: 1.6; }
+  .hero { position: relative; z-index: 1; min-height: 100vh; display: flex; align-items: flex-start; justify-content: flex-start; padding: 200px 0 0 16vw; }
+  .hero__inner { max-width: 600px; }
+  .hero__title { font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 700; letter-spacing: -0.02em; color: var(--pink); line-height: 1.1; margin-bottom: 18px; }
+  .hero__desc { font-size: clamp(1rem, 2vw, 1.15rem); color: var(--muted); max-width: 480px; line-height: 1.7; margin-bottom: 40px; }
+  .section { margin-bottom: 48px; }
+  .section__heading { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pink); margin-bottom: 16px; opacity: 0.8; }
+  table { border-collapse: collapse; width: 100%; max-width: 480px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  th { color: var(--pink); font-weight: 600; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  td { color: var(--muted); }
+  td code { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.82rem; color: var(--text); background: rgba(255,255,255,0.06); border-radius: 4px; padding: 1px 6px; }
+</style>
+</head>
+<body>
+<div class="hero">
+<div class="hero__inner">
+<h1 class="hero__title">Plutonium Firebase Proxy</h1>
+<p class="hero__desc">A Cloudflare Worker that proxies Firebase Auth, Firestore, and Realtime Database — keeping API keys server-side and adding CORS handling for browser clients.</p>
+<div class="section">
+<div class="section__heading">Endpoints</div>
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>GET</code></td><td><code>/config</code></td><td>Returns sanitised Firebase client config</td></tr>
+<tr><td><code>POST</code></td><td><code>/auth/email</code></td><td>Sign in with email &amp; password</td></tr>
+<tr><td><code>POST</code></td><td><code>/auth/signup</code></td><td>Create a new email account</td></tr>
+<tr><td><code>POST</code></td><td><code>/auth/reset</code></td><td>Send a password-reset e-mail</td></tr>
+<tr><td><code>POST</code></td><td><code>/auth/update</code></td><td>Update display name</td></tr>
+<tr><td><code>POST</code></td><td><code>/auth/delete</code></td><td>Delete the authenticated account</td></tr>
+<tr><td><code>GET</code></td><td><code>/auth/oauth/start</code></td><td>Redirect to GitHub or Google OAuth</td></tr>
+<tr><td><code>GET</code></td><td><code>/auth/oauth/callback</code></td><td>OAuth callback — exchanges code for Firebase token</td></tr>
+<tr><td><code>*</code></td><td><code>/firestore/…</code></td><td>Proxy to Firestore REST API</td></tr>
+<tr><td><code>*</code></td><td><code>/rtdb/…</code></td><td>Proxy to Realtime Database REST API</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</body>
+</html>`;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html;charset=UTF-8' },
   });
 }
 
