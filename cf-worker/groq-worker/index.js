@@ -79,6 +79,42 @@ function handleModels(allowed) {
   return corsResponse({ models: MODELS }, 200, allowed);
 }
 
+// ── Rate limiting (KV-based) ──────────────────────────────────────────────────
+// 100 requests per 12-hour window, keyed per Firebase token prefix (per account).
+
+const RL_MAX    = 100;
+const RL_WINDOW = 60 * 60 * 12; // 12 hours in seconds
+
+function getRateLimitKey(request) {
+  const auth = request.headers.get('Authorization') || '';
+  if (auth.startsWith('Bearer ')) return 'rl:' + auth.slice(7, 39);
+  return 'rl:ip:' + (request.headers.get('CF-Connecting-IP') || 'unknown');
+}
+
+async function checkRateLimit(env, key) {
+  if (!env.GROQ_RATE_LIMIT) return { limited: false };
+
+  const now    = Math.floor(Date.now() / 1000);
+  const raw    = await env.GROQ_RATE_LIMIT.get(key);
+  const bucket = raw ? JSON.parse(raw) : { count: 0, reset: now + RL_WINDOW };
+
+  if (now >= bucket.reset) {
+    bucket.count = 0;
+    bucket.reset = now + RL_WINDOW;
+  }
+
+  if (bucket.count >= RL_MAX) {
+    return { limited: true, reset: bucket.reset };
+  }
+
+  bucket.count++;
+  await env.GROQ_RATE_LIMIT.put(key, JSON.stringify(bucket), {
+    expirationTtl: bucket.reset - now + 10,
+  });
+
+  return { limited: false, remaining: RL_MAX - bucket.count };
+}
+
 // ── Chat ──────────────────────────────────────────────────────────────────────
 
 const MAX_MESSAGES = 100; // max messages accepted per request
@@ -91,6 +127,23 @@ async function handleChat(request, env, allowed) {
   const auth = request.headers.get('Authorization') || '';
   if (!auth.startsWith('Bearer ')) {
     return corsResponse({ error: 'Unauthorized' }, 401, allowed);
+  }
+
+  // Rate limit check
+  const rlKey = getRateLimitKey(request);
+  const { limited, reset, remaining } = await checkRateLimit(env, rlKey);
+  if (limited) {
+    const retryAfter = reset ? Math.max(0, reset - Math.floor(Date.now() / 1000)) : RL_WINDOW;
+    return new Response(JSON.stringify({
+      error: `Rate limit exceeded - you can send ${RL_MAX} messages every 12 hours.`,
+      retry_after: retryAfter,
+    }), {
+      status: 429,
+      headers: {
+        ...corsHeaders(allowed, { 'Content-Type': 'application/json' }),
+        'Retry-After': String(retryAfter),
+      },
+    });
   }
 
   const body = await request.json().catch(() => null);
@@ -137,9 +190,10 @@ async function handleChat(request, env, allowed) {
   }
 
   return corsResponse({
-    content: data.choices?.[0]?.message?.content ?? '',
-    model:   data.model,
-    usage:   data.usage,
+    content:   data.choices?.[0]?.message?.content ?? '',
+    model:     data.model,
+    usage:     data.usage,
+    remaining: remaining ?? null,
   }, 200, allowed);
 }
 

@@ -14,9 +14,6 @@
   <div id="particles-js"></div>
 
   <div class="ai-page">
-    <h1 class="ai-page__title">AI</h1>
-    <p class="ai-page__subtitle">Chat with powerful models via Groq - sign in to save your conversations.</p>
-
     <!-- Auth gate (shown when signed out) -->
     <div class="ai-gate" id="ai-gate">
       <i class="fa-solid fa-lock ai-gate__icon"></i>
@@ -39,6 +36,16 @@
           </button>
         </div>
         <div class="ai-chat-list" id="ai-chat-list"></div>
+        <div class="ai-rl-footer" id="ai-rl-footer">
+          <div class="ai-rl-footer__row">
+            <span class="ai-rl-footer__label">Messages sent</span>
+            <span class="ai-rl-footer__count" id="ai-rl-count">-- / 100</span>
+          </div>
+          <div class="ai-rl-bar-track">
+            <div class="ai-rl-bar-fill" id="ai-rl-bar"></div>
+          </div>
+          <div class="ai-rl-footer__reset" id="ai-rl-reset">100 messages per 12 hours</div>
+        </div>
       </div>
 
       <!-- Main -->
@@ -49,8 +56,18 @@
           <button class="ai-sidebar-toggle" id="ai-sidebar-toggle" title="Toggle sidebar">
             <i class="fa-solid fa-bars"></i>
           </button>
-          <span class="ai-chat-title" id="ai-chat-title">New Chat</span>
-          <div class="ai-model-dropdown" id="ai-model-dropdown">
+          <!-- Tab switcher -->
+          <div class="ai-tabs">
+            <button class="ai-tab active" id="ai-tab-chat" data-tab="chat">
+              <i class="fa-solid fa-message"></i> Chat
+            </button>
+            <button class="ai-tab" id="ai-tab-studio" data-tab="studio">
+              <i class="fa-solid fa-masks-theater"></i> Studio
+            </button>
+          </div>
+          <!-- Chat-only controls -->
+          <span class="ai-chat-title ai-chat-only" id="ai-chat-title">New Chat</span>
+          <div class="ai-model-dropdown ai-chat-only" id="ai-model-dropdown">
             <button class="ai-model-btn" id="ai-model-btn">
               <span class="ai-model-btn__label" id="ai-model-btn-label">Llama 3.3 70B</span>
               <i class="fa-solid fa-chevron-down ai-model-btn__chevron"></i>
@@ -59,23 +76,88 @@
           </div>
         </div>
 
-        <!-- Messages -->
-        <div class="ai-messages" id="ai-messages">
-          <div class="ai-empty" id="ai-empty">
-            <i class="fa-solid fa-robot"></i>
-            <p>Start a conversation</p>
+        <!-- ── Chat view ── -->
+        <div class="ai-view" id="ai-view-chat">
+
+          <!-- Messages -->
+          <div class="ai-messages" id="ai-messages">
+            <div class="ai-empty" id="ai-empty">
+              <i class="fa-solid fa-robot"></i>
+              <p>Start a conversation</p>
+            </div>
           </div>
+
+          <!-- Input -->
+          <div class="ai-inputbar">
+            <div class="ai-inputbar__inner">
+              <button class="ai-char-toggle" id="ai-char-toggle" title="Switch character">
+                <i class="fa-solid fa-masks-theater"></i>
+                <span id="ai-char-toggle-name">Assistant</span>
+                <i class="fa-solid fa-chevron-up" style="font-size:0.6rem;opacity:0.5"></i>
+              </button>
+              <div class="ai-inputbar__divider"></div>
+              <textarea class="ai-input" id="ai-input" rows="1" placeholder="Message..."></textarea>
+              <button class="ai-send-btn" id="ai-send-btn" title="Send">
+                <i class="fa-solid fa-arrow-up"></i>
+              </button>
+            </div>
+            <div class="ai-inputbar__hint">Enter to send - Shift+Enter for new line</div>
+          </div>
+
+          <!-- Character modal -->
+          <div class="ai-char-modal" id="ai-char-modal" style="display:none">
+            <div class="ai-char-modal__header">
+              <span class="ai-char-modal__title">Characters</span>
+              <button class="ai-char-modal__close" id="ai-char-modal-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="ai-char-list" id="ai-char-list"></div>
+          </div>
+
         </div>
 
-        <!-- Input -->
-        <div class="ai-inputbar">
-          <div class="ai-inputbar__inner">
-            <textarea class="ai-input" id="ai-input" rows="1" placeholder="Message... (Shift+Enter for new line)"></textarea>
-            <button class="ai-send-btn" id="ai-send-btn" title="Send">
-              <i class="fa-solid fa-arrow-up"></i>
-            </button>
+        <!-- ── Studio view ── -->
+        <div class="ai-view ai-view--studio" id="ai-view-studio" style="display:none">
+
+          <div class="ai-studio">
+            <!-- Character list panel -->
+            <div class="ai-studio__list-panel">
+              <div class="ai-studio__panel-header">
+                <span class="ai-studio__panel-title">Characters</span>
+                <button class="ai-studio__new-btn" id="ai-studio-new">
+                  <i class="fa-solid fa-plus"></i> New
+                </button>
+              </div>
+              <div class="ai-studio__char-list" id="ai-studio-char-list"></div>
+            </div>
+
+            <!-- Editor panel -->
+            <div class="ai-studio__editor-panel" id="ai-studio-editor-panel">
+              <div class="ai-studio__editor-empty" id="ai-studio-editor-empty">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <p>Select a character to edit, or create a new one</p>
+              </div>
+              <div class="ai-studio__editor" id="ai-studio-editor" style="display:none">
+                <div class="ai-studio__editor-row">
+                  <label class="ai-studio__label">Name</label>
+                  <input class="ai-studio__input" id="ai-studio-name" placeholder="e.g. Pirate, Code Reviewer, Chef..." maxlength="40" />
+                </div>
+                <div class="ai-studio__editor-row ai-studio__editor-row--grow">
+                  <label class="ai-studio__label">System Prompt</label>
+                  <textarea class="ai-studio__prompt" id="ai-studio-prompt" placeholder="Describe how this character should behave, its personality, tone, and any constraints..."></textarea>
+                </div>
+                <div class="ai-studio__editor-footer">
+                  <button class="ai-studio__delete-btn" id="ai-studio-delete" style="display:none">
+                    <i class="fa-solid fa-trash-can"></i> Delete
+                  </button>
+                  <div style="display:flex;gap:8px;margin-left:auto">
+                    <button class="ai-studio__cancel-btn" id="ai-studio-cancel">Cancel</button>
+                    <button class="ai-studio__save-btn" id="ai-studio-save">Save Character</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="ai-inputbar__hint">Enter to send - Shift+Enter for new line</div>
+
         </div>
 
       </div>

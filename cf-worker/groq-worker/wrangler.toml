@@ -9,3 +9,10 @@ zone_name = "plutoniumnet.work"
 [vars]
 ALLOWED_ORIGIN = "*.plutoniumnet.work,http://127.0.0.1:5500"
 # GROQ_API_KEY — set via: wrangler secret put GROQ_API_KEY
+
+# KV namespace for rate limiting — create via:
+#   wrangler kv namespace create GROQ_RATE_LIMIT
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "GROQ_RATE_LIMIT"
+id      = "9f2a6c61bb62407c8862af0677260800"
