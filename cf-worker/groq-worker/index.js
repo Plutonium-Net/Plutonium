@@ -170,6 +170,8 @@ async function handleChat(request, env, allowed) {
 
   upstream.push(...sanitized);
 
+  const wantStream = request.headers.get('Accept') === 'text/event-stream';
+
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -181,14 +183,48 @@ async function handleChat(request, env, allowed) {
       messages: upstream,
       temperature: 0.7,
       max_tokens:  4096,
+      stream:      wantStream,
     }),
   });
 
-  const data = await res.json();
   if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
     return corsResponse({ error: data.error?.message || 'Groq error' }, res.status, allowed);
   }
 
+  if (wantStream) {
+    // Pass the SSE stream straight through, injecting remaining as a final event
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+
+    (async () => {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          await writer.write(value);
+        }
+        // Send remaining count as a custom final event
+        await writer.write(encoder.encode(`event: rl\ndata: ${JSON.stringify({ remaining: remaining ?? null })}\n\n`));
+      } finally {
+        writer.close();
+      }
+    })();
+
+    return new Response(readable, {
+      status: 200,
+      headers: corsHeaders(allowed, {
+        'Content-Type':  'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'X-Accel-Buffering': 'no',
+      }),
+    });
+  }
+
+  const data = await res.json();
   return corsResponse({
     content:   data.choices?.[0]?.message?.content ?? '',
     model:     data.model,

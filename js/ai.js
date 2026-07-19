@@ -4,9 +4,113 @@ const CHARACTERS_DOC   = 'ai_characters/data';
 const MAX_CHATS        = 30;
 const MAX_CHARACTERS   = 20;
 const DEFAULT_MODEL    = 'llama-3.3-70b-versatile';
-const SYSTEM_PROMPT    = 'You are a helpful, concise assistant on the Plutonium Network. Answer clearly and directly. Use markdown for code blocks when relevant.';
+const SYSTEM_PROMPT    = `You are Stelena, the official AI assistant of Plutonium Network.
 
-const DEFAULT_CHARACTER = { id: 'default', name: 'Assistant', prompt: SYSTEM_PROMPT, isDefault: true };
+Your purpose is to provide fast, accurate, and helpful assistance across the Plutonium Network ecosystem. You act as a knowledgeable guide, technical assistant, and productivity companion while maintaining a professional, approachable, and intelligent personality.
+
+## Identity
+
+Name: Stelena
+Organization: Plutonium Network
+Role: Official AI Assistant
+
+## Personality
+
+- Professional without being robotic.
+- Friendly and conversational.
+- Confident but never arrogant.
+- Honest about uncertainty.
+- Concise by default, detailed when requested.
+- Curious and solution-oriented.
+- Never sarcastic or rude.
+
+## Core Principles
+
+1. Accuracy comes before speed.
+2. Never fabricate information.
+3. If something is unknown, clearly say so.
+4. Explain technical concepts in an understandable way.
+5. Prioritize user privacy and security.
+6. Help users solve problems instead of simply answering questions.
+
+## Responsibilities
+
+You can assist with:
+
+- Technical support
+- Programming and debugging
+- Documentation
+- Plutonium Network products and services
+- General technology questions
+- Writing and editing
+- Brainstorming ideas
+- Learning and education
+- Productivity
+- Research summaries
+- General conversation
+
+## Communication Style
+
+- Write naturally.
+- Avoid unnecessary filler.
+- Prefer short paragraphs.
+- Use markdown when it improves readability.
+- Match the user's level of technical knowledge.
+- Be enthusiastic about innovation without sounding like marketing.
+
+## Technical Behavior
+
+When writing code:
+
+- Produce clean, modern code.
+- Follow best practices.
+- Explain important decisions.
+- Minimize unnecessary complexity.
+- Include comments only when they add value.
+
+When debugging:
+
+- Identify likely causes first.
+- Walk through solutions logically.
+- Ask clarifying questions only when necessary.
+
+## Safety
+
+- Refuse harmful or illegal requests.
+- Protect user privacy.
+- Never expose confidential or internal information.
+- Do not pretend to have abilities you do not possess.
+
+## Tone
+
+Stelena should feel like a knowledgeable engineer sitting beside the user—not a corporate chatbot.
+
+She is calm, capable, and efficient.
+
+## Plutonium Network
+
+Represent Plutonium Network with professionalism.
+
+Never invent features, products, pricing, or policies.
+
+If information about Plutonium Network is unavailable, state that clearly rather than guessing.
+
+## Response Philosophy
+
+Every response should strive to be:
+
+- Helpful
+- Accurate
+- Honest
+- Efficient
+- Easy to understand
+
+The goal is not merely to answer questions, but to empower users to accomplish their goals.
+
+You are Stelena.
+The intelligence behind Plutonium Network.`;
+
+const DEFAULT_CHARACTER = { id: 'default', name: 'Stelena', prompt: SYSTEM_PROMPT, isDefault: true };
 
 const MODELS = [
   { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B' },
@@ -26,6 +130,7 @@ let isStreaming     = false;
 let currentModel    = DEFAULT_MODEL;
 let characters      = [];
 let activeCharId    = 'default';
+let tempMode        = false;
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 
@@ -66,8 +171,41 @@ const studioPrompt   = document.getElementById('ai-studio-prompt');
 const studioSave     = document.getElementById('ai-studio-save');
 const studioCancel   = document.getElementById('ai-studio-cancel');
 const studioDelete   = document.getElementById('ai-studio-delete');
-const rlCount        = document.getElementById('ai-rl-count');
-const rlBar          = document.getElementById('ai-rl-bar');
+const rlCount           = document.getElementById('ai-rl-count');
+const rlBar             = document.getElementById('ai-rl-bar');
+const tempToggleBtn     = document.getElementById('ai-temp-toggle');
+const confirmOverlay    = document.getElementById('ai-confirm-overlay');
+const confirmDialog     = document.getElementById('ai-confirm-dialog');
+const confirmMsg        = document.getElementById('ai-confirm-msg');
+const confirmOkBtn      = document.getElementById('ai-confirm-ok');
+const confirmCancelBtn  = document.getElementById('ai-confirm-cancel');
+
+// ── Custom confirm dialog ─────────────────────────────────────────────────────
+
+let _confirmResolve = null;
+
+function showConfirm(message, okLabel = 'Delete') {
+  confirmMsg.textContent = message;
+  confirmOkBtn.textContent = okLabel;
+  confirmOverlay.style.display = 'flex';
+  confirmDialog.classList.remove('ai-confirm-dialog--out');
+  confirmDialog.classList.add('ai-confirm-dialog--in');
+  return new Promise(resolve => { _confirmResolve = resolve; });
+}
+
+function _closeConfirm(result) {
+  confirmDialog.classList.remove('ai-confirm-dialog--in');
+  confirmDialog.classList.add('ai-confirm-dialog--out');
+  setTimeout(() => {
+    confirmOverlay.style.display = 'none';
+    confirmDialog.classList.remove('ai-confirm-dialog--out');
+  }, 180);
+  if (_confirmResolve) { _confirmResolve(result); _confirmResolve = null; }
+}
+
+confirmOkBtn.addEventListener('click',     () => _closeConfirm(true));
+confirmCancelBtn.addEventListener('click', () => _closeConfirm(false));
+confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) _closeConfirm(false); });
 
 // ── Model dropdown ────────────────────────────────────────────────────────────
 
@@ -166,11 +304,12 @@ function escHtml(s) {
 // ── Render helpers ────────────────────────────────────────────────────────────
 
 function renderChatList() {
-  if (!chats.length) {
+  const visibleChats = chats.filter(c => !c.temp);
+  if (!visibleChats.length) {
     chatList.innerHTML = '<div class="ai-chat-list__empty">No chats yet</div>';
     return;
   }
-  chatList.innerHTML = chats
+  chatList.innerHTML = visibleChats
     .slice()
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .map(c => `
@@ -241,15 +380,21 @@ function hideTyping() {
 function createChat() {
   const chat = {
     id:        uid(),
-    title:     'New Chat',
+    title:     tempMode ? 'Temporary Chat' : 'New Chat',
     model:     currentModel,
     messages:  [],
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    temp:      tempMode || undefined,
   };
-  chats.unshift(chat);
-  selectChat(chat.id);
-  saveChats();
+  if (!chat.temp) chats.unshift(chat);
+  activeChatId = chat.id;
+  chatTitle.textContent = chat.title;
+  messages.innerHTML = '';
+  emptyState.style.display = '';
+  renderChatList();
+  if (!chat.temp) saveChats();
+  inputEl.focus();
   return chat;
 }
 
@@ -265,10 +410,10 @@ function selectChat(id) {
   inputEl.focus();
 }
 
-function deleteChat(id) {
+async function deleteChat(id) {
   const chat = chats.find(c => c.id === id);
   if (!chat) return;
-  if (!confirm(`Delete "${chat.title}"?`)) return;
+  if (!await showConfirm(`Delete "${chat.title}"?`)) return;
   chats = chats.filter(c => c.id !== id);
   if (activeChatId === id) {
     activeChatId = chats[0]?.id || null;
@@ -422,12 +567,27 @@ charModalClose.addEventListener('click', () => {
 let activeTab = 'chat';
 
 function switchTab(tab) {
+  if (tab === activeTab) return;
   activeTab = tab;
   tabChat.classList.toggle('active', tab === 'chat');
   tabStudio.classList.toggle('active', tab === 'studio');
-  viewChat.style.display    = tab === 'chat'   ? '' : 'none';
-  viewStudio.style.display  = tab === 'studio' ? '' : 'none';
   chatOnlyEls.forEach(el => el.style.display = tab === 'chat' ? '' : 'none');
+
+  const entering = tab === 'chat' ? viewChat : viewStudio;
+  const leaving  = tab === 'chat' ? viewStudio : viewChat;
+
+  leaving.classList.remove('ai-view--active');
+  leaving.classList.add('ai-view--leave');
+  setTimeout(() => {
+    leaving.classList.remove('ai-view--leave');
+    leaving.style.display = 'none';
+  }, 160);
+
+  entering.style.display = '';
+  // Force reflow so the animation plays from the start
+  entering.getBoundingClientRect();
+  entering.classList.add('ai-view--active');
+
   if (tab === 'studio') {
     charModal.style.display = 'none';
     renderStudioList();
@@ -513,10 +673,10 @@ studioSave.addEventListener('click', () => {
 
 studioCancel.addEventListener('click', closeStudioEditor);
 
-studioDelete.addEventListener('click', () => {
+studioDelete.addEventListener('click', async () => {
   const c = characters.find(c => c.id === studioEditingId);
   if (!c) return;
-  if (!confirm(`Delete "${c.name}"?`)) return;
+  if (!await showConfirm(`Delete "${c.name}"?`)) return;
   characters = characters.filter(c => c.id !== studioEditingId);
   if (activeCharId === studioEditingId) {
     activeCharId = 'default';
@@ -577,7 +737,7 @@ async function sendMessage() {
   inputEl.style.height = '';
   renderChatList();
   appendMessage(userMsg);
-  saveChats();
+  if (!chat.temp) saveChats();
 
   isStreaming = true;
   sendBtn.disabled = true;
@@ -594,6 +754,7 @@ async function sendMessage() {
       headers: {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${user.idToken}`,
+        'Accept':        'text/event-stream',
       },
       body: JSON.stringify({
         model:    currentModel,
@@ -602,20 +763,64 @@ async function sendMessage() {
       }),
     });
 
-    hideTyping();
-
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || `HTTP ${res.status}`);
     }
 
-    const data = await res.json();
-    if (data.remaining != null) updateRateLimit(data.remaining);
-    const assistantMsg = { role: 'assistant', content: data.content, ts: Date.now() };
+    hideTyping();
+
+    // Create the assistant bubble immediately and stream tokens into it
+    const assistantMsg = { role: 'assistant', content: '', ts: Date.now() };
     chat.messages.push(assistantMsg);
+    const bubble = appendStreamingMessage();
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let   buffer  = '';
+    let   curEvent = '';
+
+    const processLine = line => {
+      if (line.startsWith('event:')) {
+        curEvent = line.slice(6).trim();
+        return;
+      }
+      if (!line.startsWith('data:')) {
+        if (line === '') curEvent = ''; // blank line resets event type
+        return;
+      }
+      const payload = line.slice(5).trim();
+      if (payload === '[DONE]') return;
+
+      let chunk;
+      try { chunk = JSON.parse(payload); } catch { return; }
+
+      if (curEvent === 'rl') {
+        if (chunk.remaining != null) updateRateLimit(chunk.remaining);
+        return;
+      }
+
+      const token = chunk.choices?.[0]?.delta?.content;
+      if (token) {
+        assistantMsg.content += token;
+        bubble.innerHTML = renderMarkdown(assistantMsg.content);
+        scrollToBottom();
+      }
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep incomplete last line
+      for (const line of lines) processLine(line);
+    }
+    // flush
+    if (buffer) processLine(buffer);
+
     chat.updatedAt = Date.now();
-    appendMessage(assistantMsg);
-    saveChats();
+    if (!chat.temp) saveChats();
 
   } catch (err) {
     hideTyping();
@@ -630,6 +835,19 @@ async function sendMessage() {
     inputEl.focus();
     renderChatList();
   }
+}
+
+// Creates an empty streaming assistant bubble and returns its inner bubble div
+function appendStreamingMessage() {
+  emptyState.style.display = 'none';
+  const el = document.createElement('div');
+  el.className = 'ai-msg ai-msg--assistant';
+  const bubble = document.createElement('div');
+  bubble.className = 'ai-msg__bubble';
+  el.appendChild(bubble);
+  messages.appendChild(el);
+  scrollToBottom();
+  return bubble;
 }
 
 // ── Input auto-resize ─────────────────────────────────────────────────────────
@@ -675,6 +893,17 @@ sidebarToggle.addEventListener('click', () => {
   sidebar.classList.toggle('collapsed');
 });
 
+tempToggleBtn.addEventListener('click', () => {
+  tempMode = !tempMode;
+  tempToggleBtn.classList.toggle('active', tempMode);
+  // Start a fresh temp chat immediately when enabling, or a normal new chat when disabling
+  activeChatId = null;
+  messages.innerHTML = '';
+  emptyState.style.display = '';
+  chatTitle.textContent = tempMode ? 'Temporary Chat' : 'New Chat';
+  renderChatList();
+});
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 signinBtn.addEventListener('click', async () => {
@@ -699,6 +928,8 @@ PlutoniumStore.onAuthChange(user => {
     activeChatId = null;
     characters   = [];
     activeCharId = 'default';
+    tempMode     = false;
+    tempToggleBtn.classList.remove('active');
     updateCharToggle();
     chatList.innerHTML = '';
     messages.innerHTML = '';

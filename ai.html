@@ -56,6 +56,9 @@
           <button class="ai-sidebar-toggle" id="ai-sidebar-toggle" title="Toggle sidebar">
             <i class="fa-solid fa-bars"></i>
           </button>
+          <button class="ai-temp-toggle" id="ai-temp-toggle" title="Temporary chat — nothing is saved">
+            <i class="fa-solid fa-ghost"></i>
+          </button>
           <!-- Tab switcher -->
           <div class="ai-tabs">
             <button class="ai-tab active" id="ai-tab-chat" data-tab="chat">
@@ -77,7 +80,7 @@
         </div>
 
         <!-- ── Chat view ── -->
-        <div class="ai-view" id="ai-view-chat">
+        <div class="ai-view ai-view--active" id="ai-view-chat">
 
           <!-- Messages -->
           <div class="ai-messages" id="ai-messages">
@@ -116,7 +119,7 @@
         </div>
 
         <!-- ── Studio view ── -->
-        <div class="ai-view ai-view--studio" id="ai-view-studio" style="display:none">
+        <div class="ai-view ai-view--studio" id="ai-view-studio">
 
           <div class="ai-studio">
             <!-- Character list panel -->
@@ -160,6 +163,17 @@
 
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm dialog -->
+  <div class="ai-confirm-overlay" id="ai-confirm-overlay" style="display:none" aria-modal="true" role="dialog">
+    <div class="ai-confirm-dialog" id="ai-confirm-dialog">
+      <p class="ai-confirm-msg" id="ai-confirm-msg"></p>
+      <div class="ai-confirm-actions">
+        <button class="ai-confirm-btn ai-confirm-btn--cancel" id="ai-confirm-cancel">Cancel</button>
+        <button class="ai-confirm-btn ai-confirm-btn--ok" id="ai-confirm-ok">Delete</button>
       </div>
     </div>
   </div>
