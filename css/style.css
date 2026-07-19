@@ -563,6 +563,14 @@ body {
   display: block;
 }
 
+.plu-nav__icon--img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+  border-radius: 4px;
+}
+
 .plu-nav__link--account {
   /* same sizing as other links */
   width: var(--nav-item-size);

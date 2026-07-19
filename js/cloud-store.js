@@ -127,7 +127,10 @@
       } else {
         _scheduleRefresh();
       }
-      _authListeners.forEach(fn => { try { fn(_currentUser); } catch (_) {} });
+      // Defer so page scripts can register onAuthChange listeners first
+      setTimeout(() => {
+        _authListeners.forEach(fn => { try { fn(_currentUser); } catch (_) {} });
+      }, 0);
     } catch (_) {}
   }
 

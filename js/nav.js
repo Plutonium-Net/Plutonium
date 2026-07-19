@@ -15,7 +15,7 @@
   'use strict';
 
   const DEFAULT_ITEMS = [
-    { id: 'home',     fa: 'fa-solid fa-house',          label: 'Home',             href: 'index.html' },
+    { id: 'home',     img: 'img/brand/icon.png',         label: 'Home',             href: 'index.html' },
     { id: 'games',    fa: 'fa-solid fa-gamepad',         label: 'Games',            href: 'games.html' },
     { id: 'web',      fa: 'fa-solid fa-globe',           label: 'Web',              href: 'web.html' },
     { id: 'vms',      fa: 'fa-solid fa-server',          label: 'Virtual Machines', href: 'vms.html' },
@@ -131,8 +131,14 @@
 
       if (item.account) {
         a.classList.add('plu-nav__link--account');
-        // Render avatar or default icon depending on auth state
         _buildAccountIcon(a);
+      } else if (item.img) {
+        const imgEl = document.createElement('img');
+        imgEl.src = item.img;
+        imgEl.className = 'plu-nav__icon plu-nav__icon--img';
+        imgEl.alt = item.label;
+        imgEl.setAttribute('aria-hidden', 'true');
+        a.appendChild(imgEl);
       } else {
         const iconEl = document.createElement('i');
         iconEl.className = `plu-nav__icon ${item.fa}`;
