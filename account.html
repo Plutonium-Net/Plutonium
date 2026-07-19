@@ -8,225 +8,55 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    /* ── Account page layout ── */
+    /* ── Page layout ── */
     .account-page {
       position: relative;
       z-index: 1;
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 80px 24px;
+      padding: 80px 24px 60px;
     }
 
     .account-card {
-      background: rgba(10, 10, 10, 0.82);
+      background: rgba(10, 10, 10, 0.85);
       border: 1px solid rgba(232, 23, 93, 0.18);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-radius: 20px;
-      padding: 48px 44px;
+      padding: 44px 40px;
       width: 100%;
-      max-width: 420px;
+      max-width: 480px;
       text-align: center;
     }
 
     .account-card__logo {
-      width: 52px;
-      height: 52px;
-      margin-bottom: 20px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
       opacity: 0.9;
     }
 
     .account-card__title {
-      font-size: 1.5rem;
+      font-size: 1.45rem;
       font-weight: 700;
       color: var(--pink);
       letter-spacing: -0.02em;
-      margin-bottom: 6px;
-    }
-
-    .account-card__subtitle {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 36px;
-    }
-
-    /* ── Signed-out view ── */
-    #view-signed-out { display: block; }
-
-    .auth-tabs {
-      display: flex;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 24px;
-    }
-
-    .auth-tab {
-      flex: 1;
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 10px 0;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color 0.15s, border-color 0.15s;
-    }
-
-    .auth-tab.active {
-      color: var(--pink);
-      border-bottom-color: var(--pink);
-    }
-
-    .auth-panel { display: none; }
-    .auth-panel.active { display: block; }
-
-    .auth-field {
-      margin-bottom: 14px;
-      text-align: left;
-    }
-
-    .auth-field label {
-      display: block;
-      font-size: 0.75rem;
-      color: var(--muted);
       margin-bottom: 5px;
     }
 
-    .auth-field input {
-      width: 100%;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 0.88rem;
-      color: var(--text);
-      outline: none;
-      box-sizing: border-box;
-      transition: border-color 0.15s;
-    }
-
-    .auth-field input:focus {
-      border-color: rgba(232, 23, 93, 0.5);
-    }
-
-    .auth-submit-btn {
-      width: 100%;
-      background: var(--pink);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 11px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 6px;
-      transition: background 0.18s ease, transform 0.12s ease;
-    }
-
-    .auth-submit-btn:hover { background: #c41050; transform: translateY(-1px); }
-    .auth-submit-btn:active { transform: translateY(0); }
-
-    .auth-forgot {
-      display: block;
-      margin-top: 12px;
-      font-size: 0.75rem;
+    .account-card__subtitle {
+      font-size: 0.83rem;
       color: var(--muted);
-      cursor: pointer;
-      background: none;
-      border: none;
-      text-decoration: underline;
+      margin-bottom: 32px;
     }
 
-    .auth-forgot:hover { color: var(--pink); }
-
-    .account-card__sign-in-error {
-      margin-top: 14px;
-      font-size: 0.78rem;
-      color: #ff6b6b;
-      min-height: 18px;
-    }
-
-    .auth-success {
-      margin-top: 14px;
-      font-size: 0.78rem;
-      color: #6bffb8;
-      min-height: 18px;
-    }
-
-    /* ── Signed-in view ── */
-    #view-signed-in { display: none; }
-
-    .account-profile__avatar {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      border: 2px solid rgba(232, 23, 93, 0.5);
-      object-fit: cover;
-      margin-bottom: 14px;
-    }
-
-    .account-profile__avatar-placeholder {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      border: 2px solid rgba(232, 23, 93, 0.5);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 14px;
-      font-size: 2.2rem;
-      color: var(--muted);
-    }
-
-    .account-profile__name {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .account-profile__email {
-      font-size: 0.82rem;
-      color: var(--muted);
-      margin-bottom: 28px;
-    }
-
-    .account-profile__uid {
-      font-size: 0.7rem;
-      color: rgba(160,160,160,0.55);
-      font-family: monospace;
-      letter-spacing: 0.04em;
-      margin-bottom: 28px;
-    }
-
-    .account-card__sign-out-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: transparent;
-      color: var(--muted);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      padding: 9px 22px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: color 0.18s ease, border-color 0.18s ease;
-    }
-
-    .account-card__sign-out-btn:hover {
-      color: var(--pink);
-      border-color: rgba(232, 23, 93, 0.35);
-    }
-
-    /* ── Loading spinner ── */
+    /* ── Loading ── */
     #view-loading { display: none; }
     .account-spinner {
       display: inline-block;
-      width: 28px;
-      height: 28px;
+      width: 28px; height: 28px;
       border: 3px solid rgba(232, 23, 93, 0.2);
       border-top-color: var(--pink);
       border-radius: 50%;
@@ -238,11 +68,345 @@
       font-size: 0.82rem;
       color: var(--muted);
     }
+
+    /* ── Auth (signed-out) ── */
+    #view-signed-out { display: block; }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 22px;
+    }
+    .auth-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 10px 0;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .auth-tab.active { color: var(--pink); border-bottom-color: var(--pink); }
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    .auth-field { margin-bottom: 13px; text-align: left; }
+    .auth-field label {
+      display: block;
+      font-size: 0.73rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .auth-field__wrap { position: relative; }
+    .auth-field input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 10px 36px 10px 12px;
+      font-size: 0.88rem;
+      color: var(--text);
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .auth-field input:focus {
+      border-color: rgba(232, 23, 93, 0.5);
+      background: rgba(255,255,255,0.07);
+    }
+    .auth-field input.is-invalid { border-color: rgba(255, 90, 90, 0.6); }
+
+    .pw-toggle {
+      position: absolute;
+      right: 10px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: rgba(160,160,160,0.5);
+      cursor: pointer; font-size: 0.8rem;
+      transition: color 0.15s;
+    }
+    .pw-toggle:hover { color: var(--muted); }
+
+    .auth-submit-btn {
+      width: 100%;
+      background: var(--pink);
+      color: #fff; border: none;
+      border-radius: 9px;
+      padding: 11px;
+      font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; margin-top: 4px;
+      transition: background 0.18s, transform 0.12s, opacity 0.18s;
+    }
+    .auth-submit-btn:hover  { background: #c41050; transform: translateY(-1px); }
+    .auth-submit-btn:active { transform: translateY(0); }
+    .auth-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .auth-forgot {
+      display: block; margin-top: 12px;
+      font-size: 0.75rem; color: var(--muted);
+      cursor: pointer; background: none; border: none;
+      transition: color 0.15s;
+    }
+    .auth-forgot:hover { color: var(--pink); }
+
+    .auth-message {
+      margin-top: 12px;
+      font-size: 0.78rem;
+      min-height: 16px;
+    }
+    .auth-message.error   { color: #ff7070; }
+    .auth-message.success { color: #5fffa8; }
+
+    /* ── Signed-in ── */
+    #view-signed-in { display: none; text-align: left; }
+
+    /* profile row */
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .profile-avatar {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 2px solid rgba(232, 23, 93, 0.4);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .profile-avatar-ph {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: 2px solid rgba(232, 23, 93, 0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; color: var(--muted);
+      flex-shrink: 0;
+    }
+    .profile-meta { flex: 1; min-width: 0; }
+    .profile-name {
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .profile-email {
+      font-size: 0.8rem; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .profile-uid {
+      font-size: 0.67rem;
+      color: rgba(160,160,160,0.4);
+      font-family: monospace;
+      margin-top: 2px;
+    }
+
+    /* section headers */
+    .mgmt-section {
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 22px;
+      margin-top: 22px;
+    }
+    .mgmt-section:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+
+    .mgmt-section__title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(160,160,160,0.55);
+      margin-bottom: 14px;
+    }
+
+    /* inline input row */
+    .mgmt-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .mgmt-input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.85rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .mgmt-input:focus {
+      border-color: rgba(232, 23, 93, 0.45);
+      background: rgba(255,255,255,0.07);
+    }
+    .mgmt-btn {
+      background: rgba(232, 23, 93, 0.14);
+      color: var(--pink);
+      border: 1px solid rgba(232, 23, 93, 0.28);
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .mgmt-btn:hover  { background: rgba(232, 23, 93, 0.24); border-color: rgba(232, 23, 93, 0.5); }
+    .mgmt-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* full-width ghost button */
+    .mgmt-full-btn {
+      width: 100%;
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9px;
+      padding: 11px 14px;
+      font-size: 0.85rem; font-weight: 500;
+      color: var(--muted);
+      cursor: pointer; text-align: left;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      margin-bottom: 8px;
+    }
+    .mgmt-full-btn:last-child { margin-bottom: 0; }
+    .mgmt-full-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); color: var(--text); }
+    .mgmt-full-btn .btn-icon { width: 20px; text-align: center; color: var(--muted); }
+    .mgmt-full-btn .btn-label { flex: 1; }
+    .mgmt-full-btn .btn-arrow { font-size: 0.7rem; color: rgba(160,160,160,0.35); }
+
+    /* danger zone */
+    .danger-btn {
+      width: 100%;
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255, 60, 60, 0.05);
+      border: 1px solid rgba(255, 60, 60, 0.2);
+      border-radius: 9px;
+      padding: 11px 14px;
+      font-size: 0.85rem; font-weight: 500;
+      color: #ff7070;
+      cursor: pointer; text-align: left;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .danger-btn:hover { background: rgba(255, 60, 60, 0.1); border-color: rgba(255, 60, 60, 0.35); }
+    .danger-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* inline feedback under a section */
+    .mgmt-feedback {
+      font-size: 0.75rem;
+      min-height: 16px;
+      margin-top: 8px;
+    }
+    .mgmt-feedback.error   { color: #ff7070; }
+    .mgmt-feedback.success { color: #5fffa8; }
+
+    /* data viewer */
+    .data-viewer {
+      display: none;
+      margin-top: 12px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 14px;
+      max-height: 260px;
+      overflow-y: auto;
+      text-align: left;
+    }
+    .data-viewer.open { display: block; }
+    .data-viewer pre {
+      font-size: 0.72rem;
+      color: rgba(200,200,200,0.8);
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    .data-viewer-empty {
+      font-size: 0.78rem;
+      color: rgba(160,160,160,0.45);
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    /* confirmation modal */
+    .confirm-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box {
+      background: #0e0e0e;
+      border: 1px solid rgba(255, 60, 60, 0.3);
+      border-radius: 16px;
+      padding: 32px 28px;
+      width: 100%; max-width: 340px;
+      text-align: center;
+    }
+    .confirm-box__icon {
+      font-size: 1.8rem; color: #ff7070;
+      margin-bottom: 14px;
+    }
+    .confirm-box__title {
+      font-size: 1rem; font-weight: 700;
+      color: var(--text); margin-bottom: 8px;
+    }
+    .confirm-box__desc {
+      font-size: 0.82rem; color: var(--muted);
+      line-height: 1.6; margin-bottom: 22px;
+    }
+    .confirm-box__btns { display: flex; gap: 10px; }
+    .confirm-cancel {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 9px;
+      padding: 10px;
+      font-size: 0.85rem; font-weight: 600;
+      color: var(--muted); cursor: pointer;
+      transition: background 0.15s;
+    }
+    .confirm-cancel:hover { background: rgba(255,255,255,0.1); }
+    .confirm-delete {
+      flex: 1;
+      background: #c0392b;
+      border: none; border-radius: 9px;
+      padding: 10px;
+      font-size: 0.85rem; font-weight: 600;
+      color: #fff; cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .confirm-delete:hover    { background: #e74c3c; }
+    .confirm-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @media (max-width: 520px) {
+      .account-card { padding: 32px 20px; }
+    }
   </style>
 </head>
 <body>
 
   <div id="particles-js"></div>
+
+  <!-- Delete account confirmation modal -->
+  <div class="confirm-overlay" id="delete-overlay">
+    <div class="confirm-box">
+      <div class="confirm-box__icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="confirm-box__title">Delete your account?</div>
+      <div class="confirm-box__desc">
+        This permanently deletes your Plutonium account and all associated cloud data.
+        This action <strong>cannot be undone</strong>.
+      </div>
+      <div class="confirm-box__btns">
+        <button class="confirm-cancel" id="btn-delete-cancel">Cancel</button>
+        <button class="confirm-delete" id="btn-delete-confirm">Delete</button>
+      </div>
+    </div>
+  </div>
 
   <section class="account-page">
     <div class="account-card">
@@ -256,73 +420,147 @@
         <p class="account-spinner-label">Signing in…</p>
       </div>
 
-      <!-- Signed out -->
+      <!-- ═══════════════════ Signed out ═══════════════════ -->
       <div id="view-signed-out">
         <div class="auth-tabs">
           <button class="auth-tab active" data-tab="signin">Sign In</button>
           <button class="auth-tab" data-tab="signup">Create Account</button>
         </div>
 
-        <!-- Sign in panel -->
+        <!-- Sign in -->
         <div class="auth-panel active" id="panel-signin">
           <div class="auth-field">
-            <label>Email</label>
+            <label for="signin-email">Email</label>
             <input type="email" id="signin-email" placeholder="you@example.com" autocomplete="email" />
           </div>
           <div class="auth-field">
-            <label>Password</label>
-            <input type="password" id="signin-password" placeholder="••••••••" autocomplete="current-password" />
+            <label for="signin-password">Password</label>
+            <div class="auth-field__wrap">
+              <input type="password" id="signin-password" placeholder="••••••••" autocomplete="current-password" />
+              <button type="button" class="pw-toggle" data-target="signin-password" aria-label="Show password">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
           <button class="auth-submit-btn" id="btn-sign-in">Sign In</button>
           <button class="auth-forgot" id="btn-forgot">Forgot password?</button>
         </div>
 
-        <!-- Sign up panel -->
+        <!-- Sign up -->
         <div class="auth-panel" id="panel-signup">
           <div class="auth-field">
-            <label>Display Name</label>
+            <label for="signup-name">Display Name</label>
             <input type="text" id="signup-name" placeholder="Your name" autocomplete="name" />
           </div>
           <div class="auth-field">
-            <label>Email</label>
+            <label for="signup-email">Email</label>
             <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" />
           </div>
           <div class="auth-field">
-            <label>Password</label>
-            <input type="password" id="signup-password" placeholder="Min. 6 characters" autocomplete="new-password" />
+            <label for="signup-password">Password</label>
+            <div class="auth-field__wrap">
+              <input type="password" id="signup-password" placeholder="Min. 6 characters" autocomplete="new-password" />
+              <button type="button" class="pw-toggle" data-target="signup-password" aria-label="Show password">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
           <button class="auth-submit-btn" id="btn-sign-up">Create Account</button>
         </div>
 
-        <p class="account-card__sign-in-error" id="sign-in-error"></p>
-        <p class="auth-success" id="sign-in-success"></p>
+        <p class="auth-message" id="auth-message"></p>
       </div>
 
-      <!-- Signed in -->
+      <!-- ═══════════════════ Signed in ═══════════════════ -->
       <div id="view-signed-in">
-        <div id="profile-avatar-wrap"></div>
-        <p class="account-profile__name" id="profile-name"></p>
-        <p class="account-profile__email" id="profile-email"></p>
-        <p class="account-profile__uid" id="profile-uid"></p>
-        <button class="account-card__sign-out-btn" id="btn-sign-out">
-          <i class="fa-solid fa-arrow-right-from-bracket"></i>
-          Sign out
-        </button>
-      </div>
+
+        <!-- Profile row -->
+        <div class="profile-row">
+          <div id="profile-avatar-wrap"></div>
+          <div class="profile-meta">
+            <div class="profile-name" id="profile-name"></div>
+            <div class="profile-email" id="profile-email"></div>
+            <div class="profile-uid" id="profile-uid"></div>
+          </div>
+        </div>
+
+        <!-- ── Profile ── -->
+        <div class="mgmt-section">
+          <div class="mgmt-section__title">Display Name</div>
+          <div class="mgmt-row">
+            <input class="mgmt-input" type="text" id="input-displayname" placeholder="Your name" autocomplete="off" />
+            <button class="mgmt-btn" id="btn-save-name">Save</button>
+          </div>
+          <div class="mgmt-feedback" id="fb-name"></div>
+        </div>
+
+        <!-- ── Password ── -->
+        <div class="mgmt-section">
+          <div class="mgmt-section__title">Password</div>
+          <button class="mgmt-full-btn" id="btn-send-reset">
+            <span class="btn-icon"><i class="fa-solid fa-envelope"></i></span>
+            <span class="btn-label">Send password reset email</span>
+            <span class="btn-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+          </button>
+          <div class="mgmt-feedback" id="fb-password"></div>
+        </div>
+
+        <!-- ── Cloud data ── -->
+        <div class="mgmt-section">
+          <div class="mgmt-section__title">Cloud Data</div>
+          <button class="mgmt-full-btn" id="btn-view-data">
+            <span class="btn-icon"><i class="fa-solid fa-database"></i></span>
+            <span class="btn-label">View my cloud data</span>
+            <span class="btn-arrow" id="view-data-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+          </button>
+          <div class="data-viewer" id="data-viewer">
+            <div class="data-viewer-empty" id="data-viewer-loading">Loading…</div>
+            <pre id="data-viewer-pre" style="display:none"></pre>
+          </div>
+          <button class="mgmt-full-btn" id="btn-export-data" style="margin-top:8px">
+            <span class="btn-icon"><i class="fa-solid fa-download"></i></span>
+            <span class="btn-label">Export data as JSON</span>
+            <span class="btn-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+          </button>
+          <div class="mgmt-feedback" id="fb-data"></div>
+        </div>
+
+        <!-- ── Session ── -->
+        <div class="mgmt-section">
+          <div class="mgmt-section__title">Session</div>
+          <button class="mgmt-full-btn" id="btn-sign-out">
+            <span class="btn-icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
+            <span class="btn-label">Sign out</span>
+            <span class="btn-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+          </button>
+        </div>
+
+        <!-- ── Danger zone ── -->
+        <div class="mgmt-section">
+          <div class="mgmt-section__title">Danger Zone</div>
+          <button class="danger-btn" id="btn-delete-account">
+            <span style="width:20px;text-align:center"><i class="fa-solid fa-trash"></i></span>
+            <span style="flex:1">Delete my account</span>
+          </button>
+          <div class="mgmt-feedback" id="fb-delete"></div>
+        </div>
+
+      </div><!-- /view-signed-in -->
     </div>
   </section>
 
   <script src="js/particles.min.js"></script>
   <script src="js/cloud-store.js"></script>
   <script>
-    // ── Configure the store ─────────────────────────────────────────────────
     PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
 
-    // ── View helpers ────────────────────────────────────────────────────────
+    // ── Known Firestore collections to fetch for "view data" ─────────────────
+    const DATA_COLLECTIONS = ['games_data/saved', 'nav_prefs/data'];
+
+    // ── Views ─────────────────────────────────────────────────────────────────
     const viewLoading   = document.getElementById('view-loading');
     const viewSignedOut = document.getElementById('view-signed-out');
     const viewSignedIn  = document.getElementById('view-signed-in');
-    const errorEl       = document.getElementById('sign-in-error');
 
     function showView(name) {
       viewLoading.style.display   = name === 'loading'    ? 'block' : 'none';
@@ -330,107 +568,296 @@
       viewSignedIn.style.display  = name === 'signed-in'  ? 'block' : 'none';
     }
 
+    // ── Auth message ──────────────────────────────────────────────────────────
+    const authMsgEl = document.getElementById('auth-message');
+    function showAuthError(t)   { authMsgEl.textContent = t; authMsgEl.className = 'auth-message error'; }
+    function showAuthSuccess(t) { authMsgEl.textContent = t; authMsgEl.className = 'auth-message success'; }
+    function clearAuthMsg()     { authMsgEl.textContent = ''; authMsgEl.className = 'auth-message'; }
+
+    // ── Management feedback helpers ───────────────────────────────────────────
+    function setFb(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'mgmt-feedback' + (type ? ' ' + type : '');
+    }
+    function clearFb(id) { setFb(id, '', ''); }
+
+    // ── Input invalid ─────────────────────────────────────────────────────────
+    function markInvalid(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('is-invalid');
+    }
+    function clearInvalid() {
+      document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    }
+
+    // ── Render signed-in profile ──────────────────────────────────────────────
     function renderProfile(user) {
       document.getElementById('profile-name').textContent  = user.displayName || 'Plutonium User';
-      document.getElementById('profile-email').textContent = user.email        || '';
-      document.getElementById('profile-uid').textContent   = `UID: ${user.uid}`;
+      document.getElementById('profile-email').textContent = user.email || '';
+      document.getElementById('profile-uid').textContent   = 'UID: ' + user.uid;
+      document.getElementById('input-displayname').value   = user.displayName || '';
 
       const wrap = document.getElementById('profile-avatar-wrap');
       wrap.innerHTML = '';
       if (user.photoUrl) {
         const img = document.createElement('img');
         img.src = user.photoUrl;
-        img.className = 'account-profile__avatar';
+        img.className = 'profile-avatar';
         img.alt = user.displayName || 'Avatar';
         wrap.appendChild(img);
       } else {
         const ph = document.createElement('div');
-        ph.className = 'account-profile__avatar-placeholder';
+        ph.className = 'profile-avatar-ph';
         ph.innerHTML = '<i class="fa-solid fa-circle-user"></i>';
         wrap.appendChild(ph);
       }
     }
 
-    // ── Auth state ──────────────────────────────────────────────────────────
+    // ── Auth state ────────────────────────────────────────────────────────────
     PlutoniumStore.onAuthChange(user => {
       if (user) {
         renderProfile(user);
+        // Reset data-viewer state whenever user changes
+        dataViewerOpen = false;
+        document.getElementById('data-viewer').classList.remove('open');
+        document.getElementById('data-viewer-arrow').innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
         showView('signed-in');
       } else {
         showView('signed-out');
       }
     });
 
-    const successEl = document.getElementById('sign-in-success');
-
-    function clearMessages() {
-      errorEl.textContent = '';
-      successEl.textContent = '';
-    }
-
-    // ── Tabs ────────────────────────────────────────────────────────────────
+    // ── Auth tabs ─────────────────────────────────────────────────────────────
     document.querySelectorAll('.auth-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-        clearMessages();
+        clearAuthMsg();
+        clearInvalid();
       });
     });
 
-    // ── Sign in ─────────────────────────────────────────────────────────────
+    // ── Show/hide password ────────────────────────────────────────────────────
+    document.querySelectorAll('.pw-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+        const visible = input.type === 'text';
+        input.type = visible ? 'password' : 'text';
+        btn.querySelector('i').className = visible ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+        btn.setAttribute('aria-label', visible ? 'Show password' : 'Hide password');
+      });
+    });
+
+    // ── Sign in ───────────────────────────────────────────────────────────────
     document.getElementById('btn-sign-in').addEventListener('click', async () => {
-      clearMessages();
+      clearAuthMsg(); clearInvalid();
       const email    = document.getElementById('signin-email').value.trim();
       const password = document.getElementById('signin-password').value;
-      if (!email || !password) { errorEl.textContent = 'Enter your email and password.'; return; }
+      if (!email)    { markInvalid('signin-email');    showAuthError('Enter your email address.'); return; }
+      if (!password) { markInvalid('signin-password'); showAuthError('Enter your password.'); return; }
+
+      const btn = document.getElementById('btn-sign-in');
+      btn.disabled = true; btn.textContent = 'Signing in…';
       showView('loading');
       try {
         await PlutoniumStore.signInWithEmail(email, password);
       } catch (e) {
-        console.error(e);
-        errorEl.textContent = friendlyError(e.message);
         showView('signed-out');
+        showAuthError(friendlyError(e.message));
+      } finally {
+        btn.disabled = false; btn.textContent = 'Sign In';
       }
     });
 
-    // ── Sign up ─────────────────────────────────────────────────────────────
+    // ── Sign up ───────────────────────────────────────────────────────────────
     document.getElementById('btn-sign-up').addEventListener('click', async () => {
-      clearMessages();
+      clearAuthMsg(); clearInvalid();
       const name     = document.getElementById('signup-name').value.trim();
       const email    = document.getElementById('signup-email').value.trim();
       const password = document.getElementById('signup-password').value;
-      if (!email || !password) { errorEl.textContent = 'Enter your email and password.'; return; }
+      if (!email)    { markInvalid('signup-email');    showAuthError('Enter your email address.'); return; }
+      if (!password) { markInvalid('signup-password'); showAuthError('Enter a password (min. 6 characters).'); return; }
+
+      const btn = document.getElementById('btn-sign-up');
+      btn.disabled = true; btn.textContent = 'Creating account…';
       showView('loading');
       try {
         await PlutoniumStore.signUp(email, password, name);
       } catch (e) {
-        console.error(e);
-        errorEl.textContent = friendlyError(e.message);
         showView('signed-out');
+        // Keep signup tab open
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+        document.querySelector('[data-tab="signup"]').classList.add('active');
+        document.getElementById('panel-signup').classList.add('active');
+        showAuthError(friendlyError(e.message));
+      } finally {
+        btn.disabled = false; btn.textContent = 'Create Account';
       }
     });
 
-    // ── Forgot password ─────────────────────────────────────────────────────
+    // ── Forgot password ───────────────────────────────────────────────────────
     document.getElementById('btn-forgot').addEventListener('click', async () => {
-      clearMessages();
+      clearAuthMsg(); clearInvalid();
       const email = document.getElementById('signin-email').value.trim();
-      if (!email) { errorEl.textContent = 'Enter your email above first.'; return; }
+      if (!email) { markInvalid('signin-email'); showAuthError('Enter your email above first.'); return; }
       try {
         await PlutoniumStore.resetPassword(email);
-        successEl.textContent = 'Password reset email sent!';
+        showAuthSuccess('Password reset email sent — check your inbox.');
       } catch (e) {
-        errorEl.textContent = friendlyError(e.message);
+        showAuthError(friendlyError(e.message));
       }
     });
 
-    // ── Sign out ────────────────────────────────────────────────────────────
+    // ── Save display name ─────────────────────────────────────────────────────
+    document.getElementById('btn-save-name').addEventListener('click', async () => {
+      clearFb('fb-name');
+      const newName = document.getElementById('input-displayname').value.trim();
+      if (!newName) { setFb('fb-name', 'Enter a display name.', 'error'); return; }
+
+      const btn = document.getElementById('btn-save-name');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        await PlutoniumStore.updateProfile(newName);
+        document.getElementById('profile-name').textContent = newName;
+        setFb('fb-name', 'Display name updated.', 'success');
+      } catch (e) {
+        setFb('fb-name', friendlyError(e.message), 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save';
+      }
+    });
+
+    // ── Send password reset (from management panel) ───────────────────────────
+    document.getElementById('btn-send-reset').addEventListener('click', async () => {
+      clearFb('fb-password');
+      const user = PlutoniumStore.currentUser;
+      if (!user?.email) return;
+      try {
+        await PlutoniumStore.resetPassword(user.email);
+        setFb('fb-password', 'Reset email sent to ' + user.email, 'success');
+      } catch (e) {
+        setFb('fb-password', friendlyError(e.message), 'error');
+      }
+    });
+
+    // ── View cloud data ───────────────────────────────────────────────────────
+    let dataViewerOpen = false;
+    let dataCache      = null;
+
+    document.getElementById('btn-view-data').addEventListener('click', async () => {
+      dataViewerOpen = !dataViewerOpen;
+      const viewer = document.getElementById('data-viewer');
+      const arrow  = document.getElementById('view-data-arrow');
+      viewer.classList.toggle('open', dataViewerOpen);
+      arrow.innerHTML = dataViewerOpen
+        ? '<i class="fa-solid fa-chevron-down"></i>'
+        : '<i class="fa-solid fa-chevron-right"></i>';
+
+      if (!dataViewerOpen) return;
+      if (dataCache) return; // already loaded
+
+      const loadingEl = document.getElementById('data-viewer-loading');
+      const preEl     = document.getElementById('data-viewer-pre');
+      loadingEl.style.display = 'block';
+      preEl.style.display     = 'none';
+
+      try {
+        dataCache = await fetchAllData();
+        preEl.textContent   = JSON.stringify(dataCache, null, 2);
+        preEl.style.display = 'block';
+        loadingEl.style.display = 'none';
+      } catch (e) {
+        loadingEl.textContent = 'Failed to load data.';
+        setFb('fb-data', e.message, 'error');
+      }
+    });
+
+    // ── Export data ───────────────────────────────────────────────────────────
+    document.getElementById('btn-export-data').addEventListener('click', async () => {
+      clearFb('fb-data');
+      const btn = document.getElementById('btn-export-data');
+      const labelEl = btn.querySelector('.btn-label');
+      labelEl.textContent = 'Exporting…';
+      btn.style.pointerEvents = 'none';
+      try {
+        const data = dataCache || await fetchAllData();
+        dataCache = data;
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = 'plutonium-data.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        setFb('fb-data', 'Export failed: ' + e.message, 'error');
+      } finally {
+        labelEl.textContent = 'Export data as JSON';
+        btn.style.pointerEvents = '';
+      }
+    });
+
+    // ── Sign out ──────────────────────────────────────────────────────────────
     document.getElementById('btn-sign-out').addEventListener('click', async () => {
+      dataCache = null;
       await PlutoniumStore.signOut();
     });
 
-    // ── Error messages ───────────────────────────────────────────────────────
+    // ── Delete account ────────────────────────────────────────────────────────
+    document.getElementById('btn-delete-account').addEventListener('click', () => {
+      document.getElementById('delete-overlay').classList.add('open');
+    });
+    document.getElementById('btn-delete-cancel').addEventListener('click', () => {
+      document.getElementById('delete-overlay').classList.remove('open');
+    });
+    document.getElementById('btn-delete-confirm').addEventListener('click', async () => {
+      const confirmBtn = document.getElementById('btn-delete-confirm');
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Deleting…';
+      try {
+        await PlutoniumStore.deleteAccount();
+        document.getElementById('delete-overlay').classList.remove('open');
+      } catch (e) {
+        document.getElementById('delete-overlay').classList.remove('open');
+        setFb('fb-delete', friendlyError(e.message), 'error');
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Delete';
+      }
+    });
+    // Close overlay on backdrop click
+    document.getElementById('delete-overlay').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    async function fetchAllData() {
+      const user = PlutoniumStore.currentUser;
+      const result = {
+        account: {
+          uid:         user.uid,
+          email:       user.email,
+          displayName: user.displayName,
+          photoUrl:    user.photoUrl || null,
+        },
+        firestore: {},
+      };
+      await Promise.all(DATA_COLLECTIONS.map(async col => {
+        try {
+          const doc = await PlutoniumStore.getDoc(col);
+          result.firestore[col] = doc;
+        } catch (_) {
+          result.firestore[col] = null;
+        }
+      }));
+      return result;
+    }
+
     function friendlyError(msg) {
       if (msg.includes('INVALID_LOGIN_CREDENTIALS') || msg.includes('INVALID_PASSWORD') || msg.includes('EMAIL_NOT_FOUND'))
         return 'Incorrect email or password.';

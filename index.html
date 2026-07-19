@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Plutonium Network</title>
-  <link rel="icon" type="image/png" href="img/brand/logo.png" />
+  <link rel="icon" type="image/png" href="img/brand/icon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -14,17 +14,54 @@
 
   <section class="hero">
     <div class="hero__inner">
-      <img class="hero__logo" src="img/brand/logo.png" alt="Plutonium logo" />
+      <img class="hero__logo" src="img/brand/icon.png" alt="Plutonium logo" />
       <h1 class="hero__title">Plutonium Network</h1>
       <p class="hero__desc">
         A next-generation network built for those who are done with individuals.
         High-performance, completely wrapped, and beautifully crafted.
       </p>
     </div>
+    <div class="hero__scroller" id="hero-scroller">
+      <div class="hero__scroller-track" id="hero-scroller-track"></div>
+    </div>
+    <div class="hero__scroller" id="hero-scroller-2">
+      <div class="hero__scroller-track" id="hero-scroller-track-2"></div>
+    </div>
   </section>
 
   <script src="js/particles.min.js"></script>
   <script src="js/nav.js"></script>
   <script src="js/main.js"></script>
+  <script>
+    (async function () {
+      try {
+        const res = await fetch('https://g.cdn.plutoniumnet.work/config.json');
+        const cfg = await res.json();
+        const games = (cfg.games || []).filter(g => g.image);
+
+        const track  = document.getElementById('hero-scroller-track');
+        const track2 = document.getElementById('hero-scroller-track-2');
+        if (!track || !games.length) return;
+
+        // Shuffle a copy for the second column so they look different
+        const shuffled = [...games].sort(() => Math.random() - 0.5);
+
+        [[track, games], [track2, shuffled]].forEach(([el, list]) => {
+          const all = [...list, ...list];
+          all.forEach(g => {
+            const img = document.createElement('img');
+            img.src = 'https://g.cdn.plutoniumnet.work/' + g.image;
+            img.alt = g.name;
+            img.className = 'hero__scroller-img';
+            img.loading = 'lazy';
+            el.appendChild(img);
+          });
+          const duration = list.length * 3.2;
+          el.style.animationDuration = duration + 's';
+        });
+
+      } catch (_) {}
+    })();
+  </script>
 </body>
 </html>

@@ -12,6 +12,8 @@
  *   POST /auth/email          → signs in with email + password
  *   POST /auth/signup         → creates a new email+password account
  *   POST /auth/reset          → sends a password-reset email
+ *   POST /auth/update         → updates displayName (requires idToken)
+ *   POST /auth/delete         → permanently deletes the account (requires idToken)
  *   *    /firestore/*         → proxies Firestore REST API
  *   *    /rtdb/*              → proxies Realtime Database REST API
  */
@@ -44,6 +46,14 @@ export default {
 
       if (path === '/auth/reset' && request.method === 'POST') {
         return handlePasswordReset(request, env, allowed);
+      }
+
+      if (path === '/auth/update' && request.method === 'POST') {
+        return handleProfileUpdate(request, env, allowed);
+      }
+
+      if (path === '/auth/delete' && request.method === 'POST') {
+        return handleAccountDelete(request, env, allowed);
       }
 
       if (path.startsWith('/firestore/')) {
@@ -190,6 +200,44 @@ async function handlePasswordReset(request, env, allowed) {
   const data = await upstream.json();
   if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
   return corsResponse({ email: data.email }, 200, allowed);
+}
+
+/* ── /auth/update — update displayName ──────────────────────────────────── */
+async function handleProfileUpdate(request, env, allowed) {
+  const { idToken, displayName } = await request.json();
+  if (!idToken) return corsResponse({ error: 'idToken required' }, 400, allowed);
+
+  const upstream = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, displayName: displayName || '', returnSecureToken: false }),
+    }
+  );
+
+  const data = await upstream.json();
+  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+  return corsResponse({ displayName: data.displayName || '' }, 200, allowed);
+}
+
+/* ── /auth/delete — permanently delete account ───────────────────────────── */
+async function handleAccountDelete(request, env, allowed) {
+  const { idToken } = await request.json();
+  if (!idToken) return corsResponse({ error: 'idToken required' }, 400, allowed);
+
+  const upstream = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    }
+  );
+
+  const data = await upstream.json();
+  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+  return corsResponse({ deleted: true }, 200, allowed);
 }
 
 /* ── /firestore/* ─────────────────────────────────────────────────────────── */

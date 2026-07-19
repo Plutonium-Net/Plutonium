@@ -186,6 +186,37 @@
     if (!res.ok) throw new Error(`[PlutoniumStore] resetPassword failed: ${data.error || JSON.stringify(data)}`);
   }
 
+  async function updateProfile(displayName) {
+    assertWorkerUrl();
+    if (!_currentUser?.idToken) throw new Error('[PlutoniumStore] Not signed in');
+    const res = await fetch(`${_workerUrl}/auth/update`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ idToken: _currentUser.idToken, displayName }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(`[PlutoniumStore] updateProfile failed: ${data.error || JSON.stringify(data)}`);
+    _currentUser.displayName = data.displayName;
+    _persist();
+    _authListeners.forEach(fn => { try { fn({ ..._currentUser }); } catch (_) {} });
+    return _currentUser;
+  }
+
+  async function deleteAccount() {
+    assertWorkerUrl();
+    if (!_currentUser?.idToken) throw new Error('[PlutoniumStore] Not signed in');
+    // Ensure token is fresh before deletion
+    if (Date.now() >= _currentUser.expiresAt - 30_000) await refreshIdToken();
+    const res = await fetch(`${_workerUrl}/auth/delete`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ idToken: _currentUser.idToken }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(`[PlutoniumStore] deleteAccount failed: ${data.error || JSON.stringify(data)}`);
+    await signOut();
+  }
+
   async function signOut() {
     if (_refreshTimer) clearTimeout(_refreshTimer);
     _currentUser = null;
@@ -428,6 +459,8 @@
     signInWithEmail,
     signUp,
     resetPassword,
+    updateProfile,
+    deleteAccount,
     signOut,
     onAuthChange,
     get currentUser()         { return _currentUser ? { ..._currentUser } : null; },

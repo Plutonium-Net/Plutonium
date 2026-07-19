@@ -71,6 +71,61 @@ body {
   line-height: 1.7;
 }
 
+/* ── Game image scroller ── */
+.hero__scroller {
+  position: fixed;
+  top: 50%;
+  right: 25%;
+  transform: translateY(-50%);
+  width: 320px;
+  height: 70vh;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+.hero__scroller-track {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: scroller-scroll-up 220s linear infinite;
+  will-change: transform;
+}
+
+#hero-scroller-2 .hero__scroller-track {
+  animation-name: scroller-scroll-down;
+}
+
+@keyframes scroller-scroll-up {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+
+@keyframes scroller-scroll-down {
+  from { transform: translateY(-50%); }
+  to   { transform: translateY(0); }
+}
+
+.hero__scroller-img {
+  width: 320px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  opacity: 0.35;
+  display: block;
+  flex-shrink: 0;
+}
+
+#hero-scroller-2 {
+  right: calc(25% - 332px);
+}
+
+@media (max-width: 900px) {
+  .hero__scroller { display: none; }
+}
+
 /* ════════════════════════════════════════════════════════
    NAV — transition keyframes
    ════════════════════════════════════════════════════════ */
