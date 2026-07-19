@@ -9,7 +9,6 @@
  *
  * Routes exposed to the browser:
  *   GET  /config              → returns non-secret Firebase client config
- *   POST /auth/token          → exchanges a Google ID token for a Firebase ID token
  *   POST /auth/email          → signs in with email + password
  *   POST /auth/signup         → creates a new email+password account
  *   POST /auth/reset          → sends a password-reset email
@@ -33,10 +32,6 @@ export default {
     try {
       if (path === '/config' && request.method === 'GET') {
         return handleConfig(env, allowed);
-      }
-
-      if (path === '/auth/token' && request.method === 'POST') {
-        return handleAuthToken(request, env, allowed);
       }
 
       if (path === '/auth/email' && request.method === 'POST') {
@@ -82,41 +77,6 @@ function handleConfig(env, allowed) {
     appId:             env.FIREBASE_APP_ID || '',
   };
   return corsResponse(config, 200, allowed);
-}
-
-/* ── /auth/token — exchange Google credential for Firebase ID token ───────── */
-async function handleAuthToken(request, env, allowed) {
-  const { idToken } = await request.json();
-  if (!idToken) return corsResponse({ error: 'idToken required' }, 400, allowed);
-
-  // Exchange via Firebase Auth REST — signInWithIdp
-  const upstream = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${env.FIREBASE_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        postBody:          `id_token=${idToken}&providerId=google.com`,
-        requestUri:        'http://localhost',
-        returnIdpCredential: true,
-        returnSecureToken: true,
-      }),
-    }
-  );
-
-  const data = await upstream.json();
-  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
-
-  // Only forward the fields the client needs
-  return corsResponse({
-    idToken:      data.idToken,
-    refreshToken: data.refreshToken,
-    expiresIn:    data.expiresIn,
-    localId:      data.localId,
-    displayName:  data.displayName,
-    email:        data.email,
-    photoUrl:     data.photoUrl,
-  }, 200, allowed);
 }
 
 /* ── /auth/email — sign in with email + password ─────────────────────────── */
