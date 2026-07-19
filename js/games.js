@@ -6,7 +6,7 @@
   // ── Constants ──────────────────────────────────────────────────────────────
   const PGCDN_BASE    = 'https://g.cdn.plutoniumnet.work';
   const LS_KEY        = 'plu_games_data';
-  const CLOUD_DOC     = 'games_data';
+  const CLOUD_DOC     = 'games_data/saved';
   const SHELF_RECENT  = 10;   // shown in the Recent shelf on the main panel
 
   // ── State ──────────────────────────────────────────────────────────────────
@@ -14,6 +14,13 @@
   let _data       = { favourites: [], recent: [] };
   // favourites: string[] of game ids
   // recent:     { id, name, image, path, ts }[] — unlimited, newest first
+
+
+  // ── Game-save sync state ───────────────────────────────────────────────────
+  let _syncGameId    = null;  // id of the game currently open in the viewer
+  let _pendingSaves  = null;  // pre-fetched saves waiting for plu_sync_ready
+  let _knownSaves    = null;  // Set of gameIds known to have cloud saves (loaded once on sign-in)
+
 
   // ── Local persistence ──────────────────────────────────────────────────────
   function _loadLocal() {
@@ -45,8 +52,10 @@
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     try {
       const doc = await PlutoniumStore.getDoc(CLOUD_DOC);
-      if (!doc) return;
+      if (!doc) { _knownSaves = new Set(); return; }
 
+      // Populate the known-saves index so we skip 404 fetches for unsaved games
+      _knownSaves = new Set(doc.savedGames || []);
       // Merge favourites — union of local + cloud
       const favSet = new Set([..._data.favourites, ...(doc.favourites || [])]);
       _data.favourites = [...favSet];
@@ -74,6 +83,91 @@
       console.warn('[games] cloud load failed:', e.message);
     }
   }
+
+  // ── Game-save sync (postMessage bridge to CDN iframe) ──────────────────────
+
+  // Snapshot received from the iframe → write to Firestore under game_saves/{gameId}
+  async function _onSaveData(gameId, saves) {
+    if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
+    if (!gameId || !saves || !Object.keys(saves).length) return;
+    try {
+      await PlutoniumStore.setDoc(`game_saves/${gameId}`, { saves: JSON.stringify(saves) });
+      // Register this game in the index so future sessions skip the 404 fetch
+      if (_knownSaves && !_knownSaves.has(gameId)) {
+        _knownSaves.add(gameId);
+        await PlutoniumStore.setDoc(CLOUD_DOC, { savedGames: [..._knownSaves] });
+      }
+    } catch (e) {
+      console.warn('[games] save-sync write failed:', e.message);
+    }
+  }
+
+  // Overlay helpers
+  const _restoreOverlay = document.getElementById('game-restore-overlay');
+  function _showRestoreOverlay() { _restoreOverlay?.classList.add('active'); }
+  function _hideRestoreOverlay() { _restoreOverlay?.classList.remove('active'); }
+
+  // Pre-fetch saves for a game BEFORE the iframe loads, cache in _pendingSaves.
+  // Skips the network call entirely if this game has never been saved to the cloud.
+  async function _prefetchGameSaves(gameId) {
+    _pendingSaves = null;
+    if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
+    if (!gameId) return;
+    // Skip fetch if we know there are no cloud saves for this game
+    if (_knownSaves && !_knownSaves.has(gameId)) {
+      return;
+    }
+    _showRestoreOverlay();
+    try {
+      const doc = await PlutoniumStore.getDoc(`game_saves/${gameId}`);
+      if (doc?.saves) {
+        _pendingSaves = JSON.parse(doc.saves);
+        _knownSaves?.add(gameId);
+      } else {
+      }
+    } catch (e) {
+      console.warn('[games] save-sync prefetch failed:', e.message);
+    } finally {
+      _hideRestoreOverlay();
+    }
+  }
+
+  // Push cached saves into the iframe
+  function _pushPendingSaves() {
+    if (!_pendingSaves) return;
+    const iframeEl = document.getElementById('game-iframe');
+    if (!iframeEl?.contentWindow) return;
+    iframeEl.contentWindow.postMessage(
+      { plu: true, type: 'plu_sync_restore', saves: _pendingSaves },
+      '*'
+    );
+    _pendingSaves = null;
+  }
+
+  // Request a snapshot from the open iframe and persist it
+  function _requestSaveSnapshot() {
+    if (!_syncGameId) return;
+    const iframeEl = document.getElementById('game-iframe');
+    if (!iframeEl?.contentWindow) return;
+    iframeEl.contentWindow.postMessage({ plu: true, type: 'plu_sync_request' }, '*');
+  }
+
+  // Listen for messages from the CDN game iframe
+  window.addEventListener('message', function (e) {
+    if (!e.data?.plu) return;
+
+    // Game announced it's ready — push pre-fetched saves immediately
+    if (e.data.type === 'plu_sync_ready') {
+      _pushPendingSaves();
+      // Request a snapshot shortly after so we capture the game's initial state
+      setTimeout(_requestSaveSnapshot, 1000);
+    }
+
+    // Game sent a full snapshot — persist it
+    if (e.data.type === 'plu_sync_data') {
+      if (_syncGameId) _onSaveData(_syncGameId, e.data.saves);
+    }
+  });
 
   // ── Sync badge (small indicator below shelves) ─────────────────────────────
   function _setBadge(synced) {
@@ -301,6 +395,24 @@
   }
 
   // ── Render history panel ───────────────────────────────────────────────────
+  let _historySort  = 'recent';
+  let _historyQuery = '';
+
+  function _getHistoryGames() {
+    let games = [..._data.recent];
+    if (_historyQuery) {
+      games = games.filter(g => g.name.toLowerCase().includes(_historyQuery));
+    }
+    if (_historySort === 'plays') {
+      const counts = {};
+      _data.recent.forEach(g => { counts[g.id] = (counts[g.id] || 0) + 1; });
+      games.sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+    } else if (_historySort === 'az') {
+      games.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return games;
+  }
+
   function _renderHistory() {
     const list  = document.getElementById('history-list');
     const count = document.getElementById('history-count');
@@ -312,10 +424,18 @@
       return;
     }
 
-    count.textContent = `${_data.recent.length} game${_data.recent.length !== 1 ? 's' : ''} played`;
+    const games = _getHistoryGames();
+
+    if (!games.length) {
+      count.textContent = 'No results';
+      list.innerHTML = `<div class="pgcdn-status"><i class="fa-solid fa-magnifying-glass"></i><span>No games found</span></div>`;
+      return;
+    }
+
+    count.textContent = `${games.length} of ${_data.recent.length} played`;
     list.innerHTML = '';
 
-    _data.recent.forEach(game => {
+    games.forEach(game => {
       const row = document.createElement('div');
       row.className = 'history-list__row';
       row.innerHTML = `
@@ -388,8 +508,11 @@
     wrap.appendChild(grid);
   }
 
-  function pgcdnLaunch(game) {
+  async function pgcdnLaunch(game) {
+    _syncGameId = game.id;
     _recordPlay(game);
+    // Pre-fetch cloud saves before the iframe starts loading
+    await _prefetchGameSaves(game.id);
     openViewer(`${PGCDN_BASE}/${game.path}`, game.name, game);
   }
 
@@ -399,6 +522,36 @@
   });
 
   pgcdnInit();
+
+  // ── History search + sort ──────────────────────────────────────────────────
+  document.getElementById('history-search').addEventListener('input', e => {
+    _historyQuery = e.target.value.trim().toLowerCase();
+    _renderHistory();
+  });
+
+  document.querySelectorAll('.history-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.history-sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _historySort = btn.dataset.sort;
+      _renderHistory();
+    });
+  });
+
+  // ── / shortcut — focus the active search input ────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.key !== '/') return;
+    const active = document.querySelector('.source-tab.active')?.dataset.panel;
+    const input  = active === 'history'
+      ? document.getElementById('history-search')
+      : document.getElementById('pgcdn-search');
+    if (!input) return;
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    e.preventDefault();
+    input.focus();
+    input.select();
+  });
 
   // ── History clear ─────────────────────────────────────────────────────────
   document.getElementById('history-clear').addEventListener('click', () => {
@@ -486,9 +639,16 @@
     document.getElementById('plu-nav')?.style.setProperty('display', 'none');
     showBar();
     scheduleBarHide();
+
+    // onload is no longer used for restore — sync.js announces plu_sync_ready
+    // and we push the pre-fetched saves in the message handler above
   }
 
   function closeViewer() {
+    // Flush saves before tearing down
+    _requestSaveSnapshot();
+    _syncGameId = null;
+
     viewer.classList.remove('active');
     iframe.src = '';
     viewerTitle.textContent = '';

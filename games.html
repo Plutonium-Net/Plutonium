@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Games — Plutonium Network</title>
+  <title>Games: Plutonium Network</title>
   <link rel="icon" type="image/png" href="img/brand/logo.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
@@ -72,9 +72,21 @@
     <!-- History panel -->
     <div class="source-panel" id="panel-history">
       <div class="history-toolbar">
+        <input class="history-search" id="history-search" type="search" placeholder="Search history…" />
+        <div class="history-sort-group">
+          <button class="history-sort-btn active" data-sort="recent" title="Most recent">
+            <i class="fa-solid fa-clock"></i>
+          </button>
+          <button class="history-sort-btn" data-sort="plays" title="Most played">
+            <i class="fa-solid fa-fire"></i>
+          </button>
+          <button class="history-sort-btn" data-sort="az" title="A → Z">
+            <i class="fa-solid fa-arrow-down-a-z"></i>
+          </button>
+        </div>
         <span class="history-count" id="history-count"></span>
         <button class="history-clear-btn" id="history-clear">
-          <i class="fa-solid fa-trash"></i> Clear history
+          <i class="fa-solid fa-trash"></i>
         </button>
       </div>
       <div id="history-list">
@@ -95,6 +107,11 @@
   <!-- Game viewer overlay -->
   <div id="game-viewer">
     <iframe id="game-iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
+    <!-- Restore spinner — shown while cloud saves are being fetched and written back -->
+    <div id="game-restore-overlay">
+      <div class="game-restore-spinner"></div>
+      <span class="game-restore-label">Restoring saves…</span>
+    </div>
   </div>
 
   <!-- Viewer dock bar -->

@@ -60,7 +60,7 @@
     const user = PlutoniumStore.currentUser;
     if (!user) return;
     try {
-      await PlutoniumStore.setDoc('nav_prefs', { mode, collapsed });
+      await PlutoniumStore.setDoc('nav_prefs/data', { mode, collapsed });
     } catch (e) {
       console.warn('[PlutoniumNav] Could not save prefs to cloud:', e);
     }
@@ -70,7 +70,7 @@
     if (typeof PlutoniumStore === 'undefined') return null;
     if (!PlutoniumStore.currentUser) return null;
     try {
-      return await PlutoniumStore.getDoc('nav_prefs');
+      return await PlutoniumStore.getDoc('nav_prefs/data');
     } catch (_) { return null; }
   }
 
