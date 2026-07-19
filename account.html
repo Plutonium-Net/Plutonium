@@ -383,6 +383,25 @@
     .confirm-delete:hover    { background: #e74c3c; }
     .confirm-delete:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    .auth-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 18px 0 14px;
+      color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1);
+    }
+    .oauth-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 10px 16px; margin-bottom: 9px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px; color: var(--text); font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: background 0.18s, border-color 0.18s;
+    }
+    .oauth-btn:last-child { margin-bottom: 0; }
+    .oauth-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.22); }
+    .oauth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .oauth-btn svg { flex-shrink: 0; }
     @media (max-width: 520px) {
       .account-card { padding: 32px 20px; }
     }
@@ -444,6 +463,22 @@
           </div>
           <button class="auth-submit-btn" id="btn-sign-in">Sign In</button>
           <button class="auth-forgot" id="btn-forgot">Forgot password?</button>
+          <div class="auth-divider">or</div>
+          <button class="oauth-btn" id="btn-oauth-google-signin">
+            <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.7 0 6.7 5.5 2.9 13.6l7.8 6C12.4 13.2 17.8 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/>
+              <path fill="#FBBC05" d="M10.7 28.4A14.6 14.6 0 0 1 9.5 24c0-1.5.3-3 .7-4.4l-7.8-6A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.7l8.2-6.3z"/>
+              <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.2 0-11.5-4.2-13.4-9.8l-8.2 6.3C6.6 42.4 14.7 48 24 48z"/>
+            </svg>
+            Continue with Google
+          </button>
+          <button class="oauth-btn" id="btn-oauth-github-signin">
+            <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.58v-2.03c-3.34.72-4.04-1.6-4.04-1.6-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.48 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.69.82.57C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            Continue with GitHub
+          </button>
         </div>
 
         <!-- Sign up -->
@@ -466,6 +501,22 @@
             </div>
           </div>
           <button class="auth-submit-btn" id="btn-sign-up">Create Account</button>
+          <div class="auth-divider">or</div>
+          <button class="oauth-btn" id="btn-oauth-google-signup">
+            <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.8 2.5 30.2 0 24 0 14.7 0 6.7 5.5 2.9 13.6l7.8 6C12.4 13.2 17.8 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/>
+              <path fill="#FBBC05" d="M10.7 28.4A14.6 14.6 0 0 1 9.5 24c0-1.5.3-3 .7-4.4l-7.8-6A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.7l8.2-6.3z"/>
+              <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.2 0-11.5-4.2-13.4-9.8l-8.2 6.3C6.6 42.4 14.7 48 24 48z"/>
+            </svg>
+            Sign up with Google
+          </button>
+          <button class="oauth-btn" id="btn-oauth-github-signup">
+            <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.58v-2.03c-3.34.72-4.04-1.6-4.04-1.6-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.48 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.69.82.57C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            Sign up with GitHub
+          </button>
         </div>
 
         <p class="auth-message" id="auth-message"></p>
@@ -673,6 +724,25 @@
         btn.disabled = false; btn.textContent = 'Sign In';
       }
     });
+
+    // ── OAuth sign-in (Google / GitHub) ──────────────────────────────────────
+    async function handleOAuth(provider) {
+      clearAuthMsg(); clearInvalid();
+      showView('loading');
+      try {
+        await PlutoniumStore.signInWithOAuth(provider);
+      } catch (e) {
+        showView('signed-out');
+        if (!e.message.includes('popup closed')) {
+          showAuthError(e.message.includes('OAuth failed') ? e.message.replace('[PlutoniumStore] OAuth failed: ', '') : 'Sign-in failed — please try again.');
+        }
+      }
+    }
+
+    document.getElementById('btn-oauth-google-signin').addEventListener('click', () => handleOAuth('google'));
+    document.getElementById('btn-oauth-github-signin').addEventListener('click', () => handleOAuth('github'));
+    document.getElementById('btn-oauth-google-signup').addEventListener('click', () => handleOAuth('google'));
+    document.getElementById('btn-oauth-github-signup').addEventListener('click', () => handleOAuth('github'));
 
     // ── Sign up ───────────────────────────────────────────────────────────────
     document.getElementById('btn-sign-up').addEventListener('click', async () => {

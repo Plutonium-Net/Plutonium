@@ -6,16 +6,27 @@
  *   FIREBASE_PROJECT_ID     — e.g. "plutonium-xyz"
  *   FIREBASE_DATABASE_URL   — e.g. "https://plutonium-xyz-default-rtdb.firebaseio.com"
  *   ALLOWED_ORIGIN          — e.g. "https://plutonium.example.com" (or "*" for dev)
+ *   SITE_URL                — e.g. "https://plutoniumnet.work" (no trailing slash)
+ *                             Used as the postMessage target after OAuth completes.
+ *
+ * OAuth setup (Firebase Console):
+ *   Authentication → Sign-in method → Enable Google and/or GitHub.
+ *   For GitHub you must also set the callback URL in your GitHub OAuth App to:
+ *     https://<your-worker-domain>/auth/oauth/callback
+ *   The worker redirect URI passed to Firebase is:
+ *     https://<your-worker-domain>/auth/oauth/callback
  *
  * Routes exposed to the browser:
- *   GET  /config              → returns non-secret Firebase client config
- *   POST /auth/email          → signs in with email + password
- *   POST /auth/signup         → creates a new email+password account
- *   POST /auth/reset          → sends a password-reset email
- *   POST /auth/update         → updates displayName (requires idToken)
- *   POST /auth/delete         → permanently deletes the account (requires idToken)
- *   *    /firestore/*         → proxies Firestore REST API
- *   *    /rtdb/*              → proxies Realtime Database REST API
+ *   GET  /config                    → returns non-secret Firebase client config
+ *   POST /auth/email                → signs in with email + password
+ *   POST /auth/signup               → creates a new email+password account
+ *   POST /auth/reset                → sends a password-reset email
+ *   POST /auth/update               → updates displayName (requires idToken)
+ *   POST /auth/delete               → permanently deletes the account (requires idToken)
+ *   GET  /auth/oauth/start          → ?provider=google|github  redirects to provider
+ *   GET  /auth/oauth/callback       → handles provider redirect, postMessages result to opener
+ *   *    /firestore/*               → proxies Firestore REST API
+ *   *    /rtdb/*                    → proxies Realtime Database REST API
  */
 
 export default {
@@ -54,6 +65,14 @@ export default {
 
       if (path === '/auth/delete' && request.method === 'POST') {
         return handleAccountDelete(request, env, allowed);
+      }
+
+      if (path === '/auth/oauth/start' && request.method === 'GET') {
+        return handleOAuthStart(request, env, url);
+      }
+
+      if (path === '/auth/oauth/callback' && request.method === 'GET') {
+        return handleOAuthCallback(request, env, url);
       }
 
       if (path.startsWith('/firestore/')) {
@@ -238,6 +257,116 @@ async function handleAccountDelete(request, env, allowed) {
   const data = await upstream.json();
   if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
   return corsResponse({ deleted: true }, 200, allowed);
+}
+
+/* ── /auth/oauth/start — redirect browser to Google or GitHub ───────────── */
+async function handleOAuthStart(request, env, url) {
+  const provider  = url.searchParams.get('provider');
+  const workerUrl = new URL(request.url).origin;
+  const callbackUri = `${workerUrl}/auth/oauth/callback`;
+
+  if (provider === 'google') {
+    // Use Firebase's createAuthUri to get the exact Google OAuth URL
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${env.FIREBASE_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          providerId:    'google.com',
+          continueUri:   callbackUri,
+        }),
+      }
+    );
+    const data = await res.json();
+    if (!res.ok || !data.authUri) {
+      return new Response(`OAuth start failed: ${JSON.stringify(data)}`, { status: 500 });
+    }
+    // Store the sessionId so we can verify it in the callback
+    return Response.redirect(data.authUri + `&state=${encodeURIComponent(data.sessionId)}`, 302);
+  }
+
+  if (provider === 'github') {
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${env.FIREBASE_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          providerId:  'github.com',
+          continueUri: callbackUri,
+        }),
+      }
+    );
+    const data = await res.json();
+    if (!res.ok || !data.authUri) {
+      return new Response(`OAuth start failed: ${JSON.stringify(data)}`, { status: 500 });
+    }
+    return Response.redirect(data.authUri + `&state=${encodeURIComponent(data.sessionId)}`, 302);
+  }
+
+  return new Response('Unknown provider', { status: 400 });
+}
+
+/* ── /auth/oauth/callback — exchange redirect result for Firebase token ─── */
+async function handleOAuthCallback(request, env, url) {
+  const siteUrl = (env.SITE_URL || '').replace(/\/$/, '');
+  const workerUrl = new URL(request.url).origin;
+  const callbackUri = `${workerUrl}/auth/oauth/callback`;
+
+  // The full redirect URL (including all params) is what Firebase needs
+  const requestUri = request.url;
+
+  const res = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requestUri,
+        postBody:          '',   // not needed for redirect flow
+        returnSecureToken: true,
+        returnIdpCredential: true,
+      }),
+    }
+  );
+
+  const data = await res.json();
+
+  if (!res.ok || !data.idToken) {
+    // Return an HTML page that postMessages the error to the opener
+    return oauthPopupPage(siteUrl, null, data.error?.message || 'OAuth sign-in failed');
+  }
+
+  const user = {
+    uid:          data.localId,
+    idToken:      data.idToken,
+    refreshToken: data.refreshToken,
+    expiresIn:    data.expiresIn,
+    displayName:  data.displayName || '',
+    email:        data.email       || '',
+    photoUrl:     data.photoUrl    || '',
+  };
+
+  return oauthPopupPage(siteUrl, user, null);
+}
+
+// Renders a tiny HTML page that postMessages the result to window.opener then closes itself
+function oauthPopupPage(siteUrl, user, error) {
+  const payload = error
+    ? JSON.stringify({ error })
+    : JSON.stringify({ user });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><script>
+    try {
+      window.opener.postMessage({ type: 'plu_oauth', payload: ${JSON.stringify(payload)} }, ${JSON.stringify(siteUrl || '*')});
+    } catch(e) {}
+    window.close();
+  <\/script></body></html>`;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html;charset=UTF-8' },
+  });
 }
 
 /* ── /firestore/* ─────────────────────────────────────────────────────────── */

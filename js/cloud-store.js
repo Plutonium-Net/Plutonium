@@ -217,6 +217,59 @@
     await signOut();
   }
 
+  function signInWithOAuth(provider) {
+    assertWorkerUrl();
+    return new Promise((resolve, reject) => {
+      const popup = window.open(
+        `${_workerUrl}/auth/oauth/start?provider=${provider}`,
+        'plu_oauth',
+        'width=520,height=620,left=200,top=100,toolbar=0,menubar=0,location=0'
+      );
+
+      if (!popup) {
+        reject(new Error('[PlutoniumStore] Popup blocked'));
+        return;
+      }
+
+      function onMessage(e) {
+        if (!e.data || e.data.type !== 'plu_oauth') return;
+        window.removeEventListener('message', onMessage);
+        clearInterval(pollTimer);
+
+        let parsed;
+        try { parsed = JSON.parse(e.data.payload); } catch (_) {
+          return reject(new Error('[PlutoniumStore] Invalid OAuth payload'));
+        }
+
+        if (parsed.error) return reject(new Error(`[PlutoniumStore] OAuth failed: ${parsed.error}`));
+
+        const u = parsed.user;
+        const user = {
+          uid:          u.uid,
+          idToken:      u.idToken,
+          refreshToken: u.refreshToken,
+          expiresAt:    Date.now() + parseInt(u.expiresIn, 10) * 1000,
+          displayName:  u.displayName || '',
+          email:        u.email       || '',
+          photoUrl:     u.photoUrl    || '',
+        };
+        _setUser(user);
+        resolve(_currentUser);
+      }
+
+      window.addEventListener('message', onMessage);
+
+      // Detect if user closed the popup without completing sign-in
+      const pollTimer = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(pollTimer);
+          window.removeEventListener('message', onMessage);
+          reject(new Error('[PlutoniumStore] OAuth popup closed'));
+        }
+      }, 500);
+    });
+  }
+
   async function signOut() {
     if (_refreshTimer) clearTimeout(_refreshTimer);
     _currentUser = null;
@@ -461,6 +514,7 @@
     resetPassword,
     updateProfile,
     deleteAccount,
+    signInWithOAuth,
     signOut,
     onAuthChange,
     get currentUser()         { return _currentUser ? { ..._currentUser } : null; },

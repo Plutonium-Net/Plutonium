@@ -11,10 +11,18 @@ compatibility_date = "2024-01-01"
 #   wrangler secret put FIREBASE_MESSAGING_SENDER_ID
 #   wrangler secret put FIREBASE_APP_ID
 #
+# OAuth (Google + GitHub):
+#   Enable providers in Firebase Console → Authentication → Sign-in method.
+#   For GitHub, set the OAuth callback URL in your GitHub OAuth App to:
+#     https://<your-worker-domain>/auth/oauth/callback
+#   Then add:
+#   wrangler secret put SITE_URL   (e.g. https://plutoniumnet.work)
+#
 # ALLOWED_ORIGIN can stay here (not secret).
 
 [vars]
 ALLOWED_ORIGIN = "*.plutoniumnet.work,http://127.0.0.1:5500"
+SITE_URL       = "https://plutoniumnet.work"
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 # Uncomment and fill in your Worker domain once deployed:
