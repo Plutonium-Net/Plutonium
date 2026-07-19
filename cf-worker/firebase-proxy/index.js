@@ -10,6 +10,9 @@
  * Routes exposed to the browser:
  *   GET  /config              → returns non-secret Firebase client config
  *   POST /auth/token          → exchanges a Google ID token for a Firebase ID token
+ *   POST /auth/email          → signs in with email + password
+ *   POST /auth/signup         → creates a new email+password account
+ *   POST /auth/reset          → sends a password-reset email
  *   *    /firestore/*         → proxies Firestore REST API
  *   *    /rtdb/*              → proxies Realtime Database REST API
  */
@@ -34,6 +37,18 @@ export default {
 
       if (path === '/auth/token' && request.method === 'POST') {
         return handleAuthToken(request, env, allowed);
+      }
+
+      if (path === '/auth/email' && request.method === 'POST') {
+        return handleEmailSignIn(request, env, allowed);
+      }
+
+      if (path === '/auth/signup' && request.method === 'POST') {
+        return handleEmailSignUp(request, env, allowed);
+      }
+
+      if (path === '/auth/reset' && request.method === 'POST') {
+        return handlePasswordReset(request, env, allowed);
       }
 
       if (path.startsWith('/firestore/')) {
@@ -102,6 +117,94 @@ async function handleAuthToken(request, env, allowed) {
     email:        data.email,
     photoUrl:     data.photoUrl,
   }, 200, allowed);
+}
+
+/* ── /auth/email — sign in with email + password ─────────────────────────── */
+async function handleEmailSignIn(request, env, allowed) {
+  const { email, password } = await request.json();
+  if (!email || !password) return corsResponse({ error: 'email and password required' }, 400, allowed);
+
+  const upstream = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, returnSecureToken: true }),
+    }
+  );
+
+  const data = await upstream.json();
+  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+
+  return corsResponse({
+    idToken:      data.idToken,
+    refreshToken: data.refreshToken,
+    expiresIn:    data.expiresIn,
+    localId:      data.localId,
+    displayName:  data.displayName || '',
+    email:        data.email,
+    photoUrl:     data.photoUrl || '',
+  }, 200, allowed);
+}
+
+/* ── /auth/signup — create email + password account ─────────────────────── */
+async function handleEmailSignUp(request, env, allowed) {
+  const { email, password, displayName } = await request.json();
+  if (!email || !password) return corsResponse({ error: 'email and password required' }, 400, allowed);
+
+  // Create the account
+  const upstream = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, returnSecureToken: true }),
+    }
+  );
+
+  const data = await upstream.json();
+  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+
+  // Optionally set displayName
+  if (displayName) {
+    await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${env.FIREBASE_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: data.idToken, displayName, returnSecureToken: false }),
+      }
+    );
+  }
+
+  return corsResponse({
+    idToken:      data.idToken,
+    refreshToken: data.refreshToken,
+    expiresIn:    data.expiresIn,
+    localId:      data.localId,
+    displayName:  displayName || '',
+    email:        data.email,
+    photoUrl:     '',
+  }, 200, allowed);
+}
+
+/* ── /auth/reset — send password-reset email ────────────────────────────── */
+async function handlePasswordReset(request, env, allowed) {
+  const { email } = await request.json();
+  if (!email) return corsResponse({ error: 'email required' }, 400, allowed);
+
+  const upstream = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestType: 'PASSWORD_RESET', email }),
+    }
+  );
+
+  const data = await upstream.json();
+  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+  return corsResponse({ email: data.email }, 200, allowed);
 }
 
 /* ── /firestore/* ─────────────────────────────────────────────────────────── */

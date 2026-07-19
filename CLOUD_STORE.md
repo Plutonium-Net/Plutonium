@@ -68,7 +68,7 @@ Set these as early as possible, before any other call:
 ```html
 <script src="js/cloud-store.js"></script>
 <script>
-  PlutoniumStore.WORKER_URL       = 'https://plutonium-firebase-proxy.YOUR-SUBDOMAIN.workers.dev';
+  PlutoniumStore.WORKER_URL       = 'https://plutonium-firebase-proxy.craftedgamz.workers.dev';
   PlutoniumStore.GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
 </script>
 ```
@@ -107,8 +107,8 @@ If `WORKER_URL` is not set when any method is called, it throws synchronously:
 The base URL of the Cloudflare Worker proxy. Trailing slashes are stripped automatically.
 
 ```js
-PlutoniumStore.WORKER_URL = 'https://plutonium-firebase-proxy.acme.workers.dev';
-console.log(PlutoniumStore.WORKER_URL); // 'https://plutonium-firebase-proxy.acme.workers.dev'
+PlutoniumStore.WORKER_URL = 'https://plutonium-firebase-proxy.craftedgamz.workers.dev';
+console.log(PlutoniumStore.WORKER_URL); // 'https://plutonium-firebase-proxy.craftedgamz.workers.dev'
 ```
 
 ### `PlutoniumStore.GOOGLE_CLIENT_ID` — `string` (read/write)
@@ -540,7 +540,7 @@ Below is a complete, self-contained example for a hypothetical "scores" feature.
 <script src="js/cloud-store.js"></script>
 <script>
   // ── 1. Configure ──────────────────────────────────────────────────────────
-  PlutoniumStore.WORKER_URL       = 'https://plutonium-firebase-proxy.acme.workers.dev';
+  PlutoniumStore.WORKER_URL       = 'https://plutonium-firebase-proxy.craftedgamz.workers.dev';
   PlutoniumStore.GOOGLE_CLIENT_ID = '123456789-abc.apps.googleusercontent.com';
 
   // ── 2. State ──────────────────────────────────────────────────────────────

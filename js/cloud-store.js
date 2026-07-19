@@ -14,6 +14,15 @@
  *   // Sign the user in (shows Google popup):
  *   const user = await PlutoniumStore.signIn();
  *
+ *   // Sign in with email + password:
+ *   const user = await PlutoniumStore.signInWithEmail('user@example.com', 'password');
+ *
+ *   // Create a new account:
+ *   const user = await PlutoniumStore.signUp('user@example.com', 'password', 'Display Name');
+ *
+ *   // Send a password-reset email:
+ *   await PlutoniumStore.resetPassword('user@example.com');
+ *
  *   // Save a document at users/{uid}/settings:
  *   await PlutoniumStore.setDoc('settings', { theme: 'dark', volume: 0.8 });
  *
@@ -40,7 +49,7 @@
  *   Set PlutoniumStore.WORKER_URL before first use, e.g. in your page's
  *   <script> block or main.js:
  *
- *     PlutoniumStore.WORKER_URL = 'https://plutonium-firebase-proxy.your-workers.dev';
+ *     PlutoniumStore.WORKER_URL = 'https://plutonium-firebase-proxy.craftedgamz.workers.dev';
  *
  * ────────────────────────────────────────────────────────────────────────────
  */
@@ -208,6 +217,61 @@
       }
       _authListeners.forEach(fn => { try { fn(_currentUser); } catch (_) {} });
     } catch (_) {}
+  }
+
+  async function signInWithEmail(email, password) {
+    assertWorkerUrl();
+    const res = await fetch(`${_workerUrl}/auth/email`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(`[PlutoniumStore] signInWithEmail failed: ${data.error || JSON.stringify(data)}`);
+    const user = {
+      uid:          data.localId,
+      idToken:      data.idToken,
+      refreshToken: data.refreshToken,
+      expiresAt:    Date.now() + parseInt(data.expiresIn, 10) * 1000,
+      displayName:  data.displayName || '',
+      email:        data.email,
+      photoUrl:     data.photoUrl || '',
+    };
+    _setUser(user);
+    return _currentUser;
+  }
+
+  async function signUp(email, password, displayName = '') {
+    assertWorkerUrl();
+    const res = await fetch(`${_workerUrl}/auth/signup`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password, displayName }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(`[PlutoniumStore] signUp failed: ${data.error || JSON.stringify(data)}`);
+    const user = {
+      uid:          data.localId,
+      idToken:      data.idToken,
+      refreshToken: data.refreshToken,
+      expiresAt:    Date.now() + parseInt(data.expiresIn, 10) * 1000,
+      displayName:  data.displayName || '',
+      email:        data.email,
+      photoUrl:     '',
+    };
+    _setUser(user);
+    return _currentUser;
+  }
+
+  async function resetPassword(email) {
+    assertWorkerUrl();
+    const res = await fetch(`${_workerUrl}/auth/reset`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(`[PlutoniumStore] resetPassword failed: ${data.error || JSON.stringify(data)}`);
   }
 
   async function signOut() {
@@ -466,6 +530,9 @@
 
     // Auth
     signIn,
+    signInWithEmail,
+    signUp,
+    resetPassword,
     signOut,
     onAuthChange,
     get currentUser()         { return _currentUser ? { ..._currentUser } : null; },

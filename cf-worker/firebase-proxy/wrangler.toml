@@ -14,7 +14,7 @@ compatibility_date = "2024-01-01"
 # ALLOWED_ORIGIN can stay here (not secret).
 
 [vars]
-ALLOWED_ORIGIN = "https://your-site.example.com"
+ALLOWED_ORIGIN = "*"
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 # Uncomment and fill in your Worker domain once deployed:
