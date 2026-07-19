@@ -1,0 +1,11 @@
+name               = "plutonium-groq-worker"
+main               = "index.js"
+compatibility_date = "2024-01-01"
+
+[[routes]]
+pattern   = "groq.cdn.plutoniumnet.work/*"
+zone_name = "plutoniumnet.work"
+
+[vars]
+ALLOWED_ORIGIN = "*.plutoniumnet.work,http://127.0.0.1:5500"
+# GROQ_API_KEY — set via: wrangler secret put GROQ_API_KEY
