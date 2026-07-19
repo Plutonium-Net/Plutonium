@@ -6,7 +6,7 @@
   const CLOUD_DOC   = 'home_dock/pins';
   const MAX_PINS    = 12;
 
-  let _pins = []; // array of game objects { id, name, path, image }
+  let _pins = []; // array of { id, name, path, image } or { id, name, type:'vm' }
 
   // ── Persistence ─────────────────────────────────────────────────────────────
 
@@ -56,7 +56,11 @@
   function pin(game) {
     if (isPinned(game.id)) return;
     if (_pins.length >= MAX_PINS) _pins.pop(); // drop oldest from end
-    _pins.unshift({ id: game.id, name: game.name, path: game.path, image: game.image });
+    if (game.type === 'vm') {
+      _pins.unshift({ id: game.id, name: game.name, type: 'vm' });
+    } else {
+      _pins.unshift({ id: game.id, name: game.name, path: game.path, image: game.image });
+    }
     _saveLocal();
     _saveCloud();
     _render();
@@ -87,13 +91,18 @@
     dock.innerHTML = '';
     _pins.forEach(game => {
       const item = document.createElement('a');
-      item.className   = 'hero__dock-item';
-      item.href        = `games.html#${game.id}`;
-      item.title       = game.name;
-      item.dataset.id  = game.id;
-      item.dataset.path = game.path;
-      item.innerHTML   = `
-        <img src="${PGCDN_BASE}/${game.image}" alt="${game.name}" loading="lazy" />
+      item.className    = 'hero__dock-item';
+      item.href         = game.type === 'vm' ? 'vms.html?autostart=1' : `games.html#${game.id}`;
+      item.title        = game.name;
+      item.dataset.id   = game.id;
+      if (game.path) item.dataset.path = game.path;
+
+      const thumb = game.type === 'vm'
+        ? `<div class="hero__dock-item__icon"><i class="fa-solid fa-desktop"></i></div>`
+        : `<img src="${PGCDN_BASE}/${game.image}" alt="${game.name}" loading="lazy" />`;
+
+      item.innerHTML = `
+        ${thumb}
         <span class="hero__dock-item__name">${game.name}</span>
         <button class="hero__dock-unpin" title="Unpin" aria-label="Unpin ${game.name}">
           <i class="fa-solid fa-xmark"></i>
@@ -119,7 +128,7 @@
     PlutoniumStore.onAuthChange(user => { if (user) _loadCloud(); });
   }
 
-  // Expose for games.js (cross-page)
+  // Expose for games.js and vms.js (cross-page)
   window.HomeDock = { pin, unpin, isPinned };
 
 })();

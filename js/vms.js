@@ -21,6 +21,7 @@ const timerText     = document.getElementById('vm-timer-text');
 const startBtn      = document.getElementById('vm-start-btn');
 const endBtn        = document.getElementById('vm-end-btn');
 const fullscreenBtn = document.getElementById('vm-fullscreen-btn');
+const pinBtn        = document.getElementById('vm-pin-btn');
 const signinBtn     = document.getElementById('vm-signin-btn');
 const embedEl       = document.getElementById('vm-embed');
 const iframeEl      = document.getElementById('vm-iframe');
@@ -235,6 +236,37 @@ PlutoniumStore.onAuthChange(user => {
 });
 
 // ── Controls ──────────────────────────────────────────────────────────────────
+
+function _updatePinBtn() {
+  if (!pinBtn || typeof HomeDock === 'undefined') return;
+  const pinned = HomeDock.isPinned('vm');
+  pinBtn.innerHTML = pinned
+    ? '<i class="fa-solid fa-thumbtack"></i> Unpin from Home'
+    : '<i class="fa-solid fa-thumbtack"></i> Pin to Home';
+}
+
+pinBtn?.addEventListener('click', () => {
+  if (typeof HomeDock === 'undefined') return;
+  if (HomeDock.isPinned('vm')) {
+    HomeDock.unpin('vm');
+  } else {
+    HomeDock.pin({ id: 'vm', name: 'Virtual Machine', type: 'vm' });
+  }
+  _updatePinBtn();
+});
+
+// Sync button state on load
+_updatePinBtn();
+
+// ── Auto-start from home dock shortcut ────────────────────────────────────────
+
+PlutoniumStore.onAuthChange(user => {
+  if (user && new URLSearchParams(location.search).get('autostart') === '1') {
+    // Remove the param from the URL so a refresh doesn't re-trigger
+    history.replaceState(null, '', location.pathname);
+    startSession();
+  }
+});
 
 startBtn.addEventListener('click', startSession);
 endBtn.addEventListener('click', () => endSession(false));

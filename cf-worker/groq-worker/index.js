@@ -23,6 +23,10 @@ export default {
         return handleModels(allowed);
       }
 
+      if (path === '/ratelimit' && request.method === 'GET') {
+        return handleRateLimit(request, env, allowed);
+      }
+
       return corsResponse({ error: 'Not found' }, 404, allowed);
     } catch (err) {
       console.error('[groq-worker]', err);
@@ -113,6 +117,32 @@ async function checkRateLimit(env, key) {
   });
 
   return { limited: false, remaining: RL_MAX - bucket.count };
+}
+
+// ── Rate limit status (read-only) ────────────────────────────────────────────
+
+async function handleRateLimit(request, env, allowed) {
+  const auth = request.headers.get('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) {
+    return corsResponse({ error: 'Unauthorized' }, 401, allowed);
+  }
+
+  if (!env.GROQ_RATE_LIMIT) {
+    return corsResponse({ used: 0, remaining: RL_MAX, max: RL_MAX }, 200, allowed);
+  }
+
+  const key = getRateLimitKey(request);
+  const now = Math.floor(Date.now() / 1000);
+  const raw = await env.GROQ_RATE_LIMIT.get(key);
+  const bucket = raw ? JSON.parse(raw) : { count: 0, reset: now + RL_WINDOW };
+
+  const count = now >= bucket.reset ? 0 : bucket.count;
+  return corsResponse({
+    used:      count,
+    remaining: RL_MAX - count,
+    max:       RL_MAX,
+    reset:     bucket.reset,
+  }, 200, allowed);
 }
 
 // ── Chat ──────────────────────────────────────────────────────────────────────

@@ -320,6 +320,20 @@ function updateRateLimit(remaining) {
   renderRateLimit();
 }
 
+async function fetchRateLimit() {
+  if (byokKey.startsWith('gsk_')) return;
+  const user = PlutoniumStore.currentUser;
+  if (!user) return;
+  try {
+    const res = await fetch(`${GROQ_WORKER}/ratelimit`, {
+      headers: { 'Authorization': `Bearer ${user.idToken}` },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.used != null) { rlUsed = data.used; renderRateLimit(); }
+  } catch (_) {}
+}
+
 function incrementRateLimit() {
   if (byokKey.startsWith('gsk_')) return;
   rlUsed = Math.min(100, rlUsed + 1);
@@ -1016,7 +1030,7 @@ PlutoniumStore.onAuthChange(user => {
   if (user) {
     gate.style.display = 'none';
     app.style.display  = '';
-    loadByok();
+    loadByok().then(() => fetchRateLimit());
     loadChats();
     loadCharacters();
   } else {

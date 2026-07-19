@@ -289,7 +289,7 @@
 
     if (typeof HomeDock !== 'undefined') {
       items.push({
-        icon:   isPinned ? 'fa-solid fa-thumbtack' : 'fa-regular fa-thumbtack',
+        icon:   isPinned ? 'fa-solid fa-thumbtack' : 'fa-solid fa-thumbtack',
         label:  isPinned ? 'Unpin from Home' : 'Pin to Home',
         action: () => isPinned ? HomeDock.unpin(game.id) : HomeDock.pin(game),
       });
