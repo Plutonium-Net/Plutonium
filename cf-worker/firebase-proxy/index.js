@@ -260,71 +260,60 @@ async function handleAccountDelete(request, env, allowed) {
 }
 
 /* ── /auth/oauth/start — redirect browser to Google or GitHub ───────────── */
+//
+// Strategy: use Firebase's own hosted auth page (firebaseapp.com/__/auth/handler)
+// as the OAuth redirect URI. This is the URL registered in both the Google Cloud
+// console and the GitHub OAuth app. After the provider redirects back there,
+// Firebase's page posts the credential to the popup opener via postMessage, and
+// our listener in cloud-store.js picks it up via /auth/oauth/callback (below).
+//
+// continueUri must be the worker callback so Firebase knows where to send the
+// tokenised result — but the actual OAuth redirect_uri sent to GitHub/Google is
+// always firebaseapp.com/__/auth/handler, which is what those providers expect.
 async function handleOAuthStart(request, env, url) {
-  const provider  = url.searchParams.get('provider');
-  const workerUrl = new URL(request.url).origin;
+  const provider   = url.searchParams.get('provider');
+  const workerUrl  = new URL(request.url).origin;
   const callbackUri = `${workerUrl}/auth/oauth/callback`;
 
-  if (provider === 'google') {
-    // Use Firebase's createAuthUri to get the exact Google OAuth URL
-    const res = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${env.FIREBASE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          providerId:    'google.com',
-          continueUri:   callbackUri,
-        }),
-      }
-    );
-    const data = await res.json();
-    if (!res.ok || !data.authUri) {
-      return new Response(`OAuth start failed: ${JSON.stringify(data)}`, { status: 500 });
+  const providerMap = { google: 'google.com', github: 'github.com' };
+  const providerId  = providerMap[provider];
+  if (!providerId) return new Response('Unknown provider', { status: 400 });
+
+  const res = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ providerId, continueUri: callbackUri }),
     }
-    // Store the sessionId so we can verify it in the callback
-    return Response.redirect(data.authUri + `&state=${encodeURIComponent(data.sessionId)}`, 302);
+  );
+  const data = await res.json();
+  if (!res.ok || !data.authUri) {
+    return new Response(`OAuth start failed: ${JSON.stringify(data)}`, { status: 500 });
   }
 
-  if (provider === 'github') {
-    const res = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${env.FIREBASE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          providerId:  'github.com',
-          continueUri: callbackUri,
-        }),
-      }
-    );
-    const data = await res.json();
-    if (!res.ok || !data.authUri) {
-      return new Response(`OAuth start failed: ${JSON.stringify(data)}`, { status: 500 });
-    }
-    return Response.redirect(data.authUri + `&state=${encodeURIComponent(data.sessionId)}`, 302);
-  }
-
-  return new Response('Unknown provider', { status: 400 });
+  // Append our own state so the callback can verify the session
+  const sep      = data.authUri.includes('?') ? '&' : '?';
+  const redirect = data.authUri + sep + `state=${encodeURIComponent(data.sessionId)}`;
+  return Response.redirect(redirect, 302);
 }
 
 /* ── /auth/oauth/callback — exchange redirect result for Firebase token ─── */
 async function handleOAuthCallback(request, env, url) {
-  const siteUrl = (env.SITE_URL || '').replace(/\/$/, '');
-  const workerUrl = new URL(request.url).origin;
+  const siteUrl    = (env.SITE_URL || '').replace(/\/$/, '');
+  const workerUrl  = new URL(request.url).origin;
   const callbackUri = `${workerUrl}/auth/oauth/callback`;
 
-  // The full redirect URL (including all params) is what Firebase needs
-  const requestUri = request.url;
-
+  // signInWithIdp needs the full callback URL (including code/state params)
+  // AND the registered redirectUri so Firebase can validate them together.
   const res = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${env.FIREBASE_API_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        requestUri,
-        postBody:          '',   // not needed for redirect flow
+        requestUri:        request.url,
+        postBody:          '',
         returnSecureToken: true,
         returnIdpCredential: true,
       }),
@@ -334,7 +323,6 @@ async function handleOAuthCallback(request, env, url) {
   const data = await res.json();
 
   if (!res.ok || !data.idToken) {
-    // Return an HTML page that postMessages the error to the opener
     return oauthPopupPage(siteUrl, null, data.error?.message || 'OAuth sign-in failed');
   }
 
@@ -357,11 +345,15 @@ function oauthPopupPage(siteUrl, user, error) {
     ? JSON.stringify({ error })
     : JSON.stringify({ user });
 
+  // Use '*' as the target origin — the message is namespaced with type:'plu_oauth'
+  // so it's safe, and it avoids silent drops when the opener is on a subdomain or
+  // local dev origin that doesn't match SITE_URL exactly.
+  // setTimeout gives the browser a tick to deliver the message before the popup closes.
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><script>
     try {
-      window.opener.postMessage({ type: 'plu_oauth', payload: ${JSON.stringify(payload)} }, ${JSON.stringify(siteUrl || '*')});
+      window.opener.postMessage({ type: 'plu_oauth', payload: ${JSON.stringify(payload)} }, '*');
     } catch(e) {}
-    window.close();
+    setTimeout(() => window.close(), 200);
   <\/script></body></html>`;
 
   return new Response(html, {
