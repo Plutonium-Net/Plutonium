@@ -3,7 +3,7 @@ main               = "index.js"
 compatibility_date = "2024-01-01"
 
 [[routes]]
-pattern   = "groq.cdn.plutoniumnet.work/*"
+pattern   = "ai.cdn.plutoniumnet.work/*"
 zone_name = "plutoniumnet.work"
 
 [vars]

@@ -1,4 +1,4 @@
-const GROQ_WORKER   = 'https://groq.cdn.plutoniumnet.work';
+const GROQ_WORKER   = 'https://ai.cdn.plutoniumnet.work';
 const HISTORY_DOC   = 'ai_chats';
 const MAX_CHATS     = 30;
 const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
@@ -32,29 +32,48 @@ const newChatBtn   = document.getElementById('ai-new-chat');
 const messages     = document.getElementById('ai-messages');
 const inputEl      = document.getElementById('ai-input');
 const sendBtn      = document.getElementById('ai-send-btn');
-const modelSelect  = document.getElementById('ai-model-select');
+const modelDropdown   = document.getElementById('ai-model-dropdown');
+const modelBtn        = document.getElementById('ai-model-btn');
+const modelBtnLabel   = document.getElementById('ai-model-btn-label');
+const modelPanel      = document.getElementById('ai-model-panel');
 const chatTitle    = document.getElementById('ai-chat-title');
 const emptyState   = document.getElementById('ai-empty');
 const sidebarToggle = document.getElementById('ai-sidebar-toggle');
 
-// ── Model selector ────────────────────────────────────────────────────────────
+// ── Model dropdown ────────────────────────────────────────────────────────────
 
-MODELS.forEach(m => {
-  const opt = document.createElement('option');
-  opt.value = m.id;
-  opt.textContent = m.label;
-  if (m.id === DEFAULT_MODEL) opt.selected = true;
-  modelSelect.appendChild(opt);
-});
+function buildModelPanel() {
+  modelPanel.innerHTML = MODELS.map(m => `
+    <div class="ai-model-option${m.id === currentModel ? ' selected' : ''}" data-id="${m.id}">
+      <span class="ai-model-option__name">${m.label}</span>
+      <span class="ai-model-option__id">${m.id}</span>
+    </div>`).join('');
+}
 
-modelSelect.addEventListener('change', () => {
-  currentModel = modelSelect.value;
+function setModel(id) {
+  const m = MODELS.find(m => m.id === id);
+  if (!m) return;
+  currentModel = m.id;
+  modelBtnLabel.textContent = m.label;
+  buildModelPanel();
   const chat = activeChat();
-  if (chat) {
-    chat.model = currentModel;
-    saveChats();
-  }
+  if (chat) { chat.model = currentModel; saveChats(); }
+}
+
+modelBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  modelDropdown.classList.toggle('open');
+  if (modelDropdown.classList.contains('open')) buildModelPanel();
 });
+
+modelPanel.addEventListener('click', e => {
+  const opt = e.target.closest('.ai-model-option');
+  if (!opt) return;
+  setModel(opt.dataset.id);
+  modelDropdown.classList.remove('open');
+});
+
+document.addEventListener('click', () => modelDropdown.classList.remove('open'));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -182,7 +201,7 @@ function selectChat(id) {
   const chat = activeChat();
   if (!chat) return;
   currentModel = chat.model || DEFAULT_MODEL;
-  modelSelect.value = currentModel;
+  modelBtnLabel.textContent = MODELS.find(m => m.id === currentModel)?.label ?? currentModel;
   chatTitle.textContent = chat.title;
   renderMessages(chat);
   renderChatList();

@@ -1,8 +1,30 @@
-/* ── Layout ────────────────────────────────────────────────────────────────── */
+/* ── Page container ────────────────────────────────────────────────────────── */
 
-.ai-gate {
+.ai-page {
   position: relative;
   z-index: 1;
+  padding: 100px 24px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ai-page__title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: var(--pink);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.ai-page__subtitle {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 40px;
+}
+
+/* ── Auth gate ─────────────────────────────────────────────────────────────── */
+
+.ai-gate {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -12,7 +34,6 @@
   border-radius: 16px;
   background: rgba(255,255,255,0.02);
   max-width: 440px;
-  margin: 100px auto 0;
 }
 
 .ai-gate__icon {
@@ -36,11 +57,11 @@
 /* ── App shell ─────────────────────────────────────────────────────────────── */
 
 .ai-app {
-  position: relative;
-  z-index: 1;
   display: flex;
-  height: 100vh;
-  padding-top: 0;
+  height: 680px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.02);
   overflow: hidden;
 }
 
@@ -229,29 +250,111 @@
   text-overflow: ellipsis;
 }
 
-.ai-model-select {
-  padding: 6px 10px;
+/* ── Model dropdown ────────────────────────────────────────────────────────── */
+
+.ai-model-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ai-model-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
   font-size: 0.78rem;
   font-family: inherit;
+  font-weight: 500;
   color: var(--muted);
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   cursor: pointer;
   outline: none;
-  transition: border-color 0.12s;
-  max-width: 160px;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
-.ai-model-select:hover,
-.ai-model-select:focus {
-  border-color: rgba(255,255,255,0.2);
+.ai-model-btn:hover,
+.ai-model-dropdown.open .ai-model-btn {
+  border-color: rgba(255,255,255,0.22);
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+}
+
+.ai-model-btn__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-model-btn__chevron {
+  font-size: 0.65rem;
+  opacity: 0.5;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.ai-model-dropdown.open .ai-model-btn__chevron {
+  transform: rotate(180deg);
+}
+
+.ai-model-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  background: #0d0d0d;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+.ai-model-dropdown.open .ai-model-panel {
+  display: block;
+}
+
+.ai-model-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.ai-model-option:last-child {
+  border-bottom: none;
+}
+
+.ai-model-option:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.ai-model-option.selected {
+  background: rgba(232,23,93,0.1);
+}
+
+.ai-model-option__name {
+  font-size: 0.82rem;
+  font-weight: 600;
   color: var(--text);
 }
 
-.ai-model-select option {
-  background: #111;
-  color: var(--text);
+.ai-model-option.selected .ai-model-option__name {
+  color: var(--pink);
+}
+
+.ai-model-option__id {
+  font-size: 0.72rem;
+  color: var(--muted);
+  opacity: 0.7;
+  font-family: "SF Mono", "Fira Code", monospace;
 }
 
 /* ── Messages ──────────────────────────────────────────────────────────────── */

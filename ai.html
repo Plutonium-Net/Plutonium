@@ -13,61 +13,72 @@
 
   <div id="particles-js"></div>
 
-  <!-- Auth gate (shown when signed out) -->
-  <div class="ai-gate" id="ai-gate">
-    <i class="fa-solid fa-lock ai-gate__icon"></i>
-    <div class="ai-gate__heading">Sign in to use AI</div>
-    <p class="ai-gate__desc">A Plutonium account is required to use the AI chat. Your conversations are saved to your account.</p>
-    <button class="ai-btn ai-btn--primary" id="ai-signin-btn">
-      <i class="fa-brands fa-google"></i> Sign in with Google
-    </button>
-  </div>
+  <div class="ai-page">
+    <h1 class="ai-page__title">AI</h1>
+    <p class="ai-page__subtitle">Chat with powerful models via Groq - sign in to save your conversations.</p>
 
-  <!-- App (shown when signed in) -->
-  <div class="ai-app" id="ai-app" style="display:none">
-
-    <!-- Sidebar -->
-    <div class="ai-sidebar" id="ai-sidebar">
-      <div class="ai-sidebar__header">
-        <span class="ai-sidebar__title">Chats</span>
-        <button class="ai-new-chat" id="ai-new-chat">
-          <i class="fa-solid fa-plus"></i> New
-        </button>
-      </div>
-      <div class="ai-chat-list" id="ai-chat-list"></div>
+    <!-- Auth gate (shown when signed out) -->
+    <div class="ai-gate" id="ai-gate">
+      <i class="fa-solid fa-lock ai-gate__icon"></i>
+      <div class="ai-gate__heading">Sign in to use AI</div>
+      <p class="ai-gate__desc">A Plutonium account is required to use the AI chat. Your conversations are saved to your account.</p>
+      <button class="ai-btn ai-btn--primary" id="ai-signin-btn">
+        <i class="fa-brands fa-google"></i> Sign in with Google
+      </button>
     </div>
 
-    <!-- Main -->
-    <div class="ai-main">
+    <!-- App (shown when signed in) -->
+    <div class="ai-app" id="ai-app" style="display:none">
 
-      <!-- Topbar -->
-      <div class="ai-topbar">
-        <button class="ai-sidebar-toggle" id="ai-sidebar-toggle" title="Toggle sidebar">
-          <i class="fa-solid fa-bars"></i>
-        </button>
-        <span class="ai-chat-title" id="ai-chat-title">New Chat</span>
-        <select class="ai-model-select" id="ai-model-select"></select>
-      </div>
-
-      <!-- Messages -->
-      <div class="ai-messages" id="ai-messages">
-        <div class="ai-empty" id="ai-empty">
-          <i class="fa-solid fa-robot"></i>
-          <p>Start a conversation</p>
-        </div>
-      </div>
-
-      <!-- Input -->
-      <div class="ai-inputbar">
-        <div class="ai-inputbar__inner">
-          <textarea class="ai-input" id="ai-input" rows="1" placeholder="Message... (Shift+Enter for new line)"></textarea>
-          <button class="ai-send-btn" id="ai-send-btn" title="Send">
-            <i class="fa-solid fa-arrow-up"></i>
+      <!-- Sidebar -->
+      <div class="ai-sidebar" id="ai-sidebar">
+        <div class="ai-sidebar__header">
+          <span class="ai-sidebar__title">Chats</span>
+          <button class="ai-new-chat" id="ai-new-chat">
+            <i class="fa-solid fa-plus"></i> New
           </button>
         </div>
-        <div class="ai-inputbar__hint">Enter to send - Shift+Enter for new line</div>
+        <div class="ai-chat-list" id="ai-chat-list"></div>
       </div>
 
+      <!-- Main -->
+      <div class="ai-main">
+
+        <!-- Topbar -->
+        <div class="ai-topbar">
+          <button class="ai-sidebar-toggle" id="ai-sidebar-toggle" title="Toggle sidebar">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <span class="ai-chat-title" id="ai-chat-title">New Chat</span>
+          <div class="ai-model-dropdown" id="ai-model-dropdown">
+            <button class="ai-model-btn" id="ai-model-btn">
+              <span class="ai-model-btn__label" id="ai-model-btn-label">Llama 3.3 70B</span>
+              <i class="fa-solid fa-chevron-down ai-model-btn__chevron"></i>
+            </button>
+            <div class="ai-model-panel" id="ai-model-panel"></div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="ai-messages" id="ai-messages">
+          <div class="ai-empty" id="ai-empty">
+            <i class="fa-solid fa-robot"></i>
+            <p>Start a conversation</p>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="ai-inputbar">
+          <div class="ai-inputbar__inner">
+            <textarea class="ai-input" id="ai-input" rows="1" placeholder="Message... (Shift+Enter for new line)"></textarea>
+            <button class="ai-send-btn" id="ai-send-btn" title="Send">
+              <i class="fa-solid fa-arrow-up"></i>
+            </button>
+          </div>
+          <div class="ai-inputbar__hint">Enter to send - Shift+Enter for new line</div>
+        </div>
+
+      </div>
     </div>
   </div>
 
