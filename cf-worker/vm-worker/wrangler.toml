@@ -9,3 +9,10 @@ zone_name = "plutoniumnet.work"
 [vars]
 ALLOWED_ORIGIN = "*.plutoniumnet.work,http://127.0.0.1:5500"
 # HYPERBEAM_API_KEY — set via: wrangler secret put HYPERBEAM_API_KEY
+
+# KV namespace for rate limiting — create via:
+#   wrangler kv namespace create VM_RATE_LIMIT
+# then paste the returned id below.
+[[kv_namespaces]]
+binding  = "VM_RATE_LIMIT"
+id       = "12b36197cd7540f2b8850162bb9b8765"
