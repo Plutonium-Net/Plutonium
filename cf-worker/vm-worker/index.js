@@ -128,7 +128,7 @@ async function handleSession(request, env, allowed) {
     if (limited) {
       const retryAfter = reset ? Math.max(0, reset - Math.floor(Date.now() / 1000)) : WINDOW_SECS;
       return new Response(JSON.stringify({
-        error: `Rate limit exceeded — you can start ${MAX_CREATES} sessions every 15 minutes.`,
+        error: `Rate limit exceeded - you can start ${MAX_CREATES} sessions every 15 minutes.`,
         retry_after: retryAfter,
       }), {
         status: 429,

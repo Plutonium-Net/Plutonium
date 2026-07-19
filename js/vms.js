@@ -199,7 +199,7 @@ async function endSession(autoEnded = false) {
   placeholder.style.display = '';
   placeholder.innerHTML = `
     <i class="fa-solid fa-desktop"></i>
-    <span>${autoEnded ? 'Session ended — 15-minute limit reached' : 'Session ended. Click Start Session to begin a new one.'}</span>`;
+    <span>${autoEnded ? 'Session ended - 15-minute limit reached' : 'Session ended. Click Start Session to begin a new one.'}</span>`;
 
   setStatus(autoEnded ? 'Session auto-ended' : 'No active session');
   startBtn.disabled  = false;
@@ -240,7 +240,10 @@ startBtn.addEventListener('click', startSession);
 endBtn.addEventListener('click', () => endSession(false));
 
 fullscreenBtn.addEventListener('click', () => {
-  if (embedUrl) window.open(embedUrl, '_blank', 'width=1920,height=1080');
+  const target = embedEl;
+  if (target.requestFullscreen)            target.requestFullscreen();
+  else if (target.webkitRequestFullscreen) target.webkitRequestFullscreen();
+  else if (target.mozRequestFullScreen)    target.mozRequestFullScreen();
 });
 
-window.addEventListener('beforeunload', () => { if (hb) hb.destroy(); });
+window.addEventListener('beforeunload', () => { if (hb) endSession(false); });
