@@ -43,7 +43,6 @@
         const track2 = document.getElementById('hero-scroller-track-2');
         if (!track || !games.length) return;
 
-        // Shuffle a copy for the second column so they look different
         const shuffled = [...games].sort(() => Math.random() - 0.5);
 
         [[track, games], [track2, shuffled]].forEach(([el, list]) => {

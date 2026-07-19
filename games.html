@@ -17,7 +17,6 @@
     <h1 class="games-page__title">Games</h1>
     <p class="games-page__subtitle">Browse and play games from multiple sources</p>
 
-    <!-- Source tabs -->
     <div class="source-tabs">
       <button class="source-tab active" data-panel="pgcdn">PlutoniumGCDN</button>
       <button class="source-tab" data-panel="lumin">LuminSDK</button>
@@ -25,13 +24,10 @@
       <button class="source-tab" data-panel="history">History</button>
     </div>
 
-    <!-- PlutoniumGCDN panel -->
     <div class="source-panel active" id="panel-pgcdn">
 
-      <!-- Sync badge -->
       <div class="pgcdn-sync-badge" id="pgcdn-sync-badge"></div>
 
-      <!-- Favourites row -->
       <div class="pgcdn-shelf" id="pgcdn-shelf-favs" style="display:none">
         <div class="pgcdn-shelf__header">
           <i class="fa-solid fa-heart"></i> Favourites
@@ -39,7 +35,6 @@
         <div class="pgcdn-shelf__row" id="pgcdn-favs-row"></div>
       </div>
 
-      <!-- Recent plays row -->
       <div class="pgcdn-shelf" id="pgcdn-shelf-recent" style="display:none">
         <div class="pgcdn-shelf__header">
           <i class="fa-solid fa-clock-rotate-left"></i> Recent
@@ -56,12 +51,10 @@
       </div>
     </div>
 
-    <!-- LuminSDK panel -->
     <div class="source-panel" id="panel-lumin">
       <div id="lumin-container"></div>
     </div>
 
-    <!-- GnMath panel -->
     <div class="source-panel" id="panel-gnmath">
       <div class="games-placeholder">
         <i class="fa-solid fa-gamepad"></i>
@@ -69,7 +62,6 @@
       </div>
     </div>
 
-    <!-- History panel -->
     <div class="source-panel" id="panel-history">
       <div class="history-toolbar">
         <input class="history-search" id="history-search" type="search" placeholder="Search history…" />
@@ -95,26 +87,21 @@
     </div>
   </div>
 
-  <!-- Context menu -->
   <div id="pgcdn-ctx-menu" class="hidden"></div>
 
-  <!-- Toast -->
   <div id="pgcdn-toast">
     <span class="toast-msg" id="pgcdn-toast-msg"></span>
     <div class="toast-actions" id="pgcdn-toast-actions"></div>
   </div>
 
-  <!-- Game viewer overlay -->
   <div id="game-viewer">
     <iframe id="game-iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
-    <!-- Restore spinner — shown while cloud saves are being fetched and written back -->
     <div id="game-restore-overlay">
       <div class="game-restore-spinner"></div>
       <span class="game-restore-label">Restoring saves…</span>
     </div>
   </div>
 
-  <!-- Viewer dock bar -->
   <div id="viewer-bar" class="bar-hidden">
     <button class="viewer-btn" id="vbtn-back" title="Back to games" aria-label="Back">
       <i class="fa-solid fa-arrow-left"></i>
@@ -136,7 +123,6 @@
     </button>
   </div>
 
-  <!-- Ghost strip to restore hidden bar -->
   <div id="viewer-bar-ghost"></div>
 
   <script src="https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js"></script>

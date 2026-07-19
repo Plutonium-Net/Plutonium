@@ -1,16 +1,3 @@
-/**
- * nav.js — Plutonium dynamic navigation
- *
- * Usage (optional, defaults shown):
- *   PlutoniumNav.init({
- *     mode: 'dock',   // 'dock' | 'sidebar' | 'topbar'
- *     items: [...],   // override default nav items
- *   });
- *
- * Reconfigure any time:
- *   PlutoniumNav.setMode('sidebar');
- */
-
 (function () {
   'use strict';
 
@@ -28,7 +15,6 @@
     { id: 'sidebar',  fa: 'fa-solid fa-table-columns',   label: 'Layout',           href: '', special: true },
   ];
 
-  // Mode cycle order and the icon that represents the NEXT mode
   const MODE_CYCLE = ['dock', 'sidebar', 'topbar'];
   const MODE_NEXT_ICON = {
     dock:    { fa: 'fa-solid fa-bars-staggered',  label: 'Sidebar'  },
@@ -41,7 +27,6 @@
   let _nav       = null;
   let _collapsed = false;
 
-  /* ── Nav preference persistence ─────────────────────────────────────── */
   const PREF_LS_KEY = 'plu_nav_prefs';
 
   function _prefsFromLS() {
@@ -74,14 +59,11 @@
     } catch (_) { return null; }
   }
 
-  // Save both locally and to cloud; local write is synchronous so the UI
-  // never waits on the network.
   function _savePrefs() {
     _savePrefsLS(_mode, _collapsed);
     _savePrefsCloud(_mode, _collapsed);
   }
 
-  // Apply a prefs object { mode, collapsed } without triggering another save.
   function _applyPrefs(prefs) {
     if (!prefs) return false;
     let changed = false;
@@ -96,7 +78,6 @@
     return changed;
   }
 
-  /* ── Build DOM ─────────────────────────────────────────────────────── */
   function buildNav() {
     const old = document.getElementById('plu-nav');
     if (old) old.remove();
@@ -105,7 +86,6 @@
     _nav.id = 'plu-nav';
     _nav.setAttribute('data-mode', _mode);
 
-    // Collapse button — directional arrow, lives before the icon list
     const collapseBtn = document.createElement('button');
     collapseBtn.className = 'plu-nav__collapse-btn';
     collapseBtn.setAttribute('aria-label', 'Hide navigation');
@@ -166,7 +146,6 @@
 
     _nav.appendChild(list);
 
-    // Clock widget
     const clock = document.createElement('div');
     clock.className = 'plu-nav__clock';
     clock.id = 'plu-nav-clock';
@@ -174,26 +153,16 @@
 
     document.body.appendChild(_nav);
 
-    // Re-apply collapsed state if it was set before a rebuild
     if (_collapsed) _nav.classList.add('plu-nav--collapsed');
 
-    // Build ghost trigger (sits at the edge, glows pink, hover restores nav)
     buildGhost();
-
-    // Update special button icon to reflect next mode in cycle
     updateSpecialIcon();
-
-    // Start clock
     startClock();
-
-    // Magnification
     attachMagnification();
   }
 
-  /* ── Account icon ───────────────────────────────────────────────────── */
   function _buildAccountIcon(anchor) {
     const user = (typeof PlutoniumStore !== 'undefined') ? PlutoniumStore.currentUser : null;
-    // Clear previous icon content
     anchor.querySelectorAll('.plu-nav__icon, .plu-nav__avatar').forEach(el => el.remove());
 
     if (user && user.photoUrl) {
@@ -211,9 +180,6 @@
     }
   }
 
-  // Subscribe to auth changes once PlutoniumStore is available.
-  // On sign-in: fetch cloud prefs and apply them (the user may have a saved
-  // layout from another device).  Also update the account icon.
   function _initAccountIconWatcher() {
     if (typeof PlutoniumStore === 'undefined') return;
     PlutoniumStore.onAuthChange(async (user) => {
@@ -227,14 +193,12 @@
     });
   }
 
-  /* ── Collapse arrow direction by mode ───────────────────────────────── */
   function collapseArrowClass() {
     if (_mode === 'dock')    return 'fa-solid fa-chevron-down';
     if (_mode === 'topbar')  return 'fa-solid fa-chevron-up';
     if (_mode === 'sidebar') return 'fa-solid fa-chevron-left';
   }
 
-  /* ── Ghost trigger ──────────────────────────────────────────────────── */
   function buildGhost() {
     const old = document.getElementById('plu-nav-ghost');
     if (old) old.remove();
@@ -246,7 +210,6 @@
     document.body.appendChild(ghost);
   }
 
-  /* ── Collapse / Expand ──────────────────────────────────────────────── */
   function collapse() {
     _collapsed = true;
     _nav.classList.add('plu-nav--collapsed');
@@ -263,11 +226,8 @@
     _savePrefs();
   }
 
-  /* ── Magnification ──────────────────────────────────────────────────── */
-  // Continuous mouse-position magnification: distance is measured in px
-  // from the cursor to each icon's center, not per-index steps.
-  const MAG_MAX    = 1.7;   // max scale at cursor
-  const MAG_RADIUS = 80;    // px radius of the magnification field
+  const MAG_MAX    = 1.7;
+  const MAG_RADIUS = 80;
 
   function attachMagnification() {
     const links = Array.from(_nav.querySelectorAll('.plu-nav__link'));
@@ -278,7 +238,6 @@
         const rect   = link.getBoundingClientRect();
         const cx     = rect.left + rect.width  / 2;
         const cy     = rect.top  + rect.height / 2;
-        // use the axis that matters for this mode
         const dist   = vertical ? Math.abs(mouseY - cy) : Math.abs(mouseX - cx);
         const t      = Math.max(0, 1 - dist / MAG_RADIUS);
         const scale  = 1 + (MAG_MAX - 1) * t * t;
@@ -298,7 +257,6 @@
     _nav.addEventListener('mousemove', e => applyMag(e.clientX, e.clientY));
     _nav.addEventListener('mouseleave', resetMag);
 
-    // Glow the bar on hover
     _nav.addEventListener('mouseenter', () => {
       _nav.style.boxShadow =
         '0 0 0 1px rgba(232,23,93,0.35), ' +
@@ -307,7 +265,6 @@
     });
   }
 
-  /* ── Update special button icon ─────────────────────────────────────── */
   function updateSpecialIcon() {
     const specialIcon  = _nav.querySelector('.plu-nav__link--special .plu-nav__icon');
     const specialLabel = _nav.querySelector('.plu-nav__link--special .plu-nav__label');
@@ -317,7 +274,6 @@
     if (specialLabel) specialLabel.textContent = next.label;
   }
 
-  /* ── Animated transition ────────────────────────────────────────────── */
   const EXIT_CLASS = {
     dock:    'plu-nav--exit-down',
     sidebar: 'plu-nav--exit-left',
@@ -340,7 +296,6 @@
     }, EXIT_DURATION);
   }
 
-  /* ── Clock ──────────────────────────────────────────────────────────── */
   let _clockTimer = null;
 
   function startClock() {
@@ -365,7 +320,6 @@
       `<span class="plu-nav__clock-s">${s}</span>`;
   }
 
-  /* ── Mode switching ─────────────────────────────────────────────────── */
   function setMode(mode) {
     if (!['dock', 'sidebar', 'topbar'].includes(mode)) {
       console.warn('[PlutoniumNav] Unknown mode:', mode);
@@ -376,28 +330,23 @@
     _savePrefs();
   }
 
-  /* ── Init ───────────────────────────────────────────────────────────── */
   async function init(opts) {
     if (opts) {
       if (opts.mode)  _mode  = opts.mode;
       if (opts.items) _items = opts.items;
     }
 
-    // 1. Apply localStorage prefs immediately (no network wait).
     _applyPrefs(_prefsFromLS());
 
     buildNav();
     _initAccountIconWatcher();
 
-    // 2. If already signed in, fetch cloud prefs and apply if different.
     const cloudPrefs = await _loadPrefsCloud();
     if (_applyPrefs(cloudPrefs)) buildNav();
   }
 
-  /* ── Public API ─────────────────────────────────────────────────────── */
   window.PlutoniumNav = { init, setMode };
 
-  /* ── Auto-init ──────────────────────────────────────────────────────── */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => init());
   } else {

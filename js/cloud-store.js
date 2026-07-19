@@ -1,66 +1,11 @@
-/**
- * cloud-store.js — PlutoniumStore
- *
- * A thin, self-contained module that lets any Plutonium feature save and
- * retrieve user-specific data to the cloud, backed by:
- *   • Firestore   — structured per-user documents
- *   • Realtime DB — low-latency live data (presence, counters, etc.)
- *
- * All Firebase credentials are hidden behind a Cloudflare Worker; this
- * module never hard-codes secrets.
- *
- * ── Usage ───────────────────────────────────────────────────────────────────
- *
- *   // Sign in with email + password:
- *   const user = await PlutoniumStore.signInWithEmail('user@example.com', 'password');
- *
- *   // Create a new account:
- *   const user = await PlutoniumStore.signUp('user@example.com', 'password', 'Display Name');
- *
- *   // Send a password-reset email:
- *   await PlutoniumStore.resetPassword('user@example.com');
- *
- *   // Save a document at users/{uid}/settings:
- *   await PlutoniumStore.setDoc('settings', { theme: 'dark', volume: 0.8 });
- *
- *   // Read it back:
- *   const doc = await PlutoniumStore.getDoc('settings');
- *
- *   // Write to Realtime DB at users/{uid}/presence:
- *   await PlutoniumStore.setRTDB('presence', { online: true, ts: Date.now() });
- *
- *   // Read from Realtime DB:
- *   const presence = await PlutoniumStore.getRTDB('presence');
- *
- *   // Listen to Realtime DB path (polling — RTDB SSE requires native SDK):
- *   const stop = PlutoniumStore.watchRTDB('presence', data => console.log(data), 5000);
- *   // later: stop();
- *
- *   // Subscribe to auth state changes:
- *   PlutoniumStore.onAuthChange(user => { ... });
- *
- *   // Sign out:
- *   await PlutoniumStore.signOut();
- *
- * ── Worker URL ──────────────────────────────────────────────────────────────
- *   Set PlutoniumStore.WORKER_URL before first use, e.g. in your page's
- *   <script> block or main.js:
- *
- *     PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
- *
- * ────────────────────────────────────────────────────────────────────────────
- */
-
 (function () {
   'use strict';
 
-  /* ── State ──────────────────────────────────────────────────────────────── */
-  let _workerUrl    = '';        // set via PlutoniumStore.WORKER_URL
-  let _currentUser  = null;      // { uid, idToken, refreshToken, expiresAt, displayName, email, photoUrl }
-  let _authListeners = [];       // callbacks registered via onAuthChange()
+  let _workerUrl    = '';
+  let _currentUser  = null;
+  let _authListeners = [];
   let _refreshTimer  = null;
 
-  /* ── Auth ───────────────────────────────────────────────────────────────── */
   async function refreshIdToken() {
     if (!_currentUser?.refreshToken) return;
     assertWorkerUrl();
@@ -121,13 +66,11 @@
       const user = JSON.parse(raw);
       if (!user?.idToken) return;
       _currentUser = user;
-      // If token is already expired, refresh immediately; otherwise schedule
       if (Date.now() >= user.expiresAt) {
         refreshIdToken();
       } else {
         _scheduleRefresh();
       }
-      // Defer so page scripts can register onAuthChange listeners first
       setTimeout(() => {
         _authListeners.forEach(fn => { try { fn(_currentUser); } catch (_) {} });
       }, 0);
@@ -208,7 +151,6 @@
   async function deleteAccount() {
     assertWorkerUrl();
     if (!_currentUser?.idToken) throw new Error('[PlutoniumStore] Not signed in');
-    // Ensure token is fresh before deletion
     if (Date.now() >= _currentUser.expiresAt - 30_000) await refreshIdToken();
     const res = await fetch(`${_workerUrl}/auth/delete`, {
       method:  'POST',
@@ -262,7 +204,6 @@
 
       window.addEventListener('message', onMessage);
 
-      // Detect if user closed the popup without completing sign-in
       const pollTimer = setInterval(() => {
         if (popup.closed) {
           clearInterval(pollTimer);
@@ -282,32 +223,23 @@
 
   function onAuthChange(callback) {
     _authListeners.push(callback);
-    // Fire immediately with current state
     try { callback(_currentUser); } catch (_) {}
     return () => {
       _authListeners = _authListeners.filter(fn => fn !== callback);
     };
   }
 
-  /* ── Token helper ───────────────────────────────────────────────────────── */
   async function _authHeader() {
     if (!_currentUser) throw new Error('[PlutoniumStore] Not signed in');
     if (Date.now() >= _currentUser.expiresAt - 30_000) await refreshIdToken();
     return { Authorization: `Bearer ${_currentUser.idToken}` };
   }
 
-  /* ── Firestore ──────────────────────────────────────────────────────────── */
-  // Documents are stored at: users/{uid}/{collection}
-  // The `collection` arg is a simple collection name (e.g. "settings", "scores").
-  // For sub-paths, pass e.g. "prefs/appearance".
-
   async function setDoc(collection, data) {
     assertWorkerUrl();
     const uid = _requireUser();
     const auth = await _authHeader();
     const path = `/users/${uid}/${collection}`;
-
-    // Convert plain JS object to Firestore REST fields format
     const fields = toFirestoreFields(data);
 
     const res = await fetch(`${_workerUrl}/firestore${path}`, {
@@ -355,7 +287,6 @@
     }
   }
 
-  /* ── Firestore field serialisation ─────────────────────────────────────── */
   function toFirestoreFields(obj) {
     const fields = {};
     for (const [k, v] of Object.entries(obj)) {
@@ -398,9 +329,6 @@
     if ('mapValue'       in v) return fromFirestoreFields(v.mapValue.fields || {});
     return undefined;
   }
-
-  /* ── Realtime Database ──────────────────────────────────────────────────── */
-  // RTDB paths are rooted at users/{uid}/{path}
 
   async function setRTDB(path, data) {
     assertWorkerUrl();
@@ -449,7 +377,7 @@
       const err = await res.json().catch(() => ({}));
       throw new Error(`[PlutoniumStore] getRTDB failed: ${JSON.stringify(err)}`);
     }
-    return res.json();   // null if the path doesn't exist in RTDB
+    return res.json();
   }
 
   async function deleteRTDB(path) {
@@ -467,10 +395,6 @@
     }
   }
 
-  /**
-   * Poll a Realtime DB path at a given interval.
-   * Returns a stop() function.
-   */
   function watchRTDB(path, callback, intervalMs = 5000) {
     let active = true;
     async function tick() {
@@ -478,16 +402,13 @@
       try {
         const data = await getRTDB(path);
         callback(data);
-      } catch (e) {
-        // Not signed in yet — skip silently
-      }
+      } catch (e) {}
       if (active) setTimeout(tick, intervalMs);
     }
     tick();
     return () => { active = false; };
   }
 
-  /* ── Guards ──────────────────────────────────────────────────────────────── */
   function assertWorkerUrl() {
     if (!_workerUrl) {
       throw new Error(
@@ -502,16 +423,12 @@
     return _currentUser.uid;
   }
 
-  /* ── Bootstrap ───────────────────────────────────────────────────────────── */
   _restoreSession();
 
-  /* ── Public API ──────────────────────────────────────────────────────────── */
   window.PlutoniumStore = {
-    // Config
     set WORKER_URL(url)       { _workerUrl = url.replace(/\/$/, ''); },
     get WORKER_URL()          { return _workerUrl; },
 
-    // Auth
     signInWithEmail,
     signUp,
     resetPassword,
@@ -522,12 +439,10 @@
     onAuthChange,
     get currentUser()         { return _currentUser ? { ..._currentUser } : null; },
 
-    // Firestore
     setDoc,
     getDoc,
     deleteDoc,
 
-    // Realtime Database
     setRTDB,
     getRTDB,
     updateRTDB,

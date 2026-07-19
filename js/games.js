@@ -1,28 +1,18 @@
-/* games.js — Plutonium games page logic */
-
 (function () {
   'use strict';
 
-  // ── Constants ──────────────────────────────────────────────────────────────
   const PGCDN_BASE    = 'https://g.cdn.plutoniumnet.work';
   const LS_KEY        = 'plu_games_data';
   const CLOUD_DOC     = 'games_data/saved';
-  const SHELF_RECENT  = 10;   // shown in the Recent shelf on the main panel
+  const SHELF_RECENT  = 10;
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  let _pgcdnGames = [];   // full game list from config.json
+  let _pgcdnGames = [];
   let _data       = { favourites: [], recent: [] };
-  // favourites: string[] of game ids
-  // recent:     { id, name, image, path, ts }[] — unlimited, newest first
 
+  let _syncGameId    = null;
+  let _pendingSaves  = null;
+  let _knownSaves    = null;
 
-  // ── Game-save sync state ───────────────────────────────────────────────────
-  let _syncGameId    = null;  // id of the game currently open in the viewer
-  let _pendingSaves  = null;  // pre-fetched saves waiting for plu_sync_ready
-  let _knownSaves    = null;  // Set of gameIds known to have cloud saves (loaded once on sign-in)
-
-
-  // ── Local persistence ──────────────────────────────────────────────────────
   function _loadLocal() {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -34,13 +24,12 @@
     try { localStorage.setItem(LS_KEY, JSON.stringify(_data)); } catch (_) {}
   }
 
-  // ── Cloud sync ─────────────────────────────────────────────────────────────
   async function _saveCloud() {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     try {
       await PlutoniumStore.setDoc(CLOUD_DOC, {
         favourites: _data.favourites,
-        recent:     _data.recent.map(g => ({ id: g.id, ts: g.ts })),  // full history
+        recent:     _data.recent.map(g => ({ id: g.id, ts: g.ts })),
       });
       _setBadge(true);
     } catch (e) {
@@ -54,13 +43,10 @@
       const doc = await PlutoniumStore.getDoc(CLOUD_DOC);
       if (!doc) { _knownSaves = new Set(); return; }
 
-      // Populate the known-saves index so we skip 404 fetches for unsaved games
       _knownSaves = new Set(doc.savedGames || []);
-      // Merge favourites — union of local + cloud
       const favSet = new Set([..._data.favourites, ...(doc.favourites || [])]);
       _data.favourites = [...favSet];
 
-      // Merge recent — cloud ids mapped back to full game objects, merged with local, deduped, sorted by ts
       const cloudRecent = (doc.recent || [])
         .map(r => {
           const game = _pgcdnGames.find(g => g.id === r.id);
@@ -73,7 +59,6 @@
       _data.recent = merged
         .filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; })
         .sort((a, b) => b.ts - a.ts);
-      // no slice — keep full history
 
       _saveLocal();
       _renderShelves();
@@ -84,15 +69,11 @@
     }
   }
 
-  // ── Game-save sync (postMessage bridge to CDN iframe) ──────────────────────
-
-  // Snapshot received from the iframe → write to Firestore under game_saves/{gameId}
   async function _onSaveData(gameId, saves) {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     if (!gameId || !saves || !Object.keys(saves).length) return;
     try {
       await PlutoniumStore.setDoc(`game_saves/${gameId}`, { saves: JSON.stringify(saves) });
-      // Register this game in the index so future sessions skip the 404 fetch
       if (_knownSaves && !_knownSaves.has(gameId)) {
         _knownSaves.add(gameId);
         await PlutoniumStore.setDoc(CLOUD_DOC, { savedGames: [..._knownSaves] });
@@ -102,18 +83,14 @@
     }
   }
 
-  // Overlay helpers
   const _restoreOverlay = document.getElementById('game-restore-overlay');
   function _showRestoreOverlay() { _restoreOverlay?.classList.add('active'); }
   function _hideRestoreOverlay() { _restoreOverlay?.classList.remove('active'); }
 
-  // Pre-fetch saves for a game BEFORE the iframe loads, cache in _pendingSaves.
-  // Skips the network call entirely if this game has never been saved to the cloud.
   async function _prefetchGameSaves(gameId) {
     _pendingSaves = null;
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     if (!gameId) return;
-    // Skip fetch if we know there are no cloud saves for this game
     if (_knownSaves && !_knownSaves.has(gameId)) {
       return;
     }
@@ -123,7 +100,6 @@
       if (doc?.saves) {
         _pendingSaves = JSON.parse(doc.saves);
         _knownSaves?.add(gameId);
-      } else {
       }
     } catch (e) {
       console.warn('[games] save-sync prefetch failed:', e.message);
@@ -132,7 +108,6 @@
     }
   }
 
-  // Push cached saves into the iframe
   function _pushPendingSaves() {
     if (!_pendingSaves) return;
     const iframeEl = document.getElementById('game-iframe');
@@ -144,7 +119,6 @@
     _pendingSaves = null;
   }
 
-  // Request a snapshot from the open iframe and persist it
   function _requestSaveSnapshot() {
     if (!_syncGameId) return;
     const iframeEl = document.getElementById('game-iframe');
@@ -152,24 +126,17 @@
     iframeEl.contentWindow.postMessage({ plu: true, type: 'plu_sync_request' }, '*');
   }
 
-  // Listen for messages from the CDN game iframe
   window.addEventListener('message', function (e) {
     if (!e.data?.plu) return;
-
-    // Game announced it's ready — push pre-fetched saves immediately
     if (e.data.type === 'plu_sync_ready') {
       _pushPendingSaves();
-      // Request a snapshot shortly after so we capture the game's initial state
       setTimeout(_requestSaveSnapshot, 1000);
     }
-
-    // Game sent a full snapshot — persist it
     if (e.data.type === 'plu_sync_data') {
       if (_syncGameId) _onSaveData(_syncGameId, e.data.saves);
     }
   });
 
-  // ── Sync badge (small indicator below shelves) ─────────────────────────────
   function _setBadge(synced) {
     const badge = document.getElementById('pgcdn-sync-badge');
     if (!badge) return;
@@ -182,7 +149,6 @@
     }
   }
 
-  // ── Favourites ─────────────────────────────────────────────────────────────
   function _isFav(id) { return _data.favourites.includes(id); }
 
   function _toggleFav(id) {
@@ -204,18 +170,15 @@
     });
   }
 
-  // ── Recent plays ───────────────────────────────────────────────────────────
   function _recordPlay(game) {
     _data.recent = _data.recent.filter(r => r.id !== game.id);
     _data.recent.unshift({ ...game, ts: Date.now() });
-    // no cap — keep full history
     _saveLocal();
     _saveCloud();
     _renderShelves();
     _renderHistory();
   }
 
-  // ── Toast ──────────────────────────────────────────────────────────────────
   const _toast        = document.getElementById('pgcdn-toast');
   const _toastMsg     = document.getElementById('pgcdn-toast-msg');
   const _toastActions = document.getElementById('pgcdn-toast-actions');
@@ -241,7 +204,6 @@
     clearTimeout(_toastTimer);
   }
 
-  // ── Context menu ───────────────────────────────────────────────────────────
   const _ctxMenu = document.getElementById('pgcdn-ctx-menu');
   let _ctxDismiss = null;
 
@@ -263,7 +225,6 @@
       _ctxMenu.appendChild(el);
     });
 
-    // Position — keep inside viewport
     _ctxMenu.classList.remove('hidden');
     const mw = _ctxMenu.offsetWidth;
     const mh = _ctxMenu.offsetHeight;
@@ -273,7 +234,6 @@
     _ctxMenu.style.left = x + 'px';
     _ctxMenu.style.top  = y + 'px';
 
-    // Dismiss on next click / scroll / ESC
     setTimeout(() => {
       _ctxDismiss = () => _hideCtx();
       document.addEventListener('click',   _ctxDismiss, { once: true });
@@ -291,8 +251,6 @@
     document.removeEventListener('keydown', _ctxEsc);
   }
 
-  // ── Build a card (used for grid + shelves) ─────────────────────────────────
-  // zone: 'grid' | 'favs' | 'recent'
   function _buildCard(game, zone = 'grid') {
     const card = document.createElement('div');
     card.className = 'pgcdn-card';
@@ -328,7 +286,6 @@
       'sep',
     ];
 
-    // Favs shelf: only show destructive remove (no redundant toggle)
     if (zone === 'favs') {
       items.push({
         icon:   'fa-solid fa-heart-crack',
@@ -364,9 +321,7 @@
     _showCtx(e, items);
   }
 
-  // ── Render shelves ─────────────────────────────────────────────────────────
   function _renderShelves() {
-    // Favourites
     const favShelf = document.getElementById('pgcdn-shelf-favs');
     const favRow   = document.getElementById('pgcdn-favs-row');
     const favGames = _data.favourites
@@ -381,7 +336,6 @@
       favShelf.style.display = 'none';
     }
 
-    // Recent — top SHELF_RECENT only
     const recentShelf = document.getElementById('pgcdn-shelf-recent');
     const recentRow   = document.getElementById('pgcdn-recent-row');
 
@@ -394,7 +348,6 @@
     }
   }
 
-  // ── Render history panel ───────────────────────────────────────────────────
   let _historySort  = 'recent';
   let _historyQuery = '';
 
@@ -472,7 +425,6 @@
     return new Date(ts).toLocaleDateString();
   }
 
-  // ── PlutoniumGCDN init ────────────────────────────────────────────────────
   async function pgcdnInit() {
     _loadLocal();
 
@@ -511,7 +463,6 @@
   async function pgcdnLaunch(game) {
     _syncGameId = game.id;
     _recordPlay(game);
-    // Pre-fetch cloud saves before the iframe starts loading
     await _prefetchGameSaves(game.id);
     openViewer(`${PGCDN_BASE}/${game.path}`, game.name, game);
   }
@@ -523,7 +474,6 @@
 
   pgcdnInit();
 
-  // ── History search + sort ──────────────────────────────────────────────────
   document.getElementById('history-search').addEventListener('input', e => {
     _historyQuery = e.target.value.trim().toLowerCase();
     _renderHistory();
@@ -538,7 +488,6 @@
     });
   });
 
-  // ── / shortcut — focus the active search input ────────────────────────────
   document.addEventListener('keydown', e => {
     if (e.key !== '/') return;
     const active = document.querySelector('.source-tab.active')?.dataset.panel;
@@ -553,7 +502,6 @@
     input.select();
   });
 
-  // ── History clear ─────────────────────────────────────────────────────────
   document.getElementById('history-clear').addEventListener('click', () => {
     _showToast('Clear all play history?', [
       {
@@ -575,7 +523,6 @@
     ]);
   });
 
-  // ── Auth sync ──────────────────────────────────────────────────────────────
   if (typeof PlutoniumStore !== 'undefined') {
     PlutoniumStore.onAuthChange(async user => {
       if (user) {
@@ -588,7 +535,6 @@
     _setBadge(false);
   }
 
-  // ── Source tab switching ───────────────────────────────────────────────────
   let _luminInited = false;
 
   document.querySelectorAll('.source-tab').forEach(tab => {
@@ -610,7 +556,6 @@
     });
   });
 
-  // ── Game viewer ───────────────────────────────────────────────────────────
   const viewer      = document.getElementById('game-viewer');
   const iframe      = document.getElementById('game-iframe');
   const viewerBar   = document.getElementById('viewer-bar');
@@ -620,7 +565,7 @@
 
   let _barHideTimer  = null;
   let _barManualHide = false;
-  let _currentGame   = null;  // game object currently open in viewer
+  let _currentGame   = null;
 
   function _updateViewerFavBtn() {
     if (!_currentGame) return;
@@ -639,13 +584,9 @@
     document.getElementById('plu-nav')?.style.setProperty('display', 'none');
     showBar();
     scheduleBarHide();
-
-    // onload is no longer used for restore — sync.js announces plu_sync_ready
-    // and we push the pre-fetched saves in the message handler above
   }
 
   function closeViewer() {
-    // Flush saves before tearing down
     _requestSaveSnapshot();
     _syncGameId = null;
 
@@ -689,7 +630,6 @@
   viewerBar.addEventListener('mouseenter', () => clearTimeout(_barHideTimer));
   viewerBar.addEventListener('mouseleave', () => { if (!_barManualHide) scheduleBarHide(); });
 
-  // Magnification
   const _vbtns = Array.from(viewerBar.querySelectorAll('.viewer-btn'));
   viewerBar.addEventListener('mousemove', e => {
     _vbtns.forEach(btn => {
