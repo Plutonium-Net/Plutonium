@@ -20,6 +20,12 @@
         A next-generation network built for those who are done with individuals.
         High-performance, completely wrapped, and beautifully crafted.
       </p>
+      <div class="hero__dock" id="hero-dock">
+        <div class="hero__dock-empty">
+          <i class="fa-solid fa-thumbtack"></i>
+          <span>Right-click any game to pin it here</span>
+        </div>
+      </div>
     </div>
     <div class="hero__scroller" id="hero-scroller">
       <div class="hero__scroller-track" id="hero-scroller-track"></div>
@@ -30,6 +36,11 @@
   </section>
 
   <script src="js/particles.min.js"></script>
+  <script src="js/cloud-store.js"></script>
+  <script>
+    PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
+  </script>
+  <script src="js/home-dock.js"></script>
   <script src="js/nav.js"></script>
   <script src="js/main.js"></script>
   <script>

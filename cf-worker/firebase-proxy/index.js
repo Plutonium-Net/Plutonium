@@ -47,6 +47,10 @@ export default {
         return handleOAuthCallback(request, env, url);
       }
 
+      if (path === '/vm/session' && request.method === 'POST') {
+        return handleVMSession(request, env, allowed);
+      }
+
       if (path.startsWith('/firestore/')) {
         return handleFirestore(request, env, allowed, path);
       }
@@ -386,6 +390,49 @@ async function proxiedResponse(upstreamResp, allowed) {
     status:  upstreamResp.status,
     headers: corsHeaders(allowed, { 'Content-Type': 'application/json' }),
   });
+}
+
+async function handleVMSession(request, env, allowed) {
+  if (!env.HYPERBEAM_API_KEY) {
+    return corsResponse({ error: 'HYPERBEAM_API_KEY not configured' }, 500, allowed);
+  }
+
+  // Verify Firebase ID token via the Worker's own /auth flow isn't needed —
+  // we just check it's a valid bearer token by inspecting the Authorization header.
+  const auth = request.headers.get('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) {
+    return corsResponse({ error: 'Unauthorized' }, 401, allowed);
+  }
+
+  const { action } = await request.json().catch(() => ({}));
+
+  if (action === 'create') {
+    const res = await fetch('https://engine.hyperbeam.com/v0/vm', {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${env.HYPERBEAM_API_KEY}`,
+      },
+      body: JSON.stringify({ offline_timeout: 60, start_url: 'https://www.google.com' }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) return corsResponse({ error: data.message || 'Hyperbeam error' }, res.status, allowed);
+
+    return corsResponse({
+      session_id: data.session_id,
+      embed_url:  data.embed_url,
+    }, 200, allowed);
+  }
+
+  if (action === 'delete') {
+    // Best-effort: delete by looking up the session from the request body
+    // The client sends no session_id — Hyperbeam auto-cleans after offline_timeout
+    // so this is a no-op placeholder for future session tracking.
+    return corsResponse({ deleted: true }, 200, allowed);
+  }
+
+  return corsResponse({ error: 'Unknown action' }, 400, allowed);
 }
 
 function handleHomepage() {

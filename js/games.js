@@ -276,6 +276,7 @@
   function _showCardCtx(e, game, zone) {
     const isFav    = _isFav(game.id);
     const isRecent = _data.recent.some(r => r.id === game.id);
+    const isPinned = typeof HomeDock !== 'undefined' && HomeDock.isPinned(game.id);
 
     const items = [
       {
@@ -285,6 +286,14 @@
       },
       'sep',
     ];
+
+    if (typeof HomeDock !== 'undefined') {
+      items.push({
+        icon:   isPinned ? 'fa-solid fa-thumbtack' : 'fa-regular fa-thumbtack',
+        label:  isPinned ? 'Unpin from Home' : 'Pin to Home',
+        action: () => isPinned ? HomeDock.unpin(game.id) : HomeDock.pin(game),
+      });
+    }
 
     if (zone === 'favs') {
       items.push({
@@ -436,6 +445,13 @@
       pgcdnRender(_pgcdnGames);
       _renderShelves();
       _renderHistory();
+
+      const launchId = location.hash.slice(1);
+      if (launchId) {
+        const game = _pgcdnGames.find(g => g.id === launchId);
+        if (game) pgcdnLaunch(game);
+        history.replaceState(null, '', location.pathname);
+      }
     } catch (e) {
       document.getElementById('pgcdn-grid-wrap').innerHTML =
         `<div class="pgcdn-status"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed to load games</span></div>`;
