@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account — Plutonium Network</title>
+  <link rel="icon" type="image/png" href="img/brand/logo.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── Account page layout ── */
+    .account-page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+    }
+
+    .account-card {
+      background: rgba(10, 10, 10, 0.82);
+      border: 1px solid rgba(232, 23, 93, 0.18);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: 20px;
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .account-card__logo {
+      width: 52px;
+      height: 52px;
+      margin-bottom: 20px;
+      opacity: 0.9;
+    }
+
+    .account-card__title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--pink);
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .account-card__subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    /* ── Signed-out view ── */
+    #view-signed-out { display: block; }
+
+    .account-card__sign-in-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--pink);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.18s ease, transform 0.12s ease;
+    }
+
+    .account-card__sign-in-btn:hover {
+      background: #c41050;
+      transform: translateY(-1px);
+    }
+
+    .account-card__sign-in-btn:active {
+      transform: translateY(0);
+    }
+
+    .account-card__sign-in-error {
+      margin-top: 14px;
+      font-size: 0.78rem;
+      color: #ff6b6b;
+      min-height: 18px;
+    }
+
+    /* ── Signed-in view ── */
+    #view-signed-in { display: none; }
+
+    .account-profile__avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 2px solid rgba(232, 23, 93, 0.5);
+      object-fit: cover;
+      margin-bottom: 14px;
+    }
+
+    .account-profile__avatar-placeholder {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 2px solid rgba(232, 23, 93, 0.5);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      font-size: 2.2rem;
+      color: var(--muted);
+    }
+
+    .account-profile__name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .account-profile__email {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .account-profile__uid {
+      font-size: 0.7rem;
+      color: rgba(160,160,160,0.55);
+      font-family: monospace;
+      letter-spacing: 0.04em;
+      margin-bottom: 28px;
+    }
+
+    .account-card__sign-out-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 9px 22px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .account-card__sign-out-btn:hover {
+      color: var(--pink);
+      border-color: rgba(232, 23, 93, 0.35);
+    }
+
+    /* ── Loading spinner ── */
+    #view-loading { display: none; }
+    .account-spinner {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(232, 23, 93, 0.2);
+      border-top-color: var(--pink);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .account-spinner-label {
+      margin-top: 12px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="particles-js"></div>
+
+  <section class="account-page">
+    <div class="account-card">
+      <img class="account-card__logo" src="img/brand/logo.png" alt="Plutonium logo" />
+      <h1 class="account-card__title">Plutonium Account</h1>
+      <p class="account-card__subtitle">Save your data across all Plutonium features</p>
+
+      <!-- Loading -->
+      <div id="view-loading">
+        <div class="account-spinner"></div>
+        <p class="account-spinner-label">Signing in…</p>
+      </div>
+
+      <!-- Signed out -->
+      <div id="view-signed-out">
+        <button class="account-card__sign-in-btn" id="btn-sign-in">
+          <i class="fa-brands fa-google"></i>
+          Sign in with Google
+        </button>
+        <p class="account-card__sign-in-error" id="sign-in-error"></p>
+      </div>
+
+      <!-- Signed in -->
+      <div id="view-signed-in">
+        <div id="profile-avatar-wrap"></div>
+        <p class="account-profile__name" id="profile-name"></p>
+        <p class="account-profile__email" id="profile-email"></p>
+        <p class="account-profile__uid" id="profile-uid"></p>
+        <button class="account-card__sign-out-btn" id="btn-sign-out">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          Sign out
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/particles.min.js"></script>
+  <script src="js/cloud-store.js"></script>
+  <script>
+    // ── Configure the store ─────────────────────────────────────────────────
+    // Replace with your deployed CF Worker URL.
+    PlutoniumStore.WORKER_URL      = 'https://plutonium-firebase-proxy.YOUR-SUBDOMAIN.workers.dev';
+    PlutoniumStore.GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com';
+
+    // ── View helpers ────────────────────────────────────────────────────────
+    const viewLoading   = document.getElementById('view-loading');
+    const viewSignedOut = document.getElementById('view-signed-out');
+    const viewSignedIn  = document.getElementById('view-signed-in');
+    const errorEl       = document.getElementById('sign-in-error');
+
+    function showView(name) {
+      viewLoading.style.display   = name === 'loading'    ? 'block' : 'none';
+      viewSignedOut.style.display = name === 'signed-out' ? 'block' : 'none';
+      viewSignedIn.style.display  = name === 'signed-in'  ? 'block' : 'none';
+    }
+
+    function renderProfile(user) {
+      document.getElementById('profile-name').textContent  = user.displayName || 'Plutonium User';
+      document.getElementById('profile-email').textContent = user.email        || '';
+      document.getElementById('profile-uid').textContent   = `UID: ${user.uid}`;
+
+      const wrap = document.getElementById('profile-avatar-wrap');
+      wrap.innerHTML = '';
+      if (user.photoUrl) {
+        const img = document.createElement('img');
+        img.src = user.photoUrl;
+        img.className = 'account-profile__avatar';
+        img.alt = user.displayName || 'Avatar';
+        wrap.appendChild(img);
+      } else {
+        const ph = document.createElement('div');
+        ph.className = 'account-profile__avatar-placeholder';
+        ph.innerHTML = '<i class="fa-solid fa-circle-user"></i>';
+        wrap.appendChild(ph);
+      }
+    }
+
+    // ── Auth state ──────────────────────────────────────────────────────────
+    PlutoniumStore.onAuthChange(user => {
+      if (user) {
+        renderProfile(user);
+        showView('signed-in');
+      } else {
+        showView('signed-out');
+      }
+    });
+
+    // ── Sign in ─────────────────────────────────────────────────────────────
+    document.getElementById('btn-sign-in').addEventListener('click', async () => {
+      errorEl.textContent = '';
+      showView('loading');
+      try {
+        await PlutoniumStore.signIn();
+        // onAuthChange callback will switch to signed-in view
+      } catch (e) {
+        console.error(e);
+        errorEl.textContent = 'Sign-in failed — please try again.';
+        showView('signed-out');
+      }
+    });
+
+    // ── Sign out ────────────────────────────────────────────────────────────
+    document.getElementById('btn-sign-out').addEventListener('click', async () => {
+      await PlutoniumStore.signOut();
+    });
+  </script>
+  <script src="js/nav.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

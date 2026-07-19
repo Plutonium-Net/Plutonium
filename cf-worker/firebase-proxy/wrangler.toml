@@ -1,0 +1,23 @@
+name            = "plutonium-firebase-proxy"
+main            = "index.js"
+compatibility_date = "2024-01-01"
+
+# ── Non-secret vars (can live here) ──────────────────────────────────────────
+# Replace these with your real Firebase project values.
+# Sensitive values (FIREBASE_API_KEY, etc.) should be stored via:
+#   wrangler secret put FIREBASE_API_KEY
+#   wrangler secret put FIREBASE_PROJECT_ID
+#   wrangler secret put FIREBASE_DATABASE_URL
+#   wrangler secret put FIREBASE_MESSAGING_SENDER_ID
+#   wrangler secret put FIREBASE_APP_ID
+#
+# ALLOWED_ORIGIN can stay here (not secret).
+
+[vars]
+ALLOWED_ORIGIN = "https://your-site.example.com"
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+# Uncomment and fill in your Worker domain once deployed:
+# routes = [
+#   { pattern = "api.your-site.example.com/*", zone_name = "your-site.example.com" }
+# ]

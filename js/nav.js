@@ -23,6 +23,7 @@
     { id: 'ai',       fa: 'fa-solid fa-microchip',       label: 'AI',               href: 'ai.html' },
     { id: 'cloud',    fa: 'fa-solid fa-cloud',           label: 'Cloud Gaming',     href: 'cloud.html' },
     { id: 'stream',   fa: 'fa-solid fa-circle-play',     label: 'Streaming',        href: 'stream.html' },
+    { id: 'account',  fa: 'fa-solid fa-circle-user',     label: 'Account',          href: 'account.html', account: true },
     { id: 'settings', fa: 'fa-solid fa-gear',            label: 'Settings',         href: '#' },
     { id: 'sidebar',  fa: 'fa-solid fa-table-columns',   label: 'Layout',           href: '', special: true },
   ];
@@ -39,6 +40,61 @@
   let _items     = DEFAULT_ITEMS;
   let _nav       = null;
   let _collapsed = false;
+
+  /* ── Nav preference persistence ─────────────────────────────────────── */
+  const PREF_LS_KEY = 'plu_nav_prefs';
+
+  function _prefsFromLS() {
+    try {
+      const raw = localStorage.getItem(PREF_LS_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+  }
+
+  function _savePrefsLS(mode, collapsed) {
+    try { localStorage.setItem(PREF_LS_KEY, JSON.stringify({ mode, collapsed })); } catch (_) {}
+  }
+
+  async function _savePrefsCloud(mode, collapsed) {
+    if (typeof PlutoniumStore === 'undefined') return;
+    const user = PlutoniumStore.currentUser;
+    if (!user) return;
+    try {
+      await PlutoniumStore.setDoc('nav_prefs', { mode, collapsed });
+    } catch (e) {
+      console.warn('[PlutoniumNav] Could not save prefs to cloud:', e);
+    }
+  }
+
+  async function _loadPrefsCloud() {
+    if (typeof PlutoniumStore === 'undefined') return null;
+    if (!PlutoniumStore.currentUser) return null;
+    try {
+      return await PlutoniumStore.getDoc('nav_prefs');
+    } catch (_) { return null; }
+  }
+
+  // Save both locally and to cloud; local write is synchronous so the UI
+  // never waits on the network.
+  function _savePrefs() {
+    _savePrefsLS(_mode, _collapsed);
+    _savePrefsCloud(_mode, _collapsed);
+  }
+
+  // Apply a prefs object { mode, collapsed } without triggering another save.
+  function _applyPrefs(prefs) {
+    if (!prefs) return false;
+    let changed = false;
+    if (prefs.mode && ['dock', 'sidebar', 'topbar'].includes(prefs.mode) && prefs.mode !== _mode) {
+      _mode = prefs.mode;
+      changed = true;
+    }
+    if (typeof prefs.collapsed === 'boolean' && prefs.collapsed !== _collapsed) {
+      _collapsed = prefs.collapsed;
+      changed = true;
+    }
+    return changed;
+  }
 
   /* ── Build DOM ─────────────────────────────────────────────────────── */
   function buildNav() {
@@ -73,9 +129,16 @@
       a.setAttribute('data-id', item.id);
       a.setAttribute('aria-label', item.label);
 
-      const iconEl = document.createElement('i');
-      iconEl.className = `plu-nav__icon ${item.fa}`;
-      iconEl.setAttribute('aria-hidden', 'true');
+      if (item.account) {
+        a.classList.add('plu-nav__link--account');
+        // Render avatar or default icon depending on auth state
+        _buildAccountIcon(a);
+      } else {
+        const iconEl = document.createElement('i');
+        iconEl.className = `plu-nav__icon ${item.fa}`;
+        iconEl.setAttribute('aria-hidden', 'true');
+        a.appendChild(iconEl);
+      }
 
       const labelEl = document.createElement('span');
       labelEl.className = 'plu-nav__label';
@@ -90,7 +153,6 @@
         });
       }
 
-      a.appendChild(iconEl);
       a.appendChild(labelEl);
       li.appendChild(a);
       list.appendChild(li);
@@ -122,6 +184,43 @@
     attachMagnification();
   }
 
+  /* ── Account icon ───────────────────────────────────────────────────── */
+  function _buildAccountIcon(anchor) {
+    const user = (typeof PlutoniumStore !== 'undefined') ? PlutoniumStore.currentUser : null;
+    // Clear previous icon content
+    anchor.querySelectorAll('.plu-nav__icon, .plu-nav__avatar').forEach(el => el.remove());
+
+    if (user && user.photoUrl) {
+      const img = document.createElement('img');
+      img.src = user.photoUrl;
+      img.className = 'plu-nav__avatar';
+      img.alt = user.displayName || 'Account';
+      img.setAttribute('aria-hidden', 'true');
+      anchor.prepend(img);
+    } else {
+      const iconEl = document.createElement('i');
+      iconEl.className = 'plu-nav__icon fa-solid fa-circle-user';
+      iconEl.setAttribute('aria-hidden', 'true');
+      anchor.prepend(iconEl);
+    }
+  }
+
+  // Subscribe to auth changes once PlutoniumStore is available.
+  // On sign-in: fetch cloud prefs and apply them (the user may have a saved
+  // layout from another device).  Also update the account icon.
+  function _initAccountIconWatcher() {
+    if (typeof PlutoniumStore === 'undefined') return;
+    PlutoniumStore.onAuthChange(async (user) => {
+      const anchor = _nav && _nav.querySelector('.plu-nav__link--account');
+      if (anchor) _buildAccountIcon(anchor);
+
+      if (user) {
+        const cloudPrefs = await _loadPrefsCloud();
+        if (_applyPrefs(cloudPrefs)) buildNav();
+      }
+    });
+  }
+
   /* ── Collapse arrow direction by mode ───────────────────────────────── */
   function collapseArrowClass() {
     if (_mode === 'dock')    return 'fa-solid fa-chevron-down';
@@ -147,6 +246,7 @@
     _nav.classList.add('plu-nav--collapsed');
     const ghost = document.getElementById('plu-nav-ghost');
     if (ghost) ghost.classList.add('plu-nav-ghost--visible');
+    _savePrefs();
   }
 
   function expand() {
@@ -154,6 +254,7 @@
     _nav.classList.remove('plu-nav--collapsed');
     const ghost = document.getElementById('plu-nav-ghost');
     if (ghost) ghost.classList.remove('plu-nav-ghost--visible');
+    _savePrefs();
   }
 
   /* ── Magnification ──────────────────────────────────────────────────── */
@@ -266,15 +367,25 @@
     }
     _mode = mode;
     buildNav();
+    _savePrefs();
   }
 
   /* ── Init ───────────────────────────────────────────────────────────── */
-  function init(opts) {
+  async function init(opts) {
     if (opts) {
       if (opts.mode)  _mode  = opts.mode;
       if (opts.items) _items = opts.items;
     }
+
+    // 1. Apply localStorage prefs immediately (no network wait).
+    _applyPrefs(_prefsFromLS());
+
     buildNav();
+    _initAccountIconWatcher();
+
+    // 2. If already signed in, fetch cloud prefs and apply if different.
+    const cloudPrefs = await _loadPrefsCloud();
+    if (_applyPrefs(cloudPrefs)) buildNav();
   }
 
   /* ── Public API ─────────────────────────────────────────────────────── */
