@@ -7,13 +7,81 @@
   <link rel="icon" type="image/png" href="img/brand/icon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/web.css" />
 </head>
 <body>
 
   <div id="particles-js"></div>
 
+  <div class="plu-page" id="web-page">
+    <h1 class="plu-page__title">Web</h1>
+    <p class="plu-page__subtitle">Browse the web through Plutonium's built-in proxy</p>
+
+    <!-- Proxy bar -->
+    <div class="web-bar">
+      <div class="web-bar__row">
+        <input
+          id="web-url"
+          class="web-bar__input"
+          type="text"
+          placeholder="Enter a URL or search…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="web-bar__go" id="web-go" title="Go">
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button class="web-bar__settings-btn" id="web-settings-toggle" title="Proxy settings">
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+      </div>
+
+      <!-- Settings panel -->
+      <div class="web-settings" id="web-settings">
+        <div class="web-settings__row">
+          <label class="web-settings__label">Proxy</label>
+          <div class="web-settings__proxy-group">
+            <button class="web-settings__proxy-btn active" data-proxy="uv">Ultraviolet</button>
+            <button class="web-settings__proxy-btn" data-proxy="sj">ScramJet</button>
+          </div>
+        </div>
+        <div class="web-settings__row">
+          <label class="web-settings__label" for="web-wisp">WISP Server</label>
+          <input
+            id="web-wisp"
+            class="web-settings__wisp-input"
+            type="text"
+            placeholder="wss://mercury-workshop.example.com/wisp/"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <div class="web-settings__row web-settings__row--note">
+          <span class="web-settings__note" id="web-status">Initialising service worker…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Proxy iframe -->
+    <div class="web-frame-wrap" id="web-frame-wrap" style="display:none">
+      <div class="web-frame-topbar">
+        <button class="web-frame-btn" id="web-back" title="Back"><i class="fa-solid fa-arrow-left"></i></button>
+        <button class="web-frame-btn" id="web-fwd"  title="Forward"><i class="fa-solid fa-arrow-right"></i></button>
+        <button class="web-frame-btn" id="web-reload" title="Reload"><i class="fa-solid fa-rotate-right"></i></button>
+        <span class="web-frame-url" id="web-frame-url"></span>
+        <button class="web-frame-btn web-frame-btn--close" id="web-close" title="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <iframe id="web-frame" class="web-frame" allow="fullscreen"></iframe>
+    </div>
+  </div>
+
   <script src="js/particles.min.js"></script>
   <script src="js/nav.js"></script>
   <script src="js/main.js"></script>
+  <script src="baremux/index.js"></script>
+  <script src="uv/uv.bundle.js"></script>
+  <script src="uv/uv.config.js"></script>
+  <script type="module" src="sj/scramjet.bundle.js"></script>
+  <script type="module" src="js/web.js"></script>
 </body>
 </html>

@@ -1,24 +1,6 @@
-.games-page {
-  position: relative;
-  z-index: 1;
-  padding: 100px 24px 60px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.games-page__title {
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  font-weight: 700;
-  color: var(--pink);
-  letter-spacing: -0.02em;
-  margin-bottom: 6px;
-}
-
-.games-page__subtitle {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-bottom: 36px;
-}
+/* .games-page layout is now provided by .plu-page in style.css */
+/* .games-page__title and .games-page__subtitle are provided by
+   .plu-page__title and .plu-page__subtitle in style.css */
 
 .source-tabs {
   display: flex;
@@ -352,12 +334,7 @@
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 6px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(232,23,93,0.3) transparent;
 }
-
-.pgcdn-shelf__row::-webkit-scrollbar { height: 3px; }
-.pgcdn-shelf__row::-webkit-scrollbar-thumb { background: rgba(232,23,93,0.3); border-radius: 2px; }
 
 .pgcdn-shelf__row .pgcdn-card {
   flex: 0 0 120px;

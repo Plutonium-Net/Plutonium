@@ -1,24 +1,6 @@
-.vm-page {
-  position: relative;
-  z-index: 1;
-  padding: 100px 24px 80px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.vm-page__title {
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  font-weight: 700;
-  color: var(--pink);
-  letter-spacing: -0.02em;
-  margin-bottom: 6px;
-}
-
-.vm-page__subtitle {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-bottom: 40px;
-}
+/* .vm-page layout is now provided by .plu-page in style.css */
+/* .vm-page__title and .vm-page__subtitle are provided by
+   .plu-page__title and .plu-page__subtitle in style.css */
 
 /* ── Auth gate ────────────────────────────────────────────────────────────── */
 

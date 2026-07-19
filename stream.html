@@ -3,17 +3,239 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Streaming — Plutonium Network</title>
+  <title>Streaming: Plutonium Network</title>
   <link rel="icon" type="image/png" href="img/brand/icon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/stream.css" />
 </head>
 <body>
 
   <div id="particles-js"></div>
 
+  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+  <div class="stream-hero">
+    <div class="stream-hero__inner">
+      <h1 class="stream-hero__title" id="hero-title">Watch <em>Cinema</em></h1>
+      <p class="stream-hero__sub" id="hero-sub">Thousands of films, instantly</p>
+    </div>
+  </div>
+
+  <!-- ── Main page ─────────────────────────────────────────────────────────── -->
+  <div class="stream-page">
+
+    <!-- Media type tabs -->
+    <div class="media-tabs">
+      <button class="media-tab active" data-type="movie">
+        <i class="fas fa-film"></i> Movies
+      </button>
+      <button class="media-tab" data-type="tv">
+        <i class="fas fa-tv"></i> TV Shows
+      </button>
+      <button class="media-tab" data-type="anime">
+        <i class="fas fa-dragon"></i> Anime
+      </button>
+    </div>
+
+    <!-- Controls bar -->
+    <div class="stream-controls">
+      <div class="stream-search-wrap">
+        <i class="fas fa-search stream-search-icon"></i>
+        <input class="stream-search" id="game-search" type="search" placeholder="Search…" autocomplete="off" />
+      </div>
+      <div class="stream-filters">
+        <select class="stream-select" id="age-sort-select" title="Age rating filter">
+          <option value="all">All ratings</option>
+          <option value="G">G</option>
+          <option value="PG">PG</option>
+          <option value="PG-13">PG-13</option>
+          <option value="R">R</option>
+          <option value="MA">MA / 18+</option>
+        </select>
+        <button class="adult-toggle" id="adult-toggle" aria-pressed="false" title="Toggle adult content">
+          <i class="fas fa-eye"></i>
+          <span id="adult-toggle-text">Off</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Genre tags -->
+    <div class="tags-section">
+      <div class="tags-bar" id="tags-bar"></div>
+    </div>
+
+    <!-- Section header -->
+    <div class="section-header">
+      <button class="special-view-back" id="special-view-back" style="display:none">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+      <span class="section-label" id="section-label">Popular Films</span>
+      <span class="count-badge" id="count-badge"></span>
+    </div>
+
+    <!-- Continue Watching shelf -->
+    <div class="shelf-section" id="continue-watching-section" style="display:none">
+      <div class="shelf-section__header">
+        <span><i class="fas fa-play-circle"></i> Continue Watching</span>
+        <button class="shelf-see-all" id="continue-see-all">See all</button>
+      </div>
+      <div class="shelf-row" id="continue-row"></div>
+    </div>
+
+    <!-- Favourites shelf -->
+    <div class="shelf-section" id="favorites-section" style="display:none">
+      <div class="shelf-section__header">
+        <span><i class="fas fa-heart"></i> My Favourites</span>
+        <button class="shelf-see-all" id="favorites-see-all">See all</button>
+      </div>
+      <div class="shelf-row" id="favorites-row"></div>
+    </div>
+
+    <!-- Card grid -->
+    <div class="stream-grid" id="games-container">
+      <div class="no-results" id="no-results" style="display:none">
+        <i class="fas fa-film"></i>
+        <p>No results found</p>
+      </div>
+    </div>
+
+    <!-- Infinite scroll sentinel + spinner -->
+    <div id="scroll-sentinel"></div>
+    <div class="scroll-spinner" id="scroll-spinner"></div>
+
+  </div><!-- /.stream-page -->
+
+  <!-- ── Section-switch toast ───────────────────────────────────────────────── -->
+  <div class="section-toast" id="section-toast">
+    <div class="section-toast__body">
+      <strong id="toast-title"></strong>
+      <span id="toast-msg"></span>
+    </div>
+    <button class="section-toast__switch" id="toast-switch"></button>
+    <button class="section-toast__close" onclick="document.getElementById('section-toast').classList.remove('visible')">
+      <i class="fas fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- ── Firebase / Favourite toast ────────────────────────────────────────── -->
+  <div class="fb-toast" id="fb-toast">
+    <i id="fb-toast-icon" class="fas fa-heart"></i>
+    <span id="fb-toast-text"></span>
+  </div>
+
+  <!-- ── Age verification modal ───────────────────────────────────────────── -->
+  <div class="modal-backdrop age-verify-backdrop" id="age-verify-backdrop" onclick="denyAgeVerify()"></div>
+  <div class="age-verify" id="age-verify">
+    <div class="age-verify__box">
+      <div class="age-verify__icon"><i class="fas fa-cake-candles"></i></div>
+      <h2 class="age-verify__title">Age Verification</h2>
+      <p class="age-verify__desc">Adult content includes titles rated MA, NC-17, TV-MA, and similar. You must be 18 or of legal age in your region to enable this.</p>
+      <p class="age-verify__question">Are you 18 or older?</p>
+      <div class="age-verify__btns">
+        <button class="age-verify__deny"    onclick="denyAgeVerify()">No, I'm under 18</button>
+        <button class="age-verify__confirm" onclick="confirmAgeVerify()">Yes, I'm 18 or older</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Details backdrop ───────────────────────────────────────────────────── -->
+  <div class="modal-backdrop" id="details-backdrop" onclick="closeOverlayStack()"></div>
+
+  <!-- ── Adult gate ─────────────────────────────────────────────────────────── -->
+  <div class="adult-gate" id="adult-gate">
+    <div class="adult-gate__box">
+      <div class="adult-gate__icon"><i class="fas fa-shield-halved"></i></div>
+      <h2 class="adult-gate__title">Mature Content</h2>
+      <p class="adult-gate__desc">This title is flagged as adult content. Enable adult content to view it.</p>
+      <div class="adult-gate__btns">
+        <button class="adult-gate__deny"    onclick="denyAdultGate()">Cancel</button>
+        <button class="adult-gate__confirm" onclick="confirmAdultGate()">Enable &amp; Watch</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Details modal ──────────────────────────────────────────────────────── -->
+  <div class="details-modal" id="details-modal">
+    <div class="details-modal__inner">
+      <button class="details-modal__close" onclick="closeDetailsModal()"><i class="fas fa-xmark"></i></button>
+      <div class="details-layout">
+        <img class="details-poster" id="details-poster" src="" alt="" />
+        <div class="details-info">
+          <div class="details-chips">
+            <span class="details-chip" id="details-type-chip">Film</span>
+            <span class="details-chip details-chip--age" id="details-age-rating">NR</span>
+            <span class="details-chip details-chip--rating"><i class="fas fa-star"></i> <span id="details-rating">N/A</span></span>
+          </div>
+          <h2 class="details-title" id="details-title"></h2>
+          <p class="details-subtitle" id="details-subtitle"></p>
+          <p class="details-overview" id="details-overview"></p>
+
+          <!-- TV season/episode dropdowns -->
+          <div class="details-tv-controls" id="details-tv-controls">
+            <div class="detail-dropdown" id="detail-season-dropdown">
+              <button class="detail-dropdown__btn" onclick="toggleDetailDropdown('season')">
+                <span id="detail-season-value">Season 1</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div class="detail-dropdown__menu" id="detail-season-menu"></div>
+            </div>
+            <div class="detail-dropdown" id="detail-episode-dropdown">
+              <button class="detail-dropdown__btn" onclick="toggleDetailDropdown('episode')">
+                <span id="detail-episode-value">Episode 1</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div class="detail-dropdown__menu" id="detail-episode-menu"></div>
+            </div>
+          </div>
+
+          <div class="details-actions">
+            <button class="details-watch-btn" onclick="watchSelectedTitle()">
+              <i class="fas fa-play"></i> Watch Now
+            </button>
+            <button class="details-fav-btn" id="details-fav-btn">
+              <i class="far fa-heart"></i> Favourite
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Player ─────────────────────────────────────────────────────────────── -->
+  <div class="player-backdrop" id="player-backdrop" onclick="closePlayer()"></div>
+  <div class="player" id="player">
+    <div class="player__bar">
+      <button class="player__btn" onclick="closePlayer()" title="Close">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <span class="player__title" id="player-title"></span>
+      <div class="player__spacer"></div>
+      <!-- TV episode controls -->
+      <div class="ep-controls" id="ep-controls">
+        <select id="season-select" onchange="onSeasonChange()" title="Season"></select>
+        <select id="episode-select" onchange="onEpisodeChange()" title="Episode"></select>
+      </div>
+      <!-- Source toggle -->
+      <div class="source-toggle" id="source-toggle" title="Switch player source">
+        <button class="source-toggle__btn active" data-source="videasy" onclick="setPlayerSource('videasy')">Videasy</button>
+        <button class="source-toggle__btn" data-source="vidcore" onclick="setPlayerSource('vidcore')">VidCore</button>
+      </div>
+      <button class="player__btn" onclick="toggleFullscreen()" title="Fullscreen">
+        <i class="fa-solid fa-expand" id="fs-icon"></i>
+      </button>
+    </div>
+    <iframe id="player-frame" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture"></iframe>
+  </div>
+
+  <!-- Scripts -->
   <script src="js/particles.min.js"></script>
+  <script src="js/cloud-store.js"></script>
+  <script>
+    PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
+  </script>
+  <script src="js/stream.js"></script>
   <script src="js/nav.js"></script>
   <script src="js/main.js"></script>
+
 </body>
 </html>

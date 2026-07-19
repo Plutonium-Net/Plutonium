@@ -10,6 +10,41 @@
   --bg: #000000;
   --text: #ffffff;
   --muted: #a0a0a0;
+  --scrollbar-thumb: rgba(232,23,93,0.55);
+  --scrollbar-thumb-hover: rgba(232,23,93,0.85);
+  --scrollbar-track: rgba(255,255,255,0.04);
+}
+
+/* ── Global scrollbars ───────────────────────────────────────────────────── */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Webkit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 html, body {
@@ -625,4 +660,59 @@ body {
 .plu-nav__link--account {
   width: var(--nav-item-size);
   height: var(--nav-item-size);
+}
+
+/* ── Shared page layout ──────────────────────────────────────────────────── */
+
+.plu-page {
+  position: relative;
+  z-index: 1;
+  padding: 100px 24px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.plu-page__title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: var(--pink);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.plu-page__subtitle {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 36px;
+}
+
+/* Coming-soon placeholder (used on stub pages) */
+.plu-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 32px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.02);
+  max-width: 480px;
+}
+
+.plu-placeholder__icon {
+  font-size: 2rem;
+  color: var(--pink);
+  opacity: 0.6;
+}
+
+.plu-placeholder__heading {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.plu-placeholder__desc {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.6;
 }
