@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Account — Plutonium Network</title>
+  <title>Account - Plutonium Network</title>
   <link rel="icon" type="image/png" href="img/brand/logo.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
@@ -620,8 +620,9 @@
         renderProfile(user);
         // Reset data-viewer state whenever user changes
         dataViewerOpen = false;
+        dataCache = null;
         document.getElementById('data-viewer').classList.remove('open');
-        document.getElementById('data-viewer-arrow').innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+        document.getElementById('view-data-arrow').innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
         showView('signed-in');
       } else {
         showView('signed-out');
@@ -707,7 +708,7 @@
       if (!email) { markInvalid('signin-email'); showAuthError('Enter your email above first.'); return; }
       try {
         await PlutoniumStore.resetPassword(email);
-        showAuthSuccess('Password reset email sent — check your inbox.');
+        showAuthSuccess('Password reset email sent - check your inbox.');
       } catch (e) {
         showAuthError(friendlyError(e.message));
       }
@@ -868,8 +869,8 @@
       if (msg.includes('INVALID_EMAIL'))
         return 'Invalid email address.';
       if (msg.includes('TOO_MANY_ATTEMPTS'))
-        return 'Too many attempts — try again later.';
-      return 'Something went wrong — please try again.';
+        return 'Too many attempts - try again later.';
+      return 'Something went wrong - please try again.';
     }
   </script>
   <script src="js/nav.js"></script>

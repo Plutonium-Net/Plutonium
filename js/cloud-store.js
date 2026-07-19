@@ -139,7 +139,7 @@
       body:    JSON.stringify({ email, password }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(`[PlutoniumStore] signInWithEmail failed: ${data.error || JSON.stringify(data)}`);
+    if (!res.ok) throw new Error(`[PlutoniumStore] signInWithEmail failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
     const user = {
       uid:          data.localId,
       idToken:      data.idToken,
@@ -161,7 +161,7 @@
       body:    JSON.stringify({ email, password, displayName }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(`[PlutoniumStore] signUp failed: ${data.error || JSON.stringify(data)}`);
+    if (!res.ok) throw new Error(`[PlutoniumStore] signUp failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
     const user = {
       uid:          data.localId,
       idToken:      data.idToken,
@@ -183,7 +183,7 @@
       body:    JSON.stringify({ email }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(`[PlutoniumStore] resetPassword failed: ${data.error || JSON.stringify(data)}`);
+    if (!res.ok) throw new Error(`[PlutoniumStore] resetPassword failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
   }
 
   async function updateProfile(displayName) {
@@ -195,7 +195,7 @@
       body:    JSON.stringify({ idToken: _currentUser.idToken, displayName }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(`[PlutoniumStore] updateProfile failed: ${data.error || JSON.stringify(data)}`);
+    if (!res.ok) throw new Error(`[PlutoniumStore] updateProfile failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
     _currentUser.displayName = data.displayName;
     _persist();
     _authListeners.forEach(fn => { try { fn({ ..._currentUser }); } catch (_) {} });
@@ -213,7 +213,7 @@
       body:    JSON.stringify({ idToken: _currentUser.idToken }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(`[PlutoniumStore] deleteAccount failed: ${data.error || JSON.stringify(data)}`);
+    if (!res.ok) throw new Error(`[PlutoniumStore] deleteAccount failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
     await signOut();
   }
 
