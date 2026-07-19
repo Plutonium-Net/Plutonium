@@ -1,6 +1,7 @@
 const GROQ_WORKER      = 'https://ai.cdn.plutoniumnet.work';
 const HISTORY_DOC      = 'ai_chats/data';
 const CHARACTERS_DOC   = 'ai_characters/data';
+const BYOK_DOC         = 'ai_settings/byok';
 const MAX_CHATS        = 30;
 const MAX_CHARACTERS   = 20;
 const DEFAULT_MODEL    = 'llama-3.3-70b-versatile';
@@ -83,7 +84,7 @@ When debugging:
 
 ## Tone
 
-Stelena should feel like a knowledgeable engineer sitting beside the user—not a corporate chatbot.
+Stelena should feel like a knowledgeable engineer sitting beside the user, not a corporate chatbot.
 
 She is calm, capable, and efficient.
 
@@ -113,13 +114,13 @@ The intelligence behind Plutonium Network.`;
 const DEFAULT_CHARACTER = { id: 'default', name: 'Stelena', prompt: SYSTEM_PROMPT, isDefault: true };
 
 const MODELS = [
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B' },
-  { id: 'llama-3.1-8b-instant',    label: 'Llama 3.1 8B' },
-  { id: 'openai/gpt-oss-120b',     label: 'GPT OSS 120B' },
-  { id: 'openai/gpt-oss-20b',      label: 'GPT OSS 20B' },
-  { id: 'qwen/qwen3.6-27b',        label: 'Qwen 3.6 27B' },
-  { id: 'groq/compound',           label: 'Groq Compound' },
-  { id: 'groq/compound-mini',      label: 'Groq Compound Mini' },
+  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B',      group: 'Groq' },
+  { id: 'llama-3.1-8b-instant',    label: 'Llama 3.1 8B',       group: 'Groq' },
+  { id: 'openai/gpt-oss-120b',     label: 'GPT OSS 120B',       group: 'Groq' },
+  { id: 'openai/gpt-oss-20b',      label: 'GPT OSS 20B',        group: 'Groq' },
+  { id: 'qwen/qwen3.6-27b',        label: 'Qwen 3.6 27B',       group: 'Groq' },
+  { id: 'groq/compound',           label: 'Groq Compound',      group: 'Groq' },
+  { id: 'groq/compound-mini',      label: 'Groq Compound Mini', group: 'Groq' },
 ];
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -155,13 +156,11 @@ const charToggleName = document.getElementById('ai-char-toggle-name');
 const charModal      = document.getElementById('ai-char-modal');
 const charModalClose = document.getElementById('ai-char-modal-close');
 const charList       = document.getElementById('ai-char-list');
-// ── Tabs
 const tabChat        = document.getElementById('ai-tab-chat');
 const tabStudio      = document.getElementById('ai-tab-studio');
 const viewChat       = document.getElementById('ai-view-chat');
 const viewStudio     = document.getElementById('ai-view-studio');
 const chatOnlyEls    = document.querySelectorAll('.ai-chat-only');
-// ── Studio
 const studioNew      = document.getElementById('ai-studio-new');
 const studioCharList = document.getElementById('ai-studio-char-list');
 const studioEditorEmpty = document.getElementById('ai-studio-editor-empty');
@@ -174,6 +173,15 @@ const studioDelete   = document.getElementById('ai-studio-delete');
 const rlCount           = document.getElementById('ai-rl-count');
 const rlBar             = document.getElementById('ai-rl-bar');
 const tempToggleBtn     = document.getElementById('ai-temp-toggle');
+const rlLabel           = document.getElementById('ai-rl-label');
+const rlBarTrack        = document.getElementById('ai-rl-bar-track');
+const rlReset           = document.getElementById('ai-rl-reset');
+const byokBtn           = document.getElementById('ai-byok-btn');
+const byokPanel         = document.getElementById('ai-byok-panel');
+const byokClose         = document.getElementById('ai-byok-close');
+const byokInput         = document.getElementById('ai-byok-input');
+const byokSave          = document.getElementById('ai-byok-save');
+const byokClear         = document.getElementById('ai-byok-clear');
 const confirmOverlay    = document.getElementById('ai-confirm-overlay');
 const confirmDialog     = document.getElementById('ai-confirm-dialog');
 const confirmMsg        = document.getElementById('ai-confirm-msg');
@@ -210,11 +218,19 @@ confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay)
 // ── Model dropdown ────────────────────────────────────────────────────────────
 
 function buildModelPanel() {
-  modelPanel.innerHTML = MODELS.map(m => `
-    <div class="ai-model-option${m.id === currentModel ? ' selected' : ''}" data-id="${m.id}">
-      <span class="ai-model-option__name">${m.label}</span>
-      <span class="ai-model-option__id">${m.id}</span>
-    </div>`).join('');
+  const groups = [...new Set(MODELS.map(m => m.group))];
+  modelPanel.innerHTML = groups.map(group => {
+    const items = MODELS.filter(m => m.group === group);
+    return `
+      <div class="ai-model-group">
+        <div class="ai-model-group__label">${group}</div>
+        ${items.map(m => `
+          <div class="ai-model-option${m.id === currentModel ? ' selected' : ''}" data-id="${m.id}">
+            <span class="ai-model-option__name">${m.label}</span>
+            <span class="ai-model-option__id">${m.id}</span>
+          </div>`).join('')}
+      </div>`;
+  }).join('');
 }
 
 function setModel(id) {
@@ -242,22 +258,76 @@ modelPanel.addEventListener('click', e => {
 
 document.addEventListener('click', () => modelDropdown.classList.remove('open'));
 
+// ── BYOK ─────────────────────────────────────────────────────────────────────
+
+let byokKey = '';
+
+function applyByokState() {
+  const active = byokKey.startsWith('gsk_');
+  byokBtn.classList.toggle('active', active);
+  byokBtn.innerHTML = active
+    ? '<i class="fa-solid fa-key"></i> Key active - unlimited'
+    : '<i class="fa-solid fa-key"></i> Use your own API key';
+  rlLabel.closest('.ai-rl-footer').classList.toggle('ai-rl-footer--byok', active);
+  if (active) {
+    rlCount.textContent   = '∞';
+    rlBar.style.width     = '0%';
+    rlBarTrack.style.display = 'none';
+    rlReset.style.display    = 'none';
+    rlLabel.textContent      = 'Unlimited (BYOK)';
+  } else {
+    rlBarTrack.style.display = '';
+    rlReset.style.display    = '';
+    rlLabel.textContent      = 'Messages sent';
+    renderRateLimit();
+  }
+  if (byokInput) byokInput.value = byokKey;
+}
+
+byokBtn.addEventListener('click', () => {
+  byokPanel.style.display = byokPanel.style.display === 'none' ? '' : 'none';
+});
+byokClose.addEventListener('click', () => { byokPanel.style.display = 'none'; });
+
+byokSave.addEventListener('click', async () => {
+  const val = byokInput.value.trim();
+  if (!val.startsWith('gsk_')) {
+    byokInput.classList.add('ai-byok-panel__input--error');
+    setTimeout(() => byokInput.classList.remove('ai-byok-panel__input--error'), 800);
+    return;
+  }
+  byokKey = val;
+  byokPanel.style.display = 'none';
+  applyByokState();
+  await saveByok();
+});
+
+byokClear.addEventListener('click', async () => {
+  byokKey = '';
+  byokInput.value = '';
+  byokPanel.style.display = 'none';
+  applyByokState();
+  await saveByok();
+});
+
 // ── Rate limit UI ─────────────────────────────────────────────────────────────
 
 let rlUsed = 0;
 
 function updateRateLimit(remaining) {
-  // Sync from server when available, otherwise just increment locally
+  if (byokKey.startsWith('gsk_')) return;
   rlUsed = 100 - remaining;
   renderRateLimit();
 }
 
 function incrementRateLimit() {
+  if (byokKey.startsWith('gsk_')) return;
   rlUsed = Math.min(100, rlUsed + 1);
   renderRateLimit();
 }
 
 function renderRateLimit() {
+  if (byokKey.startsWith('gsk_')) return;
   const pct = Math.min(100, (rlUsed / 100) * 100);
   rlCount.textContent = `${rlUsed} / 100`;
   rlBar.style.width   = pct + '%';
@@ -471,10 +541,16 @@ async function loadChats() {
   if (!PlutoniumStore.currentUser) return;
   try {
     const doc = await PlutoniumStore.getDoc(HISTORY_DOC);
-    chats = doc?.chats || [];
-    // Select most recent or leave empty
-    if (chats.length) {
-      activeChatId = chats.sort((a, b) => b.updatedAt - a.updatedAt)[0].id;
+    const loaded = doc?.chats || [];
+    // Merge: keep any chats the user already created while load was in flight
+    const existingIds = new Set(chats.map(c => c.id));
+    for (const c of loaded) {
+      if (!existingIds.has(c.id)) chats.push(c);
+    }
+    chats.sort((a, b) => b.updatedAt - a.updatedAt);
+    // Select most recent if nothing is active yet
+    if (!activeChatId && chats.length) {
+      activeChatId = chats[0].id;
       selectChat(activeChatId);
     }
     renderChatList();
@@ -489,6 +565,26 @@ async function saveChats() {
     await PlutoniumStore.setDoc(HISTORY_DOC, { chats: chats.slice(0, MAX_CHATS) });
   } catch (e) {
     console.warn('[ai] save failed:', e.message);
+  }
+}
+
+async function loadByok() {
+  if (!PlutoniumStore.currentUser) return;
+  try {
+    const doc = await PlutoniumStore.getDoc(BYOK_DOC);
+    byokKey = doc?.key || '';
+    applyByokState();
+  } catch (e) {
+    console.warn('[ai] byok load failed:', e.message);
+  }
+}
+
+async function saveByok() {
+  if (!PlutoniumStore.currentUser) return;
+  try {
+    await PlutoniumStore.setDoc(BYOK_DOC, { key: byokKey });
+  } catch (e) {
+    console.warn('[ai] byok save failed:', e.message);
   }
 }
 
@@ -755,6 +851,7 @@ async function sendMessage() {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${user.idToken}`,
         'Accept':        'text/event-stream',
+        ...(byokKey.startsWith('gsk_') ? { 'X-Groq-Key': byokKey } : {}),
       },
       body: JSON.stringify({
         model:    currentModel,
@@ -919,6 +1016,7 @@ PlutoniumStore.onAuthChange(user => {
   if (user) {
     gate.style.display = 'none';
     app.style.display  = '';
+    loadByok();
     loadChats();
     loadCharacters();
   } else {
@@ -929,7 +1027,9 @@ PlutoniumStore.onAuthChange(user => {
     characters   = [];
     activeCharId = 'default';
     tempMode     = false;
+    byokKey      = '';
     tempToggleBtn.classList.remove('active');
+    applyByokState();
     updateCharToggle();
     chatList.innerHTML = '';
     messages.innerHTML = '';

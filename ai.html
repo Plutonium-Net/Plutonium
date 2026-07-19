@@ -38,13 +38,37 @@
         <div class="ai-chat-list" id="ai-chat-list"></div>
         <div class="ai-rl-footer" id="ai-rl-footer">
           <div class="ai-rl-footer__row">
-            <span class="ai-rl-footer__label">Messages sent</span>
+            <span class="ai-rl-footer__label" id="ai-rl-label">Messages sent</span>
             <span class="ai-rl-footer__count" id="ai-rl-count">-- / 100</span>
           </div>
-          <div class="ai-rl-bar-track">
+          <div class="ai-rl-bar-track" id="ai-rl-bar-track">
             <div class="ai-rl-bar-fill" id="ai-rl-bar"></div>
           </div>
           <div class="ai-rl-footer__reset" id="ai-rl-reset">100 messages per 12 hours</div>
+          <button class="ai-byok-btn" id="ai-byok-btn">
+            <i class="fa-solid fa-key"></i> Use your own API key
+          </button>
+        </div>
+
+        <!-- BYOK panel -->
+        <div class="ai-byok-panel" id="ai-byok-panel" style="display:none">
+          <div class="ai-byok-panel__header">
+            <span class="ai-byok-panel__title"><i class="fa-solid fa-key"></i> Bring Your Own Key</span>
+            <button class="ai-byok-panel__close" id="ai-byok-close"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <p class="ai-byok-panel__desc">
+            Add your own <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq API key</a> to remove rate limits. Your key is stored in your account and sent directly to the proxy; it is never logged or stored on our servers.
+          </p>
+          <ol class="ai-byok-panel__steps">
+            <li>Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a></li>
+            <li>Click <strong>Create API Key</strong></li>
+            <li>Copy the key and paste it below</li>
+          </ol>
+          <input class="ai-byok-panel__input" id="ai-byok-input" type="password" placeholder="gsk_..." spellcheck="false" />
+          <div class="ai-byok-panel__actions">
+            <button class="ai-byok-panel__clear" id="ai-byok-clear">Remove key</button>
+            <button class="ai-byok-panel__save" id="ai-byok-save">Save key</button>
+          </div>
         </div>
       </div>
 
@@ -56,7 +80,7 @@
           <button class="ai-sidebar-toggle" id="ai-sidebar-toggle" title="Toggle sidebar">
             <i class="fa-solid fa-bars"></i>
           </button>
-          <button class="ai-temp-toggle" id="ai-temp-toggle" title="Temporary chat — nothing is saved">
+          <button class="ai-temp-toggle" id="ai-temp-toggle" title="Temporary chat - nothing is saved">
             <i class="fa-solid fa-ghost"></i>
           </button>
           <!-- Tab switcher -->

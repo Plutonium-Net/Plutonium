@@ -120,30 +120,38 @@ async function checkRateLimit(env, key) {
 const MAX_MESSAGES = 100; // max messages accepted per request
 
 async function handleChat(request, env, allowed) {
-  if (!env.GROQ_API_KEY) {
-    return corsResponse({ error: 'GROQ_API_KEY not configured' }, 500, allowed);
-  }
-
   const auth = request.headers.get('Authorization') || '';
   if (!auth.startsWith('Bearer ')) {
     return corsResponse({ error: 'Unauthorized' }, 401, allowed);
   }
 
-  // Rate limit check
-  const rlKey = getRateLimitKey(request);
-  const { limited, reset, remaining } = await checkRateLimit(env, rlKey);
-  if (limited) {
-    const retryAfter = reset ? Math.max(0, reset - Math.floor(Date.now() / 1000)) : RL_WINDOW;
-    return new Response(JSON.stringify({
-      error: `Rate limit exceeded - you can send ${RL_MAX} messages every 12 hours.`,
-      retry_after: retryAfter,
-    }), {
-      status: 429,
-      headers: {
-        ...corsHeaders(allowed, { 'Content-Type': 'application/json' }),
-        'Retry-After': String(retryAfter),
-      },
-    });
+  // BYOK: client supplied their own Groq key - skip rate limiting entirely
+  const byokKey = request.headers.get('X-Groq-Key') || '';
+  const groqKey = byokKey.startsWith('gsk_') ? byokKey : env.GROQ_API_KEY;
+
+  if (!groqKey) {
+    return corsResponse({ error: 'GROQ_API_KEY not configured' }, 500, allowed);
+  }
+
+  // Rate limit check - skipped for BYOK requests
+  let remaining = null;
+  if (!byokKey.startsWith('gsk_')) {
+    const rlKey = getRateLimitKey(request);
+    const rl = await checkRateLimit(env, rlKey);
+    if (rl.limited) {
+      const retryAfter = rl.reset ? Math.max(0, rl.reset - Math.floor(Date.now() / 1000)) : RL_WINDOW;
+      return new Response(JSON.stringify({
+        error: `Rate limit exceeded - you can send ${RL_MAX} messages every 12 hours.`,
+        retry_after: retryAfter,
+      }), {
+        status: 429,
+        headers: {
+          ...corsHeaders(allowed, { 'Content-Type': 'application/json' }),
+          'Retry-After': String(retryAfter),
+        },
+      });
+    }
+    remaining = rl.remaining ?? null;
   }
 
   const body = await request.json().catch(() => null);
@@ -176,7 +184,7 @@ async function handleChat(request, env, allowed) {
     method: 'POST',
     headers: {
       'Content-Type':  'application/json',
-      'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+      'Authorization': `Bearer ${groqKey}`,
     },
     body: JSON.stringify({
       model,
