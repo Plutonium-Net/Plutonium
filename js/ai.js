@@ -1,7 +1,7 @@
 const GROQ_WORKER      = 'https://ai.cdn.plutoniumnet.work';
-const HISTORY_DOC      = 'ai_chats/data';
-const CHARACTERS_DOC   = 'ai_characters/data';
-const BYOK_DOC         = 'ai_settings/byok';
+const HISTORY_DOC      = 'ai_chats';
+const CHARACTERS_DOC   = 'ai_characters';
+const BYOK_DOC         = 'ai_settings';
 const MAX_CHATS        = 30;
 const MAX_CHARACTERS   = 20;
 const DEFAULT_MODEL    = 'llama-3.3-70b-versatile';
@@ -865,12 +865,12 @@ async function sendMessage() {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${user.idToken}`,
         'Accept':        'text/event-stream',
-        ...(byokKey.startsWith('gsk_') ? { 'X-Groq-Key': byokKey } : {}),
       },
       body: JSON.stringify({
         model:    currentModel,
         system:   activeSystemPrompt(),
         messages: chat.messages.map(m => ({ role: m.role, content: m.content })),
+        ...(byokKey.startsWith('gsk_') ? { groqKey: byokKey } : {}),
       }),
     });
 
