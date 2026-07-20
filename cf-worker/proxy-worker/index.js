@@ -154,25 +154,31 @@ async function handleDeleteAll(env, allowed) {
     return corsResponse({ error: 'HYPERBEAM_API_KEY not configured' }, 500, allowed);
   }
 
-  const listRes = await fetch('https://engine.hyperbeam.com/v0/vm', {
-    headers: { 'Authorization': `Bearer ${env.HYPERBEAM_API_KEY}` },
-  });
+  // Collect all session IDs across pages
+  const ids = [];
+  let cursor = null;
+  do {
+    const listUrl = 'https://engine.hyperbeam.com/v0/vm' + (cursor ? `?after=${cursor}` : '');
+    const listRes = await fetch(listUrl, {
+      headers: { 'Authorization': `Bearer ${env.HYPERBEAM_API_KEY}` },
+    });
+    if (!listRes.ok) {
+      const data = await listRes.json().catch(() => ({}));
+      return corsResponse({ error: data.message || 'Failed to list sessions' }, listRes.status, allowed);
+    }
+    const body = await listRes.json().catch(() => ({}));
+    const page = Array.isArray(body) ? body : (body.results || []);
+    page.forEach(vm => ids.push(vm.id || vm.session_id));
+    // paginate if there's a next cursor and it moved forward
+    cursor = body.next && body.next !== cursor ? body.next : null;
+  } while (cursor);
 
-  if (!listRes.ok) {
-    const data = await listRes.json().catch(() => ({}));
-    return corsResponse({ error: data.message || 'Failed to list sessions' }, listRes.status, allowed);
-  }
-
-  const vms = await listRes.json().catch(() => []);
-  const sessions = Array.isArray(vms) ? vms : (vms.sessions || []);
-
-  const results = await Promise.all(sessions.map(async vm => {
-    const id = vm.session_id;
+  const results = await Promise.all(ids.map(async id => {
     const res = await fetch(`https://engine.hyperbeam.com/v0/vm/${id}`, {
       method:  'DELETE',
       headers: { 'Authorization': `Bearer ${env.HYPERBEAM_API_KEY}` },
     });
-    return { session_id: id, deleted: res.ok || res.status === 404 };
+    return { id, deleted: res.ok || res.status === 404 };
   }));
 
   return corsResponse({ deleted: results.length, sessions: results }, 200, allowed);
