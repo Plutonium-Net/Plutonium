@@ -104,10 +104,9 @@ async function handleSession(request, env, allowed) {
       'Authorization': `Bearer ${env.HYPERBEAM_API_KEY}`,
     },
     body: JSON.stringify({
-      start_url:       url,
-      kiosk_mode:      true,
-      ublock:          true,
-      offline_timeout: 0,
+      start_url:    url,
+      hide_toolbar: true,
+      ublock:       true,
     }),
   });
 
