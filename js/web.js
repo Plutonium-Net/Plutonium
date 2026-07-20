@@ -34,26 +34,17 @@
   const ntSearchBtn   = document.getElementById('nt-search-btn');
   const ntPinsEl      = document.getElementById('nt-pins');
   const ntAddPin      = document.getElementById('nt-add-pin');
-  const ntProxyBtns     = document.querySelectorAll('.nt-toggle-btn');
-  const ntDropdown      = document.getElementById('nt-wisp-dropdown');
+  const ntProxyBtns       = document.querySelectorAll('.nt-toggle-btn');
+  const ntDropdown        = document.getElementById('nt-wisp-dropdown');
   const ntDropdownTrigger = document.getElementById('nt-dropdown-trigger');
-  const ntDropdownLabel = document.getElementById('nt-dropdown-label');
-  const ntDropdownMenu  = document.getElementById('nt-dropdown-menu');
-  const ntDropdownItems = document.querySelectorAll('.nt-dropdown__item');
-  const ntWispCustom    = document.getElementById('nt-wisp-custom');
-  const ntStatusEl      = document.getElementById('nt-status');
+  const ntDropdownLabel   = document.getElementById('nt-dropdown-label');
+  const ntDropdownMenu    = document.getElementById('nt-dropdown-menu');
+  const ntDropdownItems   = document.querySelectorAll('.nt-dropdown__item');
+  const ntStatusEl        = document.getElementById('nt-status');
 
   /* ── Restore settings ───────────────────────────────────────────────── */
   const PINS_KEY = 'plu_pins';
   let selectedProxy = localStorage.getItem(PROXY_KEY) || 'uv';
-
-  const WISP_PRESETS = [
-    'wss://wisp-us-east-1.cgamz.online/',
-    'wss://wisp-us-east-2.cgamz.online/',
-    'wss://wisp-us-west.cgamz.online/',
-    'wss://wisp-europe.cgamz.online/',
-    'wss://wisp-asia.cgamz.online/',
-  ];
 
   /* ── Cloud sync helpers ─────────────────────────────────────────────── */
   const store = () => (typeof PlutoniumStore !== 'undefined' ? PlutoniumStore : null);
@@ -97,28 +88,35 @@
     ntProxyBtns.forEach(b => b.classList.toggle('active', b.dataset.proxy === selectedProxy));
   }
 
-  function setDropdownLabel(item) {
-    ntDropdownLabel.innerHTML = item.innerHTML;
-  }
-
   function syncWispDropdown() {
     const saved = localStorage.getItem(WISP_KEY) || DEFAULT_WISP;
     const match = [...ntDropdownItems].find(i => i.dataset.value === saved);
     if (match) {
-      setDropdownLabel(match);
+      ntDropdownLabel.innerHTML = match.innerHTML;
       ntDropdownItems.forEach(i => i.classList.toggle('active', i === match));
-      ntWispCustom.style.display = 'none';
-    } else {
-      ntDropdownLabel.innerHTML = '<i class="fa-solid fa-pen nt-dropdown__pen"></i> Custom…';
-      ntDropdownItems.forEach(i => i.classList.toggle('active', i.dataset.value === 'custom'));
-      ntWispCustom.style.display = '';
-      ntWispCustom.value = saved;
     }
   }
 
   syncProxyButtons();
   syncWispDropdown();
   syncSearchPlaceholder();
+
+  /* ── WISP dropdown ──────────────────────────────────────────────────── */
+  ntDropdownTrigger.addEventListener('click', e => {
+    e.stopPropagation();
+    ntDropdown.classList.toggle('open');
+  });
+  document.addEventListener('click', () => ntDropdown.classList.remove('open'));
+  ntDropdownItems.forEach(item => {
+    item.addEventListener('click', () => {
+      ntDropdown.classList.remove('open');
+      ntDropdownLabel.innerHTML = item.innerHTML;
+      ntDropdownItems.forEach(i => i.classList.toggle('active', i === item));
+      localStorage.setItem(WISP_KEY, item.dataset.value);
+      applyTransport();
+      cloudSaveSettings();
+    });
+  });
 
   /* ── Proxy toggle ───────────────────────────────────────────────────── */
   ntProxyBtns.forEach(btn => {
@@ -193,38 +191,6 @@
       setNtStatus(e.message, 'error');
     }
   }
-
-  /* ── Custom WISP dropdown ───────────────────────────────────────────── */
-  ntDropdownTrigger.addEventListener('click', e => {
-    e.stopPropagation();
-    ntDropdown.classList.toggle('open');
-  });
-
-  document.addEventListener('click', () => ntDropdown.classList.remove('open'));
-
-  ntDropdownItems.forEach(item => {
-    item.addEventListener('click', () => {
-      ntDropdown.classList.remove('open');
-      if (item.dataset.value === 'custom') {
-        ntDropdownLabel.innerHTML = '<i class="fa-solid fa-pen nt-dropdown__pen"></i> Custom…';
-        ntDropdownItems.forEach(i => i.classList.toggle('active', i === item));
-        ntWispCustom.style.display = '';
-        ntWispCustom.focus();
-      } else {
-        setDropdownLabel(item);
-        ntDropdownItems.forEach(i => i.classList.toggle('active', i === item));
-        ntWispCustom.style.display = 'none';
-        localStorage.setItem(WISP_KEY, item.dataset.value);
-        applyTransport();
-        cloudSaveSettings();
-      }
-    });
-  });
-
-  ntWispCustom.addEventListener('change', () => {
-    const v = ntWispCustom.value.trim();
-    if (v) { localStorage.setItem(WISP_KEY, v); applyTransport(); cloudSaveSettings(); }
-  });
 
   /* ── Clock ──────────────────────────────────────────────────────────── */
   function tickClock() {
@@ -324,11 +290,6 @@
   });
 
   /* ── Helpers ────────────────────────────────────────────────────────── */
-  function wispUrl() {
-    const saved = localStorage.getItem(WISP_KEY) || DEFAULT_WISP;
-    return saved.replace(/\/?$/, '/');
-  }
-
   function setStatus(msg, error = false) {
     statusEl.textContent = msg;
     statusEl.classList.toggle('browser__status--error', error);
@@ -627,7 +588,6 @@
       swReady = true;
       setStatus('Ready');
       setNtStatus('Ready', 'ok');
-      await applyTransport();
       await initScramjet();
     } catch (e) {
       setStatus('SW failed', true);
@@ -650,11 +610,6 @@
             localStorage.setItem(PROXY_KEY, selectedProxy);
             syncProxyButtons();
             syncSearchPlaceholder();
-          }
-          if (settings.wisp) {
-            localStorage.setItem(WISP_KEY, settings.wisp);
-            syncWispDropdown();
-            applyTransport();
           }
         }
       } catch { /* not critical */ }
