@@ -65,11 +65,66 @@
             img.alt = g.name;
             img.className = 'hero__scroller-img';
             img.loading = 'lazy';
+            img.dataset.gameId = g.id;
+            img.dataset.gameName = g.name;
             el.appendChild(img);
           });
           const duration = list.length * 3.2;
           el.style.animationDuration = duration + 's';
         });
+
+        // Hover functionality
+        const scrollers = document.querySelectorAll('.hero__scroller');
+        
+        scrollers.forEach(scroller => {
+          const track = scroller.querySelector('.hero__scroller-track');
+          
+          scroller.addEventListener('mouseenter', () => {
+            track.classList.add('paused');
+            highlightFocusedImages(scroller);
+          });
+          
+          scroller.addEventListener('mouseleave', () => {
+            track.classList.remove('paused');
+            removeHighlights(scroller);
+          });
+          
+          scroller.addEventListener('click', (e) => {
+            if (e.target.classList.contains('hero__scroller-img') && e.target.classList.contains('highlighted')) {
+              const gameId = e.target.dataset.gameId;
+              if (gameId) {
+                window.location.href = `games.html#${gameId}`;
+              }
+            }
+          });
+        });
+
+        function highlightFocusedImages(scroller) {
+          const images = scroller.querySelectorAll('.hero__scroller-img');
+          const scrollerRect = scroller.getBoundingClientRect();
+          const centerY = scrollerRect.top + scrollerRect.height / 2;
+          
+          const imageDistances = [];
+          
+          images.forEach(img => {
+            const imgRect = img.getBoundingClientRect();
+            const imgCenterY = imgRect.top + imgRect.height / 2;
+            const distance = Math.abs(centerY - imgCenterY);
+            imageDistances.push({ img, distance });
+          });
+          
+          imageDistances.sort((a, b) => a.distance - b.distance);
+          
+          const top3 = imageDistances.slice(0, 3);
+          top3.forEach(item => {
+            item.img.classList.add('highlighted');
+          });
+        }
+
+        function removeHighlights(scroller) {
+          const highlighted = scroller.querySelectorAll('.hero__scroller-img.highlighted');
+          highlighted.forEach(img => img.classList.remove('highlighted'));
+        }
 
       } catch (_) {}
     })();

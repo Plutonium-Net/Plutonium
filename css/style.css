@@ -218,7 +218,7 @@ body {
   height: 70vh;
   overflow: hidden;
   z-index: 1;
-  pointer-events: none;
+  pointer-events: auto;
   mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
 }
@@ -229,6 +229,10 @@ body {
   gap: 12px;
   animation: scroller-scroll-up 220s linear infinite;
   will-change: transform;
+}
+
+.hero__scroller-track.paused {
+  animation-play-state: paused;
 }
 
 #hero-scroller-2 .hero__scroller-track {
@@ -253,6 +257,14 @@ body {
   opacity: 0.35;
   display: block;
   flex-shrink: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.hero__scroller-img.highlighted {
+  opacity: 1;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(232, 23, 93, 0.6), 0 0 40px rgba(232, 23, 93, 0.3);
 }
 
 #hero-scroller-2 {
