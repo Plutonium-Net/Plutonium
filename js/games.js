@@ -697,4 +697,6 @@
       : 'fa-solid fa-expand';
   });
 
+  window.PGViewer = { open: openViewer, close: closeViewer };
+
 })();
