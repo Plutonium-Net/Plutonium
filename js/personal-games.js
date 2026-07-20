@@ -6,6 +6,8 @@
   const FILE_STORE = 'pg_files';
   const META_STORE = 'pg_meta';
 
+  const CLOUD_DOC  = 'personal_games/meta';   // Firestore: users/{uid}/personal_games/meta
+
   let _db = null;
 
   function openDB() {
@@ -67,6 +69,15 @@
       const tx  = db.transaction(FILE_STORE, 'readwrite');
       const req = tx.objectStore(FILE_STORE).delete(range);
       req.onsuccess = () => resolve();
+      req.onerror   = e => reject(e.target.error);
+    }));
+  }
+
+  function dbHasGameFiles(id) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+      const range = IDBKeyRange.bound(`${id}/`, `${id}/\uffff`);
+      const req   = db.transaction(FILE_STORE, 'readonly').objectStore(FILE_STORE).openCursor(range);
+      req.onsuccess = e => resolve(!!e.target.result);
       req.onerror   = e => reject(e.target.error);
     }));
   }
@@ -244,6 +255,7 @@
       await dbPut(META_STORE, meta);
       closeModal('file');
       _renderMyGames();
+      _saveCloud();
       _showPgToast(`"${name}" added!`, 2500);
     } catch (e) {
       console.error('[personal-games] save failed:', e);
@@ -353,6 +365,7 @@
       await dbPut(META_STORE, meta);
       closeModal('folder');
       _renderMyGames();
+      _saveCloud();
       _showPgToast(`"${name}" added!`, 2500);
     } catch (e) {
       console.error('[personal-games] folder save failed:', e);
@@ -407,6 +420,7 @@
       await dbPut(META_STORE, meta);
       closeModal('edit');
       _renderMyGames();
+      _saveCloud();
       _showPgToast(`"${meta.name}" updated.`, 2000);
     } catch (e) {
       _showPgToast('Failed to update game.', 3000);
@@ -422,6 +436,7 @@
       await dbDeleteGameFiles(meta.id);
       await dbDelete(META_STORE, meta.id);
       _renderMyGames();
+      _saveCloud();
       _showPgToast(`"${meta.name}" deleted.`, 2000);
     } catch (e) {
       _showPgToast('Failed to delete game.', 3000);
@@ -437,9 +452,9 @@
     }
   }
 
-  function _buildPersonalCard(meta) {
+  function _buildPersonalCard(meta, hasFiles = true) {
     const card = document.createElement('div');
-    card.className = 'pgcdn-card pg-personal-card';
+    card.className = 'pgcdn-card pg-personal-card' + (hasFiles ? '' : ' pg-card--cloud-only');
     card.title = meta.name;
 
     const imgSrc = meta.art || '';
@@ -448,22 +463,32 @@
         ? `<img class="pgcdn-card__img" src="${imgSrc}" alt="${meta.name}" />`
         : `<div class="pgcdn-card__img pg-no-art"><i class="fa-solid fa-${meta.type === 'folder' ? 'folder-open' : 'file-code'}"></i></div>`
       }
+      ${!hasFiles ? `<div class="pg-cloud-only-badge" title="Files not on this device — re-upload to play"><i class="fa-solid fa-cloud"></i> Not downloaded</div>` : ''}
       <div class="pgcdn-card__name">${meta.name}</div>
       <button class="pg-card-more" title="Options" aria-label="Options">
         <i class="fa-solid fa-ellipsis-vertical"></i>
       </button>
     `;
 
-    card.addEventListener('click', () => _launchPersonalGame(meta));
+    if (hasFiles) {
+      card.addEventListener('click', () => _launchPersonalGame(meta));
+    } else {
+      card.addEventListener('click', () => {
+        _showPgToast(`"${meta.name}" files aren't on this device. Re-upload the game to play it.`, 4000);
+      });
+    }
 
     card.querySelector('.pg-card-more').addEventListener('click', e => {
       e.stopPropagation();
-      _showCtxMenu(e, [
-        {
+      const items = [];
+      if (hasFiles) {
+        items.push({
           icon:   'fa-solid fa-play',
           label:  'Play',
           action: () => _launchPersonalGame(meta),
-        },
+        });
+      }
+      items.push(
         {
           icon:   'fa-solid fa-pencil',
           label:  'Edit details',
@@ -475,8 +500,9 @@
           label:  'Delete',
           danger: true,
           action: () => _confirmDelete(meta),
-        },
-      ]);
+        }
+      );
+      _showCtxMenu(e, items);
     });
 
     return card;
@@ -527,6 +553,79 @@
     ]);
   }
 
+  // ── Cloud sync ────────────────────────────────────────────────────────────
+
+  const _cloudBadge = document.getElementById('pg-cloud-badge');
+
+  function _setBadge(synced) {
+    if (!_cloudBadge) return;
+    if (synced === 'saving') {
+      _cloudBadge.textContent = '↑ Saving…';
+      _cloudBadge.className   = 'pg-cloud-badge pg-cloud-badge--saving';
+    } else if (synced === true) {
+      _cloudBadge.textContent = '✓ Synced';
+      _cloudBadge.className   = 'pg-cloud-badge pg-cloud-badge--ok';
+    } else if (synced === 'error') {
+      _cloudBadge.textContent = '⚠ Sync failed';
+      _cloudBadge.className   = 'pg-cloud-badge pg-cloud-badge--error';
+    } else {
+      _cloudBadge.textContent = '';
+      _cloudBadge.className   = 'pg-cloud-badge';
+    }
+  }
+
+  async function _saveCloud() {
+    if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
+    _setBadge('saving');
+    try {
+      const games = await dbGetAll(META_STORE).catch(() => []);
+      const serializable = games.map(({ id, name, type, art, addedAt }) => ({ id, name, type, art: art || null, addedAt }));
+      await PlutoniumStore.setDoc(CLOUD_DOC, { games: serializable });
+      _setBadge(true);
+    } catch (e) {
+      console.warn('[personal-games] cloud save failed:', e.message);
+      _setBadge('error');
+    }
+  }
+
+  async function _loadCloud() {
+    if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
+    try {
+      const doc = await PlutoniumStore.getDoc(CLOUD_DOC).catch(() => null);
+      if (!doc || !Array.isArray(doc.games)) return;
+
+      // Merge: add cloud entries whose id is not already in local IDB
+      const localGames = await dbGetAll(META_STORE).catch(() => []);
+      const localIds   = new Set(localGames.map(g => g.id));
+      let added = 0;
+      for (const g of doc.games) {
+        if (!localIds.has(g.id)) {
+          await dbPut(META_STORE, { id: g.id, name: g.name, type: g.type, art: g.art || null, addedAt: g.addedAt });
+          added++;
+        }
+      }
+      if (added > 0) {
+        _renderMyGames();
+        _showPgToast(`${added} game${added !== 1 ? 's' : ''} synced from cloud.`, 3000);
+      }
+      _setBadge(true);
+    } catch (e) {
+      console.warn('[personal-games] cloud load failed:', e.message);
+    }
+  }
+
+  if (typeof PlutoniumStore !== 'undefined') {
+    PlutoniumStore.onAuthChange(user => {
+      if (user) {
+        _loadCloud();
+      } else {
+        _setBadge(null);
+      }
+    });
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
   async function _renderMyGames() {
     const grid  = document.getElementById('pg-personal-grid');
     const empty = document.getElementById('pg-personal-empty');
@@ -548,7 +647,10 @@
       empty.style.display = '';
     } else {
       empty.style.display = 'none';
-      games.forEach(meta => grid.appendChild(_buildPersonalCard(meta)));
+      for (const meta of games) {
+        const hasFiles = await dbHasGameFiles(meta.id).catch(() => false);
+        grid.appendChild(_buildPersonalCard(meta, hasFiles));
+      }
     }
   }
 

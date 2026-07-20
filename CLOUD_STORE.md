@@ -599,6 +599,8 @@ Below is a complete, self-contained example for a hypothetical "scores" feature.
 | File | What it stores | Path | Storage |
 |---|---|---|---|
 | `js/nav.js` | Nav layout mode (`dock`/`sidebar`/`topbar`) and collapsed state | `nav_prefs` | Firestore |
+| `js/games.js` | Favourites list, recent games, per-game save slots | `games_data/saved`, `game_saves/{gameId}` | Firestore |
+| `js/personal-games.js` | My Games metadata list (name, type, cover art, addedAt) — file binaries stay local in IndexedDB | `personal_games/meta` | Firestore |
 | `account.html` | Sign-in / sign-out UI; displays `currentUser` profile | — | Auth only |
 
 When adding a new feature, choose a unique `collection`/`path` name. Check the table above and [Reserved paths](#reserved-paths-already-used-by-the-system) to avoid collisions.

@@ -947,3 +947,63 @@
 
 .pg-btn--ghost:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: var(--text); }
 
+
+/* ── Personal Games — cloud-only card state ──────────────────────────────── */
+.pg-card--cloud-only {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.pg-card--cloud-only .pgcdn-card__img {
+  filter: grayscale(0.4);
+}
+
+.pg-cloud-only-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(0,0,0,0.72);
+  color: #ccc;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 3px 7px;
+  border-radius: 6px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Personal Games — Cloud sync badge ───────────────────────────────────── */
+.pg-cloud-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pg-cloud-badge:empty { display: none; }
+
+.pg-cloud-badge--saving {
+  color: var(--muted);
+  border-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+}
+
+.pg-cloud-badge--ok {
+  color: #4caf82;
+  border-color: rgba(76,175,130,0.3);
+  background: rgba(76,175,130,0.08);
+}
+
+.pg-cloud-badge--error {
+  color: #e87c4e;
+  border-color: rgba(232,124,78,0.3);
+  background: rgba(232,124,78,0.08);
+}
