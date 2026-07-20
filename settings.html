@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings: Plutonium Network</title>
+  <link rel="icon" type="image/png" href="img/brand/icon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/settings.css" />
+  <script src="js/settings-apply.js"></script>
+</head>
+<body>
+
+  <div id="particles-js"></div>
+
+  <div class="plu-page settings-page">
+    <h1 class="plu-page__title settings-page__title">Settings</h1>
+    <p class="plu-page__subtitle">Customize Plutonium Network to your liking</p>
+
+    <div class="settings-layout">
+
+      <nav class="settings-nav" id="settings-nav">
+        <a class="settings-nav__link active" href="#appearance" data-section="appearance">
+          <i class="fa-solid fa-palette"></i><span>Appearance</span>
+        </a>
+        <a class="settings-nav__link" href="#navigation" data-section="navigation">
+          <i class="fa-solid fa-table-columns"></i><span>Navigation</span>
+        </a>
+        <a class="settings-nav__link" href="#performance" data-section="performance">
+          <i class="fa-solid fa-bolt"></i><span>Performance</span>
+        </a>
+        <a class="settings-nav__link" href="#personalization" data-section="personalization">
+          <i class="fa-solid fa-pen-nib"></i><span>Personalization</span>
+        </a>
+        <a class="settings-nav__link" href="#accessibility" data-section="accessibility">
+          <i class="fa-solid fa-universal-access"></i><span>Accessibility</span>
+        </a>
+        <a class="settings-nav__link" href="#data" data-section="data">
+          <i class="fa-solid fa-database"></i><span>Privacy &amp; Data</span>
+        </a>
+      </nav>
+
+      <div class="settings-content" id="settings-content">
+
+        <section class="settings-section active" id="section-appearance">
+          <div class="settings-section__heading"><i class="fa-solid fa-palette"></i> Appearance</div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Accent Color</div>
+            <div class="swatch-row" id="accent-swatches">
+              <button class="swatch" data-color="#e8175d" style="background:#e8175d" title="Plutonium Pink" aria-label="Plutonium Pink"></button>
+              <button class="swatch" data-color="#7c3aed" style="background:#7c3aed" title="Violet" aria-label="Violet"></button>
+              <button class="swatch" data-color="#2563eb" style="background:#2563eb" title="Blue" aria-label="Blue"></button>
+              <button class="swatch" data-color="#059669" style="background:#059669" title="Emerald" aria-label="Emerald"></button>
+              <button class="swatch" data-color="#d97706" style="background:#d97706" title="Amber" aria-label="Amber"></button>
+              <button class="swatch" data-color="#dc2626" style="background:#dc2626" title="Red" aria-label="Red"></button>
+              <button class="swatch" data-color="#0891b2" style="background:#0891b2" title="Cyan" aria-label="Cyan"></button>
+              <button class="swatch" data-color="#c026d3" style="background:#c026d3" title="Fuchsia" aria-label="Fuchsia"></button>
+              <label class="swatch swatch--custom" title="Custom color" aria-label="Custom color">
+                <i class="fa-solid fa-plus"></i>
+                <input type="color" id="accent-custom-input" />
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Background Style</div>
+            <div class="settings-radio-group" id="bg-style-group">
+              <label class="settings-radio"><input type="radio" name="bg-style" value="particles" /> <span>Particles</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="solid" />    <span>Solid Black</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="none" />     <span>Disabled</span></label>
+            </div>
+          </div>
+
+          <div class="settings-group" id="particle-settings">
+            <div class="settings-group__label">Particle Density <span class="settings-value-badge" id="particle-density-val"></span></div>
+            <input class="settings-range" type="range" id="particle-density" min="10" max="200" step="5" />
+
+            <div class="settings-group__label" style="margin-top:16px">Particle Opacity <span class="settings-value-badge" id="particle-opacity-val"></span></div>
+            <input class="settings-range" type="range" id="particle-opacity" min="0.05" max="1" step="0.05" />
+
+            <div class="settings-group__label" style="margin-top:16px">Particle Speed <span class="settings-value-badge" id="particle-speed-val"></span></div>
+            <input class="settings-range" type="range" id="particle-speed" min="0.2" max="5" step="0.1" />
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">UI Blur Intensity <span class="settings-value-badge" id="blur-val"></span></div>
+            <input class="settings-range" type="range" id="ui-blur" min="0" max="30" step="1" />
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Font Scale <span class="settings-value-badge" id="font-scale-val"></span></div>
+            <input class="settings-range" type="range" id="font-scale" min="80" max="120" step="2" />
+          </div>
+        </section>
+
+        <section class="settings-section" id="section-navigation">
+          <div class="settings-section__heading"><i class="fa-solid fa-table-columns"></i> Navigation</div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Nav Layout</div>
+            <div class="settings-radio-group" id="nav-layout-group">
+              <label class="settings-radio"><input type="radio" name="nav-layout" value="dock" />    <span>Dock (bottom)</span></label>
+              <label class="settings-radio"><input type="radio" name="nav-layout" value="sidebar" /> <span>Sidebar (left)</span></label>
+              <label class="settings-radio"><input type="radio" name="nav-layout" value="topbar" />  <span>Top Bar</span></label>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Icon Size <span class="settings-value-badge" id="nav-icon-size-val"></span></div>
+            <input class="settings-range" type="range" id="nav-icon-size" min="28" max="60" step="2" />
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Magnification Strength <span class="settings-value-badge" id="nav-mag-val"></span></div>
+            <input class="settings-range" type="range" id="nav-mag" min="1" max="2.5" step="0.05" />
+            <div class="settings-hint">Set to 1 to disable magnification</div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row__label">Show Clock</div>
+                <div class="settings-row__desc">Display the clock in the navigation bar</div>
+              </div>
+              <label class="settings-toggle">
+                <input type="checkbox" id="show-clock" />
+                <span class="settings-toggle__track"><span class="settings-toggle__thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row__label">Show Clock Seconds</div>
+                <div class="settings-row__desc">Display the large seconds digit</div>
+              </div>
+              <label class="settings-toggle">
+                <input type="checkbox" id="show-clock-seconds" />
+                <span class="settings-toggle__track"><span class="settings-toggle__thumb"></span></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section" id="section-performance">
+          <div class="settings-section__heading"><i class="fa-solid fa-bolt"></i> Performance</div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row__label">Disable Particles</div>
+                <div class="settings-row__desc">Completely remove the particle background (improves performance on low-end devices)</div>
+              </div>
+              <label class="settings-toggle">
+                <input type="checkbox" id="disable-particles" />
+                <span class="settings-toggle__track"><span class="settings-toggle__thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row__label">Reduce Motion</div>
+                <div class="settings-row__desc">Disable UI transitions and animations site-wide</div>
+              </div>
+              <label class="settings-toggle">
+                <input type="checkbox" id="reduce-motion" />
+                <span class="settings-toggle__track"><span class="settings-toggle__thumb"></span></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section" id="section-personalization">
+          <div class="settings-section__heading"><i class="fa-solid fa-pen-nib"></i> Personalization</div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Home Greeting</div>
+            <input class="settings-input" type="text" id="home-greeting" placeholder="Plutonium Network" maxlength="60" />
+            <div class="settings-hint">Replaces the main heading on the home page</div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Page Title Suffix</div>
+            <input class="settings-input" type="text" id="page-title-suffix" placeholder="Plutonium Network" maxlength="40" />
+            <div class="settings-hint">Appended to every page's browser tab title (e.g. "Games: My Name")</div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Home Sub-heading</div>
+            <textarea class="settings-input settings-textarea" id="home-desc" placeholder="A next-generation network…" maxlength="160"></textarea>
+          </div>
+        </section>
+
+        <section class="settings-section" id="section-accessibility">
+          <div class="settings-section__heading"><i class="fa-solid fa-universal-access"></i> Accessibility</div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row__label">High Contrast</div>
+                <div class="settings-row__desc">Increases border and text contrast throughout the UI</div>
+              </div>
+              <label class="settings-toggle">
+                <input type="checkbox" id="high-contrast" />
+                <span class="settings-toggle__track"><span class="settings-toggle__thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row__label">Bold Text</div>
+                <div class="settings-row__desc">Increase font weight across the UI</div>
+              </div>
+              <label class="settings-toggle">
+                <input type="checkbox" id="bold-text" />
+                <span class="settings-toggle__track"><span class="settings-toggle__thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row__label">Always Show Focus Ring</div>
+                <div class="settings-row__desc">Show keyboard focus outlines even when using a mouse</div>
+              </div>
+              <label class="settings-toggle">
+                <input type="checkbox" id="focus-ring" />
+                <span class="settings-toggle__track"><span class="settings-toggle__thumb"></span></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section" id="section-data">
+          <div class="settings-section__heading"><i class="fa-solid fa-database"></i> Privacy &amp; Data</div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Export &amp; Import</div>
+            <div class="settings-action-row">
+              <button class="settings-action-btn" id="export-settings">
+                <i class="fa-solid fa-file-export"></i> Export Settings
+              </button>
+              <label class="settings-action-btn" id="import-settings-label">
+                <i class="fa-solid fa-file-import"></i> Import Settings
+                <input type="file" id="import-settings-input" accept=".json" style="display:none" />
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Reset</div>
+            <div class="settings-action-row">
+              <button class="settings-action-btn settings-action-btn--danger" id="reset-settings">
+                <i class="fa-solid fa-rotate-left"></i> Reset All Settings
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-group__label">Clear Data</div>
+            <div class="settings-action-row">
+              <button class="settings-action-btn settings-action-btn--danger" id="clear-history">
+                <i class="fa-solid fa-clock-rotate-left"></i> Clear Play History
+              </button>
+              <button class="settings-action-btn settings-action-btn--danger" id="clear-personal-games">
+                <i class="fa-solid fa-gamepad"></i> Delete Personal Games
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="settings-toast" class="settings-toast">
+    <i class="fa-solid fa-check settings-toast__icon"></i>
+    <span class="settings-toast__msg" id="settings-toast-msg"></span>
+  </div>
+
+  <div id="settings-confirm" class="settings-confirm hidden">
+    <div class="settings-confirm__box">
+      <div class="settings-confirm__msg" id="settings-confirm-msg"></div>
+      <div class="settings-confirm__btns">
+        <button class="pg-btn pg-btn--ghost" id="settings-confirm-cancel">Cancel</button>
+        <button class="pg-btn pg-btn--primary settings-confirm__ok--danger" id="settings-confirm-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/particles.min.js"></script>
+  <script src="js/cloud-store.js"></script>
+  <script>
+    PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
+  </script>
+  <script src="js/home-dock.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    (function () {
+      if (typeof particlesJS === 'undefined') return;
+      var s = window.PluSettings ? window.PluSettings.load() : null;
+      var density  = s ? s.particleDensity  : 80;
+      var opacity  = s ? s.particleOpacity  : 0.4;
+      var speed    = s ? s.particleSpeed    : 1.2;
+      var color    = s ? s.accentColor      : '#e8175d';
+      var disabled = s && (s.disableParticles || s.bgStyle !== 'particles');
+      if (disabled) return;
+      particlesJS('particles-js', {
+        particles: {
+          number: { value: density, density: { enable: true, value_area: 800 } },
+          color: { value: color },
+          shape: { type: 'circle' },
+          opacity: { value: opacity, random: true, anim: { enable: true, speed: 0.6, opacity_min: 0.1, sync: false } },
+          size: { value: 2.5, random: true, anim: { enable: false } },
+          line_linked: { enable: true, distance: 150, color: color, opacity: 0.12, width: 1 },
+          move: { enable: true, speed: speed, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
+        },
+        interactivity: {
+          detect_on: 'canvas',
+          events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: false }, resize: true },
+          modes: { repulse: { distance: 100, duration: 0.4 } }
+        },
+        retina_detect: true
+      });
+    })();
+  </script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

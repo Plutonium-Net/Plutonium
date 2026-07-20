@@ -716,3 +716,32 @@ body {
   color: var(--muted);
   line-height: 1.6;
 }
+
+.plu-reduce-motion *,
+.plu-reduce-motion *::before,
+.plu-reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+.plu-high-contrast {
+  --muted: #d0d0d0;
+}
+
+.plu-high-contrast .pgcdn-card,
+.plu-high-contrast .history-list__row,
+.plu-high-contrast .settings-row,
+.plu-high-contrast .settings-radio {
+  border-color: rgba(255,255,255,0.22) !important;
+}
+
+.plu-bold-text body,
+.plu-bold-text {
+  font-weight: 500;
+}
+
+.plu-focus-ring *:focus {
+  outline: 2px solid var(--pink) !important;
+  outline-offset: 2px !important;
+}

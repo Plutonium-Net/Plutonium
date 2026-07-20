@@ -11,7 +11,7 @@
     { id: 'cloud',    fa: 'fa-solid fa-cloud',           label: 'Cloud Gaming',     href: 'cloud.html' },
     { id: 'stream',   fa: 'fa-solid fa-circle-play',     label: 'Streaming',        href: 'stream.html' },
     { id: 'account',  fa: 'fa-solid fa-circle-user',     label: 'Account',          href: 'account.html', account: true },
-    { id: 'settings', fa: 'fa-solid fa-gear',            label: 'Settings',         href: '#' },
+    { id: 'settings', fa: 'fa-solid fa-gear',            label: 'Settings',         href: 'settings.html' },
     { id: 'sidebar',  fa: 'fa-solid fa-table-columns',   label: 'Layout',           href: '', special: true },
   ];
 
@@ -226,7 +226,6 @@
     _savePrefs();
   }
 
-  const MAG_MAX    = 1.7;
   const MAG_RADIUS = 80;
 
   function attachMagnification() {
@@ -234,6 +233,7 @@
     const vertical = _mode === 'sidebar';
 
     function applyMag(mouseX, mouseY) {
+      const MAG_MAX = (window.PluSettings ? window.PluSettings.load().navMag : 1.7);
       links.forEach(link => {
         const rect   = link.getBoundingClientRect();
         const cx     = rect.left + rect.width  / 2;
