@@ -8,12 +8,13 @@
   const CLOUD_DOC_SETTINGS = 'web/settings';
   const CLOUD_DOC_PINS     = 'web/pins';
   const CLOUD_DOC_TABS     = 'web/tabs';
+  const HB_WORKER_URL      = 'https://proxy.cdn.plutoniumnet.work';
 
   /* ── State ──────────────────────────────────────────────────────────── */
   let sjController = null;
   let bareConn     = null;
   let swReady      = false;
-  let tabs         = [];  // [{ id, title, url, iframe }]
+  let tabs         = [];  // [{ id, title, url, iframe, hbSessionId? }]
   let activeId     = null;
   let nextId       = 0;
 
@@ -36,6 +37,10 @@
   const ntPinsEl      = document.getElementById('nt-pins');
   const ntAddPin      = document.getElementById('nt-add-pin');
   const ntProxyBtns     = document.querySelectorAll('.nt-toggle-btn');
+  const ntHbWrap        = document.getElementById('nt-hb-wrap');
+  const ntHbInput       = document.getElementById('nt-hb-input');
+  const ntHbBtn         = document.getElementById('nt-hb-btn');
+  const ntHbStatus      = document.getElementById('nt-hb-status');
   const ntDropdown      = document.getElementById('nt-wisp-dropdown');
   const ntDropdownTrigger = document.getElementById('nt-dropdown-trigger');
   const ntDropdownLabel = document.getElementById('nt-dropdown-label');
@@ -88,6 +93,11 @@
     s.setDoc(CLOUD_DOC_TABS, { tabs: snapshot }).catch(console.warn);
   }
 
+  function syncHbWrap() {
+    const isHb = selectedProxy === 'hb';
+    ntHbWrap.style.display = isHb ? '' : 'none';
+  }
+
   function syncProxyButtons() {
     ntProxyBtns.forEach(b => b.classList.toggle('active', b.dataset.proxy === selectedProxy));
   }
@@ -112,6 +122,7 @@
   }
 
   syncProxyButtons();
+  syncHbWrap();
   syncWispDropdown();
 
   /* ── Proxy toggle ───────────────────────────────────────────────────── */
@@ -120,9 +131,72 @@
       selectedProxy = btn.dataset.proxy;
       localStorage.setItem(PROXY_KEY, selectedProxy);
       syncProxyButtons();
-      cloudSaveSettings();
+      syncHbWrap();
+      // Don't cloud-save 'hb' as the proxy engine — it's not a SW proxy
+      if (selectedProxy !== 'hb') cloudSaveSettings();
     });
   });
+
+  /* ── Hyperbeam proxy launch ─────────────────────────────────────────── */
+  async function launchHbProxy() {
+    const raw = ntHbInput.value.trim();
+    if (!raw) return;
+
+    let url;
+    try {
+      url = raw.startsWith('http://') || raw.startsWith('https://')
+        ? raw
+        : 'https://' + raw;
+      new URL(url); // validate
+    } catch {
+      ntHbStatus.textContent = 'Invalid URL';
+      ntHbStatus.className = 'nt-hb-status nt-hb-status--error';
+      return;
+    }
+
+    ntHbBtn.disabled = true;
+    ntHbStatus.textContent = 'Starting session…';
+    ntHbStatus.className = 'nt-hb-status';
+
+    try {
+      const res  = await fetch(`${HB_WORKER_URL}/session`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ url }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error || `HTTP ${res.status}`;
+        console.error('[hb] worker error:', res.status, data);
+        throw new Error(msg);
+      }
+
+      ntHbStatus.textContent = '';
+      ntHbInput.value = '';
+
+      // Open a new tab and load the embed URL directly into its iframe
+      const id  = nextId++;
+      const tab = { id, title: new URL(url).hostname, url, iframe: null, hbSessionId: data.session_id };
+      tabs.push(tab);
+
+      tab.iframe = document.createElement('iframe');
+      tab.iframe.allow = 'fullscreen; autoplay';
+      tab.iframe.src = data.embed_url;
+      frameStack.appendChild(tab.iframe);
+
+      activateTab(id);
+      omniInput.value = url;
+      renderTabList();
+    } catch (e) {
+      ntHbStatus.textContent = e.message;
+      ntHbStatus.className = 'nt-hb-status nt-hb-status--error';
+    } finally {
+      ntHbBtn.disabled = false;
+    }
+  }
+
+  ntHbBtn.addEventListener('click', launchHbProxy);
+  ntHbInput.addEventListener('keydown', e => { if (e.key === 'Enter') launchHbProxy(); });
 
   /* ── Custom WISP dropdown ───────────────────────────────────────────── */
   ntDropdownTrigger.addEventListener('click', e => {
@@ -299,6 +373,14 @@
   function closeTab(id) {
     const idx = tabs.findIndex(t => t.id === id);
     if (idx === -1) return;
+    // Tear down Hyperbeam session if this was an HB tab
+    if (tabs[idx].hbSessionId) {
+      fetch(`${HB_WORKER_URL}/session`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: tabs[idx].hbSessionId }),
+      }).catch(() => {});
+    }
     if (tabs[idx].iframe) tabs[idx].iframe.remove();
     tabs.splice(idx, 1);
     if (!tabs.length) { createTab(); return; }
@@ -569,6 +651,7 @@
             selectedProxy = settings.proxy;
             localStorage.setItem(PROXY_KEY, selectedProxy);
             syncProxyButtons();
+            syncHbWrap();
           }
           if (settings.wisp) {
             localStorage.setItem(WISP_KEY, settings.wisp);

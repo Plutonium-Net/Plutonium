@@ -75,6 +75,9 @@
               <button class="nt-toggle-btn" data-proxy="sj" id="nt-btn-sj">
                 <span class="nt-toggle-btn__pip"></span> ScramJet
               </button>
+              <button class="nt-toggle-btn" data-proxy="hb" id="nt-btn-hb">
+                <span class="nt-toggle-btn__pip"></span> Hyperbeam
+              </button>
             </div>
 
             <!-- WISP custom dropdown -->
@@ -98,6 +101,19 @@
             </div>
 
             <span id="nt-status" class="nt-status">…</span>
+          </div>
+
+          <!-- Hyperbeam proxy URL row — shown only when HB is selected -->
+          <div class="nt-hb-wrap" id="nt-hb-wrap" style="display:none">
+            <div class="nt-hb-row">
+              <i class="fa-solid fa-satellite-dish nt-hb-icon"></i>
+              <input id="nt-hb-input" class="nt-hb-input" type="text"
+                     placeholder="Enter URL to proxy via Hyperbeam…" autocomplete="off" spellcheck="false" />
+              <button class="nt-hb-btn" id="nt-hb-btn">
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+            <span id="nt-hb-status" class="nt-hb-status"></span>
           </div>
 
           <!-- Pins -->

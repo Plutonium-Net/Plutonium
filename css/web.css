@@ -740,3 +740,83 @@
 
 .nt-status--error { color: #ff6b6b; }
 .nt-status--ok    { color: #4ade80; }
+
+/* ── Hyperbeam proxy URL row ─────────────────────────────────────────── */
+
+.nt-hb-wrap {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: -8px;
+}
+
+.nt-hb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(232,23,93,0.25);
+  border-radius: 10px;
+  padding: 4px 4px 4px 12px;
+  transition: border-color 0.15s;
+}
+
+.nt-hb-row:focus-within {
+  border-color: rgba(232,23,93,0.55);
+}
+
+.nt-hb-icon {
+  font-size: 0.8rem;
+  color: var(--pink);
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.nt-hb-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  padding: 5px 0;
+}
+
+.nt-hb-input::placeholder {
+  color: var(--muted);
+  opacity: 0.55;
+}
+
+.nt-hb-btn {
+  background: rgba(232,23,93,0.15);
+  border: 1px solid rgba(232,23,93,0.3);
+  border-radius: 7px;
+  color: var(--pink);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.nt-hb-btn:hover:not(:disabled) {
+  background: rgba(232,23,93,0.28);
+  border-color: rgba(232,23,93,0.55);
+}
+
+.nt-hb-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.nt-hb-status {
+  font-size: 0.78rem;
+  color: var(--muted);
+  padding-left: 2px;
+  min-height: 1em;
+}
+
+.nt-hb-status--error { color: #ff6b6b; }
