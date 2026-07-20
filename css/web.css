@@ -319,6 +319,17 @@
   display: block;
 }
 
+.hb-watermark-cover {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 200px;
+  height: 40px;
+  background: #000;
+  z-index: 10;
+  pointer-events: none;
+}
+
 .hb-clip iframe {
   position: absolute;
   inset: 0;

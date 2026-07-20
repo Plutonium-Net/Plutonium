@@ -37,10 +37,6 @@
   const ntPinsEl      = document.getElementById('nt-pins');
   const ntAddPin      = document.getElementById('nt-add-pin');
   const ntProxyBtns     = document.querySelectorAll('.nt-toggle-btn');
-  const ntHbWrap        = document.getElementById('nt-hb-wrap');
-  const ntHbInput       = document.getElementById('nt-hb-input');
-  const ntHbBtn         = document.getElementById('nt-hb-btn');
-  const ntHbStatus      = document.getElementById('nt-hb-status');
   const ntDropdown      = document.getElementById('nt-wisp-dropdown');
   const ntDropdownTrigger = document.getElementById('nt-dropdown-trigger');
   const ntDropdownLabel = document.getElementById('nt-dropdown-label');
@@ -93,9 +89,10 @@
     s.setDoc(CLOUD_DOC_TABS, { tabs: snapshot }).catch(console.warn);
   }
 
-  function syncHbWrap() {
-    const isHb = selectedProxy === 'hb';
-    ntHbWrap.style.display = isHb ? '' : 'none';
+  function syncSearchPlaceholder() {
+    ntSearchInput.placeholder = selectedProxy === 'hb'
+      ? 'Enter URL to proxy via Hyperbeam…'
+      : 'Search with DuckDuckGo…';
   }
 
   function syncProxyButtons() {
@@ -122,8 +119,8 @@
   }
 
   syncProxyButtons();
-  syncHbWrap();
   syncWispDropdown();
+  syncSearchPlaceholder();
 
   /* ── Proxy toggle ───────────────────────────────────────────────────── */
   ntProxyBtns.forEach(btn => {
@@ -131,15 +128,14 @@
       selectedProxy = btn.dataset.proxy;
       localStorage.setItem(PROXY_KEY, selectedProxy);
       syncProxyButtons();
-      syncHbWrap();
+      syncSearchPlaceholder();
       // Don't cloud-save 'hb' as the proxy engine — it's not a SW proxy
       if (selectedProxy !== 'hb') cloudSaveSettings();
     });
   });
 
   /* ── Hyperbeam proxy launch ─────────────────────────────────────────── */
-  async function launchHbProxy() {
-    const raw = ntHbInput.value.trim();
+  async function launchHbProxy(raw) {
     if (!raw) return;
 
     let url;
@@ -149,14 +145,11 @@
         : 'https://' + raw;
       new URL(url); // validate
     } catch {
-      ntHbStatus.textContent = 'Invalid URL';
-      ntHbStatus.className = 'nt-hb-status nt-hb-status--error';
+      setNtStatus('Invalid URL', 'error');
       return;
     }
 
-    ntHbBtn.disabled = true;
-    ntHbStatus.textContent = 'Starting session…';
-    ntHbStatus.className = 'nt-hb-status';
+    setNtStatus('Starting Hyperbeam session…');
 
     try {
       const res  = await fetch(`${HB_WORKER_URL}/session`, {
@@ -171,11 +164,9 @@
         throw new Error(msg);
       }
 
-      ntHbStatus.textContent = '';
-      ntHbInput.value = '';
+      setNtStatus('');
 
-      // Open a new tab and load the embed URL directly into its iframe.
-      // Wrap in a clip div so the Chromium toolbar (~76px) is scrolled out of view.
+      // Open a new tab and load the embed URL directly into its iframe
       const id  = nextId++;
       const tab = { id, title: new URL(url).hostname, url, iframe: null, hbSessionId: data.session_id };
       tabs.push(tab);
@@ -187,24 +178,23 @@
       tab.iframe.allow = 'fullscreen; autoplay';
       tab.iframe.src = data.embed_url + '&controls=false';
       clip.appendChild(tab.iframe);
+
+      // Cover the "Made with Hyperbeam" watermark (bottom-right corner)
+      const cover = document.createElement('div');
+      cover.className = 'hb-watermark-cover';
+      clip.appendChild(cover);
+
       frameStack.appendChild(clip);
 
-      // Store clip so closeTab can remove it
       tab._clip = clip;
 
       activateTab(id);
       omniInput.value = url;
       renderTabList();
     } catch (e) {
-      ntHbStatus.textContent = e.message;
-      ntHbStatus.className = 'nt-hb-status nt-hb-status--error';
-    } finally {
-      ntHbBtn.disabled = false;
+      setNtStatus(e.message, 'error');
     }
   }
-
-  ntHbBtn.addEventListener('click', launchHbProxy);
-  ntHbInput.addEventListener('keydown', e => { if (e.key === 'Enter') launchHbProxy(); });
 
   /* ── Custom WISP dropdown ───────────────────────────────────────────── */
   ntDropdownTrigger.addEventListener('click', e => {
@@ -257,6 +247,11 @@
   function doNtSearch() {
     const q = ntSearchInput.value.trim();
     if (!q) return;
+    if (selectedProxy === 'hb') {
+      ntSearchInput.value = '';
+      launchHbProxy(q);
+      return;
+    }
     // navigate active tab through proxy
     navigateTab(activeId ?? createTab(), 'https://duckduckgo.com/?q=' + encodeURIComponent(q));
     ntSearchInput.value = '';
@@ -664,7 +659,7 @@
             selectedProxy = settings.proxy;
             localStorage.setItem(PROXY_KEY, selectedProxy);
             syncProxyButtons();
-            syncHbWrap();
+            syncSearchPlaceholder();
           }
           if (settings.wisp) {
             localStorage.setItem(WISP_KEY, settings.wisp);
