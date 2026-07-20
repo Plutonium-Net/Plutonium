@@ -290,6 +290,11 @@
   });
 
   /* ── Helpers ────────────────────────────────────────────────────────── */
+  function wispUrl() {
+    const saved = localStorage.getItem(WISP_KEY) || DEFAULT_WISP;
+    return saved.replace(/\/?$/, '/');
+  }
+
   function setStatus(msg, error = false) {
     statusEl.textContent = msg;
     statusEl.classList.toggle('browser__status--error', error);
@@ -588,6 +593,7 @@
       swReady = true;
       setStatus('Ready');
       setNtStatus('Ready', 'ok');
+      await applyTransport();
       await initScramjet();
     } catch (e) {
       setStatus('SW failed', true);
@@ -610,6 +616,11 @@
             localStorage.setItem(PROXY_KEY, selectedProxy);
             syncProxyButtons();
             syncSearchPlaceholder();
+          }
+          if (settings.wisp) {
+            localStorage.setItem(WISP_KEY, settings.wisp);
+            syncWispDropdown();
+            applyTransport();
           }
         }
       } catch { /* not critical */ }
