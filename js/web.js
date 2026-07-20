@@ -28,8 +28,6 @@
   const btnNewTab  = document.getElementById('btn-new-tab');
   const statusEl      = document.getElementById('web-status');
   // New-tab page
-  const ntClockTime   = document.getElementById('nt-clock-time');
-  const ntClockDate   = document.getElementById('nt-clock-date');
   const ntSearchInput = document.getElementById('nt-search-input');
   const ntSearchBtn   = document.getElementById('nt-search-btn');
   const ntPinsEl      = document.getElementById('nt-pins');
@@ -80,7 +78,7 @@
 
   function syncSearchPlaceholder() {
     ntSearchInput.placeholder = selectedProxy === 'hb'
-      ? 'Enter URL to proxy via Hyperbeam…'
+      ? 'Enter URL to pr0xy via Hyperbeam…'
       : 'Search with DuckDuckGo…';
   }
 
@@ -193,19 +191,6 @@
   }
 
   /* ── Clock ──────────────────────────────────────────────────────────── */
-  function tickClock() {
-    const now  = new Date();
-    const raw  = now.getHours();
-    const h    = String(raw % 12 || 12);
-    const m    = String(now.getMinutes()).padStart(2, '0');
-    const ampm = raw < 12 ? 'AM' : 'PM';
-    ntClockTime.textContent = `${h}:${m} ${ampm}`;
-    ntClockDate.textContent = now.toLocaleDateString(undefined, {
-      weekday: 'long', month: 'long', day: 'numeric'
-    });
-  }
-  tickClock();
-  setInterval(tickClock, 5000);
 
   /* ── DDG search ─────────────────────────────────────────────────────── */
   function doNtSearch() {
@@ -276,17 +261,55 @@
   }
   renderPins();
 
-  ntAddPin.addEventListener('click', () => {
-    const url = prompt('Pin URL:');
-    if (!url) return;
-    let title = '';
-    try { title = new URL(url.startsWith('http') ? url : 'https://' + url).hostname; }
-    catch { title = url; }
+  /* ── Add-pin popup ──────────────────────────────────────────────────── */
+  const pinPopupBackdrop = document.getElementById('pin-popup-backdrop');
+  const pinPopupUrl      = document.getElementById('pin-popup-url');
+  const pinPopupName     = document.getElementById('pin-popup-name');
+  const pinPopupCancel   = document.getElementById('pin-popup-cancel');
+  const pinPopupAdd      = document.getElementById('pin-popup-add');
+
+  function openPinPopup() {
+    pinPopupUrl.value  = '';
+    pinPopupName.value = '';
+    pinPopupBackdrop.classList.add('open');
+    pinPopupBackdrop.removeAttribute('aria-hidden');
+    setTimeout(() => pinPopupUrl.focus(), 50);
+  }
+
+  function closePinPopup() {
+    pinPopupBackdrop.classList.remove('open');
+    pinPopupBackdrop.setAttribute('aria-hidden', 'true');
+  }
+
+  function commitPin() {
+    const raw = pinPopupUrl.value.trim();
+    if (!raw) { pinPopupUrl.focus(); return; }
+    const url = raw.startsWith('http') ? raw : 'https://' + raw;
+    let title = pinPopupName.value.trim();
+    if (!title) {
+      try { title = new URL(url).hostname; } catch { title = url; }
+    }
     const pins = loadPins();
-    pins.push({ url: url.startsWith('http') ? url : 'https://' + url, title });
+    pins.push({ url, title });
     savePins(pins);
     renderPins();
     cloudSavePins();
+    closePinPopup();
+  }
+
+  ntAddPin.addEventListener('click', openPinPopup);
+  pinPopupCancel.addEventListener('click', closePinPopup);
+  pinPopupAdd.addEventListener('click', commitPin);
+
+  // Close on backdrop click
+  pinPopupBackdrop.addEventListener('click', e => {
+    if (e.target === pinPopupBackdrop) closePinPopup();
+  });
+
+  // Keyboard: Enter submits, Escape cancels
+  pinPopupBackdrop.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.activeElement !== pinPopupCancel) commitPin();
+    if (e.key === 'Escape') closePinPopup();
   });
 
   /* ── Helpers ────────────────────────────────────────────────────────── */
@@ -649,6 +672,25 @@
         }
       } catch { /* not critical */ }
     });
+  }
+
+  /* ── Lightfall background ───────────────────────────────────────────── */
+  const _lfCanvas = document.getElementById('nt-lightfall');
+  const _lf       = typeof initLightfall === 'function' ? initLightfall(_lfCanvas) : null;
+
+  // Start/stop the animation whenever the new-tab page appears or disappears.
+  // We patch activateTab and navigateTab by observing newtabPage class changes.
+  if (_lf) {
+    const _lfObserver = new MutationObserver(() => {
+      if (newtabPage.classList.contains('active')) {
+        _lf.start();
+      } else {
+        _lf.stop();
+      }
+    });
+    _lfObserver.observe(newtabPage, { attributes: true, attributeFilter: ['class'] });
+    // Start immediately if the new-tab page is already visible on load
+    if (newtabPage.classList.contains('active')) _lf.start();
   }
 
   /* ── Boot ───────────────────────────────────────────────────────────── */

@@ -44,11 +44,13 @@
 
         <!-- ── New-tab page ───────────────────────────────────────────── -->
         <div class="newtab-page" id="newtab-page">
+          <!-- Lightfall WebGL background canvas -->
+          <canvas class="nt-lightfall" id="nt-lightfall" aria-hidden="true"></canvas>
 
-          <!-- clock -->
-          <div class="nt-clock" id="nt-clock">
-            <span class="nt-clock__time" id="nt-clock-time">00:00</span>
-            <span class="nt-clock__date" id="nt-clock-date"></span>
+          <!-- heading -->
+          <div class="nt-brand">
+            <span class="nt-brand__name">Pluto</span>
+            <span class="nt-brand__sub">(pr0xy)</span>
           </div>
 
           <!-- DuckDuckGo search bar -->
@@ -109,12 +111,33 @@
 
         </div><!-- /newtab-page -->
 
+        <!-- ── Add-pin popup ──────────────────────────────────────────── -->
+        <div class="pin-popup-backdrop" id="pin-popup-backdrop" aria-hidden="true">
+          <div class="pin-popup" role="dialog" aria-modal="true" aria-labelledby="pin-popup-title">
+            <div class="pin-popup__header">
+              <span class="pin-popup__brand">Pluto <span class="pin-popup__brand-sub">(pr0xy)</span></span>
+              <h2 class="pin-popup__title" id="pin-popup-title">Add Pin</h2>
+            </div>
+            <label class="pin-popup__label" for="pin-popup-url">URL</label>
+            <input class="pin-popup__input" id="pin-popup-url" type="text"
+                   placeholder="https://example.com" autocomplete="off" spellcheck="false" />
+            <label class="pin-popup__label" for="pin-popup-name">Name <span class="pin-popup__label-opt">(optional)</span></label>
+            <input class="pin-popup__input" id="pin-popup-name" type="text"
+                   placeholder="e.g. YouTube" autocomplete="off" />
+            <div class="pin-popup__actions">
+              <button class="pin-popup__btn pin-popup__btn--cancel" id="pin-popup-cancel">Cancel</button>
+              <button class="pin-popup__btn pin-popup__btn--add" id="pin-popup-add">Add Pin</button>
+            </div>
+          </div>
+        </div>
+
       </div>
       </div><!-- /frame-wrap -->
     </div>
   </div>
 
   <script src="js/particles.min.js"></script>
+  <script src="js/lightfall.js"></script>
   <script src="js/cloud-store.js"></script>
   <script>
     PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
