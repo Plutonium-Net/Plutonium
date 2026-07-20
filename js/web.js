@@ -24,8 +24,6 @@
   const newtabPage = document.getElementById('newtab-page');
   const omniInput  = document.getElementById('omnibar-input');
   const btnGo      = document.getElementById('btn-go');
-  const btnBack    = document.getElementById('btn-back');
-  const btnFwd     = document.getElementById('btn-fwd');
   const btnReload  = document.getElementById('btn-reload');
   const btnNewTab  = document.getElementById('btn-new-tab');
   const statusEl      = document.getElementById('web-status');
@@ -567,14 +565,6 @@
   omniInput.addEventListener('focus', () => omniInput.select());
 
   /* ── Nav buttons ────────────────────────────────────────────────────── */
-  btnBack.addEventListener('click', () => {
-    const t = getTab(activeId);
-    if (t) try { t.iframe.contentWindow.history.back(); } catch { /* x-origin */ }
-  });
-  btnFwd.addEventListener('click', () => {
-    const t = getTab(activeId);
-    if (t) try { t.iframe.contentWindow.history.forward(); } catch { /* x-origin */ }
-  });
   btnReload.addEventListener('click', () => {
     const t = getTab(activeId);
     if (!t) return;

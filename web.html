@@ -31,9 +31,7 @@
     <!-- Right: omnibar + frame stack -->
     <div class="browser__content" id="browser-content">
       <div class="browser__omnibar" id="omnibar">
-        <button class="omnibar__btn" id="btn-back"   title="Back">   <i class="fa-solid fa-arrow-left"></i></button>
-        <button class="omnibar__btn" id="btn-fwd"    title="Forward"><i class="fa-solid fa-arrow-right"></i></button>
-        <button class="omnibar__btn" id="btn-reload" title="Reload"> <i class="fa-solid fa-rotate-right"></i></button>
+        <button class="omnibar__btn" id="btn-reload" title="Reload"><i class="fa-solid fa-rotate-right"></i></button>
         <input  class="omnibar__input" id="omnibar-input" type="text"
                 placeholder="Search or enter address…" autocomplete="off" spellcheck="false" />
         <button class="omnibar__btn omnibar__btn--go" id="btn-go" title="Go">
@@ -41,6 +39,7 @@
         </button>
       </div>
 
+      <div class="browser__frame-wrap">
       <div class="browser__frames" id="frame-stack">
 
         <!-- ── New-tab page ───────────────────────────────────────────── -->
@@ -114,6 +113,7 @@
         </div><!-- /newtab-page -->
 
       </div>
+      </div><!-- /frame-wrap -->
     </div>
   </div>
 

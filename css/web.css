@@ -212,36 +212,36 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  background: rgba(10,10,10,0.82);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: 14px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  overflow: hidden;
+  gap: 18px;
+  background: transparent;
+  overflow: visible;
 }
 
-/* ── Omnibar ─────────────────────────────────────────────────────────── */
+/* ── Omnibar — slim floating bar elevated above the frame ────────────── */
 
 .browser__omnibar {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 10px;
-  background: rgba(255,255,255,0.03);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 4px 6px;
+  background: rgba(10,10,10,0.88);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
 
 .omnibar__btn {
   background: none;
   border: none;
   cursor: pointer;
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -255,24 +255,26 @@
 }
 
 .omnibar__btn--go {
-  background: var(--pink);
-  color: #fff;
+  background: rgba(232,23,93,0.2);
+  border: 1px solid rgba(232,23,93,0.3);
+  color: var(--pink);
 }
 
 .omnibar__btn--go:hover {
-  background: var(--pink-muted);
+  background: rgba(232,23,93,0.35);
+  border-color: rgba(232,23,93,0.55);
 }
 
 .omnibar__input {
   flex: 1;
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
   color: var(--text);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-family: inherit;
   outline: none;
-  padding: 5px 12px;
+  padding: 4px 10px;
   transition: border-color 0.15s;
 }
 
@@ -285,10 +287,27 @@
   opacity: 0.5;
 }
 
+/* ── Frame area — takes remaining space, rounded, clipped ────────────── */
+
+.browser__frame-wrap {
+  flex: 1;
+  min-height: 0;
+  background: rgba(10,10,10,0.82);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 14px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ── Frame stack ─────────────────────────────────────────────────────── */
 
 .browser__frames {
   flex: 1;
+  min-height: 0;
   position: relative;
   overflow: hidden;
 }
