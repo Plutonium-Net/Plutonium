@@ -23,6 +23,10 @@ export default {
         return handleDelete(request, env, allowed);
       }
 
+      if (path === '/sessions' && request.method === 'DELETE') {
+        return handleDeleteAll(env, allowed);
+      }
+
       return corsResponse({ error: 'Not found' }, 404, allowed);
     } catch (err) {
       console.error('[proxy-worker]', err);
@@ -141,6 +145,37 @@ async function handleDelete(request, env, allowed) {
   }
 
   return corsResponse({ deleted: true }, 200, allowed);
+}
+
+// ── DELETE /sessions — destroy ALL active sessions ────────────────────────────
+
+async function handleDeleteAll(env, allowed) {
+  if (!env.HYPERBEAM_API_KEY) {
+    return corsResponse({ error: 'HYPERBEAM_API_KEY not configured' }, 500, allowed);
+  }
+
+  const listRes = await fetch('https://engine.hyperbeam.com/v0/vm', {
+    headers: { 'Authorization': `Bearer ${env.HYPERBEAM_API_KEY}` },
+  });
+
+  if (!listRes.ok) {
+    const data = await listRes.json().catch(() => ({}));
+    return corsResponse({ error: data.message || 'Failed to list sessions' }, listRes.status, allowed);
+  }
+
+  const vms = await listRes.json().catch(() => []);
+  const sessions = Array.isArray(vms) ? vms : (vms.sessions || []);
+
+  const results = await Promise.all(sessions.map(async vm => {
+    const id = vm.session_id;
+    const res = await fetch(`https://engine.hyperbeam.com/v0/vm/${id}`, {
+      method:  'DELETE',
+      headers: { 'Authorization': `Bearer ${env.HYPERBEAM_API_KEY}` },
+    });
+    return { session_id: id, deleted: res.ok || res.status === 404 };
+  }));
+
+  return corsResponse({ deleted: results.length, sessions: results }, 200, allowed);
 }
 
 // ── Homepage ──────────────────────────────────────────────────────────────────
