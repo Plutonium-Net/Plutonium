@@ -91,7 +91,17 @@ const RL_WINDOW = 60 * 60 * 12; // 12 hours in seconds
 
 function getRateLimitKey(request) {
   const auth = request.headers.get('Authorization') || '';
-  if (auth.startsWith('Bearer ')) return 'rl:' + auth.slice(7, 39);
+  if (auth.startsWith('Bearer ')) {
+    // Firebase JWTs are header.payload.signature — the header is identical for
+    // all tokens from the same project, so we must key on the payload segment
+    // which is unique per user.  We take 64 chars of it (well within one user's
+    // unique payload prefix) rather than trying to base64-decode inside a Worker.
+    const token = auth.slice(7);
+    const dot1  = token.indexOf('.');
+    const dot2  = dot1 >= 0 ? token.indexOf('.', dot1 + 1) : -1;
+    const payload = dot1 >= 0 ? token.slice(dot1 + 1, dot2 >= 0 ? dot2 : undefined) : token;
+    return 'rl:' + payload.slice(0, 64);
+  }
   return 'rl:ip:' + (request.headers.get('CF-Connecting-IP') || 'unknown');
 }
 
