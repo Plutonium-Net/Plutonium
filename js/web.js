@@ -185,7 +185,7 @@
 
       tab.iframe = document.createElement('iframe');
       tab.iframe.allow = 'fullscreen; autoplay';
-      tab.iframe.src = data.embed_url + '?controls=false';
+      tab.iframe.src = data.embed_url + '&controls=false';
       clip.appendChild(tab.iframe);
       frameStack.appendChild(clip);
 
