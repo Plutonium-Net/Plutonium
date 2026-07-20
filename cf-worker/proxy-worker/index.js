@@ -80,9 +80,8 @@ function isValidUrl(raw) {
 //
 // Uses test mode (no API key billing) with:
 //   - start_url set to the caller-supplied URL
+//   - hide_toolbar: true  — hides browser chrome (borderless / kiosk)
 //   - ublock: true        — built-in ad/tracker blocking
-//   - offline_timeout: 0  — session lives until explicitly deleted (infinite)
-//   - kiosk_mode: true    — hides browser chrome (borderless / kiosk)
 
 async function handleSession(request, env, allowed) {
   if (!env.HYPERBEAM_API_KEY) {
@@ -189,7 +188,7 @@ function handleHomepage() {
 </tbody>
 </table>
 <p class="note">No <code>Authorization</code> header required — open proxy, no rate limiting.<br>
-Session flags: <code>kiosk_mode: true</code>, <code>ublock: true</code>, <code>offline_timeout: 0</code> (infinite).</p>
+Session flags: <code>hide_toolbar: true</code>, <code>ublock: true</code>.</p>
 </div>
 
 <div class="section">
