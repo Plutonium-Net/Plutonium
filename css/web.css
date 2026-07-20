@@ -365,7 +365,7 @@
   position: absolute;
   inset: 0;
   overflow-y: auto;
-  background: transparent;
+  background: #000;
   display: none;
   flex-direction: column;
   align-items: center;
@@ -377,31 +377,54 @@
   display: flex;
 }
 
-/* ── Clock ───────────────────────────────────────────────────────────── */
+/* ── Lightfall WebGL background ──────────────────────────────────────── */
 
-.nt-clock {
+.nt-lightfall {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  z-index: 0;
+  /* prevent the canvas from being a flex item that shifts layout */
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+/* ensure all newtab content sits above the canvas */
+.newtab-page > *:not(.nt-lightfall) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Brand heading ───────────────────────────────────────────────────── */
+
+.nt-brand {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  margin-top: 36px;
-  margin-bottom: 24px;
+  margin-top: 48px;
+  margin-bottom: 28px;
   user-select: none;
 }
 
-.nt-clock__time {
+.nt-brand__name {
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--pink);
+  text-stroke: 2px var(--pink);
   line-height: 1;
 }
 
-.nt-clock__date {
-  font-size: 0.78rem;
+.nt-brand__sub {
+  font-size: clamp(0.9rem, 2vw, 1.15rem);
+  font-weight: 400;
   color: var(--muted);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
 }
 
 /* ── Search bar ──────────────────────────────────────────────────────── */
@@ -416,16 +439,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
   border-radius: 8px;
   padding: 6px 8px 6px 12px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   transition: border-color 0.15s, background 0.15s;
 }
 
 .nt-search:focus-within {
-  border-color: rgba(232,23,93,0.5);
-  background: rgba(255,255,255,0.07);
+  border-color: rgba(232,23,93,0.55);
+  background: rgba(255,255,255,0.1);
 }
 
 .nt-search__logo {
@@ -502,12 +527,14 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   transition: border-color 0.15s, transform 0.12s, background 0.15s;
   overflow: hidden;
 }
@@ -566,14 +593,16 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.03);
-  border: 1px dashed rgba(255,255,255,0.13);
+  background: rgba(255,255,255,0.06);
+  border: 1px dashed rgba(255,255,255,0.18);
   color: var(--muted);
   cursor: pointer;
   font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   transition: border-color 0.15s, color 0.15s, background 0.15s;
   align-self: flex-start;
   margin-top: 0;
@@ -599,12 +628,14 @@
 /* UV / SJ toggle */
 .nt-toggle-wrap {
   display: flex;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.13);
   border-radius: 10px;
   padding: 3px;
   gap: 2px;
   flex-shrink: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .nt-toggle-btn {
@@ -667,8 +698,8 @@
   justify-content: space-between;
   gap: 8px;
   line-height: 1;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.13);
   border-radius: 8px;
   color: var(--text);
   font-size: 0.8rem;
@@ -676,13 +707,15 @@
   padding: 6px 10px;
   cursor: pointer;
   text-align: left;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   transition: border-color 0.15s, background 0.15s;
 }
 
 .nt-dropdown__trigger:hover,
 .nt-dropdown.open .nt-dropdown__trigger {
-  border-color: rgba(232,23,93,0.45);
-  background: rgba(255,255,255,0.07);
+  border-color: rgba(232,23,93,0.5);
+  background: rgba(255,255,255,0.11);
 }
 
 .nt-dropdown__arrow {
@@ -701,8 +734,8 @@
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  background: rgba(14,14,14,0.97);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(10,10,10,0.7);
+  border: 1px solid rgba(255,255,255,0.13);
   border-radius: 10px;
   list-style: none;
   margin: 0;
@@ -711,8 +744,8 @@
   flex-direction: column;
   gap: 1px;
   z-index: 100;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   overflow: hidden;
 }
 
@@ -872,3 +905,146 @@
 }
 
 .nt-hb-status--error { color: #ff6b6b; }
+
+/* ── Add-pin popup ───────────────────────────────────────────────────── */
+
+.pin-popup-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+}
+
+.pin-popup-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pin-popup {
+  background: rgba(12,12,12,0.82);
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 14px;
+  padding: 24px 24px 20px;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  transform: translateY(8px);
+  transition: transform 0.18s;
+}
+
+.pin-popup-backdrop.open .pin-popup {
+  transform: translateY(0);
+}
+
+.pin-popup__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.pin-popup__brand {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pink);
+}
+
+.pin-popup__brand-sub {
+  font-weight: 400;
+  opacity: 0.65;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.pin-popup__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pin-popup__label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.pin-popup__label-opt {
+  opacity: 0.55;
+  font-weight: 400;
+}
+
+.pin-popup__input {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  padding: 8px 10px;
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pin-popup__input:focus {
+  border-color: rgba(232,23,93,0.55);
+  background: rgba(255,255,255,0.09);
+}
+
+.pin-popup__input::placeholder {
+  color: var(--muted);
+  opacity: 0.45;
+}
+
+.pin-popup__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pin-popup__btn {
+  flex: 1;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.83rem;
+  font-family: inherit;
+  padding: 8px 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.pin-popup__btn--cancel {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+  color: var(--muted);
+}
+
+.pin-popup__btn--cancel:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+}
+
+.pin-popup__btn--add {
+  background: var(--pink);
+  border-color: var(--pink);
+  color: #fff;
+}
+
+.pin-popup__btn--add:hover {
+  background: var(--pink-muted);
+  border-color: var(--pink-muted);
+}
