@@ -174,15 +174,23 @@
       ntHbStatus.textContent = '';
       ntHbInput.value = '';
 
-      // Open a new tab and load the embed URL directly into its iframe
+      // Open a new tab and load the embed URL directly into its iframe.
+      // Wrap in a clip div so the Chromium toolbar (~76px) is scrolled out of view.
       const id  = nextId++;
       const tab = { id, title: new URL(url).hostname, url, iframe: null, hbSessionId: data.session_id };
       tabs.push(tab);
 
+      const clip = document.createElement('div');
+      clip.className = 'hb-clip active';
+
       tab.iframe = document.createElement('iframe');
       tab.iframe.allow = 'fullscreen; autoplay';
-      tab.iframe.src = data.embed_url;
-      frameStack.appendChild(tab.iframe);
+      tab.iframe.src = data.embed_url + '?controls=false';
+      clip.appendChild(tab.iframe);
+      frameStack.appendChild(clip);
+
+      // Store clip so closeTab can remove it
+      tab._clip = clip;
 
       activateTab(id);
       omniInput.value = url;
@@ -381,7 +389,9 @@
         body: JSON.stringify({ session_id: tabs[idx].hbSessionId }),
       }).catch(() => {});
     }
-    if (tabs[idx].iframe) tabs[idx].iframe.remove();
+    // HB tabs use a clip wrapper div; normal tabs have a bare iframe
+    if (tabs[idx]._clip) tabs[idx]._clip.remove();
+    else if (tabs[idx].iframe) tabs[idx].iframe.remove();
     tabs.splice(idx, 1);
     if (!tabs.length) { createTab(); return; }
     activateTab(tabs[Math.min(idx, tabs.length - 1)].id);
@@ -391,8 +401,11 @@
 
   function activateTab(id) {
     activeId = id;
-    // show/hide iframes — only tabs that have an iframe
-    tabs.forEach(t => { if (t.iframe) t.iframe.classList.toggle('active', t.id === id); });
+    // show/hide frames — HB tabs toggle the clip div, normal tabs toggle the iframe
+    tabs.forEach(t => {
+      const el = t._clip || t.iframe;
+      if (el) el.classList.toggle('active', t.id === id);
+    });
     // show/hide new-tab page
     const tab = getTab(id);
     if (tab) {

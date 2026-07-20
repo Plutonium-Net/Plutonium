@@ -104,7 +104,7 @@ async function handleSession(request, env, allowed) {
     },
     body: JSON.stringify({
       start_url:    url,
-      hide_toolbar: true,
+      kiosk_mode:   true,
       ublock:       true,
     }),
   });
