@@ -865,61 +865,6 @@
 .pg-field-input::placeholder { color: var(--muted); }
 .pg-field-input:focus { border-color: rgba(232,23,93,0.5); }
 
-.pg-art-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pg-art-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 7px 13px;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.pg-art-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); }
-
-.pg-art-clear {
-  background: none;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 7px;
-  color: var(--muted);
-  font-size: 0.78rem;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.pg-art-clear:hover { color: #ff6b6b; border-color: rgba(255,107,107,0.35); }
-
-.pg-art-preview-wrap {
-  margin-top: 6px;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.08);
-  max-height: 160px;
-}
-
-.pg-art-preview {
-  width: 100%;
-  max-height: 160px;
-  object-fit: cover;
-  display: block;
-}
-
 .pg-btn {
   border-radius: 9px;
   font-size: 0.82rem;

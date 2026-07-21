@@ -7,9 +7,8 @@
   const META_STORE = 'pg_meta';
 
   // Firestore paths (users/{uid}/…)
-  const CLOUD_META = 'personal_games/meta';          // { games: [...] }
-  // per-game file stored at personal_games/files/<id>  { html: '<string>' }
-  const CLOUD_FILE = id => `personal_games/files/${id}`;
+  const CLOUD_META = 'personal_games/meta';   // Firestore: users/{uid}/personal_games/meta
+  const CLOUD_FILE = id => `pg_files/${id}`;  // Firestore: users/{uid}/pg_files/<id>
 
   const MAX_BYTES  = 1 * 1024 * 1024; // 1 MiB
 
@@ -103,15 +102,6 @@
     });
   }
 
-  function readFileAsDataURL(file) {
-    return new Promise((resolve, reject) => {
-      const fr = new FileReader();
-      fr.onload  = () => resolve(fr.result);
-      fr.onerror = () => reject(fr.error);
-      fr.readAsDataURL(file);
-    });
-  }
-
   // ── Modal helpers ────────────────────────────────────────────────────────
 
   const _overlay = document.getElementById('pg-modal-overlay');
@@ -151,45 +141,6 @@
 
   document.querySelectorAll('.pg-modal__close').forEach(btn => {
     btn.addEventListener('click', () => closeModal());
-  });
-
-  function _setArtPreview(prefix, dataURL) {
-    const img     = document.getElementById(`pg-${prefix}-art-preview`);
-    const wrapper = document.getElementById(`pg-${prefix}-art-preview-wrap`);
-    if (dataURL) {
-      img.src = dataURL;
-      wrapper.style.display = '';
-    } else {
-      img.src = '';
-      wrapper.style.display = 'none';
-    }
-  }
-
-  // art picker for file modal
-  const _fileArtInput = document.getElementById('pg-file-art-input');
-  _fileArtInput.addEventListener('change', async () => {
-    const f = _fileArtInput.files[0];
-    if (!f) return;
-    _setArtPreview('file', await readFileAsDataURL(f));
-  });
-  document.getElementById('pg-file-art-btn').addEventListener('click', () => _fileArtInput.click());
-  document.getElementById('pg-file-art-clear').addEventListener('click', () => {
-    _fileArtInput.value = '';
-    _setArtPreview('file', null);
-  });
-
-  // art picker for edit modal
-  document.getElementById('pg-edit-art-btn').addEventListener('click', () => {
-    document.getElementById('pg-edit-art-input').click();
-  });
-  document.getElementById('pg-edit-art-input').addEventListener('change', async function () {
-    const f = this.files[0];
-    if (!f) return;
-    _setArtPreview('edit', await readFileAsDataURL(f));
-  });
-  document.getElementById('pg-edit-art-clear').addEventListener('click', () => {
-    document.getElementById('pg-edit-art-input').value = '';
-    _setArtPreview('edit', null);
   });
 
   // ── File upload ──────────────────────────────────────────────────────────
@@ -234,8 +185,6 @@
     }
     const rawName = document.getElementById('pg-file-name').value.trim();
     const name    = rawName || _pendingFileUpload.name.replace(/\.html?$/i, '');
-    const artFile = document.getElementById('pg-file-art-input').files[0];
-    const artURL  = artFile ? await readFileAsDataURL(artFile) : null;
 
     const btn = document.getElementById('pg-file-save');
     btn.disabled = true;
@@ -249,7 +198,7 @@
       const enc = new TextEncoder().encode(html);
       await dbPut(FILE_STORE, { type: 'text/html', data: enc.buffer }, `${id}/index.html`);
 
-      const meta = { id, name, type: 'file', art: artURL, addedAt: Date.now() };
+      const meta = { id, name, addedAt: Date.now() };
       await dbPut(META_STORE, meta);
 
       closeModal('file');
@@ -272,14 +221,12 @@
   async function _openEdit(meta) {
     _editingId = meta.id;
     document.getElementById('pg-edit-name').value = meta.name || '';
-    _setArtPreview('edit', meta.art || null);
     openModal('edit');
   }
 
   document.getElementById('pg-edit-save').addEventListener('click', async () => {
     if (!_editingId) return;
-    const name    = document.getElementById('pg-edit-name').value.trim();
-    const artFile = document.getElementById('pg-edit-art-input').files[0];
+    const name = document.getElementById('pg-edit-name').value.trim();
 
     const btn = document.getElementById('pg-edit-save');
     btn.disabled = true;
@@ -288,10 +235,7 @@
     try {
       const meta = await dbGet(META_STORE, _editingId);
       if (!meta) throw new Error('not found');
-      if (name)    meta.name = name;
-      if (artFile) meta.art  = await readFileAsDataURL(artFile);
-      const previewWrap = document.getElementById('pg-edit-art-preview-wrap');
-      if (previewWrap.style.display === 'none') meta.art = null;
+      if (name) meta.name = name;
 
       await dbPut(META_STORE, meta);
       closeModal('edit');
@@ -327,7 +271,32 @@
 
   // ── Launch ───────────────────────────────────────────────────────────────
 
-  function _launchPersonalGame(meta) {
+  async function _launchPersonalGame(meta) {
+    const fileKey = `${meta.id}/index.html`;
+
+    // Ensure the file is in IDB before the SW tries to serve it.
+    // This handles incognito / new devices where _loadCloud hasn't finished yet.
+    const existing = await dbGet(FILE_STORE, fileKey).catch(() => null);
+    if (!existing) {
+      if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) {
+        _showPgToast('Sign in to download this game.', 3000);
+        return;
+      }
+      _showPgToast('Downloading game…', 2000);
+      try {
+        const fileDoc = await PlutoniumStore.getDoc(CLOUD_FILE(meta.id));
+        if (!fileDoc?.html) {
+          _showPgToast('Game file not found in cloud.', 3000);
+          return;
+        }
+        const enc = new TextEncoder().encode(fileDoc.html);
+        await dbPut(FILE_STORE, { type: 'text/html', data: enc.buffer }, fileKey);
+      } catch (e) {
+        _showPgToast('Failed to download game.', 3000);
+        return;
+      }
+    }
+
     const url = `/pg-game/${meta.id}/index.html`;
     if (window.PGViewer) {
       window.PGViewer.open(url, meta.name, { id: meta.id, name: meta.name, personal: true });
@@ -343,12 +312,8 @@
     card.className = 'pgcdn-card pg-personal-card';
     card.title = meta.name;
 
-    const imgSrc = meta.art || '';
     card.innerHTML = `
-      ${imgSrc
-        ? `<img class="pgcdn-card__img" src="${imgSrc}" alt="${meta.name}" />`
-        : `<div class="pgcdn-card__img pg-no-art"><i class="fa-solid fa-file-code"></i></div>`
-      }
+      <div class="pgcdn-card__img pg-no-art"><i class="fa-solid fa-file-code"></i></div>
       <div class="pgcdn-card__name">${meta.name}</div>
       <button class="pg-card-more" title="Options" aria-label="Options">
         <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -448,9 +413,7 @@
     try {
       // 1. Save metadata list
       const games = await dbGetAll(META_STORE).catch(() => []);
-      const serializable = games.map(({ id, name, type, art, addedAt }) =>
-        ({ id, name, type, art: art || null, addedAt })
-      );
+      const serializable = games.map(({ id, name, addedAt }) => ({ id, name, addedAt }));
       await PlutoniumStore.setDoc(CLOUD_META, { games: serializable });
 
       // 2. If a new file was just added, upload its HTML to Firestore
@@ -479,10 +442,7 @@
       const missing    = doc.games.filter(g => !localIds.has(g.id));
 
       for (const g of missing) {
-        await dbPut(META_STORE, {
-          id: g.id, name: g.name, type: g.type,
-          art: g.art || null, addedAt: g.addedAt,
-        });
+        await dbPut(META_STORE, { id: g.id, name: g.name, addedAt: g.addedAt });
       }
 
       // Download HTML for every game whose file isn't in IDB yet
