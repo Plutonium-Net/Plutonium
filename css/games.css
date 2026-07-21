@@ -948,33 +948,6 @@
 .pg-btn--ghost:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: var(--text); }
 
 
-/* ── Personal Games — cloud-only card state ──────────────────────────────── */
-.pg-card--cloud-only {
-  opacity: 0.7;
-  cursor: default;
-}
-
-.pg-card--cloud-only .pgcdn-card__img {
-  filter: grayscale(0.4);
-}
-
-.pg-cloud-only-badge {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  background: rgba(0,0,0,0.72);
-  color: #ccc;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  padding: 3px 7px;
-  border-radius: 6px;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 /* ── Personal Games — Cloud sync badge ───────────────────────────────────── */
 .pg-cloud-badge {
   font-size: 0.72rem;

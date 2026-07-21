@@ -64,15 +64,12 @@
           <button class="pg-add-btn" id="pg-add-file-btn">
             <i class="fa-solid fa-file-arrow-up"></i> Add HTML File
           </button>
-          <button class="pg-add-btn" id="pg-add-folder-btn">
-            <i class="fa-solid fa-folder-arrow-up"></i> Add Game Folder
-          </button>
         </div>
       </div>
       <div class="pgcdn-grid" id="pg-personal-grid"></div>
       <div class="pgcdn-status" id="pg-personal-empty" style="display:none">
         <i class="fa-solid fa-gamepad"></i>
-        <span>No personal games yet. Please add an HTML file or game folder above</span>
+        <span>No personal games yet. Add an HTML file above (max 1 MiB)</span>
       </div>
     </div>
 
@@ -133,40 +130,6 @@
       <div class="pg-modal__footer">
         <button class="pg-btn pg-btn--ghost" id="pg-file-cancel">Cancel</button>
         <button class="pg-btn pg-btn--primary" id="pg-file-save">Add Game</button>
-      </div>
-    </div>
-
-    <div class="pg-modal" id="pg-modal-folder">
-      <div class="pg-modal__header">
-        <span class="pg-modal__title"><i class="fa-solid fa-folder-open"></i> Add Game Folder</span>
-        <button class="pg-modal__close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="pg-modal__body">
-        <div class="pg-drop-zone" id="pg-folder-drop">
-          <i class="fa-solid fa-folder-arrow-up pg-drop-zone__icon"></i>
-          <span class="pg-drop-zone__label" id="pg-folder-drop-label">Click or drag a game folder here</span>
-          <span class="pg-drop-zone__hint">Must contain an index.html</span>
-          <input type="file" id="pg-folder-input" webkitdirectory multiple style="display:none" />
-        </div>
-        <div class="pg-field-group">
-          <label class="pg-field-label">Game name</label>
-          <input class="pg-field-input" id="pg-folder-name" type="text" placeholder="Leave blank to use folder name" />
-        </div>
-        <div class="pg-field-group">
-          <label class="pg-field-label">Cover art <span class="pg-field-hint">(optional — any image)</span></label>
-          <div class="pg-art-row">
-            <button class="pg-art-btn" id="pg-folder-art-btn"><i class="fa-solid fa-image"></i> Choose image</button>
-            <button class="pg-art-clear" id="pg-folder-art-clear" title="Remove art"><i class="fa-solid fa-xmark"></i></button>
-            <input type="file" id="pg-folder-art-input" accept="image/*" style="display:none" />
-          </div>
-          <div class="pg-art-preview-wrap" id="pg-folder-art-preview-wrap" style="display:none">
-            <img class="pg-art-preview" id="pg-folder-art-preview" alt="Art preview" />
-          </div>
-        </div>
-      </div>
-      <div class="pg-modal__footer">
-        <button class="pg-btn pg-btn--ghost" id="pg-folder-cancel">Cancel</button>
-        <button class="pg-btn pg-btn--primary" id="pg-folder-save">Add Folder</button>
       </div>
     </div>
 
@@ -250,7 +213,7 @@
   <script src="js/games.js"></script>
   <script src="js/personal-games.js"></script>
   <script>
-    ['pg-file-cancel','pg-folder-cancel','pg-edit-cancel'].forEach(id => {
+    ['pg-file-cancel','pg-edit-cancel'].forEach(id => {
       document.getElementById(id).addEventListener('click', () => {
         document.getElementById('pg-modal-overlay').classList.remove('active');
         document.querySelectorAll('.pg-modal').forEach(m => m.classList.remove('active'));

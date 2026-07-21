@@ -6,9 +6,16 @@
   const FILE_STORE = 'pg_files';
   const META_STORE = 'pg_meta';
 
-  const CLOUD_DOC  = 'personal_games/meta';   // Firestore: users/{uid}/personal_games/meta
+  // Firestore paths (users/{uid}/…)
+  const CLOUD_META = 'personal_games/meta';          // { games: [...] }
+  // per-game file stored at personal_games/files/<id>  { html: '<string>' }
+  const CLOUD_FILE = id => `personal_games/files/${id}`;
+
+  const MAX_BYTES  = 1 * 1024 * 1024; // 1 MiB
 
   let _db = null;
+
+  // ── IndexedDB helpers ────────────────────────────────────────────────────
 
   function openDB() {
     if (_db) return Promise.resolve(_db);
@@ -73,14 +80,7 @@
     }));
   }
 
-  function dbHasGameFiles(id) {
-    return openDB().then(db => new Promise((resolve, reject) => {
-      const range = IDBKeyRange.bound(`${id}/`, `${id}/\uffff`);
-      const req   = db.transaction(FILE_STORE, 'readonly').objectStore(FILE_STORE).openCursor(range);
-      req.onsuccess = e => resolve(!!e.target.result);
-      req.onerror   = e => reject(e.target.error);
-    }));
-  }
+  // ── Service worker ───────────────────────────────────────────────────────
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/pg-sw.js', { scope: '/' }).catch(err => {
@@ -88,32 +88,18 @@
     });
   }
 
+  // ── Utilities ────────────────────────────────────────────────────────────
+
   function uid() {
     return 'pg_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
-  function mimeFor(filename) {
-    const ext = filename.split('.').pop().toLowerCase();
-    const map = {
-      html: 'text/html', htm: 'text/html', js: 'text/javascript',
-      mjs: 'text/javascript', css: 'text/css', json: 'application/json',
-      wasm: 'application/wasm', png: 'image/png', jpg: 'image/jpeg',
-      jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp',
-      svg: 'image/svg+xml', ico: 'image/x-icon', mp3: 'audio/mpeg',
-      ogg: 'audio/ogg', wav: 'audio/wav', mp4: 'video/mp4',
-      webm: 'video/webm', woff: 'font/woff', woff2: 'font/woff2',
-      ttf: 'font/ttf', otf: 'font/otf', txt: 'text/plain',
-      xml: 'application/xml', data: 'application/octet-stream',
-    };
-    return map[ext] || 'application/octet-stream';
-  }
-
-  function readFileAsArrayBuffer(file) {
+  function readFileAsText(file) {
     return new Promise((resolve, reject) => {
       const fr = new FileReader();
       fr.onload  = () => resolve(fr.result);
       fr.onerror = () => reject(fr.error);
-      fr.readAsArrayBuffer(file);
+      fr.readAsText(file);
     });
   }
 
@@ -126,11 +112,12 @@
     });
   }
 
+  // ── Modal helpers ────────────────────────────────────────────────────────
+
   const _overlay = document.getElementById('pg-modal-overlay');
   const _modals  = {
-    file:   document.getElementById('pg-modal-file'),
-    folder: document.getElementById('pg-modal-folder'),
-    edit:   document.getElementById('pg-modal-edit'),
+    file: document.getElementById('pg-modal-file'),
+    edit: document.getElementById('pg-modal-edit'),
   };
 
   function openModal(name) {
@@ -156,15 +143,6 @@
       document.getElementById('pg-file-drop-label').textContent = 'Click or drag an HTML file here';
       _pendingFileUpload = null;
     }
-    if (name === 'folder') {
-      document.getElementById('pg-folder-input').value = '';
-      document.getElementById('pg-folder-name').value  = '';
-      document.getElementById('pg-folder-art-input').value = '';
-      _setArtPreview('folder', null);
-      document.getElementById('pg-folder-drop').classList.remove('has-file');
-      document.getElementById('pg-folder-drop-label').textContent = 'Click or drag a game folder here';
-      _pendingFolderFiles = null;
-    }
   }
 
   _overlay.addEventListener('click', e => {
@@ -187,50 +165,66 @@
     }
   }
 
-  ['file', 'folder'].forEach(prefix => {
-    const artInput = document.getElementById(`pg-${prefix}-art-input`);
-    artInput.addEventListener('change', async () => {
-      const f = artInput.files[0];
-      if (!f) return;
-      _setArtPreview(prefix, await readFileAsDataURL(f));
-    });
-    document.getElementById(`pg-${prefix}-art-btn`).addEventListener('click', () => artInput.click());
-    document.getElementById(`pg-${prefix}-art-clear`).addEventListener('click', () => {
-      artInput.value = '';
-      _setArtPreview(prefix, null);
-    });
+  // art picker for file modal
+  const _fileArtInput = document.getElementById('pg-file-art-input');
+  _fileArtInput.addEventListener('change', async () => {
+    const f = _fileArtInput.files[0];
+    if (!f) return;
+    _setArtPreview('file', await readFileAsDataURL(f));
   });
+  document.getElementById('pg-file-art-btn').addEventListener('click', () => _fileArtInput.click());
+  document.getElementById('pg-file-art-clear').addEventListener('click', () => {
+    _fileArtInput.value = '';
+    _setArtPreview('file', null);
+  });
+
+  // art picker for edit modal
+  document.getElementById('pg-edit-art-btn').addEventListener('click', () => {
+    document.getElementById('pg-edit-art-input').click();
+  });
+  document.getElementById('pg-edit-art-input').addEventListener('change', async function () {
+    const f = this.files[0];
+    if (!f) return;
+    _setArtPreview('edit', await readFileAsDataURL(f));
+  });
+  document.getElementById('pg-edit-art-clear').addEventListener('click', () => {
+    document.getElementById('pg-edit-art-input').value = '';
+    _setArtPreview('edit', null);
+  });
+
+  // ── File upload ──────────────────────────────────────────────────────────
 
   let _pendingFileUpload = null;
 
-  const fileInput    = document.getElementById('pg-file-input');
-  const fileDrop     = document.getElementById('pg-file-drop');
-  const fileDropLbl  = document.getElementById('pg-file-drop-label');
+  const fileInput   = document.getElementById('pg-file-input');
+  const fileDrop    = document.getElementById('pg-file-drop');
+  const fileDropLbl = document.getElementById('pg-file-drop-label');
 
   function _handleFileSelection(file) {
     if (!file || !file.name.match(/\.html?$/i)) {
       _showPgToast('Please select an HTML file.', 2500);
       return;
     }
+    if (file.size > MAX_BYTES) {
+      _showPgToast(`File is too large (${(file.size / 1024 / 1024).toFixed(2)} MiB). Maximum is 1 MiB.`, 4000);
+      return;
+    }
     _pendingFileUpload = file;
     fileDrop.classList.add('has-file');
-    fileDropLbl.textContent = file.name;
+    fileDropLbl.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
     if (!document.getElementById('pg-file-name').value) {
       document.getElementById('pg-file-name').value = file.name.replace(/\.html?$/i, '');
     }
   }
 
   fileInput.addEventListener('change', () => _handleFileSelection(fileInput.files[0]));
-
   fileDrop.addEventListener('click', () => fileInput.click());
-
   fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.classList.add('drag-over'); });
   fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('drag-over'));
   fileDrop.addEventListener('drop', e => {
     e.preventDefault();
     fileDrop.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    _handleFileSelection(file);
+    _handleFileSelection(e.dataTransfer.files[0]);
   });
 
   document.getElementById('pg-file-save').addEventListener('click', async () => {
@@ -248,14 +242,19 @@
     btn.textContent = 'Saving…';
 
     try {
-      const id  = uid();
-      const buf = await readFileAsArrayBuffer(_pendingFileUpload);
-      await dbPut(FILE_STORE, { type: 'text/html', data: buf }, `${id}/index.html`);
+      const id   = uid();
+      const html = await readFileAsText(_pendingFileUpload);
+
+      // Save to IDB for local service-worker playback
+      const enc = new TextEncoder().encode(html);
+      await dbPut(FILE_STORE, { type: 'text/html', data: enc.buffer }, `${id}/index.html`);
+
       const meta = { id, name, type: 'file', art: artURL, addedAt: Date.now() };
       await dbPut(META_STORE, meta);
+
       closeModal('file');
       _renderMyGames();
-      _saveCloud();
+      _saveCloud(id, html);
       _showPgToast(`"${name}" added!`, 2500);
     } catch (e) {
       console.error('[personal-games] save failed:', e);
@@ -266,115 +265,7 @@
     }
   });
 
-  let _pendingFolderFiles = null;
-
-  const folderInput   = document.getElementById('pg-folder-input');
-  const folderDrop    = document.getElementById('pg-folder-drop');
-  const folderDropLbl = document.getElementById('pg-folder-drop-label');
-
-  function _handleFolderSelection(files) {
-    if (!files || !files.length) return;
-    const fileArr = Array.from(files);
-    const hasMeta = fileArr.some(f =>
-      (f.webkitRelativePath || f.name).replace(/^[^/]+\//, '') === 'index.html'
-    );
-    if (!hasMeta) {
-      _showPgToast('The folder must contain an index.html file.', 3000);
-      return;
-    }
-    _pendingFolderFiles = fileArr;
-    folderDrop.classList.add('has-file');
-    const firstPath = fileArr[0].webkitRelativePath || fileArr[0].name;
-    const inferredName = firstPath.split('/')[0] || 'My Game';
-    folderDropLbl.textContent = `${inferredName}/ (${fileArr.length} files)`;
-    if (!document.getElementById('pg-folder-name').value) {
-      document.getElementById('pg-folder-name').value = inferredName;
-    }
-  }
-
-  folderInput.addEventListener('change', () => _handleFolderSelection(folderInput.files));
-
-  folderDrop.addEventListener('click', () => folderInput.click());
-
-  folderDrop.addEventListener('dragover', e => { e.preventDefault(); folderDrop.classList.add('drag-over'); });
-  folderDrop.addEventListener('dragleave', () => folderDrop.classList.remove('drag-over'));
-  folderDrop.addEventListener('drop', e => {
-    e.preventDefault();
-    folderDrop.classList.remove('drag-over');
-
-    const items = e.dataTransfer.items;
-    if (!items) return;
-
-    const allFiles = [];
-    let pending = 0;
-
-    function readEntry(entry, basePath) {
-      if (entry.isFile) {
-        pending++;
-        entry.file(file => {
-          Object.defineProperty(file, 'webkitRelativePath', {
-            value: basePath + file.name,
-            writable: false,
-          });
-          allFiles.push(file);
-          pending--;
-          if (pending === 0) _handleFolderSelection(allFiles);
-        });
-      } else if (entry.isDirectory) {
-        const reader = entry.createReader();
-        pending++;
-        reader.readEntries(entries => {
-          pending--;
-          entries.forEach(child => readEntry(child, basePath + entry.name + '/'));
-          if (pending === 0 && allFiles.length) _handleFolderSelection(allFiles);
-        });
-      }
-    }
-
-    for (let i = 0; i < items.length; i++) {
-      const entry = items[i].webkitGetAsEntry?.();
-      if (entry) readEntry(entry, '');
-    }
-  });
-
-  document.getElementById('pg-folder-save').addEventListener('click', async () => {
-    if (!_pendingFolderFiles) {
-      _showPgToast('Please select a game folder first.', 2500);
-      return;
-    }
-    const rawName = document.getElementById('pg-folder-name').value.trim();
-    const inferredName = (_pendingFolderFiles[0].webkitRelativePath || _pendingFolderFiles[0].name).split('/')[0];
-    const name    = rawName || inferredName || 'My Game';
-    const artFile = document.getElementById('pg-folder-art-input').files[0];
-    const artURL  = artFile ? await readFileAsDataURL(artFile) : null;
-
-    const btn = document.getElementById('pg-folder-save');
-    btn.disabled = true;
-    btn.textContent = 'Saving…';
-
-    try {
-      const id = uid();
-
-      for (const file of _pendingFolderFiles) {
-        const relPath = (file.webkitRelativePath || file.name).replace(/^[^/]+\//, '');
-        const buf     = await readFileAsArrayBuffer(file);
-        await dbPut(FILE_STORE, { type: mimeFor(file.name), data: buf }, `${id}/${relPath}`);
-      }
-
-      const meta = { id, name, type: 'folder', art: artURL, addedAt: Date.now() };
-      await dbPut(META_STORE, meta);
-      closeModal('folder');
-      _renderMyGames();
-      _saveCloud();
-      _showPgToast(`"${name}" added!`, 2500);
-    } catch (e) {
-      console.error('[personal-games] folder save failed:', e);
-      _showPgToast('Failed to save game folder.', 3000);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Add Folder';
-    }
-  });
+  // ── Edit modal ───────────────────────────────────────────────────────────
 
   let _editingId = null;
 
@@ -384,21 +275,6 @@
     _setArtPreview('edit', meta.art || null);
     openModal('edit');
   }
-
-  document.getElementById('pg-edit-art-btn').addEventListener('click', () => {
-    document.getElementById('pg-edit-art-input').click();
-  });
-
-  document.getElementById('pg-edit-art-input').addEventListener('change', async function () {
-    const f = this.files[0];
-    if (!f) return;
-    _setArtPreview('edit', await readFileAsDataURL(f));
-  });
-
-  document.getElementById('pg-edit-art-clear').addEventListener('click', () => {
-    document.getElementById('pg-edit-art-input').value = '';
-    _setArtPreview('edit', null);
-  });
 
   document.getElementById('pg-edit-save').addEventListener('click', async () => {
     if (!_editingId) return;
@@ -410,7 +286,7 @@
     btn.textContent = 'Saving…';
 
     try {
-      const meta   = await dbGet(META_STORE, _editingId);
+      const meta = await dbGet(META_STORE, _editingId);
       if (!meta) throw new Error('not found');
       if (name)    meta.name = name;
       if (artFile) meta.art  = await readFileAsDataURL(artFile);
@@ -431,17 +307,25 @@
     }
   });
 
+  // ── Delete ───────────────────────────────────────────────────────────────
+
   async function _deleteGame(meta) {
     try {
       await dbDeleteGameFiles(meta.id);
       await dbDelete(META_STORE, meta.id);
       _renderMyGames();
       _saveCloud();
+      // Remove file doc from Firestore too
+      if (typeof PlutoniumStore !== 'undefined' && PlutoniumStore.currentUser) {
+        PlutoniumStore.deleteDoc(CLOUD_FILE(meta.id)).catch(() => {});
+      }
       _showPgToast(`"${meta.name}" deleted.`, 2000);
     } catch (e) {
       _showPgToast('Failed to delete game.', 3000);
     }
   }
+
+  // ── Launch ───────────────────────────────────────────────────────────────
 
   function _launchPersonalGame(meta) {
     const url = `/pg-game/${meta.id}/index.html`;
@@ -452,61 +336,41 @@
     }
   }
 
-  function _buildPersonalCard(meta, hasFiles = true) {
+  // ── Card builder ─────────────────────────────────────────────────────────
+
+  function _buildPersonalCard(meta) {
     const card = document.createElement('div');
-    card.className = 'pgcdn-card pg-personal-card' + (hasFiles ? '' : ' pg-card--cloud-only');
+    card.className = 'pgcdn-card pg-personal-card';
     card.title = meta.name;
 
     const imgSrc = meta.art || '';
     card.innerHTML = `
       ${imgSrc
         ? `<img class="pgcdn-card__img" src="${imgSrc}" alt="${meta.name}" />`
-        : `<div class="pgcdn-card__img pg-no-art"><i class="fa-solid fa-${meta.type === 'folder' ? 'folder-open' : 'file-code'}"></i></div>`
+        : `<div class="pgcdn-card__img pg-no-art"><i class="fa-solid fa-file-code"></i></div>`
       }
-      ${!hasFiles ? `<div class="pg-cloud-only-badge" title="Files not on this device — re-upload to play"><i class="fa-solid fa-cloud"></i> Not downloaded</div>` : ''}
       <div class="pgcdn-card__name">${meta.name}</div>
       <button class="pg-card-more" title="Options" aria-label="Options">
         <i class="fa-solid fa-ellipsis-vertical"></i>
       </button>
     `;
 
-    if (hasFiles) {
-      card.addEventListener('click', () => _launchPersonalGame(meta));
-    } else {
-      card.addEventListener('click', () => {
-        _showPgToast(`"${meta.name}" files aren't on this device. Re-upload the game to play it.`, 4000);
-      });
-    }
+    card.addEventListener('click', () => _launchPersonalGame(meta));
 
     card.querySelector('.pg-card-more').addEventListener('click', e => {
       e.stopPropagation();
-      const items = [];
-      if (hasFiles) {
-        items.push({
-          icon:   'fa-solid fa-play',
-          label:  'Play',
-          action: () => _launchPersonalGame(meta),
-        });
-      }
-      items.push(
-        {
-          icon:   'fa-solid fa-pencil',
-          label:  'Edit details',
-          action: () => _openEdit(meta),
-        },
+      _showCtxMenu(e, [
+        { icon: 'fa-solid fa-play',   label: 'Play',         action: () => _launchPersonalGame(meta) },
+        { icon: 'fa-solid fa-pencil', label: 'Edit details', action: () => _openEdit(meta) },
         'sep',
-        {
-          icon:   'fa-solid fa-trash',
-          label:  'Delete',
-          danger: true,
-          action: () => _confirmDelete(meta),
-        }
-      );
-      _showCtxMenu(e, items);
+        { icon: 'fa-solid fa-trash',  label: 'Delete', danger: true, action: () => _confirmDelete(meta) },
+      ]);
     });
 
     return card;
   }
+
+  // ── Context menu ─────────────────────────────────────────────────────────
 
   function _showCtxMenu(e, items) {
     const ctxMenu = document.getElementById('pgcdn-ctx-menu');
@@ -557,15 +421,18 @@
 
   const _cloudBadge = document.getElementById('pg-cloud-badge');
 
-  function _setBadge(synced) {
+  function _setBadge(state) {
     if (!_cloudBadge) return;
-    if (synced === 'saving') {
+    if (state === 'saving') {
       _cloudBadge.textContent = '↑ Saving…';
       _cloudBadge.className   = 'pg-cloud-badge pg-cloud-badge--saving';
-    } else if (synced === true) {
+    } else if (state === 'syncing') {
+      _cloudBadge.textContent = '↓ Syncing…';
+      _cloudBadge.className   = 'pg-cloud-badge pg-cloud-badge--saving';
+    } else if (state === true) {
       _cloudBadge.textContent = '✓ Synced';
       _cloudBadge.className   = 'pg-cloud-badge pg-cloud-badge--ok';
-    } else if (synced === 'error') {
+    } else if (state === 'error') {
       _cloudBadge.textContent = '⚠ Sync failed';
       _cloudBadge.className   = 'pg-cloud-badge pg-cloud-badge--error';
     } else {
@@ -574,13 +441,23 @@
     }
   }
 
-  async function _saveCloud() {
+  // _saveCloud(gameId?, htmlText?) — saves meta list, and optionally saves a file doc.
+  async function _saveCloud(newId, newHtml) {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     _setBadge('saving');
     try {
+      // 1. Save metadata list
       const games = await dbGetAll(META_STORE).catch(() => []);
-      const serializable = games.map(({ id, name, type, art, addedAt }) => ({ id, name, type, art: art || null, addedAt }));
-      await PlutoniumStore.setDoc(CLOUD_DOC, { games: serializable });
+      const serializable = games.map(({ id, name, type, art, addedAt }) =>
+        ({ id, name, type, art: art || null, addedAt })
+      );
+      await PlutoniumStore.setDoc(CLOUD_META, { games: serializable });
+
+      // 2. If a new file was just added, upload its HTML to Firestore
+      if (newId && newHtml != null) {
+        await PlutoniumStore.setDoc(CLOUD_FILE(newId), { html: newHtml });
+      }
+
       _setBadge(true);
     } catch (e) {
       console.warn('[personal-games] cloud save failed:', e.message);
@@ -588,29 +465,56 @@
     }
   }
 
+  // _loadCloud() — on sign-in, fetch meta, then download missing HTML files into IDB.
   async function _loadCloud() {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
+    _setBadge('syncing');
     try {
-      const doc = await PlutoniumStore.getDoc(CLOUD_DOC).catch(() => null);
-      if (!doc || !Array.isArray(doc.games)) return;
+      const doc = await PlutoniumStore.getDoc(CLOUD_META).catch(() => null);
+      if (!doc || !Array.isArray(doc.games)) { _setBadge(true); return; }
 
-      // Merge: add cloud entries whose id is not already in local IDB
+      // Merge metadata for entries not already in local IDB
       const localGames = await dbGetAll(META_STORE).catch(() => []);
       const localIds   = new Set(localGames.map(g => g.id));
-      let added = 0;
+      const missing    = doc.games.filter(g => !localIds.has(g.id));
+
+      for (const g of missing) {
+        await dbPut(META_STORE, {
+          id: g.id, name: g.name, type: g.type,
+          art: g.art || null, addedAt: g.addedAt,
+        });
+      }
+
+      // Download HTML for every game whose file isn't in IDB yet
+      let downloaded = 0;
       for (const g of doc.games) {
-        if (!localIds.has(g.id)) {
-          await dbPut(META_STORE, { id: g.id, name: g.name, type: g.type, art: g.art || null, addedAt: g.addedAt });
-          added++;
+        const fileKey = `${g.id}/index.html`;
+        const existing = await dbGet(FILE_STORE, fileKey).catch(() => null);
+        if (existing) continue;
+
+        try {
+          const fileDoc = await PlutoniumStore.getDoc(CLOUD_FILE(g.id));
+          if (!fileDoc?.html) continue;
+          const enc = new TextEncoder().encode(fileDoc.html);
+          await dbPut(FILE_STORE, { type: 'text/html', data: enc.buffer }, fileKey);
+          downloaded++;
+        } catch (_) {}
+      }
+
+      if (missing.length > 0 || downloaded > 0) {
+        _renderMyGames();
+        if (downloaded > 0) {
+          _showPgToast(
+            `${downloaded} game${downloaded !== 1 ? 's' : ''} downloaded from cloud.`,
+            3000
+          );
         }
       }
-      if (added > 0) {
-        _renderMyGames();
-        _showPgToast(`${added} game${added !== 1 ? 's' : ''} synced from cloud.`, 3000);
-      }
+
       _setBadge(true);
     } catch (e) {
       console.warn('[personal-games] cloud load failed:', e.message);
+      _setBadge('error');
     }
   }
 
@@ -647,16 +551,15 @@
       empty.style.display = '';
     } else {
       empty.style.display = 'none';
-      for (const meta of games) {
-        const hasFiles = await dbHasGameFiles(meta.id).catch(() => false);
-        grid.appendChild(_buildPersonalCard(meta, hasFiles));
-      }
+      games.forEach(meta => grid.appendChild(_buildPersonalCard(meta)));
     }
   }
 
-  const _pgToast      = document.getElementById('pgcdn-toast');
-  const _pgToastMsg   = document.getElementById('pgcdn-toast-msg');
-  const _pgToastActs  = document.getElementById('pgcdn-toast-actions');
+  // ── Toast ─────────────────────────────────────────────────────────────────
+
+  const _pgToast     = document.getElementById('pgcdn-toast');
+  const _pgToastMsg  = document.getElementById('pgcdn-toast-msg');
+  const _pgToastActs = document.getElementById('pgcdn-toast-actions');
   let   _pgToastTimer = null;
 
   function _showPgToast(msg, actionsOrDuration, autoDismiss = 0) {
@@ -683,8 +586,9 @@
     if (dismiss > 0) _pgToastTimer = setTimeout(() => _pgToast.classList.remove('toast-visible'), dismiss);
   }
 
+  // ── Boot ──────────────────────────────────────────────────────────────────
+
   document.getElementById('pg-add-file-btn').addEventListener('click', () => openModal('file'));
-  document.getElementById('pg-add-folder-btn').addEventListener('click', () => openModal('folder'));
 
   _renderMyGames();
 
