@@ -47,27 +47,41 @@
   }
 
   // ── Search UI ─────────────────────────────────────────────────────────────
-  const _searchWrap = document.getElementById('cg-search');
-  const _searchBtn  = document.getElementById('cg-search-btn');
+  const _searchWrap  = document.getElementById('cg-search');
+  const _searchBtn   = document.getElementById('cg-search-btn');
   const _searchInput = document.getElementById('cg-search-input');
+  const _searchSizer = document.getElementById('cg-search-sizer');
+
+  function _resizeInput() {
+    // Mirror input value (or placeholder when empty) into the sizer span
+    var text = _searchInput.value || _searchInput.placeholder;
+    _searchSizer.textContent = text;
+    var w = _searchSizer.offsetWidth;
+    // clamp between min (120) and max (320)
+    w = Math.min(320, Math.max(120, w));
+    _searchInput.style.width = w + 'px';
+  }
 
   _searchBtn.addEventListener('click', function () {
     if (_searchWrap.classList.contains('open')) {
-      // If empty, collapse; otherwise clear
       if (_searchInput.value === '') {
+        _searchInput.style.width = '';
         _searchWrap.classList.remove('open');
       } else {
         _searchInput.value = '';
         _filterGames('');
+        _resizeInput();
         _searchInput.focus();
       }
     } else {
       _searchWrap.classList.add('open');
+      _resizeInput();
       setTimeout(function () { _searchInput.focus(); }, 50);
     }
   });
 
   _searchInput.addEventListener('input', function () {
+    _resizeInput();
     _filterGames(_searchInput.value.trim());
   });
 
@@ -75,6 +89,7 @@
     if (e.key === 'Escape') {
       _searchInput.value = '';
       _filterGames('');
+      _searchInput.style.width = '';
       _searchWrap.classList.remove('open');
     }
   });
