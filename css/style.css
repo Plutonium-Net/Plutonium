@@ -934,3 +934,84 @@ body {
   width: 160px;
   border-radius: 4px;
 }
+
+/* ── Workers / Services section (index.html) ─────────────────────────────── */
+
+.workers {
+  position: relative;
+  z-index: 1;
+  padding: 80px 16vw 120px;
+}
+
+.workers__heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pink);
+  opacity: 0.8;
+  margin-bottom: 28px;
+}
+
+.workers__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.worker-card {
+  display: block;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 22px 24px 20px;
+  background: rgba(255,255,255,0.02);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.worker-card:hover {
+  border-color: rgba(232,23,93,0.35);
+  background: rgba(232,23,93,0.04);
+}
+
+.worker-card__name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--pink);
+  margin-bottom: 4px;
+}
+
+.worker-card__route {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+
+.worker-card__desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.worker-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.worker-tag {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.72rem;
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
+@media (max-width: 700px) {
+  .workers { padding: 60px 20px 80px; }
+  .workers__grid { grid-template-columns: 1fr; }
+}

@@ -36,6 +36,71 @@
     </div>
   </section>
 
+  <!-- ── Workers / Services ──────────────────────────────────────────────── -->
+  <section class="workers">
+    <div class="workers__inner">
+      <div class="workers__heading">Services &amp; Workers</div>
+      <div class="workers__grid">
+
+        <a class="worker-card" href="https://accounting.cdn.plutoniumnet.work" target="_blank" rel="noopener">
+          <div class="worker-card__name">Plutonium Firebase Proxy</div>
+          <div class="worker-card__route">accounting.cdn.plutoniumnet.work</div>
+          <p class="worker-card__desc">Proxies Firebase Auth, Firestore, and Realtime Database — keeping API keys server-side with CORS handling for browser clients.</p>
+          <div class="worker-card__tags">
+            <span class="worker-tag">GET /config</span>
+            <span class="worker-tag">POST /auth/email</span>
+            <span class="worker-tag">POST /auth/signup</span>
+            <span class="worker-tag">/firestore/…</span>
+            <span class="worker-tag">/rtdb/…</span>
+          </div>
+        </a>
+
+        <a class="worker-card" href="https://ai.cdn.plutoniumnet.work" target="_blank" rel="noopener">
+          <div class="worker-card__name">Plutonium Groq Worker</div>
+          <div class="worker-card__route">ai.cdn.plutoniumnet.work</div>
+          <p class="worker-card__desc">Proxies Groq chat completions — keeping the API key server-side with per-user rate limiting via KV.</p>
+          <div class="worker-card__tags">
+            <span class="worker-tag">POST /chat</span>
+            <span class="worker-tag">GET /models</span>
+            <span class="worker-tag">GET /ratelimit</span>
+          </div>
+        </a>
+
+        <a class="worker-card" href="https://proxy.cdn.plutoniumnet.work" target="_blank" rel="noopener">
+          <div class="worker-card__name">Plutonium Proxy Worker</div>
+          <div class="worker-card__route">proxy.cdn.plutoniumnet.work</div>
+          <p class="worker-card__desc">Spins up a borderless Hyperbeam kiosk session for a given URL — no auth required, API key stays server-side.</p>
+          <div class="worker-card__tags">
+            <span class="worker-tag">POST /session</span>
+            <span class="worker-tag">DELETE /session</span>
+          </div>
+        </a>
+
+        <a class="worker-card" href="https://vm.cdn.plutoniumnet.work" target="_blank" rel="noopener">
+          <div class="worker-card__name">Plutonium VM Worker</div>
+          <div class="worker-card__route">vm.cdn.plutoniumnet.work</div>
+          <p class="worker-card__desc">Proxies Hyperbeam VM session creation and deletion — keeping the API key server-side with per-user rate limits.</p>
+          <div class="worker-card__tags">
+            <span class="worker-tag">POST /session</span>
+            <span class="worker-tag">GET /stats</span>
+          </div>
+        </a>
+
+        <a class="worker-card" href="https://cgapi.cdn.plutoniumnet.work" target="_blank" rel="noopener">
+          <div class="worker-card__name">Plutonium-CGAPI</div>
+          <div class="worker-card__route">cgapi.cdn.plutoniumnet.work</div>
+          <p class="worker-card__desc">Self-hosted cloud gaming API — streams games over WebRTC with session lifecycle management, queue handling, and rate limiting.</p>
+          <div class="worker-card__tags">
+            <span class="worker-tag">POST /cloud/v1/createSession</span>
+            <span class="worker-tag">POST /cloud/v1/startGame</span>
+            <span class="worker-tag">WS /cloud/v1/signal/:uuid</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
   <script src="bg/js/particles.min.js"></script>
   <script src="bg/js/three.min.js"></script>
   <script src="bg/js/p5.min.js"></script>

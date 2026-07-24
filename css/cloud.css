@@ -1,0 +1,205 @@
+/* ── Page ───────────────────────────────────────────────────── */
+.cg-page {
+  position: relative;
+  z-index: 1;
+  padding: 40px 24px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cg-heading {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text, #fff);
+  margin: 0 0 28px;
+}
+
+/* ── Grid ───────────────────────────────────────────────────── */
+.cg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* ── Card ───────────────────────────────────────────────────── */
+.cg-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.cg-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.cg-card__img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+
+/* gradient scrim so text is readable */
+.cg-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+.cg-card__body {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 18px;
+  z-index: 1;
+}
+
+.cg-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.cg-card__desc {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.45;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .cg-page { padding: 24px 14px 60px; }
+  .cg-grid { grid-template-columns: 1fr; gap: 14px; }
+}
+
+/* ── Launch overlay ─────────────────────────────────────────── */
+#cg-launch-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.85);
+  align-items: center;
+  justify-content: center;
+}
+
+#cg-launch-overlay.open {
+  display: flex;
+}
+
+.cg-launch-box {
+  position: relative;
+  width: 90vw;
+  height: 85vh;
+  max-width: 1200px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cg-launch-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.cg-launch-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.cg-launch-status {
+  padding: 32px 40px;
+}
+
+.cg-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cg-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.25);
+  transition: color 0.2s;
+}
+
+.cg-step::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.cg-step.done {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.cg-step.done::before {
+  background: var(--pink, #e8175d);
+  border-color: var(--pink, #e8175d);
+}
+
+.cg-step.active {
+  color: #fff;
+}
+
+.cg-step.active::before {
+  background: transparent;
+  border-color: var(--pink, #e8175d);
+  border-top-color: transparent;
+  animation: cg-spin 0.7s linear infinite;
+}
+
+@keyframes cg-spin {
+  to { transform: rotate(360deg); }
+}
+
+.cg-step-suffix {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  color: var(--pink, #e8175d);
+  opacity: 0.85;
+}
+
+.cg-step-error {
+  display: none;
+  margin-top: 20px;
+  font-size: 0.82rem;
+  color: #f87171;
+}
+
+.cg-launch-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: none;
+}
