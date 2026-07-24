@@ -114,7 +114,10 @@
       el.value = _settings[key];
       vl.textContent = fmt ? fmt(_settings[key]) : _settings[key];
       el.addEventListener('input', function () {
-        vl.textContent = fmt ? fmt(parseFloat(el.value)) : el.value;
+        var v = parseFloat(el.value);
+        vl.textContent = fmt ? fmt(v) : el.value;
+        _settings[key] = v;
+        S.apply(_settings);
       });
       el.addEventListener('change', function () {
         _settings[key] = parseFloat(el.value);

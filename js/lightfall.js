@@ -175,13 +175,18 @@ function _buildProgram(gl) {
  * @param {HTMLCanvasElement} canvas
  */
 function initLightfall(canvas) {
-  // ── Theme colours ──────────────────────────────────────────────────────
-  // Dark crimson — deep, brooding reds barely above black
+  // ── Theme colours (derived from user accent colour) ────────────────────
+  function _darkenHex(hex, f) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    const toH = v => Math.max(0,Math.round(v*f)).toString(16).padStart(2,'0');
+    return '#' + toH(r) + toH(g) + toH(b);
+  }
+  const accent = (window.PluSettings && window.PluSettings.load().accentColor) || '#e8175d';
   const COLORS = [
-    '#7a0a2e',  // deep crimson (primary)
-    '#5c0820',  // near-black red
-    '#a01035',  // mid crimson
-    '#8c0c28',  // dark rose
+    _darkenHex(accent, 0.55),  // deep shade (primary)
+    _darkenHex(accent, 0.35),  // near-black shade
+    _darkenHex(accent, 0.70),  // mid shade
+    _darkenHex(accent, 0.45),  // dark shade
   ];
   const BG_COLOR   = '#000000';  // --bg
   const SPEED      = 0.45;

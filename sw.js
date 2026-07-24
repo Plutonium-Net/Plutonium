@@ -263,7 +263,6 @@ self.addEventListener("fetch", (event) => {
 		event.respondWith(handleRequest(event));
 		return;
 	}
-	// Everything else — let the browser handle natively
 });
 
 self.addEventListener("message", ({ data }) => {

@@ -25,8 +25,8 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
   padding: 6px;
 }
@@ -54,7 +54,7 @@
 }
 
 .settings-nav__link:hover {
-  background: rgba(255,255,255,0.05);
+  background: var(--surface-2);
   color: var(--text);
 }
 
@@ -88,7 +88,7 @@
   align-items: center;
   gap: 10px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .settings-section__heading i {
@@ -136,7 +136,7 @@
   width: 100%;
   height: 4px;
   border-radius: 2px;
-  background: rgba(255,255,255,0.1);
+  background: var(--surface-4);
   outline: none;
   cursor: pointer;
 }
@@ -169,29 +169,66 @@
 .swatch-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
 
 .swatch {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 2px solid transparent;
+  border: 2px solid rgba(255,255,255,0.12);
   cursor: pointer;
-  transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), border-color 0.15s, box-shadow 0.15s;
   flex-shrink: 0;
   position: relative;
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+/* Inner shine */
+.swatch::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 40%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  filter: blur(2px);
+  pointer-events: none;
+  transition: opacity 0.15s;
 }
 
 .swatch:hover {
-  transform: scale(1.18);
+  transform: scale(1.25);
+  border-color: rgba(255,255,255,0.5);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.5),
+    0 0 12px 3px color-mix(in srgb, var(--c, currentColor) 60%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.3);
 }
 
 .swatch.active {
   border-color: #fff;
-  transform: scale(1.15);
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+  transform: scale(1.2);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.5),
+    0 0 16px 4px color-mix(in srgb, var(--c, currentColor) 70%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.35);
+}
+
+/* Checkmark on active */
+.swatch.active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") center/55% no-repeat;
+  z-index: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
 }
 
 /* Custom color picker swatch */
@@ -312,7 +349,8 @@
   gap: 10px;
   padding: 10px 14px;
   border-radius: 9px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
   cursor: pointer;
   font-size: 0.85rem;
   color: var(--text);
@@ -321,7 +359,8 @@
 }
 
 .settings-radio:hover {
-  background: rgba(255,255,255,0.04);
+  background: var(--surface-2);
+  border-color: var(--border-light);
 }
 
 /* Hide native radio, replace with custom indicator */
@@ -331,7 +370,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.25);
+  border: 2px solid var(--border-light);
   background: transparent;
   flex-shrink: 0;
   cursor: pointer;
@@ -373,8 +412,8 @@
   gap: 20px;
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.07);
-  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
 }
 
 .settings-row__label {
@@ -408,7 +447,7 @@
   width: 48px;
   height: 27px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.07);
+  background: var(--surface-3);
   border: 1.5px solid rgba(255,255,255,0.13);
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.35);
   transition: background 0.24s, border-color 0.24s, box-shadow 0.24s;
@@ -462,7 +501,7 @@
 
 .settings-input {
   width: 100%;
-  background: rgba(255,255,255,0.05);
+  background: var(--surface-2);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 9px;
   padding: 9px 13px;
@@ -497,8 +536,8 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
   border-radius: 9px;
   color: var(--text);
   font-size: 0.82rem;
@@ -511,7 +550,7 @@
 }
 
 .settings-action-btn:hover {
-  background: rgba(255,255,255,0.09);
+  background: var(--surface-3);
   border-color: rgba(255,255,255,0.2);
 }
 
@@ -533,10 +572,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(10,10,10,0.92);
+  background: var(--panel-bg-dark);
   border: 1px solid rgba(var(--pink-rgb),0.2);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
   border-radius: 12px;
   padding: 12px 18px;
   font-size: 0.82rem;
@@ -563,9 +602,9 @@
   position: fixed;
   inset: 0;
   z-index: 800;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: var(--overlay-bg);
+  backdrop-filter: var(--ui-blur-overlay);
+  -webkit-backdrop-filter: var(--ui-blur-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -576,7 +615,7 @@
 }
 
 .settings-confirm__box {
-  background: rgba(10,10,10,0.97);
+  background: var(--panel-bg-dark);
   border: 1px solid rgba(var(--pink-rgb),0.2);
   border-radius: 14px;
   padding: 24px 28px;
@@ -627,12 +666,12 @@
 .pg-btn--primary:hover:not(:disabled) { background: var(--pink-muted); }
 
 .pg-btn--ghost {
-  background: rgba(255,255,255,0.06);
+  background: var(--surface-2);
   color: var(--muted);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--border-light);
 }
 
-.pg-btn--ghost:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: var(--text); }
+.pg-btn--ghost:hover:not(:disabled) { background: var(--surface-4); color: var(--text); }
 
 /* ── Custom Color Picker Popup ─────────────────────────────── */
 .clr-picker {
@@ -735,7 +774,7 @@
 
 .clr-hex {
   flex: 1;
-  background: rgba(255,255,255,0.07);
+  background: var(--surface-3);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 7px;
   padding: 5px 8px;

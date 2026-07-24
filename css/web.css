@@ -23,11 +23,11 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: rgba(10,10,10,0.82);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
   overflow: hidden;
   z-index: 2;
 }
@@ -43,7 +43,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  background: rgba(255,255,255,0.04);
+  background: var(--surface-2);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 10px;
   color: var(--muted);
@@ -90,7 +90,7 @@
 }
 
 .browser__tab:hover {
-  background: rgba(255,255,255,0.05);
+  background: var(--surface-2);
   color: var(--text);
 }
 
@@ -224,11 +224,11 @@
   align-items: center;
   gap: 4px;
   padding: 4px 6px;
-  background: rgba(10,10,10,0.88);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
   flex-shrink: 0;
   box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
@@ -251,7 +251,7 @@
 
 .omnibar__btn:hover {
   color: var(--text);
-  background: rgba(255,255,255,0.07);
+  background: var(--surface-3);
 }
 
 .omnibar__btn--go {
@@ -267,7 +267,7 @@
 
 .omnibar__input {
   flex: 1;
-  background: rgba(255,255,255,0.05);
+  background: var(--surface-2);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 6px;
   color: var(--text);
@@ -292,11 +292,11 @@
 .browser__frame-wrap {
   flex: 1;
   min-height: 0;
-  background: rgba(10,10,10,0.82);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
   overflow: hidden;
   position: relative;
   display: flex;
@@ -439,18 +439,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255,255,255,0.07);
+  background: var(--surface-3);
   border: 1px solid rgba(255,255,255,0.14);
   border-radius: 8px;
   padding: 6px 8px 6px 12px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
   transition: border-color 0.15s, background 0.15s;
 }
 
 .nt-search:focus-within {
   border-color: rgba(var(--pink-rgb),0.55);
-  background: rgba(255,255,255,0.1);
+  background: var(--surface-4);
 }
 
 .nt-search__logo {
@@ -527,14 +527,14 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.08);
+  background: var(--surface-4);
   border: 1px solid rgba(255,255,255,0.14);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
   transition: border-color 0.15s, transform 0.12s, background 0.15s;
   overflow: hidden;
 }
@@ -593,7 +593,7 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.06);
+  background: var(--surface-2);
   border: 1px dashed rgba(255,255,255,0.18);
   color: var(--muted);
   cursor: pointer;
@@ -601,8 +601,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
   transition: border-color 0.15s, color 0.15s, background 0.15s;
   align-self: flex-start;
   margin-top: 0;
@@ -628,14 +628,14 @@
 /* UV / SJ toggle */
 .nt-toggle-wrap {
   display: flex;
-  background: rgba(255,255,255,0.07);
+  background: var(--surface-3);
   border: 1px solid rgba(255,255,255,0.13);
   border-radius: 10px;
   padding: 3px;
   gap: 2px;
   flex-shrink: 0;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
 }
 
 .nt-toggle-btn {
@@ -673,7 +673,7 @@
 }
 
 .nt-toggle-btn:not(.active):hover {
-  background: rgba(255,255,255,0.05);
+  background: var(--surface-2);
   color: var(--text);
 }
 
@@ -698,7 +698,7 @@
   justify-content: space-between;
   gap: 8px;
   line-height: 1;
-  background: rgba(255,255,255,0.07);
+  background: var(--surface-3);
   border: 1px solid rgba(255,255,255,0.13);
   border-radius: 8px;
   color: var(--text);
@@ -707,8 +707,8 @@
   padding: 6px 10px;
   cursor: pointer;
   text-align: left;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
   transition: border-color 0.15s, background 0.15s;
 }
 
@@ -734,7 +734,7 @@
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  background: rgba(10,10,10,0.7);
+  background: var(--panel-bg);
   border: 1px solid rgba(255,255,255,0.13);
   border-radius: 10px;
   list-style: none;
@@ -744,8 +744,8 @@
   flex-direction: column;
   gap: 1px;
   z-index: 100;
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  backdrop-filter: var(--ui-blur-heavy);
+  -webkit-backdrop-filter: var(--ui-blur-heavy);
   overflow: hidden;
 }
 
@@ -781,7 +781,7 @@
 }
 
 .nt-dropdown__item:hover {
-  background: rgba(255,255,255,0.06);
+  background: var(--surface-2);
   color: var(--text);
 }
 
@@ -798,7 +798,7 @@
 
 .nt-wisp-custom {
   flex: 1;
-  background: rgba(255,255,255,0.04);
+  background: var(--surface-2);
   border: 1px solid rgba(var(--pink-rgb),0.35);
   border-radius: 8px;
   color: var(--text);
@@ -841,7 +841,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255,255,255,0.04);
+  background: var(--surface-2);
   border: 1px solid rgba(var(--pink-rgb),0.25);
   border-radius: 10px;
   padding: 4px 4px 4px 12px;
@@ -911,9 +911,9 @@
 .pin-popup-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: var(--overlay-bg);
+  backdrop-filter: var(--ui-blur-overlay);
+  -webkit-backdrop-filter: var(--ui-blur-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -929,7 +929,7 @@
 }
 
 .pin-popup {
-  background: rgba(12,12,12,0.82);
+  background: var(--panel-bg);
   border: 1px solid rgba(255,255,255,0.13);
   border-radius: 14px;
   padding: 24px 24px 20px;
@@ -938,8 +938,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  backdrop-filter: var(--ui-blur-heavy);
+  -webkit-backdrop-filter: var(--ui-blur-heavy);
   transform: translateY(8px);
   transition: transform 0.18s;
 }
@@ -988,7 +988,7 @@
 }
 
 .pin-popup__input {
-  background: rgba(255,255,255,0.06);
+  background: var(--surface-2);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 8px;
   color: var(--text);
@@ -1002,7 +1002,7 @@
 
 .pin-popup__input:focus {
   border-color: rgba(var(--pink-rgb),0.55);
-  background: rgba(255,255,255,0.09);
+  background: var(--surface-3);
 }
 
 .pin-popup__input::placeholder {
@@ -1028,13 +1028,13 @@
 }
 
 .pin-popup__btn--cancel {
-  background: rgba(255,255,255,0.06);
+  background: var(--surface-2);
   border-color: rgba(255,255,255,0.12);
   color: var(--muted);
 }
 
 .pin-popup__btn--cancel:hover {
-  background: rgba(255,255,255,0.1);
+  background: var(--surface-4);
   color: var(--text);
 }
 

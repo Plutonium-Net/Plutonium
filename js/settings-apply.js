@@ -43,9 +43,28 @@
     root.style.setProperty('--scrollbar-thumb',       'rgba(' + rgb + ',0.55)');
     root.style.setProperty('--scrollbar-thumb-hover', 'rgba(' + rgb + ',0.85)');
     root.style.setProperty('--nav-blur',              'blur(' + s.uiBlur + 'px)');
+    root.style.setProperty('--ui-blur',               'blur(' + s.uiBlur + 'px)');
+    root.style.setProperty('--ui-blur-heavy',         'blur(' + Math.round(s.uiBlur * 1.4) + 'px)');
+    root.style.setProperty('--ui-blur-overlay',       'blur(' + Math.round(s.uiBlur * 0.3) + 'px)');
     root.style.setProperty('--nav-item-size',         s.navIconSize + 'px');
     root.style.fontSize = (s.fontScale / 100) + 'em';
+
+    // ── Background opacity scales with blur ───────────────────────────────
+    // At blur=0: fully clear. At blur=30: fully solid.
+    var t = Math.min(s.uiBlur, 30) / 30;  // 0..1
+    var panelOp = _rnd(0.05 + t * 0.95);  // 0.05 → 1.0
+    root.style.setProperty('--panel-bg',      'rgba(10,10,10,' + panelOp + ')');
+    root.style.setProperty('--panel-bg-dark', 'rgba(10,10,10,' + Math.min(_rnd(panelOp + 0.08), 1) + ')');
+    root.style.setProperty('--nav-bg',        'rgba(10,10,10,' + panelOp + ')');
+    root.style.setProperty('--surface-1',     'rgba(255,255,255,' + _rnd(t * 0.06) + ')');
+    root.style.setProperty('--surface-2',     'rgba(255,255,255,' + _rnd(t * 0.12) + ')');
+    root.style.setProperty('--surface-3',     'rgba(255,255,255,' + _rnd(t * 0.18) + ')');
+    root.style.setProperty('--surface-4',     'rgba(255,255,255,' + _rnd(t * 0.24) + ')');
+    root.style.setProperty('--border-subtle', 'rgba(255,255,255,' + _rnd(t * 0.18) + ')');
+    root.style.setProperty('--border-light',  'rgba(255,255,255,' + _rnd(t * 0.24) + ')');
   }
+
+  function _rnd(v) { return Math.round(Math.max(0, v) * 100) / 100; }
 
   function applyDOM(s) {
     var body = document.body;

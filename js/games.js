@@ -434,8 +434,50 @@
     return new Date(ts).toLocaleDateString();
   }
 
+  function _skelGrid(n) {
+    const wrap = document.getElementById('pgcdn-grid-wrap');
+    const grid = document.createElement('div');
+    grid.className = 'pgcdn-grid';
+    for (let i = 0; i < n; i++) {
+      grid.innerHTML += `<div class="skel-card"><div class="skel skel-card__img"></div><div class="skel skel-card__name"></div></div>`;
+    }
+    wrap.innerHTML = '';
+    wrap.appendChild(grid);
+  }
+
+  function _skelShelf(rowEl, n) {
+    rowEl.innerHTML = Array.from({length: n}, () =>
+      `<div class="skel-shelf-card"><div class="skel skel-shelf-card__img"></div><div class="skel skel-shelf-card__name"></div></div>`
+    ).join('');
+  }
+
+  function _skelHistory(n) {
+    const list = document.getElementById('history-list');
+    if (!list) return;
+    list.innerHTML = Array.from({length: n}, () => `
+      <div class="skel-history-row">
+        <div class="skel skel-history-row__thumb"></div>
+        <div class="skel-history-row__lines">
+          <div class="skel skel-history-row__title"></div>
+          <div class="skel skel-history-row__sub"></div>
+        </div>
+      </div>`).join('');
+  }
+
   async function pgcdnInit() {
     _loadLocal();
+    _skelGrid(24);
+    const favRow    = document.getElementById('pgcdn-favs-row');
+    const recentRow = document.getElementById('pgcdn-recent-row');
+    if (_data.favourites.length) {
+      document.getElementById('pgcdn-shelf-favs').style.display = '';
+      _skelShelf(favRow, Math.min(_data.favourites.length, 6));
+    }
+    if (_data.recent.length) {
+      document.getElementById('pgcdn-shelf-recent').style.display = '';
+      _skelShelf(recentRow, Math.min(_data.recent.length, 6));
+    }
+    _skelHistory(Math.min(_data.recent.length || 5, 8));
 
     try {
       const res = await fetch(`${PGCDN_BASE}/config.json`);

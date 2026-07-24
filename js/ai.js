@@ -1026,10 +1026,33 @@ signinBtn.addEventListener('click', async () => {
   }
 });
 
+function _skelChatList(n) {
+  const widths = ['60%','45%','72%','38%','55%','65%','42%'];
+  chatList.innerHTML = Array.from({length: n}, (_, i) =>
+    `<div class="skel-chat-item"><div class="skel skel-chat-item__line" style="width:${widths[i % widths.length]}"></div></div>`
+  ).join('');
+}
+
+function _skelMessages() {
+  const configs = [
+    {side:'assistant', lines:['85%','72%','45%']},
+    {side:'user',      lines:['60%']},
+    {side:'assistant', lines:['90%','68%','80%','40%']},
+    {side:'user',      lines:['50%','35%']},
+  ];
+  messages.innerHTML = configs.map(({side, lines}) => `
+    <div class="skel-msg skel-msg--${side}">
+      ${lines.map(w => `<div class="skel skel-msg__line" style="width:${w}"></div>`).join('')}
+    </div>`).join('');
+  emptyState.style.display = 'none';
+}
+
 PlutoniumStore.onAuthChange(user => {
   if (user) {
     gate.style.display = 'none';
     app.style.display  = '';
+    _skelChatList(6);
+    _skelMessages();
     loadByok().then(() => fetchRateLimit());
     loadChats();
     loadCharacters();

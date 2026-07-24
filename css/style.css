@@ -7,13 +7,29 @@
 :root {
   --pink: #e8175d;
   --pink-rgb: 232,23,93;
-  --pink-muted: var(--pink-muted);
+  --pink-muted: #971040;
   --bg: #000000;
   --text: #ffffff;
   --muted: #a0a0a0;
   --scrollbar-thumb: rgba(var(--pink-rgb),0.55);
   --scrollbar-thumb-hover: rgba(var(--pink-rgb),0.85);
   --scrollbar-track: rgba(255,255,255,0.04);
+
+  /* ── Blur tiers ──────────────────────────────────────────────────── */
+  --ui-blur:         blur(20px); /* panels, cards, sidebars, inputs     */
+  --ui-blur-heavy:   blur(28px); /* dropdowns, popups                   */
+  --ui-blur-overlay: blur(6px);  /* modal backdrops, scrims             */
+
+  /* ── Surface opacity tiers (defaults = blur 14/30 midpoint) ─────── */
+  --panel-bg:      rgba(10,10,10,0.82);   /* floating panels, cards, sidebars  */
+  --panel-bg-dark: rgba(10,10,10,0.92);   /* modals, toasts, elevated panels   */
+  --overlay-bg:    rgba(0,0,0,0.75);      /* modal backdrops                   */
+  --surface-1:     rgba(255,255,255,0.02);/* lowest fill: app shells, gates    */
+  --surface-2:     rgba(255,255,255,0.04);/* inputs, button resting state      */
+  --surface-3:     rgba(255,255,255,0.07);/* hover / slightly raised           */
+  --surface-4:     rgba(255,255,255,0.1); /* active / focused border context   */
+  --border-subtle: rgba(255,255,255,0.07);/* standard divider / card border    */
+  --border-light:  rgba(255,255,255,0.11);/* input borders, secondary dividers */
 }
 
 /* ── Global scrollbars ───────────────────────────────────────────────────── */
@@ -177,7 +193,7 @@ body {
   height: 68px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
+  background: var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -328,7 +344,7 @@ body {
 .plu-nav--enter-up   { animation: nav-enter-up   0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
 :root {
-  --nav-bg:          rgba(10, 10, 10, 0.75);
+  --nav-bg:          rgba(10, 10, 10, 0.82);
   --nav-border:      rgba(var(--pink-rgb), 0.18);
   --nav-blur:        blur(14px);
   --nav-radius-dock: 50px;
@@ -390,7 +406,7 @@ body {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text);
-  background: rgba(20, 20, 20, 0.92);
+  background: var(--panel-bg-dark);
   border: 1px solid var(--nav-border);
   border-radius: 6px;
   padding: 3px 8px;
@@ -720,7 +736,7 @@ body {
   padding: 32px;
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 16px;
-  background: rgba(255,255,255,0.02);
+  background: var(--surface-1);
   max-width: 480px;
 }
 
@@ -769,4 +785,152 @@ body {
 .plu-focus-ring *:focus {
   outline: 2px solid var(--pink) !important;
   outline-offset: 2px !important;
+}
+
+/* ── Skeleton loaders ────────────────────────────────────────────────────── */
+
+@keyframes skel-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skel {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 800px 100%;
+  animation: skel-shimmer 1.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.plu-reduce-motion .skel { animation: none; }
+
+/* ── Game card skeleton ───────────────────────────────── */
+.skel-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+}
+.skel-card__img {
+  width: 100%;
+  aspect-ratio: 16/9;
+}
+.skel-card__name {
+  margin: 8px 10px;
+  height: 12px;
+  width: 75%;
+  border-radius: 4px;
+}
+
+/* ── Shelf card skeleton (smaller horizontal row) ─────── */
+.skel-shelf-card {
+  width: 140px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+}
+.skel-shelf-card__img {
+  width: 100%;
+  aspect-ratio: 16/9;
+}
+.skel-shelf-card__name {
+  margin: 8px 10px;
+  height: 10px;
+  width: 70%;
+  border-radius: 4px;
+}
+
+/* ── History row skeleton ─────────────────────────────── */
+.skel-history-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.skel-history-row__thumb {
+  width: 64px;
+  height: 36px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.skel-history-row__lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.skel-history-row__title {
+  height: 11px;
+  width: 55%;
+  border-radius: 4px;
+}
+.skel-history-row__sub {
+  height: 9px;
+  width: 30%;
+  border-radius: 4px;
+}
+
+/* ── AI chat item skeleton ────────────────────────────── */
+.skel-chat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  margin: 1px 8px;
+}
+.skel-chat-item__line {
+  height: 11px;
+  border-radius: 4px;
+  flex: 1;
+}
+
+/* ── AI message skeleton ──────────────────────────────── */
+.skel-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+  max-width: 72%;
+}
+.skel-msg--user  { align-self: flex-end; }
+.skel-msg--assistant { align-self: flex-start; }
+.skel-msg__line {
+  height: 11px;
+  border-radius: 4px;
+}
+
+/* ── Account profile skeleton ────────────────────────── */
+.skel-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+.skel-profile__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+}
+.skel-profile__name {
+  height: 14px;
+  width: 120px;
+  border-radius: 4px;
+}
+.skel-profile__email {
+  height: 10px;
+  width: 160px;
+  border-radius: 4px;
 }

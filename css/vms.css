@@ -10,9 +10,9 @@
   align-items: flex-start;
   gap: 16px;
   padding: 32px;
-  border: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid var(--border-subtle);
   border-radius: 16px;
-  background: rgba(255,255,255,0.02);
+  background: var(--surface-1);
   max-width: 440px;
 }
 
@@ -37,9 +37,9 @@
 /* ── Card ─────────────────────────────────────────────────────────────────── */
 
 .vm-card {
-  border: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid var(--border-subtle);
   border-radius: 16px;
-  background: rgba(255,255,255,0.02);
+  background: var(--surface-1);
   overflow: hidden;
 }
 
@@ -79,9 +79,9 @@
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--border-light);
   border-radius: 20px;
-  background: rgba(255,255,255,0.03);
+  background: var(--surface-2);
 }
 
 .vm-timer.warning {
@@ -106,7 +106,7 @@
   font-weight: 600;
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.04);
+  background: var(--surface-2);
   color: var(--text);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, opacity 0.15s;
@@ -115,7 +115,7 @@
 }
 
 .vm-btn:hover:not(:disabled) {
-  background: rgba(255,255,255,0.08);
+  background: var(--surface-4);
   border-color: rgba(255,255,255,0.22);
 }
 

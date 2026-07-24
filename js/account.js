@@ -5,11 +5,22 @@ const DATA_COLLECTIONS = ['games_data/saved', 'nav_prefs/data'];
 const viewLoading   = document.getElementById('view-loading');
 const viewSignedOut = document.getElementById('view-signed-out');
 const viewSignedIn  = document.getElementById('view-signed-in');
+const accountCard   = document.getElementById('account-card');
+
+function _skelProfile() {
+  document.getElementById('profile-avatar-wrap').innerHTML =
+    '<div class="skel-profile"><div class="skel skel-profile__avatar"></div><div class="skel skel-profile__name"></div><div class="skel skel-profile__email"></div></div>';
+  document.getElementById('profile-name').textContent  = '';
+  document.getElementById('profile-email').textContent = '';
+  document.getElementById('profile-uid').textContent   = '';
+}
 
 function showView(name) {
   viewLoading.style.display   = name === 'loading'    ? 'block' : 'none';
   viewSignedOut.style.display = name === 'signed-out' ? 'block' : 'none';
   viewSignedIn.style.display  = name === 'signed-in'  ? 'block' : 'none';
+  accountCard.classList.toggle('is-signed-in', name === 'signed-in');
+  if (name === 'loading') _skelProfile();
 }
 
 const authMsgEl = document.getElementById('auth-message');
