@@ -55,8 +55,8 @@
 }
 
 .browser__new-tab:hover {
-  background: rgba(232,23,93,0.1);
-  border-color: rgba(232,23,93,0.3);
+  background: rgba(var(--pink-rgb),0.1);
+  border-color: rgba(var(--pink-rgb),0.3);
   color: var(--pink);
 }
 
@@ -95,17 +95,17 @@
 }
 
 .browser__tab.active {
-  background: rgba(232,23,93,0.12);
+  background: rgba(var(--pink-rgb),0.12);
   color: var(--text);
-  border-color: rgba(232,23,93,0.25);
+  border-color: rgba(var(--pink-rgb),0.25);
 }
 
 /* drag states */
 .browser__tab.dragging { opacity: 0.4; }
 
 .browser__tab.drag-over {
-  border-color: rgba(232,23,93,0.6);
-  background: rgba(232,23,93,0.08);
+  border-color: rgba(var(--pink-rgb),0.6);
+  background: rgba(var(--pink-rgb),0.08);
 }
 
 /* drag grip */
@@ -255,14 +255,14 @@
 }
 
 .omnibar__btn--go {
-  background: rgba(232,23,93,0.2);
-  border: 1px solid rgba(232,23,93,0.3);
+  background: rgba(var(--pink-rgb),0.2);
+  border: 1px solid rgba(var(--pink-rgb),0.3);
   color: var(--pink);
 }
 
 .omnibar__btn--go:hover {
-  background: rgba(232,23,93,0.35);
-  border-color: rgba(232,23,93,0.55);
+  background: rgba(var(--pink-rgb),0.35);
+  border-color: rgba(var(--pink-rgb),0.55);
 }
 
 .omnibar__input {
@@ -279,7 +279,7 @@
 }
 
 .omnibar__input:focus {
-  border-color: rgba(232,23,93,0.5);
+  border-color: rgba(var(--pink-rgb),0.5);
 }
 
 .omnibar__input::placeholder {
@@ -449,7 +449,7 @@
 }
 
 .nt-search:focus-within {
-  border-color: rgba(232,23,93,0.55);
+  border-color: rgba(var(--pink-rgb),0.55);
   background: rgba(255,255,255,0.1);
 }
 
@@ -546,8 +546,8 @@
 }
 
 .nt-pin:hover .nt-pin__icon {
-  border-color: rgba(232,23,93,0.45);
-  background: rgba(232,23,93,0.08);
+  border-color: rgba(var(--pink-rgb),0.45);
+  background: rgba(var(--pink-rgb),0.08);
   transform: scale(1.05);
 }
 
@@ -609,9 +609,9 @@
 }
 
 .nt-add-pin:hover {
-  border-color: rgba(232,23,93,0.4);
+  border-color: rgba(var(--pink-rgb),0.4);
   color: var(--pink);
-  background: rgba(232,23,93,0.06);
+  background: rgba(var(--pink-rgb),0.06);
 }
 
 /* ── Proxy + WISP controls ───────────────────────────────────────────── */
@@ -663,13 +663,13 @@
 }
 
 .nt-toggle-btn.active {
-  background: rgba(232,23,93,0.15);
+  background: rgba(var(--pink-rgb),0.15);
   color: var(--pink);
 }
 
 .nt-toggle-btn.active .nt-toggle-btn__pip {
   background: var(--pink);
-  box-shadow: 0 0 6px rgba(232,23,93,0.7);
+  box-shadow: 0 0 6px rgba(var(--pink-rgb),0.7);
 }
 
 .nt-toggle-btn:not(.active):hover {
@@ -714,7 +714,7 @@
 
 .nt-dropdown__trigger:hover,
 .nt-dropdown.open .nt-dropdown__trigger {
-  border-color: rgba(232,23,93,0.5);
+  border-color: rgba(var(--pink-rgb),0.5);
   background: rgba(255,255,255,0.11);
 }
 
@@ -786,7 +786,7 @@
 }
 
 .nt-dropdown__item.active {
-  background: rgba(232,23,93,0.12);
+  background: rgba(var(--pink-rgb),0.12);
   color: var(--pink);
 }
 
@@ -799,7 +799,7 @@
 .nt-wisp-custom {
   flex: 1;
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(232,23,93,0.35);
+  border: 1px solid rgba(var(--pink-rgb),0.35);
   border-radius: 8px;
   color: var(--text);
   font-size: 0.78rem;
@@ -810,7 +810,7 @@
 }
 
 .nt-wisp-custom:focus {
-  border-color: rgba(232,23,93,0.65);
+  border-color: rgba(var(--pink-rgb),0.65);
 }
 
 .nt-wisp-custom::placeholder {
@@ -842,14 +842,14 @@
   align-items: center;
   gap: 8px;
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(232,23,93,0.25);
+  border: 1px solid rgba(var(--pink-rgb),0.25);
   border-radius: 10px;
   padding: 4px 4px 4px 12px;
   transition: border-color 0.15s;
 }
 
 .nt-hb-row:focus-within {
-  border-color: rgba(232,23,93,0.55);
+  border-color: rgba(var(--pink-rgb),0.55);
 }
 
 .nt-hb-icon {
@@ -876,8 +876,8 @@
 }
 
 .nt-hb-btn {
-  background: rgba(232,23,93,0.15);
-  border: 1px solid rgba(232,23,93,0.3);
+  background: rgba(var(--pink-rgb),0.15);
+  border: 1px solid rgba(var(--pink-rgb),0.3);
   border-radius: 7px;
   color: var(--pink);
   cursor: pointer;
@@ -888,8 +888,8 @@
 }
 
 .nt-hb-btn:hover:not(:disabled) {
-  background: rgba(232,23,93,0.28);
-  border-color: rgba(232,23,93,0.55);
+  background: rgba(var(--pink-rgb),0.28);
+  border-color: rgba(var(--pink-rgb),0.55);
 }
 
 .nt-hb-btn:disabled {
@@ -1001,7 +1001,7 @@
 }
 
 .pin-popup__input:focus {
-  border-color: rgba(232,23,93,0.55);
+  border-color: rgba(var(--pink-rgb),0.55);
   background: rgba(255,255,255,0.09);
 }
 

@@ -13,7 +13,7 @@
 <body>
 
   <div id="particles-js"></div>
-
+  <div id="vanta-bg"></div>
   <div class="vm-page plu-page">
     <h1 class="vm-page__title plu-page__title">Virtual Machines</h1>
     <p class="vm-page__subtitle plu-page__subtitle">Browser-based cloud VMs powered by Hyperbeam — sign in to start a session.</p>
@@ -69,14 +69,27 @@
     </div>
   </div>
 
-  <script src="js/particles.min.js"></script>
+  <script src="bg/js/particles.min.js"></script>
+  <script src="bg/js/three.min.js"></script>
+  <script src="bg/js/p5.min.js"></script>
+  <script src="bg/js/vanta.birds.min.js"></script>
+  <script src="bg/js/vanta.fog.min.js"></script>
+  <script src="bg/js/vanta.waves.min.js"></script>
+  <script src="bg/js/vanta.clouds.min.js"></script>
+  <script src="bg/js/vanta.globe.min.js"></script>
+  <script src="bg/js/vanta.net.min.js"></script>
+  <script src="bg/js/vanta.trunk.min.js"></script>
+  <script src="bg/js/vanta.topology.min.js"></script>
+  <script src="bg/js/vanta.dots.min.js"></script>
+  <script src="bg/js/vanta.rings.min.js"></script>
+  <script src="bg/js/vanta.halo.min.js"></script>
   <script src="js/cloud-store.js"></script>
   <script>
     PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
   </script>
   <script src="js/home-dock.js"></script>
   <script src="js/nav.js"></script>
-  <script src="js/main.js"></script>
+  <script src="bg/js/bg-init.js"></script>
   <script type="module" src="js/vms.js"></script>
 </body>
 </html>

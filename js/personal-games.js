@@ -127,8 +127,6 @@
     if (name === 'file') {
       document.getElementById('pg-file-input').value = '';
       document.getElementById('pg-file-name').value  = '';
-      document.getElementById('pg-file-art-input').value = '';
-      _setArtPreview('file', null);
       document.getElementById('pg-file-drop').classList.remove('has-file');
       document.getElementById('pg-file-drop-label').textContent = 'Click or drag an HTML file here';
       _pendingFileUpload = null;

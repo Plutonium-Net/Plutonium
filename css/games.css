@@ -72,7 +72,7 @@
 }
 
 .pgcdn-search::placeholder { color: var(--muted); }
-.pgcdn-search:focus { border-color: rgba(232,23,93,0.5); }
+.pgcdn-search:focus { border-color: rgba(var(--pink-rgb),0.5); }
 
 .pgcdn-count {
   font-size: 0.78rem;
@@ -96,9 +96,9 @@
 }
 
 .pgcdn-card:hover {
-  border-color: rgba(232,23,93,0.45);
+  border-color: rgba(var(--pink-rgb),0.45);
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 12px rgba(232,23,93,0.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 12px rgba(var(--pink-rgb),0.15);
 }
 
 .pgcdn-card__img {
@@ -133,7 +133,7 @@
 .pgcdn-spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid rgba(232,23,93,0.2);
+  border: 3px solid rgba(var(--pink-rgb),0.2);
   border-top-color: var(--pink);
   border-radius: 50%;
   animation: games-spin 0.7s linear infinite;
@@ -163,7 +163,7 @@
 .game-restore-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid rgba(232,23,93,0.2);
+  border: 3px solid rgba(var(--pink-rgb),0.2);
   border-top-color: var(--pink);
   border-radius: 50%;
   animation: games-spin 0.7s linear infinite;
@@ -204,12 +204,12 @@
   align-items: center;
   gap: 6px;
   background: rgba(10,10,10,0.82);
-  border: 1px solid rgba(232,23,93,0.22);
+  border: 1px solid rgba(var(--pink-rgb),0.22);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-radius: 60px;
   padding: 6px 20px;
-  box-shadow: 0 6px 32px rgba(0,0,0,0.7), 0 0 16px rgba(232,23,93,0.1);
+  box-shadow: 0 6px 32px rgba(0,0,0,0.7), 0 0 16px rgba(var(--pink-rgb),0.1);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -233,9 +233,9 @@
   width: 40px;
   height: 4px;
   border-radius: 3px;
-  background: rgba(232,23,93,0.22);
-  box-shadow: 0 0 10px 3px rgba(232,23,93,0.45),
-              0 0 24px 6px rgba(232,23,93,0.2);
+  background: rgba(var(--pink-rgb),0.22);
+  box-shadow: 0 0 10px 3px rgba(var(--pink-rgb),0.45),
+              0 0 24px 6px rgba(var(--pink-rgb),0.2);
   z-index: 201;
   opacity: 0;
   pointer-events: none;
@@ -270,18 +270,18 @@
 
 #vbtn-fav.is-fav i {
   text-shadow:
-    0 0 6px rgba(232,23,93,0.9),
-    0 0 12px rgba(232,23,93,0.6),
-    0 0 24px rgba(232,23,93,0.3);
+    0 0 6px rgba(var(--pink-rgb),0.9),
+    0 0 12px rgba(var(--pink-rgb),0.6),
+    0 0 24px rgba(var(--pink-rgb),0.3);
 }
 
 .viewer-btn:hover { color: var(--pink); }
 
 .viewer-btn:hover i {
   text-shadow:
-    0 0 6px rgba(232,23,93,0.9),
-    0 0 12px rgba(232,23,93,0.6),
-    0 0 24px rgba(232,23,93,0.3);
+    0 0 6px rgba(var(--pink-rgb),0.9),
+    0 0 12px rgba(var(--pink-rgb),0.6),
+    0 0 24px rgba(var(--pink-rgb),0.3);
 }
 
 .viewer-bar__sep {
@@ -365,10 +365,10 @@
 .pgcdn-fav-btn.is-fav {
   opacity: 1;
   color: var(--pink);
-  background: rgba(232,23,93,0.18);
+  background: rgba(var(--pink-rgb),0.18);
 }
 
-.pgcdn-fav-btn:hover { color: var(--pink); background: rgba(232,23,93,0.25); }
+.pgcdn-fav-btn:hover { color: var(--pink); background: rgba(var(--pink-rgb),0.25); }
 
 .pgcdn-sync-badge {
   font-size: 0.7rem;
@@ -403,7 +403,7 @@
 }
 
 .history-search::placeholder { color: var(--muted); }
-.history-search:focus { border-color: rgba(232,23,93,0.5); }
+.history-search:focus { border-color: rgba(var(--pink-rgb),0.5); }
 
 .history-sort-group {
   display: flex;
@@ -432,7 +432,7 @@
 .history-sort-btn:hover { color: var(--text); }
 
 .history-sort-btn.active {
-  background: rgba(232,23,93,0.18);
+  background: rgba(var(--pink-rgb),0.18);
   color: var(--pink);
 }
 
@@ -522,13 +522,13 @@
   position: fixed;
   z-index: 500;
   background: rgba(10,10,10,0.92);
-  border: 1px solid rgba(232,23,93,0.2);
+  border: 1px solid rgba(var(--pink-rgb),0.2);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-radius: 10px;
   padding: 5px 0;
   min-width: 180px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 12px rgba(232,23,93,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 12px rgba(var(--pink-rgb),0.08);
   user-select: none;
 }
 
@@ -574,7 +574,7 @@
   transform: translateX(-50%) translateY(16px);
   z-index: 300;
   background: rgba(10,10,10,0.92);
-  border: 1px solid rgba(232,23,93,0.2);
+  border: 1px solid rgba(var(--pink-rgb),0.2);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-radius: 12px;
@@ -644,8 +644,8 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  background: rgba(232,23,93,0.08);
-  border: 1px solid rgba(232,23,93,0.25);
+  background: rgba(var(--pink-rgb),0.08);
+  border: 1px solid rgba(var(--pink-rgb),0.25);
   border-radius: 10px;
   color: var(--text);
   font-size: 0.82rem;
@@ -656,8 +656,8 @@
 }
 
 .pg-add-btn:hover {
-  background: rgba(232,23,93,0.16);
-  border-color: rgba(232,23,93,0.5);
+  background: rgba(var(--pink-rgb),0.16);
+  border-color: rgba(var(--pink-rgb),0.5);
   color: var(--pink);
 }
 
@@ -720,9 +720,9 @@
   max-width: 460px;
   max-height: 92vh;
   background: rgba(10,10,10,0.97);
-  border: 1px solid rgba(232,23,93,0.2);
+  border: 1px solid rgba(var(--pink-rgb),0.2);
   border-radius: 16px;
-  box-shadow: 0 16px 56px rgba(0,0,0,0.7), 0 0 24px rgba(232,23,93,0.08);
+  box-shadow: 0 16px 56px rgba(0,0,0,0.7), 0 0 24px rgba(var(--pink-rgb),0.08);
   overflow: hidden;
   margin: 0 16px;
 }
@@ -799,13 +799,13 @@
 
 .pg-drop-zone:hover,
 .pg-drop-zone.drag-over {
-  border-color: rgba(232,23,93,0.5);
-  background: rgba(232,23,93,0.04);
+  border-color: rgba(var(--pink-rgb),0.5);
+  background: rgba(var(--pink-rgb),0.04);
 }
 
 .pg-drop-zone.has-file {
-  border-color: rgba(232,23,93,0.45);
-  background: rgba(232,23,93,0.06);
+  border-color: rgba(var(--pink-rgb),0.45);
+  background: rgba(var(--pink-rgb),0.06);
 }
 
 .pg-drop-zone__icon {
@@ -863,7 +863,7 @@
 }
 
 .pg-field-input::placeholder { color: var(--muted); }
-.pg-field-input:focus { border-color: rgba(232,23,93,0.5); }
+.pg-field-input:focus { border-color: rgba(var(--pink-rgb),0.5); }
 
 .pg-btn {
   border-radius: 9px;
@@ -882,7 +882,7 @@
   color: #fff;
 }
 
-.pg-btn--primary:hover:not(:disabled) { background: #c91250; }
+.pg-btn--primary:hover:not(:disabled) { background: var(--pink-muted); }
 
 .pg-btn--ghost {
   background: rgba(255,255,255,0.06);

@@ -101,8 +101,8 @@
   font-size: 0.78rem;
   font-weight: 600;
   border-radius: 16px;
-  border: 1px solid rgba(232,23,93,0.35);
-  background: rgba(232,23,93,0.1);
+  border: 1px solid rgba(var(--pink-rgb),0.35);
+  background: rgba(var(--pink-rgb),0.1);
   color: var(--pink);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
@@ -111,8 +111,8 @@
 }
 
 .ai-new-chat:hover {
-  background: rgba(232,23,93,0.2);
-  border-color: rgba(232,23,93,0.55);
+  background: rgba(var(--pink-rgb),0.2);
+  border-color: rgba(var(--pink-rgb),0.55);
 }
 
 .ai-chat-list {
@@ -201,7 +201,7 @@
 }
 
 .ai-chat-item.active {
-  background: rgba(232,23,93,0.1);
+  background: rgba(var(--pink-rgb),0.1);
 }
 
 .ai-chat-item__title {
@@ -258,7 +258,7 @@
   flex: 1;
   min-width: 0;
   background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(232,23,93,0.4);
+  border: 1px solid rgba(var(--pink-rgb),0.4);
   border-radius: 4px;
   color: var(--text);
   font-size: 0.82rem;
@@ -324,7 +324,7 @@
 }
 
 .ai-tab.active {
-  background: rgba(232,23,93,0.15);
+  background: rgba(var(--pink-rgb),0.15);
   color: var(--pink);
 }
 
@@ -407,7 +407,7 @@
 }
 
 .ai-temp-toggle.active {
-  background: rgba(232, 23, 93, 0.12);
+  background: rgba(var(--pink-rgb), 0.12);
   border-color: var(--pink);
   color: var(--pink);
 }
@@ -527,7 +527,7 @@
 }
 
 .ai-model-option.selected {
-  background: rgba(232,23,93,0.1);
+  background: rgba(var(--pink-rgb),0.1);
 }
 
 .ai-model-option__name {
@@ -604,8 +604,8 @@
 }
 
 .ai-msg--user .ai-msg__bubble {
-  background: rgba(232,23,93,0.15);
-  border: 1px solid rgba(232,23,93,0.25);
+  background: rgba(var(--pink-rgb),0.15);
+  border: 1px solid rgba(var(--pink-rgb),0.25);
   color: var(--text);
   border-bottom-right-radius: 4px;
 }
@@ -690,7 +690,7 @@
 }
 
 .ai-inputbar__inner:focus-within {
-  border-color: rgba(232,23,93,0.4);
+  border-color: rgba(var(--pink-rgb),0.4);
 }
 
 .ai-inputbar__divider {
@@ -821,15 +821,15 @@
   font-family: inherit;
   font-weight: 600;
   border-radius: 12px;
-  border: 1px solid rgba(232,23,93,0.35);
-  background: rgba(232,23,93,0.1);
+  border: 1px solid rgba(var(--pink-rgb),0.35);
+  background: rgba(var(--pink-rgb),0.1);
   color: var(--pink);
   cursor: pointer;
   transition: background 0.12s;
 }
 
 .ai-char-new-btn:hover {
-  background: rgba(232,23,93,0.2);
+  background: rgba(var(--pink-rgb),0.2);
 }
 
 .ai-char-modal__close {
@@ -872,7 +872,7 @@
 
 .ai-char-item:hover { background: rgba(255,255,255,0.04); }
 
-.ai-char-item.active { background: rgba(232,23,93,0.1); }
+.ai-char-item.active { background: rgba(var(--pink-rgb),0.1); }
 
 .ai-char-item__info {
   flex: 1;
@@ -950,7 +950,7 @@
 
 .ai-char-editor__input:focus,
 .ai-char-editor__prompt:focus {
-  border-color: rgba(232,23,93,0.4);
+  border-color: rgba(var(--pink-rgb),0.4);
 }
 
 .ai-char-editor__prompt { line-height: 1.5; }
@@ -973,12 +973,12 @@
 }
 
 .ai-char-editor__save {
-  background: rgba(232,23,93,0.15);
-  border: 1px solid rgba(232,23,93,0.35);
+  background: rgba(var(--pink-rgb),0.15);
+  border: 1px solid rgba(var(--pink-rgb),0.35);
   color: var(--pink);
 }
 
-.ai-char-editor__save:hover { background: rgba(232,23,93,0.25); }
+.ai-char-editor__save:hover { background: rgba(var(--pink-rgb),0.25); }
 
 .ai-char-editor__cancel {
   background: rgba(255,255,255,0.04);
@@ -1008,14 +1008,14 @@
 }
 
 .ai-btn--primary {
-  background: rgba(232,23,93,0.15);
-  border-color: rgba(232,23,93,0.35);
+  background: rgba(var(--pink-rgb),0.15);
+  border-color: rgba(var(--pink-rgb),0.35);
   color: var(--pink);
 }
 
 .ai-btn--primary:hover:not(:disabled) {
-  background: rgba(232,23,93,0.25);
-  border-color: rgba(232,23,93,0.55);
+  background: rgba(var(--pink-rgb),0.25);
+  border-color: rgba(var(--pink-rgb),0.55);
 }
 
 .ai-btn:disabled {
@@ -1066,15 +1066,15 @@
   font-weight: 600;
   font-family: inherit;
   border-radius: 12px;
-  border: 1px solid rgba(232,23,93,0.35);
-  background: rgba(232,23,93,0.1);
+  border: 1px solid rgba(var(--pink-rgb),0.35);
+  background: rgba(var(--pink-rgb),0.1);
   color: var(--pink);
   cursor: pointer;
   transition: background 0.12s;
 }
 
 .ai-studio__new-btn:hover {
-  background: rgba(232,23,93,0.2);
+  background: rgba(var(--pink-rgb),0.2);
 }
 
 .ai-studio__char-list {
@@ -1092,7 +1092,7 @@
 
 .ai-studio__char-item:last-child { border-bottom: none; }
 .ai-studio__char-item:hover { background: rgba(255,255,255,0.04); }
-.ai-studio__char-item.active { background: rgba(232,23,93,0.1); }
+.ai-studio__char-item.active { background: rgba(var(--pink-rgb),0.1); }
 
 .ai-studio__char-item-info {
   display: flex;
@@ -1116,7 +1116,7 @@
   text-transform: uppercase;
   color: var(--pink);
   opacity: 0.7;
-  border: 1px solid rgba(232,23,93,0.3);
+  border: 1px solid rgba(var(--pink-rgb),0.3);
   border-radius: 4px;
   padding: 1px 5px;
 }
@@ -1204,7 +1204,7 @@
 
 .ai-studio__input:focus,
 .ai-studio__prompt:focus {
-  border-color: rgba(232,23,93,0.4);
+  border-color: rgba(var(--pink-rgb),0.4);
 }
 
 .ai-studio__prompt {
@@ -1234,12 +1234,12 @@
 }
 
 .ai-studio__save-btn {
-  background: rgba(232,23,93,0.15);
-  border: 1px solid rgba(232,23,93,0.35);
+  background: rgba(var(--pink-rgb),0.15);
+  border: 1px solid rgba(var(--pink-rgb),0.35);
   color: var(--pink);
 }
 
-.ai-studio__save-btn:hover { background: rgba(232,23,93,0.25); }
+.ai-studio__save-btn:hover { background: rgba(var(--pink-rgb),0.25); }
 
 .ai-studio__cancel-btn {
   background: rgba(255,255,255,0.04);
@@ -1369,8 +1369,8 @@
 }
 
 .ai-byok-btn.active {
-  background: rgba(232,23,93,0.08);
-  border-color: rgba(232,23,93,0.3);
+  background: rgba(var(--pink-rgb),0.08);
+  border-color: rgba(var(--pink-rgb),0.3);
   color: var(--pink);
 }
 
@@ -1484,12 +1484,12 @@
 }
 
 .ai-byok-panel__save {
-  background: rgba(232,23,93,0.12);
-  border-color: rgba(232,23,93,0.3);
+  background: rgba(var(--pink-rgb),0.12);
+  border-color: rgba(var(--pink-rgb),0.3);
   color: var(--pink);
 }
 
-.ai-byok-panel__save:hover { background: rgba(232,23,93,0.2); }
+.ai-byok-panel__save:hover { background: rgba(var(--pink-rgb),0.2); }
 
 .ai-byok-panel__clear {
   background: rgba(255,255,255,0.04);

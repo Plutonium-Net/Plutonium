@@ -258,10 +258,11 @@
     _nav.addEventListener('mouseleave', resetMag);
 
     _nav.addEventListener('mouseenter', () => {
+      const rgb = getComputedStyle(document.documentElement).getPropertyValue('--pink-rgb').trim() || '232,23,93';
       _nav.style.boxShadow =
-        '0 0 0 1px rgba(232,23,93,0.35), ' +
-        '0 0 18px 4px rgba(232,23,93,0.30), ' +
-        '0 0 40px 8px rgba(232,23,93,0.12)';
+        `0 0 0 1px rgba(${rgb},0.35), ` +
+        `0 0 18px 4px rgba(${rgb},0.30), ` +
+        `0 0 40px 8px rgba(${rgb},0.12)`;
     });
   }
 

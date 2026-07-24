@@ -81,7 +81,7 @@
 .media-tab.active {
   color: var(--pink);
   border-color: var(--pink);
-  background: rgba(232,23,93,0.08);
+  background: rgba(var(--pink-rgb),0.08);
 }
 
 /* ── Controls bar ────────────────────────────────────────────────────────── */
@@ -123,7 +123,7 @@
 }
 
 .stream-search:focus {
-  border-color: rgba(232,23,93,0.5);
+  border-color: rgba(var(--pink-rgb),0.5);
 }
 
 .stream-search::placeholder { color: var(--muted); }
@@ -147,7 +147,7 @@
   transition: border-color 0.15s;
 }
 
-.stream-select:focus { border-color: rgba(232,23,93,0.5); }
+.stream-select:focus { border-color: rgba(var(--pink-rgb),0.5); }
 .stream-select option { background: #111; }
 
 .adult-toggle {
@@ -168,7 +168,7 @@
 .adult-toggle.active {
   color: var(--pink);
   border-color: var(--pink);
-  background: rgba(232,23,93,0.1);
+  background: rgba(var(--pink-rgb),0.1);
 }
 
 /* ── Genre tags ──────────────────────────────────────────────────────────── */
@@ -202,7 +202,7 @@
 .tag.active {
   color: var(--pink);
   border-color: var(--pink);
-  background: rgba(232,23,93,0.08);
+  background: rgba(var(--pink-rgb),0.08);
 }
 
 /* ── Section header ──────────────────────────────────────────────────────── */
@@ -412,7 +412,7 @@
 
 .game-box:hover {
   transform: scale(1.03);
-  border-color: rgba(232,23,93,0.35);
+  border-color: rgba(var(--pink-rgb),0.35);
 }
 
 .game-box img {
@@ -1053,7 +1053,7 @@
 }
 
 .detail-dropdown__btn:hover { border-color: rgba(255,255,255,0.22); }
-.detail-dropdown.open .detail-dropdown__btn { border-color: rgba(232,23,93,0.5); }
+.detail-dropdown.open .detail-dropdown__btn { border-color: rgba(var(--pink-rgb),0.5); }
 
 .detail-dropdown__menu {
   position: absolute;
@@ -1130,8 +1130,8 @@
 .details-fav-btn.active,
 .details-fav-btn:hover {
   color: var(--pink);
-  border-color: rgba(232,23,93,0.4);
-  background: rgba(232,23,93,0.08);
+  border-color: rgba(var(--pink-rgb),0.4);
+  background: rgba(var(--pink-rgb),0.08);
 }
 
 /* ── Video player ────────────────────────────────────────────────────────── */

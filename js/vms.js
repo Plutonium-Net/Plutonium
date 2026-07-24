@@ -2,7 +2,7 @@ import Hyperbeam from 'https://unpkg.com/@hyperbeam/web@latest/dist/index.js';
 
 const WORKER       = 'https://vm.cdn.plutoniumnet.work';
 const SESSION_SECS = 900; // 15 minutes
-const HISTORY_DOC  = 'vm_history';
+const HISTORY_DOC  = 'vm_history/data';
 
 let hb               = null;
 let countdownTimer   = null;

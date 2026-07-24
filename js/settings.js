@@ -11,52 +11,11 @@
   function save() {
     try { localStorage.setItem(LS_KEY, JSON.stringify(_settings)); } catch (_) {}
     S.apply(_settings);
-    _reinitParticles();
+    _reinitBg();
   }
 
-  function _reinitParticles() {
-    if (typeof particlesJS === 'undefined') return;
-    var s = _settings;
-    if (s.disableParticles || s.bgStyle !== 'particles') return;
-    particlesJS('particles-js', {
-      particles: {
-        number: { value: s.particleDensity, density: { enable: true, value_area: 800 } },
-        color: { value: s.accentColor },
-        shape: { type: 'circle' },
-        opacity: {
-          value: s.particleOpacity,
-          random: true,
-          anim: { enable: true, speed: 0.6, opacity_min: 0.1, sync: false }
-        },
-        size: { value: 2.5, random: true, anim: { enable: false } },
-        line_linked: {
-          enable: true,
-          distance: 150,
-          color: s.accentColor,
-          opacity: 0.12,
-          width: 1
-        },
-        move: {
-          enable: true,
-          speed: s.particleSpeed,
-          direction: 'none',
-          random: true,
-          straight: false,
-          out_mode: 'out',
-          bounce: false
-        }
-      },
-      interactivity: {
-        detect_on: 'canvas',
-        events: {
-          onhover: { enable: true, mode: 'repulse' },
-          onclick: { enable: false },
-          resize: true
-        },
-        modes: { repulse: { distance: 100, duration: 0.4 } }
-      },
-      retina_detect: true
-    });
+  function _reinitBg() {
+    if (window.PluBG) window.PluBG.init();
   }
 
   function toast(msg, isError) {
@@ -141,8 +100,6 @@
       r.addEventListener('change', function () {
         if (!r.checked) return;
         _settings.bgStyle = r.value;
-        var ptEl = document.getElementById('particles-js');
-        if (ptEl) ptEl.style.display = (r.value !== 'particles') ? 'none' : '';
         document.getElementById('particle-settings').style.display = r.value === 'particles' ? '' : 'none';
         save();
         toast('Background style updated');
@@ -347,5 +304,6 @@
   initPersonalization();
   initAccessibility();
   initData();
+  if (window.PluColorPicker) PluColorPicker.init();
 
 })();

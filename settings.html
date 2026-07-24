@@ -13,7 +13,7 @@
 <body>
 
   <div id="particles-js"></div>
-
+  <div id="vanta-bg"></div>
   <div class="plu-page settings-page">
     <h1 class="plu-page__title settings-page__title">Settings</h1>
     <p class="plu-page__subtitle">Customize Plutonium Network to your liking</p>
@@ -57,17 +57,28 @@
               <button class="swatch" data-color="#dc2626" style="background:#dc2626" title="Red" aria-label="Red"></button>
               <button class="swatch" data-color="#0891b2" style="background:#0891b2" title="Cyan" aria-label="Cyan"></button>
               <button class="swatch" data-color="#c026d3" style="background:#c026d3" title="Fuchsia" aria-label="Fuchsia"></button>
-              <label class="swatch swatch--custom" title="Custom color" aria-label="Custom color">
-                <i class="fa-solid fa-plus"></i>
-                <input type="color" id="accent-custom-input" />
-              </label>
+              <button class="swatch swatch--custom" id="accent-custom-btn" title="Custom color" aria-label="Custom color">
+                <i class="fa-solid fa-palette"></i>
+              </button>
+              <input type="color" id="accent-custom-input" style="display:none" />
             </div>
           </div>
 
           <div class="settings-group">
             <div class="settings-group__label">Background Style</div>
-            <div class="settings-radio-group" id="bg-style-group">
+            <div class="settings-radio-group settings-radio-group--grid" id="bg-style-group">
               <label class="settings-radio"><input type="radio" name="bg-style" value="particles" /> <span>Particles</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="birds" />    <span>Birds</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="fog" />      <span>Fog</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="waves" />    <span>Waves</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="clouds" />   <span>Clouds</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="globe" />    <span>Globe</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="net" />      <span>Net</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="trunk" />    <span>Trunk</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="topology" /> <span>Topology</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="dots" />     <span>Dots</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="rings" />    <span>Rings</span></label>
+              <label class="settings-radio"><input type="radio" name="bg-style" value="halo" />     <span>Halo</span></label>
               <label class="settings-radio"><input type="radio" name="bg-style" value="solid" />    <span>Solid Black</span></label>
               <label class="settings-radio"><input type="radio" name="bg-style" value="none" />     <span>Disabled</span></label>
             </div>
@@ -296,42 +307,45 @@
     </div>
   </div>
 
-  <script src="js/particles.min.js"></script>
+  <!-- Custom accent color picker popup -->
+  <div id="clr-picker" class="clr-picker" role="dialog" aria-label="Color picker" hidden>
+    <div class="clr-sv-wrap">
+      <canvas id="clr-sv" class="clr-sv" width="216" height="150"></canvas>
+      <div class="clr-sv-cursor" id="clr-sv-cursor"></div>
+    </div>
+    <div class="clr-hue-row">
+      <canvas id="clr-hue" class="clr-hue" width="216" height="16"></canvas>
+      <div class="clr-hue-cursor" id="clr-hue-cursor"></div>
+    </div>
+    <div class="clr-bottom">
+      <div class="clr-preview" id="clr-preview"></div>
+      <input class="clr-hex" id="clr-hex" type="text" maxlength="7" spellcheck="false" placeholder="#000000" />
+      <button class="clr-apply" id="clr-apply">Apply</button>
+    </div>
+  </div>
+
+  <script src="bg/js/particles.min.js"></script>
+  <script src="bg/js/three.min.js"></script>
+  <script src="bg/js/p5.min.js"></script>
+  <script src="bg/js/vanta.birds.min.js"></script>
+  <script src="bg/js/vanta.fog.min.js"></script>
+  <script src="bg/js/vanta.waves.min.js"></script>
+  <script src="bg/js/vanta.clouds.min.js"></script>
+  <script src="bg/js/vanta.globe.min.js"></script>
+  <script src="bg/js/vanta.net.min.js"></script>
+  <script src="bg/js/vanta.trunk.min.js"></script>
+  <script src="bg/js/vanta.topology.min.js"></script>
+  <script src="bg/js/vanta.dots.min.js"></script>
+  <script src="bg/js/vanta.rings.min.js"></script>
+  <script src="bg/js/vanta.halo.min.js"></script>
   <script src="js/cloud-store.js"></script>
   <script>
     PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
   </script>
   <script src="js/home-dock.js"></script>
   <script src="js/nav.js"></script>
-  <script>
-    (function () {
-      if (typeof particlesJS === 'undefined') return;
-      var s = window.PluSettings ? window.PluSettings.load() : null;
-      var density  = s ? s.particleDensity  : 80;
-      var opacity  = s ? s.particleOpacity  : 0.4;
-      var speed    = s ? s.particleSpeed    : 1.2;
-      var color    = s ? s.accentColor      : '#e8175d';
-      var disabled = s && (s.disableParticles || s.bgStyle !== 'particles');
-      if (disabled) return;
-      particlesJS('particles-js', {
-        particles: {
-          number: { value: density, density: { enable: true, value_area: 800 } },
-          color: { value: color },
-          shape: { type: 'circle' },
-          opacity: { value: opacity, random: true, anim: { enable: true, speed: 0.6, opacity_min: 0.1, sync: false } },
-          size: { value: 2.5, random: true, anim: { enable: false } },
-          line_linked: { enable: true, distance: 150, color: color, opacity: 0.12, width: 1 },
-          move: { enable: true, speed: speed, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
-        },
-        interactivity: {
-          detect_on: 'canvas',
-          events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: false }, resize: true },
-          modes: { repulse: { distance: 100, duration: 0.4 } }
-        },
-        retina_detect: true
-      });
-    })();
-  </script>
+  <script src="bg/js/bg-init.js"></script>
+  <script src="js/color-picker.js"></script>
   <script src="js/settings.js"></script>
 </body>
 </html>

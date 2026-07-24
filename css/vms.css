@@ -125,14 +125,14 @@
 }
 
 .vm-btn--primary {
-  background: rgba(232,23,93,0.15);
-  border-color: rgba(232,23,93,0.35);
+  background: rgba(var(--pink-rgb),0.15);
+  border-color: rgba(var(--pink-rgb),0.35);
   color: var(--pink);
 }
 
 .vm-btn--primary:hover:not(:disabled) {
-  background: rgba(232,23,93,0.25);
-  border-color: rgba(232,23,93,0.55);
+  background: rgba(var(--pink-rgb),0.25);
+  border-color: rgba(var(--pink-rgb),0.55);
 }
 
 .vm-btn--danger {

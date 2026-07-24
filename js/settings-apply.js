@@ -35,11 +35,13 @@
 
   function applyRoot(s) {
     var root = document.documentElement;
+    var rgb  = _toRgbComponents(s.accentColor);
     root.style.setProperty('--pink',                  s.accentColor);
+    root.style.setProperty('--pink-rgb',              rgb);
     root.style.setProperty('--pink-muted',            _darken(s.accentColor));
     root.style.setProperty('--nav-pink',              s.accentColor);
-    root.style.setProperty('--scrollbar-thumb',       s.accentColor + '8c');
-    root.style.setProperty('--scrollbar-thumb-hover', s.accentColor);
+    root.style.setProperty('--scrollbar-thumb',       'rgba(' + rgb + ',0.55)');
+    root.style.setProperty('--scrollbar-thumb-hover', 'rgba(' + rgb + ',0.85)');
     root.style.setProperty('--nav-blur',              'blur(' + s.uiBlur + 'px)');
     root.style.setProperty('--nav-item-size',         s.navIconSize + 'px');
     root.style.fontSize = (s.fontScale / 100) + 'em';
@@ -54,10 +56,7 @@
     body.classList.toggle('plu-focus-ring',    !!s.focusRing);
     body.classList.toggle('plu-reduce-motion', !!s.reduceMotion);
 
-    var ptEl = document.getElementById('particles-js');
-    if (ptEl) {
-      ptEl.style.display = (s.disableParticles || s.bgStyle !== 'particles') ? 'none' : '';
-    }
+    /* display toggling for backgrounds is handled entirely by bg-init.js */
 
     if (s.pageTitleSuffix) {
       var base = document.title.replace(/:\s*.+$/, '');
@@ -95,6 +94,13 @@
     g = Math.max(0, Math.floor(g * 0.65));
     b = Math.max(0, Math.floor(b * 0.65));
     return '#' + [r,g,b].map(function(v){ return v.toString(16).padStart(2,'0'); }).join('');
+  }
+
+  function _toRgbComponents(hex) {
+    var r = parseInt(hex.slice(1,3),16);
+    var g = parseInt(hex.slice(3,5),16);
+    var b = parseInt(hex.slice(5,7),16);
+    return r + ',' + g + ',' + b;
   }
 
   window.PluSettings = {
