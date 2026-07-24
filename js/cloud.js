@@ -9,26 +9,83 @@
   // ── Build cards from JSON ─────────────────────────────────────────────────
   const grid = document.getElementById('cg-grid');
 
+  let _allGames = [];
+
   function buildCards(games) {
     grid.innerHTML = '';
-    games.forEach(function (game) {
-      const card = document.createElement('div');
-      card.className = 'cg-card';
-      card.innerHTML =
-        '<img class="cg-card__img" src="' + game.image + '" alt="' + game.name + '" loading="lazy" />' +
-        '<div class="cg-card__body">' +
-          '<div class="cg-card__title">' + game.name + '</div>' +
-          '<div class="cg-card__desc">' + game.description + '</div>' +
-        '</div>';
-      card.addEventListener('click', function () { _launch(game); });
-      grid.appendChild(card);
-    });
+    const noResults = document.getElementById('cg-no-results');
+    if (games.length === 0) {
+      noResults.style.display = 'block';
+    } else {
+      noResults.style.display = 'none';
+      games.forEach(function (game) {
+        const card = document.createElement('div');
+        card.className = 'cg-card';
+        card.innerHTML =
+          '<img class="cg-card__img" src="' + game.image + '" alt="' + game.name + '" loading="lazy" />' +
+          '<div class="cg-card__body">' +
+            '<div class="cg-card__title">' + game.name + '</div>' +
+            '<div class="cg-card__desc">' + game.description + '</div>' +
+          '</div>';
+        card.addEventListener('click', function () { _launch(game); });
+        grid.appendChild(card);
+      });
+    }
   }
+
+  function _filterGames(query) {
+    if (!query) {
+      buildCards(_allGames);
+      return;
+    }
+    const q = query.toLowerCase();
+    buildCards(_allGames.filter(function (g) {
+      return g.name.toLowerCase().includes(q) ||
+             (g.description && g.description.toLowerCase().includes(q)) ||
+             (g.tags && g.tags.some(function (t) { return t.toLowerCase().includes(q); }));
+    }));
+  }
+
+  // ── Search UI ─────────────────────────────────────────────────────────────
+  const _searchWrap = document.getElementById('cg-search');
+  const _searchBtn  = document.getElementById('cg-search-btn');
+  const _searchInput = document.getElementById('cg-search-input');
+
+  _searchBtn.addEventListener('click', function () {
+    if (_searchWrap.classList.contains('open')) {
+      // If empty, collapse; otherwise clear
+      if (_searchInput.value === '') {
+        _searchWrap.classList.remove('open');
+      } else {
+        _searchInput.value = '';
+        _filterGames('');
+        _searchInput.focus();
+      }
+    } else {
+      _searchWrap.classList.add('open');
+      setTimeout(function () { _searchInput.focus(); }, 50);
+    }
+  });
+
+  _searchInput.addEventListener('input', function () {
+    _filterGames(_searchInput.value.trim());
+  });
+
+  _searchInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      _searchInput.value = '';
+      _filterGames('');
+      _searchWrap.classList.remove('open');
+    }
+  });
 
   // Load game list from examples/cloud.json
   fetch('examples/cloud.json')
     .then(function (r) { return r.json(); })
-    .then(buildCards)
+    .then(function (games) {
+      _allGames = games;
+      buildCards(_allGames);
+    })
     .catch(function () {
       grid.innerHTML = '<p style="color:var(--muted);padding:40px">Failed to load games.</p>';
     });

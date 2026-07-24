@@ -16,8 +16,17 @@
   <div id="vanta-bg"></div>
 
   <div class="cg-page">
-    <h1 class="cg-heading">Cloud Gaming</h1>
+    <div class="cg-heading-row">
+      <h1 class="cg-heading">Cloud Gaming</h1>
+      <div class="cg-search" id="cg-search">
+        <button class="cg-search__btn" id="cg-search-btn" aria-label="Search games">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <input class="cg-search__input" id="cg-search-input" type="text" placeholder="Search games…" autocomplete="off" />
+      </div>
+    </div>
     <div class="cg-grid" id="cg-grid"></div>
+    <p class="cg-no-results" id="cg-no-results" style="display:none">No games found.</p>
   </div>
 
   <script src="bg/js/particles.min.js"></script>
