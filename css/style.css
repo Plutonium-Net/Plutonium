@@ -226,19 +226,21 @@ body {
   top: 50%;
   right: 25%;
   transform: translateY(-50%);
-  width: 320px;
+  width: 360px;
   height: 70vh;
   overflow: hidden;
   z-index: 1;
   pointer-events: auto;
   mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .hero__scroller-track {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 24px;
   animation: scroller-scroll-up 220s linear infinite;
   will-change: transform;
 }
@@ -262,25 +264,24 @@ body {
 }
 
 .hero__scroller-img {
-  width: 320px;
+  width: 100%;
   height: 180px;
   object-fit: cover;
   border-radius: 12px;
-  opacity: 0.35;
+  opacity: 1;
   display: block;
   flex-shrink: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
 }
 
 .hero__scroller-img.highlighted {
-  opacity: 1;
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(var(--pink-rgb), 0.6), 0 0 40px rgba(var(--pink-rgb), 0.3);
+  transform: scale(1.06);
+  box-shadow: 0 8px 32px rgba(var(--pink-rgb), 0.7), 0 0 60px rgba(var(--pink-rgb), 0.35);
 }
 
 #hero-scroller-2 {
-  right: calc(25% - 332px);
+  right: calc(25% - 360px);
 }
 
 @media (max-width: 900px) {
