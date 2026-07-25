@@ -399,71 +399,6 @@
     renderTabList();
   }
 
-  // ── Popup interception script ────────────────────────────────────────
-  // Injected into every proxied iframe after load. Overrides window.open and
-  // patches target="_blank" anchors so they postMessage back to the parent
-  // (us) instead of escaping into a real browser tab.
-  const INTERCEPT_SCRIPT = `(function(){
-    if(window.__plu_intercept__) return;
-    window.__plu_intercept__ = true;
-    // Override window.open
-    var _origOpen = window.open;
-    window.open = function(url, target, features){
-      if(url && url !== 'about:blank' && url !== '' &&
-         (!target || target === '_blank' || target === '_new')){
-        var abs = url;
-        try { abs = new URL(url, location.href).href; } catch(e){}
-        parent.postMessage({ __pluPopup: true, url: abs }, '*');
-        return null;
-      }
-      return _origOpen.apply(this, arguments);
-    };
-    // Patch existing and future target="_blank" anchors
-    function patchAnchors(root){
-      (root || document).querySelectorAll('a[target="_blank"],a[target="_new"]')
-        .forEach(function(a){
-          if(a.__pluPatched) return;
-          a.__pluPatched = true;
-          a.addEventListener('click', function(e){
-            var href = a.href;
-            if(!href || href === 'about:blank') return;
-            e.preventDefault();
-            e.stopPropagation();
-            parent.postMessage({ __pluPopup: true, url: href }, '*');
-          }, true);
-        });
-    }
-    patchAnchors();
-    // Watch for dynamically added anchors
-    var obs = new MutationObserver(function(muts){
-      muts.forEach(function(m){
-        m.addedNodes.forEach(function(n){
-          if(n.nodeType !== 1) return;
-          if((n.tagName==='A') && (n.target==='_blank'||n.target==='_new')) patchAnchors(n.parentElement);
-          else patchAnchors(n);
-        });
-      });
-    });
-    obs.observe(document.documentElement, { subtree: true, childList: true });
-  })();`;
-
-  // Inject the intercept script into a proxied iframe's contentWindow.
-  // The proxied content is same-origin (via SW), so this works.
-  function _injectIntercept(iframe) {
-    try {
-      const win = iframe.contentWindow;
-      if (!win) return;
-      const doc = win.document;
-      if (!doc) return;
-      const s = doc.createElement('script');
-      s.textContent = INTERCEPT_SCRIPT;
-      (doc.head || doc.documentElement || doc.body).appendChild(s);
-      s.remove();
-    } catch (e) {
-      // cross-origin guard — shouldn't happen for proxied content but fail silently
-    }
-  }
-
   function navigateTab(id, rawUrl) {
     if (!swReady) { setNtStatus('SW not ready…', 'error'); setStatus('SW not ready…', true); return; }
     const target = normaliseUrl(rawUrl);
@@ -477,10 +412,6 @@
     if (!tab.iframe) {
       tab.iframe = document.createElement('iframe');
       tab.iframe.allow = 'fullscreen';
-      // Sandbox: block native popups and top-level navigation escape.
-      // allow-same-origin is needed so our SW-proxied content (which is
-      // technically same-origin) can still read/write its own storage.
-      tab.iframe.sandbox = 'allow-scripts allow-forms allow-same-origin allow-modals allow-downloads';
       frameStack.appendChild(tab.iframe);
     }
     tab.url   = target;
@@ -491,16 +422,14 @@
     omniInput.value = target;
     newtabPage.classList.remove('active');
     cloudSaveTabs();
-    // On each load: update title + inject intercept script
+    // try updating title on load
     tab.iframe.addEventListener('load', () => {
       try {
         const u = new URL(tab.iframe.contentWindow.location.href);
-        tab.url   = u.href.startsWith('/') ? target : (tab.url || target);
         tab.title = u.hostname;
         updateTabEl(id);
         cloudSaveTabs();
-      } catch { /* cross-origin — proxy should make this same-origin */ }
-      _injectIntercept(tab.iframe);
+      } catch { /* cross-origin */ }
     });
     updateTabEl(id);
   }
@@ -763,18 +692,6 @@
     // Start immediately if the new-tab page is already visible on load
     if (newtabPage.classList.contains('active')) _lf.start();
   }
-
-  /* ── Popup interception listener ───────────────────────────────────── */
-  // Receives { __pluPopup: true, url } messages posted by the injected script
-  // running inside proxied iframes, then opens the URL in a new Plutonium tab.
-  window.addEventListener('message', (e) => {
-    if (!e.data || !e.data.__pluPopup) return;
-    const url = e.data.url;
-    if (!url || typeof url !== 'string') return;
-    // Silently ignore blob:/data: etc. that can't be proxied
-    if (url.startsWith('blob:') || url.startsWith('data:')) return;
-    createTab(url);
-  });
 
   /* ── Boot ───────────────────────────────────────────────────────────── */
   registerSW();
