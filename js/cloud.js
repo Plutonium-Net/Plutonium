@@ -85,7 +85,7 @@
   }
 
   // ── Load game list ────────────────────────────────────────────────────────
-  fetch('examples/cloud.json')
+  fetch('data/cloud.json')
     .then(function (r) { return r.json(); })
     .then(function (games) {
       _allGames = games.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
