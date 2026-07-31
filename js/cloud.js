@@ -88,7 +88,7 @@
   fetch('data/cloud.json')
     .then(function (r) { return r.json(); })
     .then(function (games) {
-      _allGames = games.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+      _allGames = games;
       _buildTagPills(games);
       _renderGrid();
     })
