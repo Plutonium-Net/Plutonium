@@ -115,6 +115,15 @@
           <label class="pg-field-label">Game name</label>
           <input class="pg-field-input" id="pg-file-name" type="text" placeholder="Leave blank to use filename" />
         </div>
+
+        <!-- New: GitHub import -->
+        <div class="pg-field-group">
+          <label class="pg-field-label">Import from GitHub (repo or tree URL)</label>
+          <input class="pg-field-input" id="pg-github-url" type="url" placeholder="https://github.com/owner/repo or https://github.com/owner/repo/tree/branch/path" />
+          <div style="margin-top:8px">
+            <button class="pg-btn pg-btn--secondary" id="pg-github-import">Import from GitHub</button>
+          </div>
+        </div>
       </div>
       <div class="pg-modal__footer">
         <button class="pg-btn pg-btn--ghost" id="pg-file-cancel">Cancel</button>
