@@ -6,15 +6,12 @@
   const FILE_STORE = 'pg_files';
   const META_STORE = 'pg_meta';
 
-  // Firestore paths (users/{uid}/…)
-  const CLOUD_META = 'personal_games/meta';   // Firestore: users/{uid}/personal_games/meta
-  const CLOUD_FILE = id => `pg_files/${id}`;  // Firestore: users/{uid}/pg_files/<id>
+  const CLOUD_META = 'personal_games/meta';
+  const CLOUD_FILE = id => `pg_files/${id}`;
 
-  const MAX_BYTES  = 1 * 1024 * 1024; // 1 MiB
+  const MAX_BYTES  = 1 * 1024 * 1024;
 
   let _db = null;
-
-  // ── IndexedDB helpers ────────────────────────────────────────────────────
 
   function openDB() {
     if (_db) return Promise.resolve(_db);
@@ -79,15 +76,11 @@
     }));
   }
 
-  // ── Service worker ───────────────────────────────────────────────────────
-
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/pg-sw.js', { scope: '/' }).catch(err => {
       console.warn('[personal-games] SW registration failed:', err);
     });
   }
-
-  // ── Utilities ────────────────────────────────────────────────────────────
 
   function uid() {
     return 'pg_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -101,8 +94,6 @@
       fr.readAsText(file);
     });
   }
-
-  // ── Modal helpers ────────────────────────────────────────────────────────
 
   const _overlay = document.getElementById('pg-modal-overlay');
   const _modals  = {
@@ -140,8 +131,6 @@
   document.querySelectorAll('.pg-modal__close').forEach(btn => {
     btn.addEventListener('click', () => closeModal());
   });
-
-  // ── File upload ──────────────────────────────────────────────────────────
 
   let _pendingFileUpload = null;
 
@@ -192,7 +181,6 @@
       const id   = uid();
       const html = await readFileAsText(_pendingFileUpload);
 
-      // Save to IDB for local service-worker playback
       const enc = new TextEncoder().encode(html);
       await dbPut(FILE_STORE, { type: 'text/html', data: enc.buffer }, `${id}/index.html`);
 
@@ -211,8 +199,6 @@
       btn.textContent = 'Add Game';
     }
   });
-
-  // ── Edit modal ───────────────────────────────────────────────────────────
 
   let _editingId = null;
 
@@ -249,15 +235,12 @@
     }
   });
 
-  // ── Delete ───────────────────────────────────────────────────────────────
-
   async function _deleteGame(meta) {
     try {
       await dbDeleteGameFiles(meta.id);
       await dbDelete(META_STORE, meta.id);
       _renderMyGames();
       _saveCloud();
-      // Remove file doc from Firestore too
       if (typeof PlutoniumStore !== 'undefined' && PlutoniumStore.currentUser) {
         PlutoniumStore.deleteDoc(CLOUD_FILE(meta.id)).catch(() => {});
       }
@@ -267,13 +250,9 @@
     }
   }
 
-  // ── Launch ───────────────────────────────────────────────────────────────
-
   async function _launchPersonalGame(meta) {
     const fileKey = `${meta.id}/index.html`;
 
-    // Ensure the file is in IDB before the SW tries to serve it.
-    // This handles incognito / new devices where _loadCloud hasn't finished yet.
     const existing = await dbGet(FILE_STORE, fileKey).catch(() => null);
     if (!existing) {
       if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) {
@@ -303,8 +282,6 @@
     }
   }
 
-  // ── Card builder ─────────────────────────────────────────────────────────
-
   function _buildPersonalCard(meta) {
     const card = document.createElement('div');
     card.className = 'pgcdn-card pg-personal-card';
@@ -332,8 +309,6 @@
 
     return card;
   }
-
-  // ── Context menu ─────────────────────────────────────────────────────────
 
   function _showCtxMenu(e, items) {
     const ctxMenu = document.getElementById('pgcdn-ctx-menu');
@@ -380,8 +355,6 @@
     ]);
   }
 
-  // ── Cloud sync ────────────────────────────────────────────────────────────
-
   const _cloudBadge = document.getElementById('pg-cloud-badge');
 
   function _setBadge(state) {
@@ -404,17 +377,14 @@
     }
   }
 
-  // _saveCloud(gameId?, htmlText?) — saves meta list, and optionally saves a file doc.
   async function _saveCloud(newId, newHtml) {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     _setBadge('saving');
     try {
-      // 1. Save metadata list
       const games = await dbGetAll(META_STORE).catch(() => []);
       const serializable = games.map(({ id, name, addedAt }) => ({ id, name, addedAt }));
       await PlutoniumStore.setDoc(CLOUD_META, { games: serializable });
 
-      // 2. If a new file was just added, upload its HTML to Firestore
       if (newId && newHtml != null) {
         await PlutoniumStore.setDoc(CLOUD_FILE(newId), { html: newHtml });
       }
@@ -426,7 +396,6 @@
     }
   }
 
-  // _loadCloud() — on sign-in, fetch meta, then download missing HTML files into IDB.
   async function _loadCloud() {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     _setBadge('syncing');
@@ -434,7 +403,6 @@
       const doc = await PlutoniumStore.getDoc(CLOUD_META).catch(() => null);
       if (!doc || !Array.isArray(doc.games)) { _setBadge(true); return; }
 
-      // Merge metadata for entries not already in local IDB
       const localGames = await dbGetAll(META_STORE).catch(() => []);
       const localIds   = new Set(localGames.map(g => g.id));
       const missing    = doc.games.filter(g => !localIds.has(g.id));
@@ -443,7 +411,6 @@
         await dbPut(META_STORE, { id: g.id, name: g.name, addedAt: g.addedAt });
       }
 
-      // Download HTML for every game whose file isn't in IDB yet
       let downloaded = 0;
       for (const g of doc.games) {
         const fileKey = `${g.id}/index.html`;
@@ -486,8 +453,6 @@
     });
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   async function _renderMyGames() {
     const grid  = document.getElementById('pg-personal-grid');
     const empty = document.getElementById('pg-personal-empty');
@@ -512,8 +477,6 @@
       games.forEach(meta => grid.appendChild(_buildPersonalCard(meta)));
     }
   }
-
-  // ── Toast ─────────────────────────────────────────────────────────────────
 
   const _pgToast     = document.getElementById('pgcdn-toast');
   const _pgToastMsg  = document.getElementById('pgcdn-toast-msg');
@@ -544,10 +507,217 @@
     if (dismiss > 0) _pgToastTimer = setTimeout(() => _pgToast.classList.remove('toast-visible'), dismiss);
   }
 
-  // ── Boot ──────────────────────────────────────────────────────────────────
-
   document.getElementById('pg-add-file-btn').addEventListener('click', () => openModal('file'));
 
   _renderMyGames();
+
+  function parseGitHubUrl(input) {
+    try {
+      const u = new URL(input.trim());
+      if (!/github\.com$/.test(u.hostname)) return null;
+      const parts = u.pathname.replace(/^\/+|\/+$/g, '').split('/');
+      if (parts.length < 2) return null;
+      const owner = parts[0], repo = parts[1];
+      let branch = null, path = '';
+      if (parts[2] === 'tree' || parts[2] === 'blob') {
+        branch = parts[3];
+        path = parts.slice(4).join('/');
+      }
+      return { owner, repo, branch, path };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function getDefaultBranch(owner, repo) {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+      if (!r.ok) throw new Error('repo not found');
+      const json = await r.json();
+      return json.default_branch || 'main';
+    } catch (e) {
+      return 'main';
+    }
+  }
+
+  function rawUrlFor(owner, repo, branch, relPath) {
+    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${relPath}`;
+  }
+
+  function guessContentTypeFromPath(path) {
+    const ext = (path.split('.').pop() || '').toLowerCase();
+    switch (ext) {
+      case 'html': return 'text/html';
+      case 'htm': return 'text/html';
+      case 'js': return 'application/javascript';
+      case 'mjs': return 'application/javascript';
+      case 'css': return 'text/css';
+      case 'json': return 'application/json';
+      case 'png': return 'image/png';
+      case 'jpg': case 'jpeg': return 'image/jpeg';
+      case 'gif': return 'image/gif';
+      case 'svg': return 'image/svg+xml';
+      case 'webp': return 'image/webp';
+      case 'wav': return 'audio/wav';
+      case 'mp3': return 'audio/mpeg';
+      case 'ogg': return 'audio/ogg';
+      default: return 'application/octet-stream';
+    }
+  }
+
+  async function fetchTextOrArrayBuffer(url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('fetch failed: ' + r.status);
+    const ct = r.headers.get('content-type') || '';
+    if (/^(text\/)*/i.test(ct) || /\.(html?|css|js|json|svg)$/i.test(url)) {
+      return { data: await r.text(), isText: true, contentType: ct || 'text/plain' };
+    } else {
+      const buf = await r.arrayBuffer();
+      return { data: buf, isText: false, contentType: ct || guessContentTypeFromPath(url) };
+    }
+  }
+
+  function normalizeRelativePath(basePath, relative) {
+    if (/^(https?:)?\/\//i.test(relative)) return null;
+    relative = relative.split('#')[0].split('?')[0];
+    if (relative.startsWith('/')) relative = relative.slice(1);
+    if (!basePath) return relative;
+    const combined = basePath + '/' + relative;
+    const parts = combined.split('/');
+    const stack = [];
+    for (const p of parts) {
+      if (p === '' || p === '.') continue;
+      if (p === '..') stack.pop();
+      else stack.push(p);
+    }
+    return stack.join('/');
+  }
+
+  async function importFromGitHubUrl(inputUrl) {
+    const parsed = parseGitHubUrl(inputUrl);
+    if (!parsed) {
+      _showPgToast('Invalid GitHub URL', 3000);
+      return;
+    }
+
+    const owner = parsed.owner, repo = parsed.repo;
+    let branch = parsed.branch;
+    let rootPath = parsed.path || '';
+
+    const btn = document.getElementById('pg-github-import');
+    btn.disabled = true;
+    btn.textContent = 'Importing…';
+
+    try {
+      if (!branch) {
+        branch = await getDefaultBranch(owner, repo);
+      }
+
+      async function findIndexPaths() {
+        try {
+          const treesUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+          const resp = await fetch(treesUrl);
+          if (!resp.ok) throw new Error('tree fetch failed');
+          const json = await resp.json();
+          if (!Array.isArray(json.tree)) throw new Error('no tree');
+          const idxEntries = json.tree.filter(e => /(^|\/)index\.html?$/i.test(e.path) && e.type === 'blob');
+          const dirs = idxEntries.map(e => {
+            const parts = e.path.split('/');
+            parts.pop();
+            return parts.join('/');
+          });
+          return [...new Set(dirs.sort((a, b) => (a === '' ? -1 : a.length - b.length)))];
+        } catch (e) {
+          return [''];
+        }
+      }
+
+      let candidateDirs = [];
+      if (rootPath) candidateDirs = [rootPath];
+      else candidateDirs = await findIndexPaths();
+
+      let found = false;
+      let chosenDir = '';
+      let indexHtml = null;
+      for (const d of candidateDirs) {
+        const candidate = d ? `${d}/index.html` : 'index.html';
+        const raw = rawUrlFor(owner, repo, branch, candidate);
+        try {
+          const fetched = await fetchTextOrArrayBuffer(raw);
+          if (fetched && fetched.isText) {
+            indexHtml = fetched.data;
+            chosenDir = d;
+            found = true;
+            break;
+          }
+        } catch (_) {}
+      }
+
+      if (!found) {
+        _showPgToast('No index.html found in repository path', 3500);
+        return;
+      }
+
+      const id = uid();
+
+      const assetPaths = new Set();
+      try {
+        const baseDir = chosenDir;
+        const regex = /(?:src|href)\s*=\s*["']([^"']+)["']/ig;
+        let m;
+        while ((m = regex.exec(indexHtml)) !== null) {
+          const rawRef = m[1].trim();
+          const normalized = normalizeRelativePath(baseDir, rawRef);
+          if (normalized) assetPaths.add(normalized);
+        }
+        const dataRegex = /data-(?:src|main|file)\s*=\s*["']([^"']+)["']/ig;
+        while ((m = dataRegex.exec(indexHtml)) !== null) {
+          const normalized = normalizeRelativePath(baseDir, m[1].trim());
+          if (normalized) assetPaths.add(normalized);
+        }
+      } catch (e) {}
+
+      await dbPut(FILE_STORE, { type: 'text/html', data: new TextEncoder().encode(indexHtml).buffer }, `${id}/index.html`);
+
+      let fetchedCount = 0;
+      for (const ap of assetPaths) {
+        const rawUrl = rawUrlFor(owner, repo, branch, (chosenDir ? chosenDir + '/' : '') + ap);
+        try {
+          const fetched = await fetchTextOrArrayBuffer(rawUrl);
+          if (fetched) {
+            let dataBuf;
+            let ctype = fetched.contentType || guessContentTypeFromPath(ap);
+            if (fetched.isText) {
+              dataBuf = new TextEncoder().encode(fetched.data).buffer;
+            } else {
+              dataBuf = fetched.data;
+            }
+            await dbPut(FILE_STORE, { type: ctype, data: dataBuf }, `${id}/${ap}`);
+            fetchedCount++;
+          }
+        } catch (_) {}
+      }
+
+      const meta = { id, name: (owner + '/' + repo + (chosenDir ? '/' + chosenDir : '')), addedAt: Date.now(), github: { owner, repo, branch, root: chosenDir } };
+      await dbPut(META_STORE, meta);
+
+      await _saveCloud(id, indexHtml);
+
+      _renderMyGames();
+      _showPgToast(`Imported "${meta.name}" (${fetchedCount} assets).`, 3500);
+    } catch (e) {
+      console.error('[personal-games] GitHub import failed', e);
+      _showPgToast('Import failed. See console for details.', 4000);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Import from GitHub';
+    }
+  }
+
+  document.getElementById('pg-github-import').addEventListener('click', () => {
+    const url = document.getElementById('pg-github-url').value.trim();
+    if (!url) { _showPgToast('Enter a GitHub URL first.', 2000); return; }
+    importFromGitHubUrl(url);
+  });
 
 })();
