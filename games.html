@@ -117,12 +117,35 @@
         </div>
 
         <div class="pg-field-group">
-          <label class="pg-field-label">Import from GitHub (repo or tree URL)</label>
-          <input class="pg-field-input" id="pg-github-url" type="url" placeholder="https://github.com/owner/repo or https://github.com/owner/repo/tree/branch/path" />
-          <div style="margin-top:8px">
-            <button class="pg-btn pg-btn--secondary" id="pg-github-import">Import from GitHub</button>
-          </div>
-        </div>
+  <label class="pg-field-label">
+    Import from GitHub
+  </label>
+
+  <input
+    class="pg-field-input"
+    id="pg-github-url"
+    type="url"
+    placeholder="https://github.com/owner/repo"
+  />
+
+  <div style="margin-top:8px">
+    <button
+      class="pg-btn pg-btn--secondary"
+      id="pg-github-import"
+      type="button"
+    >
+      <i class="fa-solid fa-magnifying-glass"></i>
+      Scan GitHub
+    </button>
+  </div>
+
+  <!-- Populated automatically by personal-games.js -->
+  <div
+    id="pg-github-picker"
+    class="pg-github-picker"
+    style="display:none"
+  ></div>
+</div>
       </div>
       <div class="pg-modal__footer">
         <button class="pg-btn pg-btn--ghost" id="pg-file-cancel">Cancel</button>
