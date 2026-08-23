@@ -89,15 +89,18 @@
 </div>
 
 <div class="app-flanks" id="app-flanks">
-  <div class="app-column">
-    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://games"><span class="app-tile-icon"><i class="fa-solid fa-gamepad"></i></span><span>Games</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Games</span><span class="app-tile-hover-desc">Play hundreds of browser games instantly</span></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://ai"><span class="app-tile-icon"><i class="fa-solid fa-robot"></i></span><span>AI</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Artificial Intelligence</span><span class="app-tile-hover-desc">Chat with AI assistants and tools</span></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://cloud"><span class="app-tile-icon"><i class="fa-solid fa-cloud"></i></span><span>Cloud Gaming</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Cloud Gaming</span><span class="app-tile-hover-desc">Stream high-end games from the cloud</span></div>
+  <div class="app-grid-popup" id="app-grid-popup">
+    <span class="app-grid-popup-name" id="app-grid-popup-name"></span>
+    <span class="app-grid-popup-line"></span>
+    <span class="app-grid-popup-desc" id="app-grid-popup-desc"></span>
   </div>
-  <div class="app-column">
-    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://movies"><span class="app-tile-icon"><i class="fa-solid fa-film"></i></span><span>Movies</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Movies</span><span class="app-tile-hover-desc">Watch the latest movies and shows</span></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://vms"><span class="app-tile-icon"><i class="fa-solid fa-server"></i></span><span>VMs</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Virtual Machines</span><span class="app-tile-hover-desc">Access remote virtual machines</span></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://stream"><span class="app-tile-icon"><i class="fa-solid fa-clapperboard"></i></span><span>Streaming</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Streaming</span><span class="app-tile-hover-desc">Watch live streams and content</span></div>
+  <div class="app-grid">
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://games" data-name="Games" data-desc="Play hundreds of browser games instantly"><span class="app-tile-icon"><i class="fa-solid fa-gamepad"></i></span><span>Games</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://ai" data-name="Artificial Intelligence" data-desc="Chat with AI assistants and tools"><span class="app-tile-icon"><i class="fa-solid fa-robot"></i></span><span>AI</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://cloud" data-name="Cloud Gaming" data-desc="Stream high-end games from the cloud"><span class="app-tile-icon"><i class="fa-solid fa-cloud"></i></span><span>Cloud Gaming</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://movies" data-name="Movies" data-desc="Watch the latest movies and shows"><span class="app-tile-icon"><i class="fa-solid fa-film"></i></span><span>Movies</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://vms" data-name="Virtual Machines" data-desc="Access remote virtual machines"><span class="app-tile-icon"><i class="fa-solid fa-server"></i></span><span>VMs</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://stream" data-name="Streaming" data-desc="Watch live streams and content"><span class="app-tile-icon"><i class="fa-solid fa-clapperboard"></i></span><span>Streaming</span></button></div>
   </div>
 </div>
 
@@ -120,6 +123,16 @@
 </div>
 
 <div class="shortcuts"></div>
+
+<div class="news-ticker" id="news-ticker">
+  <div class="news-clock" id="news-clock"></div>
+  <div class="news-date" id="news-date"></div>
+  <div class="news-story" id="news-story">
+    <div class="news-story-title" id="news-story-title"></div>
+    <div class="news-story-desc" id="news-story-desc"></div>
+  </div>
+  <div class="news-dots" id="news-dots"></div>
+</div>
 
     </div>
     <iframe id="page-frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-top-navigation-by-user-activation"></iframe>
@@ -207,5 +220,6 @@
 <script src="js/tabs.js"></script>
 <script src="js/loading.js"></script>
 <script src="js/escape.js"></script>
+<script src="js/news-ticker.js"></script>
 </body>
 </html>

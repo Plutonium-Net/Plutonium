@@ -777,18 +777,18 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 
 /* App launcher — tiles as a separate layer flanking the search bar */
 .app-flanks{
-  position:absolute;left:0;right:0;top:50%;height:0;
+  position:absolute;top:25%;right:4%;height:0;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
   pointer-events:none;
 }
-.app-column{
-  position:absolute;top:0;transform:translateY(-50%);
-  display:flex;flex-direction:column;gap:14px;pointer-events:auto;
+.app-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr);
+  gap:10px;pointer-events:auto;
 }
-.app-column:first-child{left:5%}
-.app-column:last-child{right:5%}
+.app-tile-wrap{position:relative;display:inline-flex}
 .app-tile{
-  position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;
-  width:150px;padding:24px 12px 18px;
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;
+  width:120px;padding:18px 10px 14px;
   cursor:pointer;color:var(--ui-text-sub);font-family:inherit;
   transition:transform .2s cubic-bezier(0.16,1,0.3,1),background .15s,border-color .15s,color .15s,box-shadow .2s;
 }
@@ -801,9 +801,9 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .app-tile:active{transform:translateY(-1px) scale(0.97)}
 .app-tile-icon{
   display:flex;align-items:center;justify-content:center;
-  width:68px;height:68px;border-radius:18px;
+  width:54px;height:54px;border-radius:14px;
   background:var(--ui-icon-bg);color:var(--ui-text);
-  font-size:28px;border:1px solid rgba(255,255,255,0.12);
+  font-size:24px;border:1px solid rgba(255,255,255,0.12);
   transition:color .15s,box-shadow .15s,background .15s,border-color .15s;
 }
 .app-tile:hover .app-tile-icon{
@@ -812,62 +812,44 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   border-color:rgba(var(--ui-accent-rgb),0.55);
   box-shadow:0 0 22px rgba(var(--ui-accent-rgb),0.4);
 }
-.app-tile > span:nth-child(2){font-size:14px;font-weight:600;line-height:1;white-space:nowrap;letter-spacing:.2px}
+.app-tile > span:nth-child(2){font-size:12px;font-weight:600;line-height:1;white-space:nowrap;letter-spacing:.2px}
 
-/* ── Hover line + name + description ──────────────────────────────── */
-.app-tile-wrap{position:relative;display:inline-flex}
-/* ── Hover line element ─────────────────────────────────────────────── */
-.app-tile-line{
-  position:absolute;top:50%;height:5px;width:0;
-  background:rgba(255,255,255,0.12);
-  backdrop-filter:blur(6px) saturate(180%);-webkit-backdrop-filter:blur(6px) saturate(180%);
-  border:1px solid rgba(255,255,255,0.2);
-  border-radius:999px;
-  opacity:0;
-  transition:width .4s cubic-bezier(0.16,1,0.3,1),opacity .3s ease;
-  pointer-events:none;
-  box-shadow:0 0 12px rgba(var(--ui-accent-rgb),0.25),inset 0 1px 0 rgba(255,255,255,0.15);
+/* ── Global grid popup ───────────────────────────────────────────── */
+.app-grid-popup{
+  display:flex;flex-direction:column;align-items:center;gap:0;
+  padding:0 16px 4px;
+  pointer-events:auto;
+  z-index:20;white-space:nowrap;
 }
-.app-column:first-child .app-tile-line{left:calc(100% + 8px);transform:translateY(-50%)}
-.app-column:last-child .app-tile-line{right:calc(100% + 8px);transform:translateY(-50%)}
-.app-tile-wrap:hover .app-tile-line{width:220px;opacity:1}
+.app-grid-popup-name{
+  font-size:14px;font-weight:700;color:#fff;line-height:1;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .25s ease .06s,transform .25s cubic-bezier(0.16,1,0.3,1) .06s;
+}
+.app-grid-popup-line{
+  width:0;height:2px;margin:6px 0;
+  background:rgba(255,255,255,0.25);
+  border-radius:1px;
+  transition:width .3s cubic-bezier(0.16,1,0.3,1);
+}
+.app-grid-popup-desc{
+  font-size:11px;color:var(--ui-text-muted);line-height:1;
+  opacity:0;transform:translateY(-6px);
+  transition:opacity .25s ease .1s,transform .25s cubic-bezier(0.16,1,0.3,1) .1s;
+}
+.app-grid-popup.visible .app-grid-popup-name{opacity:1;transform:translateY(0)}
+.app-grid-popup.visible .app-grid-popup-line{width:100%}
+.app-grid-popup.visible .app-grid-popup-desc{opacity:1;transform:translateY(0)}
 
-.app-tile-hover-name,
-.app-tile-hover-desc{
-  position:absolute;
-  opacity:0;
-  pointer-events:none;
-  white-space:nowrap;
-  z-index:10;
-}
-.app-tile-hover-name{
-  transition:opacity .3s ease .06s,transform .3s cubic-bezier(0.16,1,0.3,1) .06s;
-  font-size:18px;font-weight:700;
-  color:#fff;
-  line-height:1;padding-bottom:8px;
-}
-.app-tile-hover-desc{
-  transition:opacity .3s ease .12s,transform .3s cubic-bezier(0.16,1,0.3,1) .12s;
-  font-size:14px;
-  color:var(--ui-text-muted);
-  line-height:1;
-}
-.app-column:first-child .app-tile-hover-name{left:calc(100% + 20px);top:calc(50% - 34px);transform:translateX(-6px)}
-.app-column:last-child .app-tile-hover-name{right:calc(100% + 20px);top:calc(50% - 34px);transform:translateX(6px)}
-.app-column:first-child .app-tile-hover-desc{left:calc(100% + 18px);top:calc(50% + 8px);transform:translateX(-6px)}
-.app-column:last-child .app-tile-hover-desc{right:calc(100% + 18px);top:calc(50% + 8px);transform:translateX(6px)}
-.app-tile-wrap:hover .app-tile-hover-name,
-.app-tile-wrap:hover .app-tile-hover-desc{opacity:1;transform:translateX(0)}
-
-/* Narrow windows: tiles drop below the search as two side-by-side columns */
+/* Narrow windows: grid becomes smaller */
 @media (max-width: 980px){
-  .app-flanks{position:static;display:flex;flex-wrap:wrap;justify-content:center;gap:18px 20px;height:auto}
-  .app-column{position:static;transform:none;gap:10px}
-  .app-tile-wrap{display:block}
+  .app-flanks{position:static;height:auto;align-items:center}
   .app-tile{width:100px;padding:14px 10px 12px;gap:8px}
   .app-tile-icon{width:52px;height:52px;border-radius:14px;font-size:22px}
-  .app-tile > span:nth-child(2){font-size:12px}
-  .app-tile-hover-name,.app-tile-hover-desc,.app-tile-line{display:none}
+  .app-tile > span:nth-child(2){font-size:11px}
+  .app-grid-popup{padding:0 12px 2px}
+  .app-grid-popup-name{font-size:12px}
+  .app-grid-popup-desc{font-size:10px}
 }
 
 .proxy-engine-switch{
@@ -1115,3 +1097,55 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .confirm-box-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:8px}
 .confirm-box-desc{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:20px}
 .confirm-box-actions{display:flex;gap:8px;justify-content:flex-end}
+
+/* ── News ticker (macOS-style, bottom-left) ───────────────────────── */
+.news-ticker{
+  position:absolute;bottom:80px;left:20px;
+  pointer-events:auto;z-index:5;
+  display:flex;flex-direction:column;gap:6px;
+  max-width:500px;
+}
+.news-clock{
+  font-size:72px;font-weight:200;color:#fff;line-height:1;
+  letter-spacing:-1px;font-variant-numeric:tabular-nums;
+}
+.news-clock .clock-ampm{
+  font-size:32px;font-weight:500;vertical-align:super;margin-left:4px;
+}
+.news-date{
+  font-size:22px;font-weight:500;color:rgba(255,255,255,0.85);line-height:1.2;
+  margin-bottom:10px;
+}
+.news-story{
+  opacity:1;transform:translateX(0);
+  transition:opacity .4s cubic-bezier(0.25,0.1,0.25,1),transform .4s cubic-bezier(0.25,0.1,0.25,1);
+}
+.news-story.slide-out{opacity:0;transform:translateX(-40px)}
+.news-story.slide-in{opacity:0;transform:translateX(40px)}
+.news-story-title{
+  font-size:18px;font-weight:500;color:rgba(255,255,255,0.95);line-height:1.35;
+}
+.news-story-desc{
+  font-size:14px;font-weight:400;color:rgba(255,255,255,0.5);line-height:1.35;margin-top:3px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.news-dots{
+  display:flex;gap:10px;align-items:center;margin-top:10px;
+}
+.news-dot{
+  width:12px;height:12px;border-radius:50%;
+  background:rgba(255,255,255,0.25);
+  transition:background .3s ease;cursor:pointer;
+}
+.news-dot.active{
+  background:#fff;
+}
+
+@media (max-width: 980px){
+  .news-ticker{max-width:400px;bottom:60px}
+  .news-clock{font-size:48px;font-weight:400}
+  .news-clock .clock-ampm{font-size:22px;font-weight:500}
+  .news-date{font-size:16px;font-weight:500}
+  .news-story-title{font-size:15px;font-weight:500}
+  .news-story-desc{font-size:12px}
+}

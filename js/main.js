@@ -70,6 +70,24 @@ document.querySelectorAll('.waffle-item, .app-tile').forEach(btn => {
   })
 })
 
+// Hover popup for app grid
+const gridPopup = document.getElementById('app-grid-popup')
+const gridPopupName = document.getElementById('app-grid-popup-name')
+const gridPopupDesc = document.getElementById('app-grid-popup-desc')
+if (gridPopup) {
+  document.querySelectorAll('.app-tile').forEach(btn => {
+    btn.addEventListener('mouseenter', () => {
+      gridPopupName.textContent = btn.dataset.name || ''
+      gridPopupDesc.textContent = btn.dataset.desc || ''
+      gridPopup.classList.add('visible')
+    })
+    btn.addEventListener('mouseleave', () => {
+      gridPopup.classList.remove('visible')
+    })
+  })
+}
+
+
 // Customize (paintbrush) dropdown — background effects, accent color
 const customizeWrap = document.getElementById('customize-wrap')
 const customizeBtn = document.getElementById('btn-customize')
@@ -268,23 +286,11 @@ showNewTabPage()
 
 renderPins()
 
-// Align the flanking app-tile columns with the search bar (wide layouts only)
+// Reset inline top on resize so the CSS value takes effect
 function alignAppFlanks() {
   const flanks = document.getElementById('app-flanks')
-  const search = document.querySelector('.search-box')
-  const page = document.getElementById('new-tab-page')
-  if (!flanks || !search || !page) return
-  if (window.innerWidth <= 980) {
-    flanks.style.top = ''
-    return
-  }
-  // flanks is positioned relative to .new-tab-page, so convert the search
-  // center from viewport coords to page coords, then align the column's
-  // center (translateY(-50%) already self-centers it) onto that point.
-  const sRect = search.getBoundingClientRect()
-  const pRect = page.getBoundingClientRect()
-  const center = sRect.top + sRect.height / 2 - pRect.top
-  flanks.style.top = Math.max(0, center) + 'px'
+  if (!flanks) return
+  flanks.style.top = ''
 }
 window.addEventListener('resize', alignAppFlanks)
 alignAppFlanks()
