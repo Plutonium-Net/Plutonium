@@ -302,19 +302,34 @@ function openAboutDialog() {
     </div>
     <div class="about-dialog__body">
       <p>Plutonium Network is a web platform providing access to games, applications, AI services, virtual machines, and more, all directly through your browser.</p>
-      <p>This platform is also meant for internet freedom. With the on-going, rising censorship in this world — from GoGuardian on a school Chromebook to Europe's Digital Services Act — this site will help you evade that.</p>
+      <p>This platform is also meant for internet freedom. With the on-going, rising censorship in this world. From GoGuardian on a school Chromebook to Europe's Digital Services Act, this site will help you evade that.</p>
 
-      <div class="about-dialog__stats">
-        <div class="about-dialog__stat glass"><div class="about-dialog__stat-value">15</div><div class="about-dialog__stat-label">Version</div></div>
-        <div class="about-dialog__stat glass"><div class="about-dialog__stat-value">2022</div><div class="about-dialog__stat-label">Est.</div></div>
-        <div class="about-dialog__stat glass"><div class="about-dialog__stat-value" style="color:var(--ui-success)">Active</div><div class="about-dialog__stat-label">Status</div></div>
-      </div>
+<div class="about-dialog__section">
+  <div class="about-dialog__section-label">Creators &amp; Team</div>
 
-      <div class="about-dialog__section">
-        <div class="about-dialog__section-label">Creators &amp; Team</div>
-        <div class="about-dialog__row"><div class="about-dialog__row-icon blue"><i class="fas fa-user-circle"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Plutonium</div><div class="about-dialog__row-sub">Lead Developer &amp; Project Creator</div></div><a href="https://crafted.pages.dev" class="about-dialog__row-link">Portfolio</a><a href="https://github.com/itscrafted" class="about-dialog__row-link">GitHub</a></div>
-        <div class="about-dialog__row"><div class="about-dialog__row-icon grey"><i class="fas fa-user"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Mizzery</div><div class="about-dialog__row-sub">General Support</div></div></div>
-      </div>
+  <div class="about-dialog__row">
+    <div class="about-dialog__row-icon blue">
+      <i class="fas fa-user-circle"></i>
+    </div>
+    <div class="about-dialog__row-body">
+      <div class="about-dialog__row-title">Crafted</div>
+      <div class="about-dialog__row-sub">Co-Owner &amp; Project Creator</div>
+    </div>
+    <a href="https://crafted.pages.dev" class="about-dialog__row-link">Portfolio</a>
+    <a href="https://github.com/craf1ed" class="about-dialog__row-link">GitHub</a>
+  </div>
+
+  <div class="about-dialog__row">
+    <div class="about-dialog__row-icon grey">
+      <i class="fas fa-user"></i>
+    </div>
+    <div class="about-dialog__row-body">
+      <div class="about-dialog__row-title">Mizzery</div>
+      <div class="about-dialog__row-sub">Co-Owner &amp; Community Manager</div>
+    </div>
+    <a href="https://github.com/xXmizzeryXx" class="about-dialog__row-link">GitHub</a>
+  </div>
+</div>
 
       <div class="about-dialog__section">
         <div class="about-dialog__section-label">Technology</div>
@@ -363,8 +378,10 @@ function openAboutDialog() {
       </div>
 
       <div class="about-dialog__contact">
-        <i class="fab fa-discord"></i>
-        <span>Have questions or suggestions? Find us on Discord!</span>
+        <a href="https://discord.gg/sQvNX6SVfA" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;display:flex;align-items:center">
+          <i class="fab fa-discord"></i>
+          <span>Have questions or suggestions? Find us on Discord!</span>
+        </a>
       </div>
     </div>
   `
@@ -643,6 +660,31 @@ function acctRenderPage() {
   acctRenderBookmarks()
   acctSetupSignedInListeners(am)
 
+  // Build cloud data tree (only when signed in)
+  acctBuildTree()
+  acctDiscoverDynamicDocs()
+  document.getElementById('tree-refresh-all')?.addEventListener('click', () => {
+    document.querySelectorAll('#tree-docs .tree-node.expanded').forEach(n => {
+      n.classList.remove('expanded')
+    })
+    acctBuildTree()
+    acctDiscoverDynamicDocs()
+  })
+
+  // Custom path input
+  const customInput = document.getElementById('tree-custom-input')
+  const customLoad = document.getElementById('tree-custom-load')
+  if (customInput && customLoad) {
+    const loadCustom = () => {
+      const name = customInput.value.trim()
+      if (!name) return
+      acctAddCustomNode(name)
+      customInput.value = ''
+    }
+    customLoad.addEventListener('click', loadCustom)
+    customInput.addEventListener('keydown', e => { if (e.key === 'Enter') loadCustom() })
+  }
+
   if (_acctSyncInterval) clearInterval(_acctSyncInterval)
   _acctSyncInterval = setInterval(() => { acctUpdateStats() }, 5000)
 }
@@ -712,6 +754,239 @@ function acctSetupPasswordReset(am) {
       sending = false
     }
   })
+}
+
+// ── Cloud data tree explorer ──────────────────────────────────────────────
+const CLOUD_DOCS = [
+  { name: 'bookmarks',          label: 'Bookmarks',          icon: 'fa-solid fa-bookmark' },
+  { name: 'pins',               label: 'Pins',               icon: 'fa-solid fa-thumbtack' },
+  { name: 'tabs',               label: 'Tabs',               icon: 'fa-solid fa-folder-open' },
+  { name: 'settings',           label: 'Settings',           icon: 'fa-solid fa-gear' },
+  { name: 'games_data/saved',   label: 'Games Data',         icon: 'fa-solid fa-gamepad' },
+  { name: 'personal_games/meta',label: 'Personal Games',     icon: 'fa-solid fa-upload' },
+  { name: 'stream_favorites',   label: 'Stream Favorites',   icon: 'fa-solid fa-heart' },
+  { name: 'stream_continue',    label: 'Stream Continue',    icon: 'fa-solid fa-play-circle' },
+  { name: 'stream_prefs',       label: 'Stream Prefs',       icon: 'fa-solid fa-sliders' },
+]
+
+function acctBuildTree() {
+  const container = document.getElementById('tree-docs')
+  if (!container) return
+  container.innerHTML = ''
+
+  CLOUD_DOCS.forEach(doc => {
+    const node = document.createElement('div')
+    node.className = 'tree-node'
+    node.dataset.doc = doc.name
+
+    const header = document.createElement('div')
+    header.className = 'tree-node-header'
+    header.innerHTML = `
+      <span class="tree-node-chevron"><i class="fa-solid fa-chevron-right"></i></span>
+      <span class="tree-node-icon doc"><i class="${doc.icon}"></i></span>
+      <span class="tree-node-name">${doc.name}</span>
+      <span class="tree-node-meta" id="tree-meta-${doc.name}"></span>
+    `
+
+    const body = document.createElement('div')
+    body.className = 'tree-node-body'
+    body.innerHTML = `
+      <div class="tree-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading…</div>
+    `
+
+    header.addEventListener('click', () => acctToggleNode(node, doc))
+
+    node.appendChild(header)
+    node.appendChild(body)
+    container.appendChild(node)
+  })
+}
+
+async function acctDiscoverDynamicDocs() {
+  const container = document.getElementById('tree-docs')
+  if (!container) return
+
+  try {
+    if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return
+
+    // Discover personal game files from metadata
+    const meta = await PlutoniumStore.getDoc('personal_games/meta').catch(() => null)
+    if (meta && Array.isArray(meta.games)) {
+      meta.games.forEach(game => {
+        if (game.id) acctAddTreeDoc(container, `pg_files/${game.id}`, 'fa-solid fa-file-code', game.name || game.id)
+      })
+    }
+
+    // Discover game save slots from games data
+    const gamesData = await PlutoniumStore.getDoc('games_data/saved').catch(() => null)
+    if (gamesData && Array.isArray(gamesData.savedGames)) {
+      gamesData.savedGames.forEach(id => {
+        acctAddTreeDoc(container, `game_saves/${id}`, 'fa-solid fa-floppy-disk', id)
+      })
+    }
+  } catch (_) {}
+}
+
+function acctAddTreeDoc(container, name, icon, label) {
+  // Avoid duplicates
+  if (container.querySelector(`[data-doc="${name}"]`)) return
+
+  const node = document.createElement('div')
+  node.className = 'tree-node'
+  node.dataset.doc = name
+
+  const header = document.createElement('div')
+  header.className = 'tree-node-header'
+  header.innerHTML = `
+    <span class="tree-node-chevron"><i class="fa-solid fa-chevron-right"></i></span>
+    <span class="tree-node-icon doc"><i class="${icon}"></i></span>
+    <span class="tree-node-name">${name}</span>
+    <span class="tree-node-meta" id="tree-meta-${name}"></span>
+  `
+
+  const body = document.createElement('div')
+  body.className = 'tree-node-body'
+  body.innerHTML = '<div class="tree-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading…</div>'
+
+  header.addEventListener('click', () => acctToggleNode(node, { name, label }))
+
+  node.appendChild(header)
+  node.appendChild(body)
+  container.appendChild(node)
+}
+
+function acctAddCustomNode(name) {
+  const container = document.getElementById('tree-docs')
+  if (!container) return
+  acctAddTreeDoc(container, name, 'fa-solid fa-file', name)
+  // Auto-expand
+  const node = container.querySelector(`[data-doc="${CSS.escape(name)}"]`)
+  if (node) {
+    const doc = { name, label: name }
+    acctToggleNode(node, doc)
+  }
+}
+
+async function acctToggleNode(node, doc) {
+  const isExpanded = node.classList.contains('expanded')
+  if (isExpanded) {
+    node.classList.remove('expanded')
+    return
+  }
+
+  node.classList.add('expanded')
+  const body = node.querySelector('.tree-node-body')
+  body.innerHTML = '<div class="tree-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading…</div>'
+
+  try {
+    if (typeof PlutoniumStore === 'undefined') {
+      body.innerHTML = '<div class="tree-empty">PlutoniumStore not loaded</div>'
+      return
+    }
+    if (!PlutoniumStore.currentUser) {
+      body.innerHTML = '<div class="tree-empty">Not signed in — sign in to view cloud data</div>'
+      return
+    }
+    const data = await PlutoniumStore.getDoc(doc.name)
+    if (!data) {
+      body.innerHTML = '<div class="tree-empty">Document not created yet — save data to create it</div>'
+      body.innerHTML += '<div style="margin-top:8px"><button class="btn btn-ghost" id="tree-create-' + doc.name + '"><i class="fa-solid fa-plus"></i> Create empty document</button></div>'
+      document.getElementById('tree-create-' + doc.name).addEventListener('click', async () => {
+        try {
+          await PlutoniumStore.setDoc(doc.name, {})
+          acctShowToast(`${doc.name} created`)
+          acctReloadNode(node, doc)
+        } catch (e) {
+          acctShowToast('Failed: ' + e.message)
+        }
+      })
+      document.getElementById(`tree-meta-${doc.name}`).textContent = 'empty'
+      return
+    }
+    const json = JSON.stringify(data, null, 2)
+    const summary = acctSummarizeDoc(data)
+    document.getElementById(`tree-meta-${doc.name}`).textContent = summary
+
+    body.innerHTML = `
+      <textarea class="tree-editor" spellcheck="false" data-doc="${doc.name}">${json.replace(/</g, '&lt;')}</textarea>
+      <div class="tree-actions">
+        <button class="btn btn-ghost" id="tree-reload-${doc.name}" title="Revert"><i class="fa-solid fa-rotate-right"></i> Revert</button>
+        <button class="btn btn-primary" id="tree-save-${doc.name}"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+        <span class="tree-save-msg" id="tree-msg-${doc.name}"></span>
+      </div>
+    `
+
+    const editor = body.querySelector('.tree-editor')
+    editor.addEventListener('input', () => acctValidateEditor(editor, doc.name))
+
+    document.getElementById(`tree-save-${doc.name}`).addEventListener('click', () => acctSaveDoc(editor, doc))
+    document.getElementById(`tree-reload-${doc.name}`).addEventListener('click', () => acctReloadNode(node, doc))
+  } catch (err) {
+    const msg = (err.message || 'Failed to load').replace(/\[PlutoniumStore\]\s*/g, '')
+    body.innerHTML = `<div class="tree-empty" style="color:var(--ui-danger)"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px"></i>${msg}</div>`
+  }
+}
+
+function acctSummarizeDoc(data) {
+  if (data && Array.isArray(data.list)) return data.list.length + ' items'
+  if (data && Array.isArray(data.items)) return data.items.length + ' items'
+  if (data && typeof data === 'object') return Object.keys(data).length + ' keys'
+  return ''
+}
+
+function acctValidateEditor(editor, docName) {
+  const msg = document.getElementById(`tree-msg-${docName}`)
+  try {
+    JSON.parse(editor.value)
+    editor.classList.remove('is-invalid')
+    if (msg) { msg.textContent = ''; msg.className = 'tree-save-msg' }
+  } catch {
+    editor.classList.add('is-invalid')
+    if (msg) { msg.textContent = 'Invalid JSON'; msg.className = 'tree-save-msg err' }
+  }
+}
+
+async function acctSaveDoc(editor, doc) {
+  const msg = document.getElementById(`tree-msg-${doc.name}`)
+  try {
+    const data = JSON.parse(editor.value)
+    if (msg) { msg.textContent = 'Saving…'; msg.className = 'tree-save-msg' }
+    await PlutoniumStore.setDoc(doc.name, data)
+    if (msg) { msg.textContent = 'Saved'; msg.className = 'tree-save-msg ok' }
+    const summary = acctSummarizeDoc(data)
+    const meta = document.getElementById(`tree-meta-${doc.name}`)
+    if (meta) meta.textContent = summary
+    acctShowToast(`${doc.name} saved`)
+  } catch (err) {
+    if (msg) { msg.textContent = err.message || 'Save failed'; msg.className = 'tree-save-msg err' }
+  }
+}
+
+async function acctReloadNode(node, doc) {
+  const body = node.querySelector('.tree-node-body')
+  body.innerHTML = '<div class="tree-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading…</div>'
+  try {
+    const data = await PlutoniumStore.getDoc(doc.name)
+    if (!data) {
+      body.innerHTML = '<div class="tree-empty">No document found</div>'
+      return
+    }
+    const json = JSON.stringify(data, null, 2)
+    body.innerHTML = `
+      <textarea class="tree-editor" spellcheck="false" data-doc="${doc.name}">${json.replace(/</g, '&lt;')}</textarea>
+      <div class="tree-actions">
+        <button class="btn btn-ghost" id="tree-reload-${doc.name}" title="Revert"><i class="fa-solid fa-rotate-right"></i> Revert</button>
+        <button class="btn btn-primary" id="tree-save-${doc.name}"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+        <span class="tree-save-msg" id="tree-msg-${doc.name}"></span>
+      </div>
+    `
+    const editor = body.querySelector('.tree-editor')
+    editor.addEventListener('input', () => acctValidateEditor(editor, doc.name))
+    document.getElementById(`tree-save-${doc.name}`).addEventListener('click', () => acctSaveDoc(editor, doc))
+    document.getElementById(`tree-reload-${doc.name}`).addEventListener('click', () => acctReloadNode(node, doc))
+  } catch (err) {
+    body.innerHTML = `<div class="tree-empty" style="color:var(--ui-danger)"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px"></i>${err.message || 'Failed to load'}</div>`
+  }
 }
 
 function openAccountDialog() {
@@ -869,6 +1144,19 @@ function openAccountDialog() {
             <div class="row-end">
               <button class="btn btn-danger" id="delete-account-btn"><i class="fa-solid fa-trash-can"></i> Delete</button>
             </div>
+          </div>
+        </div>
+
+        <div class="section-label">Cloud Data</div>
+        <div class="card glass" id="cloud-data-tree">
+          <div class="tree-toolbar">
+            <span class="tree-toolbar-label"><i class="fa-solid fa-database" style="margin-right:6px;opacity:.5"></i>Firestore Documents</span>
+            <button class="btn btn-ghost" id="tree-refresh-all" title="Refresh all"><i class="fa-solid fa-rotate-right"></i></button>
+          </div>
+          <div id="tree-docs"></div>
+          <div class="tree-custom">
+            <input type="text" id="tree-custom-input" class="tree-custom-input" placeholder="Enter document path (e.g. pg_files/game123)" spellcheck="false">
+            <button class="btn btn-ghost" id="tree-custom-load"><i class="fa-solid fa-arrow-right"></i></button>
           </div>
         </div>
 

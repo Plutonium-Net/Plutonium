@@ -239,7 +239,11 @@
     assertWorkerUrl();
     const uid = _requireUser();
     const auth = await _authHeader();
-    const path = `/users/${uid}/${collection}`;
+    // Firestore REST API requires a document path (collection/docId).
+    // If the caller passes a bare collection name (no '/'), append a
+    // default document ID so the path resolves to a single document.
+    const docPath = collection.includes('/') ? collection : `${collection}/_default`;
+    const path = `/users/${uid}/${docPath}`;
     const fields = toFirestoreFields(data);
 
     const res = await fetch(`${_workerUrl}/firestore${path}`, {
@@ -258,7 +262,8 @@
     assertWorkerUrl();
     const uid  = _requireUser();
     const auth = await _authHeader();
-    const path = `/users/${uid}/${collection}`;
+    const docPath = collection.includes('/') ? collection : `${collection}/_default`;
+    const path = `/users/${uid}/${docPath}`;
 
     const res = await fetch(`${_workerUrl}/firestore${path}`, {
       headers: auth,
@@ -276,7 +281,8 @@
     assertWorkerUrl();
     const uid  = _requireUser();
     const auth = await _authHeader();
-    const path = `/users/${uid}/${collection}`;
+    const docPath = collection.includes('/') ? collection : `${collection}/_default`;
+    const path = `/users/${uid}/${docPath}`;
 
     const res = await fetch(`${_workerUrl}/firestore${path}`, {
       method:  'DELETE',

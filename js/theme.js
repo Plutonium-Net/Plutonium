@@ -181,6 +181,18 @@ const Theme = (() => {
           '--ui-warn-rgb': `${hexToRgb(sem.warn).r},${hexToRgb(sem.warn).g},${hexToRgb(sem.warn).b}`,
         }
       })(),
+      // Decorative rainbow — 8 hues 45° apart starting at the accent hue,
+      // so the about-dialog icon palette follows the chosen accent.
+      ...(() => {
+        const { h } = hexToHsl(accent)
+        const rowVars = {}
+        for (let i = 0; i < 8; i++) {
+          const c = hslToHex(h + i * 45, 0.62, isLight ? 0.42 : 0.66)
+          rowVars['--row-' + i] = c
+          rowVars['--row-' + i + '-rgb'] = `${hexToRgb(c).r},${hexToRgb(c).g},${hexToRgb(c).b}`
+        }
+        return rowVars
+      })(),
     }
   }
 
