@@ -984,6 +984,37 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .bm-ctx-rename-ok:hover{background:rgba(255,255,255,0.22)}
 
+/* Custom right-click context menu */
+.plu-ctx-menu{
+  position:fixed;z-index:9999;
+  background:var(--ui-surface-4);
+  backdrop-filter:blur(2px) saturate(180%);-webkit-backdrop-filter:blur(2px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+  box-shadow:0 8px 24px rgba(var(--ui-shadow-rgb),0.45);
+  padding:6px;min-width:190px;max-width:270px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  animation:plu-ctx-in .12s ease-out;
+}
+@keyframes plu-ctx-in{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
+.plu-ctx-item{
+  display:flex;align-items:center;gap:9px;width:100%;
+  text-align:left;border:none;background:transparent;
+  color:var(--ui-text-sub);font-size:13px;font-family:inherit;
+  padding:7px 10px;border-radius:5px;cursor:pointer;
+  transition:background .1s,color .1s;
+}
+.plu-ctx-item i{width:16px;text-align:center;font-size:12px;flex-shrink:0;color:var(--ui-text-muted);transition:color .1s}
+.plu-ctx-item:hover:not(.disabled){background:var(--ui-hover);color:var(--ui-text)}
+.plu-ctx-item:hover:not(.disabled) i{color:var(--ui-text)}
+.plu-ctx-item:active:not(.disabled){background:rgba(255,255,255,0.17)}
+.plu-ctx-item:focus-visible{outline:1px solid rgba(var(--ui-accent-rgb),0.6);outline-offset:-1px}
+.plu-ctx-item.disabled{opacity:.4;cursor:default}
+.plu-ctx-item.danger{color:rgba(255,100,100,0.85)}
+.plu-ctx-item.danger i{color:rgba(255,100,100,0.75)}
+.plu-ctx-item.danger:hover:not(.disabled){background:rgba(var(--ui-danger-rgb),0.12);color:var(--ui-danger)}
+.plu-ctx-item.danger:hover:not(.disabled) i{color:var(--ui-danger)}
+.plu-ctx-sep{height:1px;background:var(--ui-border-sub);margin:4px 6px}
+
 .status-bar.wisp-ok{
   border-color:rgba(110,220,140,0.24);
   box-shadow:0 14px 38px rgba(var(--ui-shadow-rgb),0.42), 0 0 0 1px rgba(110,220,140,0.08), 0 0 24px rgba(110,220,140,0.16), inset 0 1px 0 rgba(var(--ui-accent-rgb),0.08);

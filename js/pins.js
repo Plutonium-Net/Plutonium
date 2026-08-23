@@ -212,6 +212,9 @@ function renderPins() {
     const item = document.createElement('div')
     item.className = 'shortcut'
     item.title = pin.name
+    item.dataset.pinId = pin.id
+    item.dataset.pinName = pin.name
+    item.dataset.pinType = pin.type || ''
 
     const thumb = document.createElement('div')
     thumb.className = 'icon'
