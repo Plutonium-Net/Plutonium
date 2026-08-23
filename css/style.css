@@ -552,7 +552,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 
 /* Pin picker dropdown */
 .pin-picker{
-  position:fixed;z-index:9999;
+  position:fixed !important;z-index:9999;
   left:50%;top:50%;transform:translate(-50%,-50%);
   width:320px;max-height:420px;
   overflow:hidden;display:flex;flex-direction:column;
@@ -565,9 +565,60 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   animation:pin-picker-scrim-in .15s ease-out;
 }
 @keyframes pin-picker-scrim-in{from{opacity:0}to{opacity:1}}
-}
 @keyframes pin-picker-in{from{opacity:0;transform:translate(-50%,-50%) scale(0.95)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 .pin-picker__loading{padding:20px;text-align:center;color:var(--ui-text-muted);font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px}
+
+/* About dialog */
+.about-scrim{position:fixed !important;inset:0;z-index:9998;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.about-dialog{position:fixed !important;z-index:9999;left:50%;top:50%;transform:translate(-50%,-50%) scale(0.96);opacity:0;width:min(520px,calc(100vw - 32px));max-height:min(80vh,700px);overflow:hidden;display:flex;flex-direction:column;border-radius:16px;transition:opacity .2s ease,transform .2s cubic-bezier(0.22,1,0.36,1)}
+.about-dialog:not([hidden]){opacity:1;transform:translate(-50%,-50%) scale(1)}
+.about-dialog[hidden]{display:none !important}
+.about-scrim[hidden]{display:none !important}
+.about-dialog__head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--ui-border-sub);flex-shrink:0}
+.about-dialog__title{font-size:15px;font-weight:700;color:var(--ui-text)}
+.about-dialog__close{border:none;background:transparent;color:var(--ui-text-muted);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:6px;transition:background .12s,color .12s}
+.about-dialog__close:hover{background:var(--ui-hover);color:var(--ui-text)}
+.about-dialog__body{overflow-y:auto;padding:16px 20px 20px;flex:1}
+.about-dialog__body p{font-size:13px;color:var(--ui-text-sub);line-height:1.55;margin-bottom:8px}
+.about-dialog__section{margin-bottom:16px}
+.about-dialog__section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--ui-text-muted);margin-bottom:8px}
+.about-dialog__row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;transition:background .12s}
+.about-dialog__row:hover{background:var(--ui-hover)}
+.about-dialog__row-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.about-dialog__row-icon.purple{background:rgba(var(--row-0-rgb),0.25);color:var(--row-0)}
+.about-dialog__row-icon.orange{background:rgba(var(--row-1-rgb),0.25);color:var(--row-1)}
+.about-dialog__row-icon.red{background:rgba(var(--row-2-rgb),0.22);color:var(--row-2)}
+.about-dialog__row-icon.yellow{background:rgba(var(--row-3-rgb),0.22);color:var(--row-3)}
+.about-dialog__row-icon.teal{background:rgba(var(--row-4-rgb),0.22);color:var(--row-4)}
+.about-dialog__row-icon.pink{background:rgba(var(--row-5-rgb),0.22);color:var(--row-5)}
+.about-dialog__row-icon.blue{background:rgba(var(--row-6-rgb),0.22);color:var(--row-6)}
+.about-dialog__row-icon.green{background:rgba(var(--row-7-rgb),0.22);color:var(--row-7)}
+.about-dialog__row-icon.grey{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.5)}
+.about-dialog__row-body{flex:1;min-width:0}
+.about-dialog__row-title{font-size:12.5px;color:var(--ui-text);font-weight:500}
+.about-dialog__row-sub{font-size:10.5px;color:var(--ui-text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.about-dialog__row-link{font-size:11px;color:var(--ui-text-muted);text-decoration:none;margin-left:8px;white-space:nowrap}
+.about-dialog__row-link:hover{color:var(--row-6)}
+.about-dialog__stats{display:flex;gap:8px;margin-bottom:12px}
+.about-dialog__stat{flex:1;text-align:center;padding:10px 8px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid var(--ui-border-sub)}
+.about-dialog__stat-value{font-size:16px;font-weight:600;color:var(--ui-text)}
+.about-dialog__stat-label{font-size:9px;color:var(--ui-text-muted);text-transform:uppercase;margin-top:3px;letter-spacing:.4px}
+.about-dialog__legal{font-size:11px;color:var(--ui-text-muted);line-height:1.5;padding:12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--ui-border-sub)}
+.about-dialog__legal strong{color:var(--ui-text-sub)}
+.about-dialog__contact{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--ui-border-sub);font-size:12px;color:var(--ui-text-sub)}
+.about-dialog__contact i{font-size:20px;color:var(--row-5)}
+
+/* Account dialog */
+.account-scrim{position:fixed !important;inset:0;z-index:9998;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.account-dialog{position:fixed !important;z-index:9999;left:50%;top:50%;transform:translate(-50%,-50%) scale(0.96);opacity:0;width:min(560px,calc(100vw - 32px));height:min(80vh,720px);overflow:hidden;display:flex;flex-direction:column;border-radius:16px;transition:opacity .2s ease,transform .2s cubic-bezier(0.22,1,0.36,1)}
+.account-dialog:not([hidden]){opacity:1;transform:translate(-50%,-50%) scale(1)}
+.account-dialog[hidden]{display:none !important}
+.account-scrim[hidden]{display:none !important}
+.account-dialog__head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;border-bottom:1px solid var(--ui-border-sub);flex-shrink:0}
+.account-dialog__title{font-size:15px;font-weight:700;color:var(--ui-text)}
+.account-dialog__close{border:none;background:transparent;color:var(--ui-text-muted);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:6px;transition:background .12s,color .12s}
+.account-dialog__close:hover{background:var(--ui-hover);color:var(--ui-text)}
+.account-dialog__frame{flex:1;width:100%;border:none;background:transparent}
 .pin-picker__header{padding:10px 14px 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--ui-text-muted)}
 .pin-picker__list{overflow-y:auto;flex:1;padding:0 6px 6px}
 .pin-picker__item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .12s}
@@ -598,9 +649,8 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .app-tile:hover{
   transform:translateY(-3px) scale(1.04);
-  background:rgba(255,255,255,0.22);
-  border-color:rgba(var(--ui-accent-rgb),0.55);
-  box-shadow:0 16px 40px rgba(var(--ui-shadow-rgb),0.4), 0 0 26px rgba(var(--ui-accent-rgb),0.18);
+  border-color:rgba(var(--ui-accent-rgb),0.75);
+  box-shadow:0 16px 40px rgba(var(--ui-shadow-rgb),0.4), 0 0 24px rgba(var(--ui-accent-rgb),0.45), 0 0 56px rgba(var(--ui-accent-rgb),0.22);
   color:var(--ui-text);
 }
 .app-tile:active{transform:translateY(-1px) scale(0.97)}
@@ -631,6 +681,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .proxy-engine-switch{
   display:flex;justify-content:center;align-items:center;
   border-radius:2rem;padding:3px;margin-top:12px;
+  position:relative;
   border:1px solid var(--ui-border-sub);
 }
 .proxy-engine-btn{
@@ -638,14 +689,18 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   border:none;background:transparent;cursor:pointer;
   color:var(--ui-text-sub);font-size:11.5px;font-weight:600;font-family:inherit;
   padding:6px 12px;border-radius:999px;
-  transition:color .18s,border-color .18s;
-  border:2px solid transparent;
+  position:relative;z-index:1;
+  transition:color .18s;
 }
 .proxy-engine-btn:hover{color:var(--ui-text)}
-.proxy-engine-btn.active{
-  color:var(--ui-text);
-  border-color:var(--ui-accent);
+.proxy-engine-btn.active{color:var(--ui-text)}
+.proxy-engine-slider{
+  position:absolute;top:3px;bottom:3px;z-index:0;
+  border:2px solid var(--ui-accent);
+  border-radius:999px;
+  background:transparent;
   box-shadow:0 0 8px rgba(var(--ui-accent-rgb, 232,23,93),0.35);
+  transition:left .28s cubic-bezier(0.22,1,0.36,1),width .28s cubic-bezier(0.22,1,0.36,1);
 }
 
 .status-bar{

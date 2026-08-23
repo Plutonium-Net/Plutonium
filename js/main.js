@@ -253,3 +253,138 @@ function alignAppFlanks() {
 window.addEventListener('resize', alignAppFlanks)
 alignAppFlanks()
 
+// ── About dialog ──────────────────────────────────────────────────────────
+function openAboutDialog() {
+  const scrim = document.getElementById('about-scrim')
+  const dlg = document.getElementById('about-dialog')
+  if (!scrim || !dlg) return
+
+  dlg.innerHTML = `
+    <div class="about-dialog__head">
+      <span class="about-dialog__title"><i class="fas fa-info-circle" style="margin-right:6px;opacity:.5"></i>About &amp; Credits</span>
+      <button class="about-dialog__close" id="about-dialog-close"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="about-dialog__body">
+      <p>Plutonium Network is a web platform providing access to games, applications, AI services, virtual machines, and more, all directly through your browser.</p>
+      <p>This platform is also meant for internet freedom. With the on-going, rising censorship in this world — from GoGuardian on a school Chromebook to Europe's Digital Services Act — this site will help you evade that.</p>
+
+      <div class="about-dialog__stats">
+        <div class="about-dialog__stat glass"><div class="about-dialog__stat-value">15</div><div class="about-dialog__stat-label">Version</div></div>
+        <div class="about-dialog__stat glass"><div class="about-dialog__stat-value">2022</div><div class="about-dialog__stat-label">Est.</div></div>
+        <div class="about-dialog__stat glass"><div class="about-dialog__stat-value" style="color:var(--ui-success)">Active</div><div class="about-dialog__stat-label">Status</div></div>
+      </div>
+
+      <div class="about-dialog__section">
+        <div class="about-dialog__section-label">Creators &amp; Team</div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon blue"><i class="fas fa-user-circle"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Plutonium</div><div class="about-dialog__row-sub">Lead Developer &amp; Project Creator</div></div><a href="https://crafted.pages.dev" class="about-dialog__row-link">Portfolio</a><a href="https://github.com/itscrafted" class="about-dialog__row-link">GitHub</a></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon grey"><i class="fas fa-user"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Mizzery</div><div class="about-dialog__row-sub">General Support</div></div></div>
+      </div>
+
+      <div class="about-dialog__section">
+        <div class="about-dialog__section-label">Technology</div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon purple"><i class="fab fa-font-awesome"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Font Awesome</div><div class="about-dialog__row-sub">Icon library</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Ultraviolet</div><div class="about-dialog__row-sub">Web proxy technology</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Scramjet</div><div class="about-dialog__row-sub">Web proxy technology</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon grey"><i class="fas fa-database"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">GitHub</div><div class="about-dialog__row-sub">File hosting</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon orange"><i class="fas fa-cloud"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Cloudflare</div><div class="about-dialog__row-sub">Site hosting &amp; DDoS protection</div></div></div>
+      </div>
+
+      <div class="about-dialog__section">
+        <div class="about-dialog__section-label">AI Services</div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon yellow"><i class="fas fa-brain"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Groq Cloud</div><div class="about-dialog__row-sub">AI inference provider</div></div><a href="https://console.groq.com" class="about-dialog__row-link">Console</a></div>
+      </div>
+
+      <div class="about-dialog__section">
+        <div class="about-dialog__section-label">Services &amp; Workers</div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-gamepad"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Games CDN</div><div class="about-dialog__row-sub">Cloud-hosted game catalog with save sync</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-cloud"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Cloud Gaming</div><div class="about-dialog__row-sub">On-demand cloud game sessions</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-robot"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Plutonium AI (Stelena)</div><div class="about-dialog__row-sub">Groq-backed chat worker</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-desktop"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Virtual Machines</div><div class="about-dialog__row-sub">Hyperbeam VM sessions</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-user-circle"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Accounts</div><div class="about-dialog__row-sub">OAuth sign-in with cloud sync</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-clapperboard"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Streaming</div><div class="about-dialog__row-sub">Movies, TV &amp; anime</div></div></div>
+      </div>
+
+      <div class="about-dialog__section">
+        <div class="about-dialog__section-label">Special Thanks</div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon yellow"><i class="fas fa-star"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Titanium Network</div><div class="about-dialog__row-sub">Scramjet and Ultraviolet source code</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon blue"><i class="fas fa-users"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Our Community</div><div class="about-dialog__row-sub">Thank you for feedback and support</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon green"><i class="fas fa-hands-helping"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Koyeb</div><div class="about-dialog__row-sub">Hosting free wisp</div></div></div>
+      </div>
+
+      <div class="about-dialog__section">
+        <div class="about-dialog__section-label">License</div>
+        <div class="about-dialog__legal">
+          <p><strong>ARR: All Rights Reserved</strong></p>
+          <p style="margin-top:4px">© 2022-2026 Plutonium Network. All rights reserved.</p>
+        </div>
+      </div>
+
+      <div class="about-dialog__contact">
+        <i class="fab fa-discord"></i>
+        <span>Have questions or suggestions? Find us on Discord!</span>
+      </div>
+    </div>
+  `
+
+  // show
+  dlg.hidden = false
+  scrim.hidden = false
+  dlg.offsetHeight
+  dlg.style.opacity = '1'
+  dlg.style.transform = 'translate(-50%,-50%) scale(1)'
+  scrim.style.opacity = '1'
+
+  // close handlers
+  document.getElementById('about-dialog-close').addEventListener('click', closeAboutDialog)
+  scrim.addEventListener('click', closeAboutDialog)
+  document.addEventListener('keydown', function _esc(e) {
+    if (e.key === 'Escape') { closeAboutDialog(); document.removeEventListener('keydown', _esc) }
+  })
+}
+
+function closeAboutDialog() {
+  const scrim = document.getElementById('about-scrim')
+  const dlg = document.getElementById('about-dialog')
+  if (!dlg || !scrim) return
+  dlg.style.opacity = '0'
+  dlg.style.transform = 'translate(-50%,-50%) scale(0.96)'
+  scrim.style.opacity = '0'
+  setTimeout(() => { dlg.hidden = true; scrim.hidden = true }, 200)
+}
+
+// ── Account dialog ────────────────────────────────────────────────────────
+function openAccountDialog() {
+  const scrim = document.getElementById('account-scrim')
+  const dlg = document.getElementById('account-dialog')
+  if (!scrim || !dlg) return
+
+  // show
+  dlg.hidden = false
+  scrim.hidden = false
+  dlg.offsetHeight
+  dlg.style.opacity = '1'
+  dlg.style.transform = 'translate(-50%,-50%) scale(1)'
+  scrim.style.opacity = '1'
+
+  // refresh the frame content so state is current
+  const frame = document.getElementById('account-frame')
+  if (frame) frame.src = 'pages/account.html'
+
+  // close handlers (idempotent-ish: re-bind is fine since old ones die with the dialog)
+  document.getElementById('account-dialog-close').addEventListener('click', closeAccountDialog)
+  scrim.addEventListener('click', closeAccountDialog)
+  document.addEventListener('keydown', function _esc(e) {
+    if (e.key === 'Escape') { closeAccountDialog(); document.removeEventListener('keydown', _esc) }
+  })
+}
+
+function closeAccountDialog() {
+  const scrim = document.getElementById('account-scrim')
+  const dlg = document.getElementById('account-dialog')
+  if (!dlg || !scrim) return
+  dlg.style.opacity = '0'
+  dlg.style.transform = 'translate(-50%,-50%) scale(0.96)'
+  scrim.style.opacity = '0'
+  setTimeout(() => { dlg.hidden = true; scrim.hidden = true }, 200)
+}
+

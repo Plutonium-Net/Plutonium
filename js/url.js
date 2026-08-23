@@ -3,8 +3,6 @@ const LOCAL_PAGES = {
   movies: '/pages/stream.html',
   stream: '/pages/stream.html',
   ai: '/pages/ai.html',
-  about: '/pages/about.html',
-  account: '/pages/account.html',
   vms: '/pages/vms.html',
   cloud: '/pages/cloud.html',
 }

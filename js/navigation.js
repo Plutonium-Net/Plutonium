@@ -319,8 +319,8 @@ btnForward.addEventListener('click', async () => {
   await openHistoryEntry(tab, state.index + 1)
 })
 
-btnAbout.addEventListener('click', () => navigate('pluto://about'))
-btnUserPage.addEventListener('click', () => navigate('pluto://account'))
+btnAbout.addEventListener('click', () => { if (typeof openAboutDialog === 'function') openAboutDialog() })
+btnUserPage.addEventListener('click', () => { if (typeof openAccountDialog === 'function') openAccountDialog() })
 
 urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') navigate(urlInput.value) })
 urlInput.addEventListener('focus', () => urlInput.select())

@@ -102,6 +102,7 @@
 </div>
 
 <div class="proxy-engine-switch glass" role="group" aria-label="Proxy engine">
+  <div class="proxy-engine-slider" id="proxy-engine-slider"></div>
   <button class="proxy-engine-btn active" data-engine="uv" title="Ultraviolet service worker proxy">
     <i class="fa-solid fa-bolt"></i> UV
   </button>
@@ -133,6 +134,18 @@
     </div>
   </div>
 
+</div>
+
+<div class="about-scrim" id="about-scrim" hidden></div>
+<div class="about-dialog glass" id="about-dialog" hidden></div>
+
+<div class="account-scrim" id="account-scrim" hidden></div>
+<div class="account-dialog glass" id="account-dialog" hidden>
+  <div class="account-dialog__head">
+    <span class="account-dialog__title"><i class="fa-solid fa-user" style="margin-right:6px;opacity:.5"></i>Account</span>
+    <button class="account-dialog__close" id="account-dialog-close"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <iframe class="account-dialog__frame" id="account-frame" src="pages/account.html" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-top-navigation-by-user-activation"></iframe>
 </div>
 
 <div class="wisp-switcher-menu glass" id="wisp-switcher-menu" hidden>

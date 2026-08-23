@@ -586,9 +586,23 @@ function setProxyEngine(engine) {
 }
 
 function syncProxyEngineButtons() {
-  document.querySelectorAll('.proxy-engine-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.engine === selectedProxy)
+  const btns = document.querySelectorAll('.proxy-engine-btn')
+  const switchEl = document.querySelector('.proxy-engine-switch')
+  const slider = document.getElementById('proxy-engine-slider')
+
+  btns.forEach(btn => {
+    const isActive = btn.dataset.engine === selectedProxy
+    btn.classList.toggle('active', isActive)
   })
+
+  if (!slider || !switchEl) return
+  const activeBtn = switchEl.querySelector('.proxy-engine-btn.active')
+  if (!activeBtn) { slider.style.opacity = '0'; return }
+  const switchRect = switchEl.getBoundingClientRect()
+  const btnRect = activeBtn.getBoundingClientRect()
+  slider.style.opacity = '1'
+  slider.style.left = (btnRect.left - switchRect.left) + 'px'
+  slider.style.width = btnRect.width + 'px'
 }
 
 
