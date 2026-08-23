@@ -81,7 +81,13 @@ function resolveAllowedOrigin(origin, setting) {
     }
   }
 
-  return entries[0];
+  // Allow loopback origins so local development and previews can sign in.
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin)) {
+    return origin;
+  }
+
+  // Not allowed — return null so the ACAO header is omitted and the browser blocks.
+  return null;
 }
 
 function handleConfig(env, allowed) {
@@ -501,11 +507,14 @@ function corsResponse(body, status, allowed) {
 }
 
 function corsHeaders(allowed, extra = {}) {
-  return {
-    'Access-Control-Allow-Origin':  allowed,
+  const headers = {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age':       '86400',
     ...extra,
   };
+  if (allowed) {
+    headers['Access-Control-Allow-Origin'] = allowed;
+  }
+  return headers;
 }

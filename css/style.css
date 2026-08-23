@@ -669,6 +669,53 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .app-tile span:last-child{font-size:14px;font-weight:600;line-height:1;white-space:nowrap;letter-spacing:.2px}
 
+/* ── Hover line + name + description ──────────────────────────────── */
+/* ── Hover line element ─────────────────────────────────────────────── */
+.app-tile-line{
+  position:absolute;top:50%;height:4px;width:0;
+  background:rgba(255,255,255,0.12);
+  backdrop-filter:blur(6px) saturate(180%);-webkit-backdrop-filter:blur(6px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:999px;
+  opacity:0;
+  transition:width .4s cubic-bezier(0.16,1,0.3,1),opacity .3s ease;
+  pointer-events:none;
+  box-shadow:0 0 12px rgba(var(--ui-accent-rgb),0.25),inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.app-column:first-child .app-tile-line{left:calc(100% + 6px);transform:translateY(-50%)}
+.app-column:last-child .app-tile-line{right:calc(100% + 6px);transform:translateY(-50%)}
+.app-tile:hover .app-tile-line{width:200px;opacity:1}
+
+.app-tile::before{
+  content:attr(data-name);
+  position:absolute;
+  opacity:0;
+  transition:opacity .3s ease .06s,transform .3s cubic-bezier(0.16,1,0.3,1) .06s;
+  font-size:16px;font-weight:700;
+  color:#fff;
+  white-space:nowrap;pointer-events:none;
+  padding-bottom:6px;line-height:1;
+}
+.app-column:first-child .app-tile::before{left:calc(100% + 16px);top:calc(50% - 30px);transform:translateX(-6px)}
+.app-column:last-child .app-tile::before{right:calc(100% + 16px);top:calc(50% - 30px);transform:translateX(6px)}
+.app-tile:hover::before{opacity:1;transform:translateX(0)}
+
+/* Override .glass::after so the description pseudo-element works */
+.app-tile.glass::after{
+  content:attr(data-desc);
+  position:absolute;
+  opacity:0;
+  transition:opacity .3s ease .12s,transform .3s cubic-bezier(0.16,1,0.3,1) .12s;
+  font-size:13px;
+  color:var(--ui-text-muted);
+  white-space:nowrap;pointer-events:none;
+  background:transparent;backdrop-filter:none;border:none;border-radius:0;
+  box-shadow:none;filter:none;
+}
+.app-column:first-child .app-tile.glass::after{left:calc(100% + 14px);right:auto;top:calc(50% + 6px);width:auto;height:auto;transform:translateX(-6px)}
+.app-column:last-child .app-tile.glass::after{right:calc(100% + 14px);left:auto;top:calc(50% + 6px);width:auto;height:auto;transform:translateX(6px)}
+.app-tile:hover::after{opacity:1;transform:translateX(0)}
+
 /* Narrow windows: tiles drop below the search as two side-by-side columns */
 @media (max-width: 980px){
   .app-flanks{position:static;display:flex;flex-wrap:wrap;justify-content:center;gap:18px 20px;height:auto}
@@ -676,6 +723,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   .app-tile{width:100px;padding:14px 10px 12px;gap:8px}
   .app-tile-icon{width:52px;height:52px;border-radius:14px;font-size:22px}
   .app-tile span:last-child{font-size:12px}
+  .app-tile::before,.app-tile::after,.app-tile.glass::before,.app-tile.glass::after,.app-tile-line{display:none}
 }
 
 .proxy-engine-switch{
@@ -852,34 +900,42 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .page-loading-screen{
   position:absolute;inset:0;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:16px;z-index:50;
+  background:#000;z-index:50;
 }
-.page-loading-spinner{position:relative;width:160px;height:160px;flex-shrink:0}
-.pls-ring{position:absolute;top:50%;left:50%;border-radius:50%;border-style:solid;border-color:transparent}
-.pls-ring-0{
-  width:130px;height:130px;margin-left:-65px;margin-top:-65px;border-width:3px;
-  border-top-color:rgba(255,255,255,0.9);border-right-color:rgba(255,255,255,0.7);border-bottom-color:rgba(255,255,255,0.3);
-  animation:pls-spin 1.5s linear infinite;filter:drop-shadow(0 0 8px rgba(var(--ui-accent-rgb),0.5));
+.page-loading-title{
+  display:flex;
+  color:rgb(var(--ui-accent-rgb));
+  font-family:'Curly',cursive;
+  font-size:clamp(42px,8vw,80px);
+  letter-spacing:2px;
+  margin-bottom:40px;
+  z-index:1;
 }
-.pls-ring-1{
-  width:90px;height:90px;margin-left:-45px;margin-top:-45px;border-width:2.5px;
-  border-top-color:rgba(255,255,255,0.7);border-right-color:rgba(255,255,255,0.5);border-bottom-color:rgba(255,255,255,0.2);
-  animation:pls-spin 1.9s linear infinite reverse;filter:drop-shadow(0 0 6px rgba(var(--ui-accent-rgb),0.4));
+.page-loading-letter{
+  display:inline-block;
+  animation:boot-letter 3s ease-in-out infinite;
 }
-.pls-ring-2{
-  width:54px;height:54px;margin-left:-27px;margin-top:-27px;border-width:2px;
-  border-top-color:rgba(255,255,255,0.5);border-right-color:rgba(255,255,255,0.3);border-bottom-color:rgba(255,255,255,0.1);
-  animation:pls-spin 2.3s linear infinite;filter:drop-shadow(0 0 4px rgba(var(--ui-accent-rgb),0.3));
+.page-loading-spinner{
+  width:80px;height:80px;
+  padding:10px;border-radius:20px;box-sizing:border-box;
+  position:relative;
+  mask:conic-gradient(#000 0 0) content-box exclude,conic-gradient(#000 0 0);
+  filter:blur(12px);
+  animation:boot-morph 1.2s linear infinite alternate;
 }
-.pls-orb{
-  position:absolute;top:50%;left:50%;width:22px;height:22px;margin-left:-11px;margin-top:-11px;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,255,255,0.6) 50%,rgba(255,255,255,0.2) 100%);
-  box-shadow:0 0 14px rgba(var(--ui-accent-rgb),0.9),0 0 28px rgba(var(--ui-accent-rgb),0.6),0 0 48px rgba(var(--ui-accent-rgb),0.4);
-  animation:pls-pulse 2s ease-in-out infinite;
+.pls-spinner-inner{
+  position:absolute;inset:0;
+  background:repeating-conic-gradient(#0000 0 5%,rgb(var(--ui-accent-rgb)),#0000 20% 50%);
+  animation:boot-spin 1s linear infinite;
 }
-@keyframes pls-spin{to{transform:rotate(360deg)}}
-@keyframes pls-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:0.65}}
+@keyframes boot-morph{to{border-radius:50%}}
+@keyframes boot-spin{to{rotate:.5turn}}
+@keyframes boot-letter{
+  0%,100%{transform:translateY(0)scaleY(1);filter:drop-shadow(0 0 8px rgba(var(--ui-accent-rgb),.4))}
+  25%{transform:translateY(-8px)scaleY(1.06);filter:drop-shadow(0 0 18px rgba(var(--ui-accent-rgb),.8))}
+  50%{transform:translateY(0)scaleY(0.96);filter:drop-shadow(0 0 4px rgba(var(--ui-accent-rgb),.25))}
+  75%{transform:translateY(8px)scaleY(1.05);filter:drop-shadow(0 0 16px rgba(var(--ui-accent-rgb),.7))}
+}
 .page-loading-url{
   color:var(--ui-text-muted);font-size:13px;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;

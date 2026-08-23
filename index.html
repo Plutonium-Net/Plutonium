@@ -90,14 +90,14 @@
 
 <div class="app-flanks" id="app-flanks">
   <div class="app-column">
-    <button class="app-tile glass" data-local-uri="pluto://games"><span class="app-tile-icon"><i class="fa-solid fa-gamepad"></i></span><span>Games</span></button>
-    <button class="app-tile glass" data-local-uri="pluto://ai"><span class="app-tile-icon"><i class="fa-solid fa-robot"></i></span><span>AI</span></button>
-    <button class="app-tile glass" data-local-uri="pluto://cloud"><span class="app-tile-icon"><i class="fa-solid fa-cloud"></i></span><span>Cloud Gaming</span></button>
+    <button class="app-tile glass" data-local-uri="pluto://games" data-name="Games" data-desc="Play hundreds of browser games instantly"><span class="app-tile-icon"><i class="fa-solid fa-gamepad"></i></span><span>Games</span><span class="app-tile-line"></span></button>
+    <button class="app-tile glass" data-local-uri="pluto://ai" data-name="AI" data-desc="Chat with AI assistants and tools"><span class="app-tile-icon"><i class="fa-solid fa-robot"></i></span><span>AI</span><span class="app-tile-line"></span></button>
+    <button class="app-tile glass" data-local-uri="pluto://cloud" data-name="Cloud Gaming" data-desc="Stream high-end games from the cloud"><span class="app-tile-icon"><i class="fa-solid fa-cloud"></i></span><span>Cloud Gaming</span><span class="app-tile-line"></span></button>
   </div>
   <div class="app-column">
-    <button class="app-tile glass" data-local-uri="pluto://movies"><span class="app-tile-icon"><i class="fa-solid fa-film"></i></span><span>Movies</span></button>
-    <button class="app-tile glass" data-local-uri="pluto://vms"><span class="app-tile-icon"><i class="fa-solid fa-server"></i></span><span>VMs</span></button>
-    <button class="app-tile glass" data-local-uri="pluto://stream"><span class="app-tile-icon"><i class="fa-solid fa-clapperboard"></i></span><span>Streaming</span></button>
+    <button class="app-tile glass" data-local-uri="pluto://movies" data-name="Movies" data-desc="Watch the latest movies and shows"><span class="app-tile-icon"><i class="fa-solid fa-film"></i></span><span>Movies</span><span class="app-tile-line"></span></button>
+    <button class="app-tile glass" data-local-uri="pluto://vms" data-name="VMs" data-desc="Access remote virtual machines"><span class="app-tile-icon"><i class="fa-solid fa-server"></i></span><span>VMs</span><span class="app-tile-line"></span></button>
+    <button class="app-tile glass" data-local-uri="pluto://stream" data-name="Streaming" data-desc="Watch live streams and content"><span class="app-tile-icon"><i class="fa-solid fa-clapperboard"></i></span><span>Streaming</span><span class="app-tile-line"></span></button>
   </div>
 </div>
 
@@ -123,12 +123,20 @@
 
     </div>
     <iframe id="page-frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-top-navigation-by-user-activation"></iframe>
-    <div class="page-loading-screen glass" id="page-loading-screen" style="display:none">
+    <div class="page-loading-screen" id="page-loading-screen" style="display:none">
+      <div class="page-loading-title">
+        <span class="page-loading-letter" style="animation-delay:0s">P</span>
+        <span class="page-loading-letter" style="animation-delay:0.18s">l</span>
+        <span class="page-loading-letter" style="animation-delay:0.36s">u</span>
+        <span class="page-loading-letter" style="animation-delay:0.54s">t</span>
+        <span class="page-loading-letter" style="animation-delay:0.72s">o</span>
+        <span class="page-loading-letter" style="animation-delay:0.9s">n</span>
+        <span class="page-loading-letter" style="animation-delay:1.08s">i</span>
+        <span class="page-loading-letter" style="animation-delay:1.26s">u</span>
+        <span class="page-loading-letter" style="animation-delay:1.44s">m</span>
+      </div>
       <div class="page-loading-spinner">
-        <div class="pls-ring pls-ring-0"></div>
-        <div class="pls-ring pls-ring-1"></div>
-        <div class="pls-ring pls-ring-2"></div>
-        <div class="pls-orb"></div>
+        <div class="pls-spinner-inner"></div>
       </div>
       <div class="page-loading-url" id="page-loading-url"></div>
     </div>
