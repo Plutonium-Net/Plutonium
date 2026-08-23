@@ -346,8 +346,8 @@ self.addEventListener("fetch", (event) => {
 						if (network.ok) cache.put(event.request, network.clone());
 						return network;
 					});
-			});
-		});
+				});
+			})
 		);
 		return;
 	}
@@ -361,8 +361,8 @@ self.addEventListener("fetch", (event) => {
 						if (network.ok) cache.put(event.request, network.clone());
 						return network;
 					});
-			});
-		});
+				});
+			})
 		);
 		return;
 	}
