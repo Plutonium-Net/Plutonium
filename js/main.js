@@ -76,6 +76,7 @@ const customizeBtn = document.getElementById('btn-customize')
 const customizeMenu = document.getElementById('customize-menu')
 const customizeEffects = document.getElementById('customize-effects')
 const customizeAccent = document.getElementById('customize-accent')
+const customizeWallpapers = document.getElementById('customize-wallpapers')
 
 const ACCENT_SWATCHES = [
   { color: '#e8175d', label: 'Plutonium Pink' },
@@ -86,6 +87,7 @@ const ACCENT_SWATCHES = [
   { color: '#dc2626', label: 'Red' },
   { color: '#0891b2', label: 'Cyan' },
   { color: '#c026d3', label: 'Fuchsia' },
+  { color: '#ffffff', label: 'White' },
 ]
 
 function closeCustomizeMenu() {
@@ -146,6 +148,7 @@ function buildCustomizeAccent() {
     btn.className = 'customize-swatch' + (state.accentColor === color ? ' active' : '')
     btn.title = label
     btn.style.background = color
+    btn.dataset.color = color
     btn.addEventListener('click', () => {
       if (themeApi()) Theme.setAccentColor(color)
       requestAnimationFrame(syncCustomizeMenu)
@@ -154,8 +157,41 @@ function buildCustomizeAccent() {
   })
 }
 
+function buildCustomizeWallpapers() {
+  if (!customizeWallpapers || !window.BrowserThemeState) return
+  const state = currentThemeState()
+  const currentImage = state.bgImage || ''
+  customizeWallpapers.innerHTML = ''
+
+  BrowserThemeState.BACKGROUND_IMAGES.forEach(function (img) {
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'customize-wallpaper' + (currentImage === img.id ? ' active' : '')
+    btn.title = img.label
+
+    if (img.file) {
+      btn.style.backgroundImage = 'url("' + img.file + '")'
+      btn.style.backgroundSize = 'cover'
+      btn.style.backgroundPosition = 'center'
+    }
+
+    const label = document.createElement('span')
+    label.className = 'customize-wallpaper-label'
+    label.textContent = img.label
+    btn.appendChild(label)
+
+    btn.addEventListener('click', function () {
+      if (themeApi()) Theme.setBackgroundImage(img.file)
+      requestAnimationFrame(syncCustomizeMenu)
+    })
+
+    customizeWallpapers.appendChild(btn)
+  })
+}
+
 function syncCustomizeMenu() {
   buildCustomizeEffects()
+  buildCustomizeWallpapers()
   buildCustomizeAccent()
 }
 
@@ -319,12 +355,32 @@ function openAboutDialog() {
         </div>
       </div>
 
+      <div class="about-dialog__section">
+        <div class="about-dialog__section-label">Maintenance</div>
+        <button class="about-dialog__cache-btn" id="about-clear-cache" type="button">
+          <i class="fas fa-trash-can" style="margin-right:6px"></i>Clear Cache &amp; Reload
+        </button>
+      </div>
+
       <div class="about-dialog__contact">
         <i class="fab fa-discord"></i>
         <span>Have questions or suggestions? Find us on Discord!</span>
       </div>
     </div>
   `
+
+  // cache-clear button
+  document.getElementById('about-clear-cache').addEventListener('click', async function () {
+    if ('caches' in window) {
+      const names = await caches.keys();
+      for (const name of names) await caches.delete(name);
+    }
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) await reg.unregister();
+    }
+    location.reload();
+  });
 
   // show
   dlg.hidden = false

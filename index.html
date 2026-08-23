@@ -90,14 +90,14 @@
 
 <div class="app-flanks" id="app-flanks">
   <div class="app-column">
-    <button class="app-tile glass" data-local-uri="pluto://games" data-name="Games" data-desc="Play hundreds of browser games instantly"><span class="app-tile-icon"><i class="fa-solid fa-gamepad"></i></span><span>Games</span><span class="app-tile-line"></span></button>
-    <button class="app-tile glass" data-local-uri="pluto://ai" data-name="AI" data-desc="Chat with AI assistants and tools"><span class="app-tile-icon"><i class="fa-solid fa-robot"></i></span><span>AI</span><span class="app-tile-line"></span></button>
-    <button class="app-tile glass" data-local-uri="pluto://cloud" data-name="Cloud Gaming" data-desc="Stream high-end games from the cloud"><span class="app-tile-icon"><i class="fa-solid fa-cloud"></i></span><span>Cloud Gaming</span><span class="app-tile-line"></span></button>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://games"><span class="app-tile-icon"><i class="fa-solid fa-gamepad"></i></span><span>Games</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Games</span><span class="app-tile-hover-desc">Play hundreds of browser games instantly</span></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://ai"><span class="app-tile-icon"><i class="fa-solid fa-robot"></i></span><span>AI</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Artificial Intelligence</span><span class="app-tile-hover-desc">Chat with AI assistants and tools</span></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://cloud"><span class="app-tile-icon"><i class="fa-solid fa-cloud"></i></span><span>Cloud Gaming</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Cloud Gaming</span><span class="app-tile-hover-desc">Stream high-end games from the cloud</span></div>
   </div>
   <div class="app-column">
-    <button class="app-tile glass" data-local-uri="pluto://movies" data-name="Movies" data-desc="Watch the latest movies and shows"><span class="app-tile-icon"><i class="fa-solid fa-film"></i></span><span>Movies</span><span class="app-tile-line"></span></button>
-    <button class="app-tile glass" data-local-uri="pluto://vms" data-name="VMs" data-desc="Access remote virtual machines"><span class="app-tile-icon"><i class="fa-solid fa-server"></i></span><span>VMs</span><span class="app-tile-line"></span></button>
-    <button class="app-tile glass" data-local-uri="pluto://stream" data-name="Streaming" data-desc="Watch live streams and content"><span class="app-tile-icon"><i class="fa-solid fa-clapperboard"></i></span><span>Streaming</span><span class="app-tile-line"></span></button>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://movies"><span class="app-tile-icon"><i class="fa-solid fa-film"></i></span><span>Movies</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Movies</span><span class="app-tile-hover-desc">Watch the latest movies and shows</span></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://vms"><span class="app-tile-icon"><i class="fa-solid fa-server"></i></span><span>VMs</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Virtual Machines</span><span class="app-tile-hover-desc">Access remote virtual machines</span></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://stream"><span class="app-tile-icon"><i class="fa-solid fa-clapperboard"></i></span><span>Streaming</span></button><span class="app-tile-line"></span><span class="app-tile-hover-name">Streaming</span><span class="app-tile-hover-desc">Watch live streams and content</span></div>
   </div>
 </div>
 
@@ -179,6 +179,8 @@
   <div class="customize-menu-scroll">
     <div class="customize-section-label">Background</div>
     <div class="customize-effect-grid" id="customize-effects"></div>
+    <div class="customize-section-label">Wallpapers</div>
+    <div class="customize-wallpaper-grid" id="customize-wallpapers"></div>
     <div class="customize-section-label">Accent Color</div>
     <div class="customize-swatches" id="customize-accent"></div>
   </div>

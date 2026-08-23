@@ -190,8 +190,9 @@
     var color   = s.accentColor || '#e8175d';
     var ptEl    = document.getElementById('particles-js');
     var vantaEl = document.getElementById('vanta-bg');
-    var isParticles = (style === 'particles' && !s.disableParticles);
-    var isVanta     = !!VANTA_KEY[style];
+    var hasImage = !!(s.bgImage && BrowserThemeState.getBackgroundImageURL(s.bgImage));
+    var isParticles = (style === 'particles' && !s.disableParticles && !hasImage);
+    var isVanta     = !!VANTA_KEY[style] && !hasImage;
 
     destroy();
 

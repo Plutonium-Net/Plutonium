@@ -337,6 +337,20 @@ self.addEventListener("fetch", (event) => {
 	const pgResult = handlePersonalGameFetch(event);
 	if (pgResult) return;
 
+	// Background image cache — serve from Cache API
+	if (url.includes('/img/backgrounds/')) {
+		event.respondWith(
+			caches.open('plutonium-bg-v2').then(function (cache) {
+				return cache.match(event.request).then(function (cached) {
+					return cached || fetch(event.request).then(function (network) {
+						if (network.ok) cache.put(event.request, network.clone());
+						return network;
+					});
+			});
+		});
+		return;
+	}
+
 	// UV proxy requests
 	if (url.includes(UV_PREFIX)) {
 		event.respondWith(uvSW.fetch(event));

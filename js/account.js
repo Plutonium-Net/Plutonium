@@ -179,6 +179,13 @@ class AccountManager {
       if (proxy) out.proxyEngine = proxy
       const wisp = localStorage.getItem('plu_wisp_server')
       if (wisp) out.wispServer = wisp
+      // bgImage is embedded in the plu_theme JSON but also stored as a
+      // top-level field so the pull side can merge it even when the
+      // remote plu_theme predates the bgImage feature.
+      try {
+        const parsed = JSON.parse(theme || '{}')
+        if (parsed.bgImage) out.bgImage = parsed.bgImage
+      } catch (_) {}
     } catch (_) {}
     return out
   }
@@ -210,7 +217,12 @@ class AccountManager {
         return
       }
       if (doc.theme && window.BrowserThemeState.saveThemeState) {
-        try { window.BrowserThemeState.saveThemeState(JSON.parse(doc.theme)) } catch (_) {}
+        try {
+          const parsed = JSON.parse(doc.theme)
+          // Explicitly pull bgImage so it syncs across devices
+          if (doc.bgImage !== undefined) parsed.bgImage = doc.bgImage
+          window.BrowserThemeState.saveThemeState(parsed)
+        } catch (_) {}
       }
       if (doc.proxyEngine) window.setProxyEngine(doc.proxyEngine)
       if (doc.wispServer) window.switchWispServer(doc.wispServer)

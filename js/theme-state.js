@@ -6,6 +6,7 @@ const BrowserThemeState = (() => {
     accentColor: '#e8175d',
     bgPreset: 'minimal',
     bgEffect: 'particles',
+    bgImage: '',
   }
 
   // Animated background effects (Plutonium Vanta + particles engine).
@@ -23,6 +24,33 @@ const BrowserThemeState = (() => {
     rings:     { label: 'Rings',     icon: 'fa-ring' },
     halo:      { label: 'Halo',      icon: 'fa-circle-half-stroke' },
     none:      { label: 'None',      icon: 'fa-ban' },
+  }
+
+  // Built-in wallpaper images shipped with the app.
+  const BACKGROUND_IMAGES = [
+    { id: 'none',              label: 'None',              file: '',                                tint: '#000000', tintOpacity: 0.15 },
+    { id: 'coast',             label: 'Coast',             file: 'img/backgrounds/coast.jpg',            tint: '#0a1a28', tintOpacity: 0.14 },
+    { id: 'color-burst',       label: 'Color Burst',       file: 'img/backgrounds/color-burst.jpg',     tint: '#4a1a00', tintOpacity: 0.3 },
+    { id: 'desert',            label: 'Desert',            file: 'img/backgrounds/desert.jpg',           tint: '#5c3a00', tintOpacity: 0.16 },
+    { id: 'galaxy',            label: 'Galaxy',            file: 'img/backgrounds/galaxy.jpg',           tint: '#0a1628', tintOpacity: 0.45 },
+    { id: 'lake-dusk',         label: 'Lake Dusk',         file: 'img/backgrounds/lake-dusk.jpg',        tint: '#3a1a00', tintOpacity: 0.7 },
+    { id: 'lake-twilight',     label: 'Lake Twilight',     file: 'img/backgrounds/lake-twilight.jpg',    tint: '#1a0a30', tintOpacity: 0.7 },
+    { id: 'light-stream',      label: 'Light Stream',      file: 'img/backgrounds/light-stream.jpg',     tint: '#0a2e1a', tintOpacity: 0.70 },
+    { id: 'lightning',         label: 'Lightning',         file: 'img/backgrounds/Lightning.jpg',        tint: '#0a0a20', tintOpacity: 0.4 },
+    { id: 'lines',             label: 'Lines',             file: 'img/backgrounds/lines.png',            tint: '#1a1a1a', tintOpacity: 0.7 },
+    { id: 'mojave',            label: 'Mojave',            file: 'img/backgrounds/mojave.jpg',           tint: '#2a1040', tintOpacity: 0.20 },
+    { id: 'refraction-green',  label: 'Refraction Green',  file: 'img/backgrounds/refraction-green.png', tint: '#2a2a2a', tintOpacity: 0.65 },
+    { id: 'refraction-purple', label: 'Refraction Purple', file: 'img/backgrounds/refraction-purple.png', tint: '#1a1a1a', tintOpacity: 0.65 },
+    { id: 'swirls',            label: 'Swirls',            file: 'img/backgrounds/swirls.png',           tint: '#1a1a2e', tintOpacity: 0.14 },
+  ]
+
+  function normalizeBgImage(value) {
+    if (typeof value !== 'string') return ''
+    if (value === '') return ''
+    // Normalize to the built-in id so getBackgroundImageURL can look it up.
+    // Also accept a full file path (from legacy state) and map back to id.
+    const match = BACKGROUND_IMAGES.find(img => img.id === value || img.file === value)
+    return match ? match.id : ''
   }
 
   const BACKGROUND_PRESETS = {
@@ -94,6 +122,16 @@ const BrowserThemeState = (() => {
     return BACKGROUND_PRESETS[preset] ? preset : DEFAULT_THEME_STATE.bgPreset
   }
 
+  function getBackgroundImageURL(id) {
+    const match = BACKGROUND_IMAGES.find(img => img.id === id)
+    return match ? match.file : ''
+  }
+
+  function getBackgroundImageTint(id) {
+    const match = BACKGROUND_IMAGES.find(img => img.id === id)
+    return match ? { color: match.tint || '#000000', opacity: match.tintOpacity || 0.15 } : { color: '#000000', opacity: 0.15 }
+  }
+
   function normalizeBgEffect(value) {
     const effect = typeof value === 'string' ? value.trim().toLowerCase() : ''
     return BG_EFFECTS[effect] ? effect : DEFAULT_THEME_STATE.bgEffect
@@ -101,11 +139,17 @@ const BrowserThemeState = (() => {
 
   function normalizeThemeState(raw) {
     const next = raw && typeof raw === 'object' ? raw : {}
+    const effect = normalizeBgEffect(next.bgEffect)
+    const image  = normalizeBgImage(next.bgImage)
+    // Wallpaper and animated effects are mutually exclusive.
+    // A wallpaper wins: if one is set the effect is forced to 'none';
+    // if an effect is set the wallpaper is cleared.
     return {
       mode: normalizeMode(next.mode),
       accentColor: normalizeAccentColor(next.accentColor),
       bgPreset: normalizeBgPreset(next.bgPreset),
-      bgEffect: normalizeBgEffect(next.bgEffect),
+      bgEffect: image ? 'none' : effect,
+      bgImage: effect !== 'none' ? '' : image,
     }
   }
 
@@ -174,12 +218,13 @@ const BrowserThemeState = (() => {
     if (!hasOwn) {
       const legacyTheme = loadRawLegacyThemeState()
       const legacySettings = loadRawLegacySettingsState()
-      return normalizeThemeState({
-        mode: getLegacyMode(legacyTheme, legacySettings),
-        accentColor: legacyTheme.accentColor || legacySettings.accentColor,
-        bgPreset: legacyTheme.bgPreset || legacyTheme.bgStyle || legacySettings.bgPreset || legacySettings.bgStyle,
-        bgEffect: legacyTheme.bgEffect || legacySettings.bgStyle,
-      })
+    return normalizeThemeState({
+      mode: getLegacyMode(legacyTheme, legacySettings),
+      accentColor: legacyTheme.accentColor || legacySettings.accentColor,
+      bgPreset: legacyTheme.bgPreset || legacyTheme.bgStyle || legacySettings.bgPreset || legacySettings.bgStyle,
+      bgEffect: legacyTheme.bgEffect || legacySettings.bgStyle,
+      bgImage: legacyTheme.bgImage || legacySettings.bgImage,
+    })
     }
 
     return normalizeThemeState({
@@ -187,6 +232,7 @@ const BrowserThemeState = (() => {
       accentColor: rawTheme.accentColor || rawSettings.accentColor,
       bgPreset: rawTheme.bgPreset || rawTheme.bgStyle || rawSettings.bgPreset || rawSettings.bgStyle,
       bgEffect: rawTheme.bgEffect || rawSettings.bgStyle,
+      bgImage: rawTheme.bgImage || rawSettings.bgImage,
     })
   }
 
@@ -208,6 +254,7 @@ const BrowserThemeState = (() => {
       ...patch,
       mode: normalizedMode,
       bgPreset: normalizedPreset,
+      bgImage: patch && patch.bgImage !== undefined ? patch.bgImage : current.bgImage,
       accentColor: patch && patch.accentColor !== undefined
         ? patch.accentColor
         : (shouldUsePresetAccent
@@ -223,6 +270,7 @@ const BrowserThemeState = (() => {
       accentColor: next.accentColor,
       bgStyle: next.bgEffect,
       bgPreset: next.bgPreset,
+      bgImage: next.bgImage || '',
     }))
 
     // Push the theme to the cloud when signed in
@@ -248,6 +296,7 @@ const BrowserThemeState = (() => {
     '#dc2626': 'red',
     '#0891b2': 'cyan',
     '#c026d3': 'fuchsia',
+    '#ffffff': 'white',
   }
 
   function getAccentIconFile() {
@@ -263,12 +312,15 @@ const BrowserThemeState = (() => {
     SETTINGS_KEY,
     DEFAULT_THEME_STATE,
     BACKGROUND_PRESETS,
+    BACKGROUND_IMAGES,
     BG_EFFECTS,
     loadThemeState,
     saveThemeState,
     getDefaultAccent,
     normalizeThemeState,
     getBackgroundPreset,
+    getBackgroundImageURL,
+    getBackgroundImageTint,
     getAccentIconFile,
     getAccentIconPath,
   }

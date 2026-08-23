@@ -197,7 +197,7 @@ function renderPins() {
     empty.className = 'shortcut empty-pin-hint'
     empty.innerHTML = `
       <div class="icon"><i class="fa-solid fa-thumbtack"></i></div>
-      <span>Pin games here</span>
+      <span>Pin Items.</span>
     `
     empty.title = 'Click to choose games to pin'
     empty.addEventListener('click', (e) => {

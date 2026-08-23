@@ -19,6 +19,9 @@ body{
 
 #bg-fallback{
   background:linear-gradient(135deg,#0a0e14,#050709);
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
 }
 
 #particles-js{

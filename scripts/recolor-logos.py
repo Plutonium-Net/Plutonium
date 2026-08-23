@@ -20,6 +20,7 @@ ACCENTS = {
     "red":            "#dc2626",
     "cyan":           "#0891b2",
     "fuchsia":        "#c026d3",
+    "white":          "#ffffff",
 }
 
 SRC = {
@@ -44,12 +45,15 @@ def hex_to_rgb(h: str) -> tuple[int, int, int]:
     return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
 
 
-def recolor(img: Image.Image, accent_hex: str) -> Image.Image:
-    """Shift pink-ish pixels toward the target accent hue."""
+def recolor(img: Image.Image, accent_hex: str, target_name: str = "") -> Image.Image:
+    """Shift pink-ish pixels toward the target accent hue.
+    For white, desaturate and brighten pink pixels instead."""
     target_hue = colorsys.rgb_to_hls(*[c / 255.0 for c in hex_to_rgb(accent_hex)])[0] * 360.0
     img = img.convert("RGBA")
     rgba = img.load()
     w, h = img.size
+
+    is_white = target_name == "white"
 
     # Rotate the source hue so the logo's pink becomes the accent colour
     hue_shift = (target_hue - SRC_HUE) % 360.0
@@ -71,7 +75,15 @@ def recolor(img: Image.Image, accent_hex: str) -> Image.Image:
             if ss >= SAT_MIN and LIGHT_MIN <= ll <= LIGHT_MAX:
                 delta = min(abs(hue_deg - SRC_HUE), 360 - abs(hue_deg - SRC_HUE))
                 if delta <= HUE_TOLERANCE:
-                    hue_deg = (hue_deg + hue_shift) % 360.0
+                    if is_white:
+                        # Desaturate toward white: kill saturation, boost lightness
+                        new_sat = ss * 0.08
+                        new_light = min(0.92, ll + (0.92 - ll) * 0.7)
+                        nr, ng, nb = colorsys.hls_to_rgb(hue_deg / 360.0, new_light, new_sat)
+                        opx[x, y] = (int(nr * 255), int(ng * 255), int(nb * 255), a)
+                        continue
+                    else:
+                        hue_deg = (hue_deg + hue_shift) % 360.0
             nr, ng, nb = colorsys.hls_to_rgb(hue_deg / 360.0, ll, ss)
             opx[x, y] = (int(nr * 255), int(ng * 255), int(nb * 255), a)
     return out
@@ -82,7 +94,7 @@ def main():
     for name, src in SRC.items():
         img = Image.open(src)
         for color, hex_color in ACCENTS.items():
-            out = recolor(img, hex_color)
+            out = recolor(img, hex_color, color)
             out_path = OUT_DIR / f"{name}-{color}.png"
             out.save(out_path, "PNG")
         print(f"  + {name}: 8 variants")

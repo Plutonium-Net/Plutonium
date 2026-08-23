@@ -489,6 +489,21 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .customize-swatch:hover{transform:scale(1.15)}
 .customize-swatch.active{border-color:#fff;box-shadow:0 0 0 2px var(--ui-accent),0 1px 4px rgba(var(--ui-shadow-rgb),0.4)}
+.customize-swatch[data-color="#ffffff"]{box-shadow:0 1px 4px rgba(var(--ui-shadow-rgb),0.4),inset 0 0 0 2px rgba(0,0,0,0.15)}
+.customize-wallpaper-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 6px 8px}
+.customize-wallpaper{
+  position:relative;aspect-ratio:16/10;border-radius:8px;cursor:pointer;
+  border:2px solid var(--ui-border-sub);background:var(--ui-hover-2);color:var(--ui-text-muted);
+  overflow:hidden;padding:0;transition:border-color .14s,transform .14s;
+}
+.customize-wallpaper-label{
+  position:absolute;bottom:0;left:0;right:0;padding:3px 5px;
+  font-size:8px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;
+  background:rgba(0,0,0,.65);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.customize-wallpaper:hover{transform:scale(1.04);border-color:var(--ui-text-muted)}
+.customize-wallpaper.active{border-color:var(--ui-accent);box-shadow:0 0 0 1px var(--ui-accent)}
+.customize-wallpaper.active .customize-wallpaper-label{color:var(--ui-accent)}
 
 
 .content-area{flex:1;position:relative;overflow:hidden}
@@ -605,6 +620,9 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .about-dialog__stat-label{font-size:9px;color:var(--ui-text-muted);text-transform:uppercase;margin-top:3px;letter-spacing:.4px}
 .about-dialog__legal{font-size:11px;color:var(--ui-text-muted);line-height:1.5;padding:12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--ui-border-sub)}
 .about-dialog__legal strong{color:var(--ui-text-sub)}
+.about-dialog__cache-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;border-radius:10px;border:1px solid var(--ui-danger);background:rgba(220,38,38,0.08);color:var(--ui-danger);font-size:12px;font-weight:600;cursor:pointer;transition:background .14s,transform .14s}
+.about-dialog__cache-btn:hover{background:rgba(220,38,38,0.18);transform:scale(1.01)}
+.about-dialog__cache-btn:active{transform:scale(0.98)}
 .about-dialog__contact{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--ui-border-sub);font-size:12px;color:var(--ui-text-sub)}
 .about-dialog__contact i{font-size:20px;color:var(--row-5)}
 
@@ -667,12 +685,13 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   border-color:rgba(var(--ui-accent-rgb),0.55);
   box-shadow:0 0 22px rgba(var(--ui-accent-rgb),0.4);
 }
-.app-tile span:last-child{font-size:14px;font-weight:600;line-height:1;white-space:nowrap;letter-spacing:.2px}
+.app-tile > span:nth-child(2){font-size:14px;font-weight:600;line-height:1;white-space:nowrap;letter-spacing:.2px}
 
 /* ── Hover line + name + description ──────────────────────────────── */
+.app-tile-wrap{position:relative;display:inline-flex}
 /* ── Hover line element ─────────────────────────────────────────────── */
 .app-tile-line{
-  position:absolute;top:50%;height:4px;width:0;
+  position:absolute;top:50%;height:5px;width:0;
   background:rgba(255,255,255,0.12);
   backdrop-filter:blur(6px) saturate(180%);-webkit-backdrop-filter:blur(6px) saturate(180%);
   border:1px solid rgba(255,255,255,0.2);
@@ -682,48 +701,46 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   pointer-events:none;
   box-shadow:0 0 12px rgba(var(--ui-accent-rgb),0.25),inset 0 1px 0 rgba(255,255,255,0.15);
 }
-.app-column:first-child .app-tile-line{left:calc(100% + 6px);transform:translateY(-50%)}
-.app-column:last-child .app-tile-line{right:calc(100% + 6px);transform:translateY(-50%)}
-.app-tile:hover .app-tile-line{width:200px;opacity:1}
+.app-column:first-child .app-tile-line{left:calc(100% + 8px);transform:translateY(-50%)}
+.app-column:last-child .app-tile-line{right:calc(100% + 8px);transform:translateY(-50%)}
+.app-tile-wrap:hover .app-tile-line{width:220px;opacity:1}
 
-.app-tile::before{
-  content:attr(data-name);
+.app-tile-hover-name,
+.app-tile-hover-desc{
   position:absolute;
   opacity:0;
+  pointer-events:none;
+  white-space:nowrap;
+  z-index:10;
+}
+.app-tile-hover-name{
   transition:opacity .3s ease .06s,transform .3s cubic-bezier(0.16,1,0.3,1) .06s;
-  font-size:16px;font-weight:700;
+  font-size:18px;font-weight:700;
   color:#fff;
-  white-space:nowrap;pointer-events:none;
-  padding-bottom:6px;line-height:1;
+  line-height:1;padding-bottom:8px;
 }
-.app-column:first-child .app-tile::before{left:calc(100% + 16px);top:calc(50% - 30px);transform:translateX(-6px)}
-.app-column:last-child .app-tile::before{right:calc(100% + 16px);top:calc(50% - 30px);transform:translateX(6px)}
-.app-tile:hover::before{opacity:1;transform:translateX(0)}
-
-/* Override .glass::after so the description pseudo-element works */
-.app-tile.glass::after{
-  content:attr(data-desc);
-  position:absolute;
-  opacity:0;
+.app-tile-hover-desc{
   transition:opacity .3s ease .12s,transform .3s cubic-bezier(0.16,1,0.3,1) .12s;
-  font-size:13px;
+  font-size:14px;
   color:var(--ui-text-muted);
-  white-space:nowrap;pointer-events:none;
-  background:transparent;backdrop-filter:none;border:none;border-radius:0;
-  box-shadow:none;filter:none;
+  line-height:1;
 }
-.app-column:first-child .app-tile.glass::after{left:calc(100% + 14px);right:auto;top:calc(50% + 6px);width:auto;height:auto;transform:translateX(-6px)}
-.app-column:last-child .app-tile.glass::after{right:calc(100% + 14px);left:auto;top:calc(50% + 6px);width:auto;height:auto;transform:translateX(6px)}
-.app-tile:hover::after{opacity:1;transform:translateX(0)}
+.app-column:first-child .app-tile-hover-name{left:calc(100% + 20px);top:calc(50% - 34px);transform:translateX(-6px)}
+.app-column:last-child .app-tile-hover-name{right:calc(100% + 20px);top:calc(50% - 34px);transform:translateX(6px)}
+.app-column:first-child .app-tile-hover-desc{left:calc(100% + 18px);top:calc(50% + 8px);transform:translateX(-6px)}
+.app-column:last-child .app-tile-hover-desc{right:calc(100% + 18px);top:calc(50% + 8px);transform:translateX(6px)}
+.app-tile-wrap:hover .app-tile-hover-name,
+.app-tile-wrap:hover .app-tile-hover-desc{opacity:1;transform:translateX(0)}
 
 /* Narrow windows: tiles drop below the search as two side-by-side columns */
 @media (max-width: 980px){
   .app-flanks{position:static;display:flex;flex-wrap:wrap;justify-content:center;gap:18px 20px;height:auto}
   .app-column{position:static;transform:none;gap:10px}
+  .app-tile-wrap{display:block}
   .app-tile{width:100px;padding:14px 10px 12px;gap:8px}
   .app-tile-icon{width:52px;height:52px;border-radius:14px;font-size:22px}
-  .app-tile span:last-child{font-size:12px}
-  .app-tile::before,.app-tile::after,.app-tile.glass::before,.app-tile.glass::after,.app-tile-line{display:none}
+  .app-tile > span:nth-child(2){font-size:12px}
+  .app-tile-hover-name,.app-tile-hover-desc,.app-tile-line{display:none}
 }
 
 .proxy-engine-switch{

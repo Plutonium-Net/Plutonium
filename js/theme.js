@@ -189,6 +189,7 @@ const Theme = (() => {
     if (!frame || !frame.contentWindow) return
     frame.contentWindow.postMessage({ type: 'plu_bg_preset', preset: state.bgPreset }, '*')
     frame.contentWindow.postMessage({ type: 'plu_bg_effect', effect: state.bgEffect }, '*')
+    frame.contentWindow.postMessage({ type: 'plu_bg_image', bgImage: state.bgImage }, '*')
   }
 
   function normalizeLegacyPreset(presetKey) {
@@ -203,6 +204,7 @@ const Theme = (() => {
       accentColor: state.accentColor || DEFAULT_STATE.accentColor,
       bgPreset: state.bgPreset || DEFAULT_STATE.bgPreset,
       bgEffect: state.bgEffect || DEFAULT_STATE.bgEffect || 'particles',
+      bgImage: 'bgImage' in state ? (state.bgImage || '') : (loadState().bgImage || ''),
     }
 
     const preset = getBackgroundPreset(nextState.bgPreset)
@@ -215,6 +217,7 @@ const Theme = (() => {
     document.documentElement.dataset.theme = nextState.mode
     document.documentElement.dataset.bgPreset = nextState.bgPreset
     document.documentElement.dataset.bgEffect = nextState.bgEffect
+    document.documentElement.dataset.bgImage = nextState.bgImage
 
     if (!options.skipSave) {
       saveState(nextState)
@@ -247,6 +250,11 @@ const Theme = (() => {
   async function setBackgroundEffect(bgEffect) {
     const state = loadState()
     return applyState({ ...state, bgEffect })
+  }
+
+  async function setBackgroundImage(bgImage) {
+    const state = loadState()
+    return applyState({ ...state, bgImage: bgImage || '' })
   }
 
   async function refresh() {
@@ -285,6 +293,11 @@ const Theme = (() => {
       return
     }
 
+    if (event.data.type === 'plu_bg_image' && event.data.bgImage !== undefined) {
+      setBackgroundImage(event.data.bgImage)
+      return
+    }
+
     if (event.data.type === 'plu_theme_refresh') {
       refresh()
     }
@@ -304,6 +317,7 @@ const Theme = (() => {
     setAccentColor,
     setBackgroundPreset,
     setBackgroundEffect,
+    setBackgroundImage,
     getState: loadState,
   }
 })()

@@ -10,6 +10,7 @@ const ACCENT_LOGO_MAP = {
   '#dc2626': 'red',
   '#0891b2': 'cyan',
   '#c026d3': 'fuchsia',
+  '#ffffff': 'white',
 }
 
 function accentLogoFile() {
