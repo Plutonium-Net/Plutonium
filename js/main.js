@@ -333,6 +333,7 @@ function openAboutDialog() {
       <div class="about-dialog__row-title">Mizzery</div>
       <div class="about-dialog__row-sub">Co-Owner &amp; Community Manager</div>
     </div>
+    <a href="https://https://xxmizzeryxx.github.io/mizzery.github.io" class="about-dialog__row-link">Portfolio</a>
     <a href="https://github.com/xXmizzeryXx" class="about-dialog__row-link">GitHub</a>
   </div>
 </div>
@@ -365,14 +366,14 @@ function openAboutDialog() {
         <div class="about-dialog__section-label">Special Thanks</div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon yellow"><i class="fas fa-star"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Titanium Network</div><div class="about-dialog__row-sub">Scramjet and Ultraviolet source code</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon blue"><i class="fas fa-users"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Our Community</div><div class="about-dialog__row-sub">Thank you for feedback and support</div></div></div>
-        <div class="about-dialog__row"><div class="about-dialog__row-icon green"><i class="fas fa-hands-helping"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Koyeb</div><div class="about-dialog__row-sub">Hosting free wisp</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon green"><i class="fas fa-hands-helping"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Render</div><div class="about-dialog__row-sub">Hosting free wisp</div></div></div>
       </div>
 
       <div class="about-dialog__section">
         <div class="about-dialog__section-label">License</div>
         <div class="about-dialog__legal">
-          <p><strong>ARR: All Rights Reserved</strong></p>
-          <p style="margin-top:4px">© 2022-2026 Plutonium Network. All rights reserved.</p>
+          <p><strong>Plutonium License (PL) 1.0.0</strong></p>
+          <p style="margin-top:4px">© 2026 Plutonium Network. All rights reserved.</p>
         </div>
       </div>
 
