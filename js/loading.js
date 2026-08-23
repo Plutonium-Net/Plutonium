@@ -188,21 +188,19 @@
 
     // 1. Collect background image URLs that need caching
     var bgResponses = [];
-    var bgNeed = [];
     try {
       var bgCache = await caches.open(CACHE_KEY);
       var bgKeys = await bgCache.keys();
-      if (bgKeys.length < BG_IMAGES.length) {
-        for (var i = 0; i < BG_IMAGES.length; i++) {
-          try {
-            var resp = await fetch(BG_IMAGES[i], { cache: 'no-store' });
-            var len = parseInt(resp.headers.get('content-length') || '0', 10);
-            bgResponses.push({ url: BG_IMAGES[i], resp: resp, ok: resp.ok, bytes: len });
-            bgNeed.push(true);
-          } catch (_) {
-            bgResponses.push({ url: BG_IMAGES[i], resp: null, ok: false, bytes: 0 });
-            bgNeed.push(false);
-          }
+      var bgCachedUrls = new Set(bgKeys.map(function (r) { return r.url; }));
+      for (var i = 0; i < BG_IMAGES.length; i++) {
+        var fullUrl = new URL(BG_IMAGES[i], location.href).href;
+        if (bgCachedUrls.has(fullUrl)) continue;
+        try {
+          var resp = await fetch(BG_IMAGES[i], { cache: 'no-store' });
+          var len = parseInt(resp.headers.get('content-length') || '0', 10);
+          bgResponses.push({ url: BG_IMAGES[i], resp: resp, ok: resp.ok, bytes: len });
+        } catch (_) {
+          bgResponses.push({ url: BG_IMAGES[i], resp: null, ok: false, bytes: 0 });
         }
       }
     } catch (_) {}

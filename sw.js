@@ -5,12 +5,24 @@ if (navigator.userAgent.includes("Firefox")) {
 	});
 }
 
-importScripts("/uv/uv.bundle.js");
-importScripts("/uv/uv.config.js");
-importScripts("/uv/uv.sw.js");
-importScripts("/sj/scramjet.all.js");
-const { ScramjetServiceWorker } = $scramjetLoadWorker();
-const uvSW = new UVServiceWorker();
+let ScramjetServiceWorker = null;
+let uvSW = null;
+
+try {
+	importScripts("/uv/uv.bundle.js");
+	importScripts("/uv/uv.config.js");
+	importScripts("/uv/uv.sw.js");
+	uvSW = new UVServiceWorker();
+} catch (e) {
+	console.warn("[sw] UV scripts failed to load — UV proxy disabled:", e);
+}
+
+try {
+	importScripts("/sj/scramjet.all.js");
+	({ ScramjetServiceWorker } = $scramjetLoadWorker());
+} catch (e) {
+	console.warn("[sw] Scramjet scripts failed to load — SJ proxy disabled:", e);
+}
 
 const CONFIG = {
 	inject: {
@@ -136,6 +148,7 @@ async function repairScramjetDatabase() {
 let scramjetPromise = null;
 
 async function getScramjet() {
+	if (!ScramjetServiceWorker) throw new Error("Scramjet not available");
 	if (!scramjetPromise) {
 		scramjetPromise = (async () => {
 			await repairScramjetDatabase();
@@ -286,7 +299,7 @@ const PG_ROUTE_RE = /^\/pg-game\/([^/]+)\/(.+)$/;
 function handlePersonalGameFetch(event) {
 	const url = new URL(event.request.url);
 	const m   = PG_ROUTE_RE.exec(url.pathname);
-	if (!m) return null;
+	if (!m) return false;
 
 	const gameId   = m[1];
 	const filePath = m[2];
@@ -318,6 +331,7 @@ function handlePersonalGameFetch(event) {
 			return new Response('File not found', { status: 404 });
 		}).catch(() => new Response('Service worker error', { status: 500 }))
 	);
+	return true;
 }
 
 // ── Service Worker Lifecycle ──────────────────────────────────────────────────
@@ -369,12 +383,20 @@ self.addEventListener("fetch", (event) => {
 
 	// UV proxy requests
 	if (url.includes(UV_PREFIX)) {
-		event.respondWith(uvSW.fetch(event));
+		if (uvSW) {
+			event.respondWith(uvSW.fetch(event));
+		} else {
+			event.respondWith(fetch(event.request));
+		}
 		return;
 	}
 	// SJ proxy requests
 	if (url.includes(SJ_PREFIX)) {
-		event.respondWith(handleRequest(event));
+		if (ScramjetServiceWorker) {
+			event.respondWith(handleRequest(event));
+		} else {
+			event.respondWith(fetch(event.request));
+		}
 		return;
 	}
 });
