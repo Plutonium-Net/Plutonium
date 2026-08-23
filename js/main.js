@@ -315,7 +315,7 @@ function openAboutDialog() {
 
   <div class="about-dialog__row">
     <div class="about-dialog__row-icon blue">
-      <i class="fas fa-user-circle"></i>
+      <img src="./img/about-images/crafted.png" alt="Crafted">
     </div>
     <div class="about-dialog__row-body">
       <div class="about-dialog__row-title">Crafted</div>
@@ -327,7 +327,7 @@ function openAboutDialog() {
 
   <div class="about-dialog__row">
     <div class="about-dialog__row-icon grey">
-      <i class="fas fa-user"></i>
+      <img src="./img/about-images/mizzery.png" alt="Mizzery">
     </div>
     <div class="about-dialog__row-body">
       <div class="about-dialog__row-title">Mizzery</div>
