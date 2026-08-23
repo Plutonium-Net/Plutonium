@@ -7,6 +7,8 @@
 
   /* ── Background images to pre-cache ─────────────────────────────────── */
   const CACHE_KEY = 'plutonium-bg-v2';
+  const GAMES_CACHE_KEY = 'plutonium-games-v1';
+  const PGCDN_BASE = 'https://g.cdn.plutoniumnet.work';
   const BG_IMAGES = [
     'img/backgrounds/coast.jpg',
     'img/backgrounds/color-burst.jpg',
@@ -180,66 +182,110 @@
     if (e.key === 'k' || e.key === 'K') { kPressed = false; checkAndHide(); }
   });
 
-  /* ── asset caching ───────────────────────────────────────────────── */
-  async function cacheBackgrounds() {
+  /* ── unified asset caching (backgrounds + game images) ──────────── */
+  async function cacheAllAssets() {
     if (!('caches' in window)) { cacheReady = true; return; }
 
+    // 1. Collect background image URLs that need caching
+    var bgResponses = [];
+    var bgNeed = [];
     try {
-      const existing = await caches.open(CACHE_KEY);
-      const keys = await existing.keys();
-      // Already cached — skip progress
-      if (keys.length >= BG_IMAGES.length) { cacheReady = true; return; }
-    } catch (_) {
-      cacheReady = true;
-      return;
-    }
-
-    showProgress();
-    const total = BG_IMAGES.length;
-    let cached = 0;
-    let bytesDone = 0;
-    let bytesTotal = 0;
-
-    // Fetch all first to get Content-Length for total MB
-    const responses = [];
-    for (var i = 0; i < total; i++) {
-      try {
-        const resp = await fetch(BG_IMAGES[i], { cache: 'no-store' });
-        const len = parseInt(resp.headers.get('content-length') || '0', 10);
-        bytesTotal += len;
-        responses.push({ url: BG_IMAGES[i], resp: resp, ok: resp.ok });
-      } catch (_) {
-        responses.push({ url: BG_IMAGES[i], resp: null, ok: false });
-      }
-    }
-
-    // Now store in cache with progress
-    const cache = await caches.open(CACHE_KEY);
-    for (var j = 0; j < responses.length; j++) {
-      const entry = responses[j];
-      if (entry.ok && entry.resp) {
-        // Clone because we need to consume the body for the cache
-        const clone = entry.resp.clone();
-        await cache.put(entry.url, clone);
-        // Read body length from the clone
-        try {
-          const blob = await entry.resp.blob();
-          bytesDone += blob.size;
-        } catch (_) {
-          // approximate from Content-Length
-          var len2 = parseInt(entry.resp.headers.get('content-length') || '0', 10);
-          bytesDone += len2;
+      var bgCache = await caches.open(CACHE_KEY);
+      var bgKeys = await bgCache.keys();
+      if (bgKeys.length < BG_IMAGES.length) {
+        for (var i = 0; i < BG_IMAGES.length; i++) {
+          try {
+            var resp = await fetch(BG_IMAGES[i], { cache: 'no-store' });
+            var len = parseInt(resp.headers.get('content-length') || '0', 10);
+            bgResponses.push({ url: BG_IMAGES[i], resp: resp, ok: resp.ok, bytes: len });
+            bgNeed.push(true);
+          } catch (_) {
+            bgResponses.push({ url: BG_IMAGES[i], resp: null, ok: false, bytes: 0 });
+            bgNeed.push(false);
+          }
         }
       }
-      cached++;
-      updateProgress(cached, total, bytesDone, bytesTotal);
+    } catch (_) {}
+
+    // 2. Collect game image URLs that need caching
+    var gameUrls = [];
+    var gameResponses = [];
+    try {
+      var cres = await fetch(PGCDN_BASE + '/config.json', { cache: 'no-store' });
+      if (cres.ok) {
+        var cfg = await cres.json();
+        var allGames = (cfg.games || []).filter(function (g) { return g.image; });
+        var gameCache = await caches.open(GAMES_CACHE_KEY);
+        var gameKeys = await gameCache.keys();
+        var alreadyCached = new Set(gameKeys.map(function (r) { return r.url; }));
+        for (var gi = 0; gi < allGames.length; gi++) {
+          var imgUrl = PGCDN_BASE + '/' + allGames[gi].image;
+          if (alreadyCached.has(imgUrl)) continue;
+          gameUrls.push(imgUrl);
+        }
+        for (var gj = 0; gj < gameUrls.length; gj++) {
+          try {
+            var gresp = await fetch(gameUrls[gj], { cache: 'no-store' });
+            var glen = parseInt(gresp.headers.get('content-length') || '0', 10);
+            gameResponses.push({ url: gameUrls[gj], resp: gresp, ok: gresp.ok, bytes: glen });
+          } catch (_) {
+            gameResponses.push({ url: gameUrls[gj], resp: null, ok: false, bytes: 0 });
+          }
+        }
+      }
+    } catch (_) {}
+
+    var totalBg = bgResponses.length;
+    var totalGames = gameResponses.length;
+    var grandTotal = totalBg + totalGames;
+    if (grandTotal === 0) { cacheReady = true; return; }
+
+    showProgress();
+    var done = 0;
+    var bytesDone = 0;
+    var bytesTotal = 0;
+
+    // Sum up bytes
+    bgResponses.forEach(function (r) { bytesTotal += r.bytes; });
+    gameResponses.forEach(function (r) { bytesTotal += r.bytes; });
+
+    function _tick(label) {
+      done++;
+      var pct = Math.round((done / grandTotal) * 100);
+      barFill.style.width = pct + '%';
+      statusText.textContent = label + ' ' + done + '/' + grandTotal + '  ' +
+        formatMB(bytesDone) + ' / ' + formatMB(bytesTotal);
+    }
+
+    // 3. Store backgrounds
+    var bgCache2 = await caches.open(CACHE_KEY);
+    for (var bi = 0; bi < bgResponses.length; bi++) {
+      var be = bgResponses[bi];
+      if (be.ok && be.resp) {
+        var bclone = be.resp.clone();
+        await bgCache2.put(be.url, bclone);
+        try { var bb = await be.resp.blob(); bytesDone += bb.size; } catch (_) { bytesDone += be.bytes; }
+      }
+      _tick('Caching backgrounds:');
+    }
+
+    // 4. Store game images
+    var gCache2 = await caches.open(GAMES_CACHE_KEY);
+    for (var gi2 = 0; gi2 < gameResponses.length; gi2++) {
+      var ge = gameResponses[gi2];
+      if (ge.ok && ge.resp) {
+        var gclone = ge.resp.clone();
+        await gCache2.put(ge.url, gclone);
+        try { var gb = await ge.resp.blob(); bytesDone += gb.size; } catch (_) { bytesDone += ge.bytes; }
+      }
+      _tick('Caching games:');
     }
 
     cacheReady = true;
     checkAndHide();
   }
 
-  cacheBackgrounds();
+  cacheAllAssets();
 
   /* safety net: force-hide after 30 s */
   setTimeout(function () {

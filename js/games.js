@@ -488,7 +488,6 @@
       pgcdnRender(_pgcdnGames);
       _renderShelves();
       _renderHistory();
-      _precacheImages(_pgcdnGames);
 
       const launchId = location.hash.slice(1);
       if (launchId) {
@@ -553,27 +552,6 @@
     _allCards.forEach(({ game, el }) => {
       el.style.display = visibleSet.has(game) ? '' : 'none';
     });
-  }
-
-  // Pre-cache all game thumbnails in the background on first load
-  function _precacheImages(games) {
-    if (!games.length) return;
-    // Stagger requests to avoid flooding the network
-    let i = 0;
-    function _next() {
-      if (i >= games.length) return;
-      const g = games[i++];
-      if (g.image) {
-        fetch(`${PGCDN_BASE}/${g.image}`, { cache: 'force-cache' }).catch(() => {});
-      }
-      if (i < games.length) setTimeout(_next, 60);
-    }
-    // Use requestIdleCallback if available, otherwise start after a short delay
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(() => setTimeout(_next, 200), { timeout: 2000 });
-    } else {
-      setTimeout(_next, 500);
-    }
   }
 
   async function pgcdnLaunch(game) {
