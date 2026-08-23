@@ -104,13 +104,13 @@
 <div class="proxy-engine-switch glass" role="group" aria-label="Proxy engine">
   <div class="proxy-engine-slider" id="proxy-engine-slider"></div>
   <button class="proxy-engine-btn active" data-engine="uv" title="Ultraviolet service worker proxy">
-    <i class="fa-solid fa-bolt"></i> UV
+    <img src="img/3rd-party/ultraviolet.png" alt="UV" class="proxy-engine-logo"> UV
   </button>
   <button class="proxy-engine-btn" data-engine="sj" title="Scramjet service worker proxy">
-    <i class="fa-solid fa-shield-halved"></i> Scramjet
+    <img src="img/3rd-party/scramjet.png" alt="Scramjet" class="proxy-engine-logo"> Scramjet
   </button>
   <button class="proxy-engine-btn" data-engine="hb" title="Hyperbeam cloud browser session">
-    <i class="fa-solid fa-desktop"></i> Hyperbeam
+    <img src="img/3rd-party/hyperbeam.png" alt="Hyperbeam" class="proxy-engine-logo"> Hyperbeam
   </button>
 </div>
 
@@ -148,13 +148,9 @@
 <div class="about-dialog glass" id="about-dialog" hidden></div>
 
 <div class="account-scrim" id="account-scrim" hidden></div>
-<div class="account-dialog glass" id="account-dialog" hidden>
-  <div class="account-dialog__head">
-    <span class="account-dialog__title"><i class="fa-solid fa-user" style="margin-right:6px;opacity:.5"></i>Account</span>
-    <button class="account-dialog__close" id="account-dialog-close"><i class="fa-solid fa-xmark"></i></button>
-  </div>
-  <iframe class="account-dialog__frame" id="account-frame" src="pages/account.html" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-top-navigation-by-user-activation"></iframe>
-</div>
+<div class="account-dialog glass" id="account-dialog" hidden></div>
+<div id="acct-toast"></div>
+<input type="file" id="import-file-input" accept=".json" style="display:none">
 
 <div class="wisp-switcher-menu glass" id="wisp-switcher-menu" hidden>
   <div class="wisp-switcher-menu-head">
