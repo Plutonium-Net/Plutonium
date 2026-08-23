@@ -147,6 +147,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 14px;
+  contain: layout style;
 }
 
 .pgcdn-card {
@@ -156,6 +157,8 @@ body {
   overflow: hidden;
   cursor: pointer;
   transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
 }
 
 .pgcdn-card:hover {
@@ -325,6 +328,7 @@ body {
   transition: color 0.15s, transform 0.15s;
   transform-origin: center bottom;
   text-decoration: none;
+  will-change: transform;
 }
 
 #vbtn-fav.is-fav {

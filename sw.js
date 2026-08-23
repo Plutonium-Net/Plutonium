@@ -352,6 +352,21 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
+	// Game images — serve from Cache API (cache-first)
+	if (url.includes('g.cdn.plutoniumnet.work/') && (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.webp') || url.endsWith('.gif') || url.endsWith('.svg'))) {
+		event.respondWith(
+			caches.open('plutonium-games-v1').then(function (cache) {
+				return cache.match(event.request).then(function (cached) {
+					return cached || fetch(event.request).then(function (network) {
+						if (network.ok) cache.put(event.request, network.clone());
+						return network;
+					});
+			});
+		});
+		);
+		return;
+	}
+
 	// UV proxy requests
 	if (url.includes(UV_PREFIX)) {
 		event.respondWith(uvSW.fetch(event));

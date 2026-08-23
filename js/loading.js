@@ -47,11 +47,34 @@
     'position:fixed;inset:0;background:#000;display:flex;flex-direction:column;' +
     'justify-content:center;align-items:center;z-index:9999;transition:opacity .6s ease;';
 
+  /* ── content wrapper (spinner rings the logo) ───────────────────── */
+  const contentWrap = document.createElement('div');
+  contentWrap.style.cssText =
+    'position:relative;display:inline-flex;align-items:center;justify-content:center;' +
+    'margin-bottom:28px;';
+
+  /* ── spinner (ring around logo) ──────────────────────────────────── */
+  const spinner = document.createElement('div');
+  spinner.className = 'boot-spinner';
+  spinner.style.cssText =
+    'padding:12px;border-radius:50%;box-sizing:border-box;' +
+    'position:absolute;inset:0;' +
+    'mask:conic-gradient(#000 0 0) content-box exclude,conic-gradient(#000 0 0);' +
+    'filter:blur(12px);animation:boot-morph 1.2s linear infinite alternate;' +
+    'transition:width .1s,height .1s;';
+
+  const spinnerInner = document.createElement('div');
+  spinnerInner.style.cssText =
+    "content:'';position:absolute;inset:0;" +
+    'background:repeating-conic-gradient(#0000 0 5%,' + accent + ',#0000 20% 50%);' +
+    'animation:boot-spin 1s linear infinite;';
+  spinner.appendChild(spinnerInner);
+
   /* ── "Plutonium" title ───────────────────────────────────────────── */
   const title = document.createElement('div');
   title.style.cssText =
     'display:flex;color:' + accent + ";font-family:'Curly',cursive;" +
-    'font-size:clamp(42px,8vw,80px);letter-spacing:2px;margin-bottom:32px;z-index:1;';
+    'font-size:clamp(42px,8vw,80px);letter-spacing:2px;z-index:1;position:relative;';
 
   'Plutonium'.split('').forEach(function (ch, i) {
     const span = document.createElement('span');
@@ -61,21 +84,8 @@
     title.appendChild(span);
   });
 
-  /* ── spinner ─────────────────────────────────────────────────────── */
-  const spinner = document.createElement('div');
-  spinner.className = 'boot-spinner';
-  spinner.style.cssText =
-    'width:72px;height:72px;padding:8px;border-radius:18px;box-sizing:border-box;' +
-    'position:relative;margin-bottom:28px;' +
-    'mask:conic-gradient(#000 0 0) content-box exclude,conic-gradient(#000 0 0);' +
-    'filter:blur(12px);animation:boot-morph 1.2s linear infinite alternate;';
-
-  const spinnerInner = document.createElement('div');
-  spinnerInner.style.cssText =
-    "content:'';position:absolute;inset:0;" +
-    'background:repeating-conic-gradient(#0000 0 5%,' + accent + ',#0000 20% 50%);' +
-    'animation:boot-spin 1s linear infinite;';
-  spinner.appendChild(spinnerInner);
+  contentWrap.appendChild(spinner);
+  contentWrap.appendChild(title);
 
   /* ── progress bar ────────────────────────────────────────────────── */
   const progressWrap = document.createElement('div');
@@ -114,11 +124,17 @@
   document.head.appendChild(style);
 
   /* ── assemble ────────────────────────────────────────────────────── */
-  overlay.appendChild(title);
-  overlay.appendChild(spinner);
+  overlay.appendChild(contentWrap);
   overlay.appendChild(progressWrap);
   document.body.insertBefore(overlay, document.body.firstChild);
   document.body.style.overflow = 'hidden';
+
+  /* ── size spinner to half the viewport ───────────────────────────── */
+  var spSize = Math.round(Math.min(window.innerHeight * 0.5, window.innerWidth * 0.9));
+  spinner.style.width  = spSize + 'px';
+  spinner.style.height = spSize + 'px';
+  contentWrap.style.width  = spSize + 'px';
+  contentWrap.style.height = spSize + 'px';
 
   /* ── progress helpers ────────────────────────────────────────────── */
   function updateProgress(cached, total, bytesDone, bytesTotal) {

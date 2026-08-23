@@ -441,9 +441,7 @@
     const wrap = document.getElementById('pgcdn-grid-wrap');
     const grid = document.createElement('div');
     grid.className = 'pgcdn-grid';
-    for (let i = 0; i < n; i++) {
-      grid.innerHTML += `<div class="skel-card"><div class="skel skel-card__img"></div><div class="skel skel-card__name"></div></div>`;
-    }
+    grid.innerHTML = Array.from({length: n}, () => `<div class="skel-card"><div class="skel skel-card__img"></div><div class="skel skel-card__name"></div></div>`).join('');
     wrap.innerHTML = '';
     wrap.appendChild(grid);
   }
@@ -490,6 +488,7 @@
       pgcdnRender(_pgcdnGames);
       _renderShelves();
       _renderHistory();
+      _precacheImages(_pgcdnGames);
 
       const launchId = location.hash.slice(1);
       if (launchId) {
@@ -503,22 +502,78 @@
     }
   }
 
-  function pgcdnRender(games) {
+  let _allCards   = [];  // { game, el } pairs built once
+  let _noResults  = null;
+
+  function _buildAllCards(games) {
     const wrap  = document.getElementById('pgcdn-grid-wrap');
     const count = document.getElementById('pgcdn-count');
-    count.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
+
+    // Tear down previous
+    wrap.innerHTML = '';
+    _allCards = [];
+
+    // No-results placeholder (always exists, toggled by visibility)
+    _noResults = document.createElement('div');
+    _noResults.className = 'pgcdn-status';
+    _noResults.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>No games found</span>';
+    _noResults.style.display = 'none';
+    wrap.appendChild(_noResults);
 
     if (!games.length) {
-      wrap.innerHTML = `<div class="pgcdn-status"><i class="fa-solid fa-magnifying-glass"></i><span>No games found</span></div>`;
+      _noResults.style.display = '';
+      count.textContent = '0 games';
       return;
     }
 
     const grid = document.createElement('div');
     grid.className = 'pgcdn-grid';
-    games.forEach(game => grid.appendChild(_buildCard(game)));
-
-    wrap.innerHTML = '';
+    games.forEach(game => {
+      const el = _buildCard(game);
+      _allCards.push({ game, el });
+      grid.appendChild(el);
+    });
     wrap.appendChild(grid);
+    count.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
+  }
+
+  function pgcdnRender(games) {
+    const count = document.getElementById('pgcdn-count');
+    count.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
+
+    if (!_allCards.length) {
+      _buildAllCards(games);
+      return;
+    }
+
+    // Toggle the no-results placeholder
+    _noResults.style.display = games.length ? 'none' : '';
+
+    const visibleSet = new Set(games);
+    _allCards.forEach(({ game, el }) => {
+      el.style.display = visibleSet.has(game) ? '' : 'none';
+    });
+  }
+
+  // Pre-cache all game thumbnails in the background on first load
+  function _precacheImages(games) {
+    if (!games.length) return;
+    // Stagger requests to avoid flooding the network
+    let i = 0;
+    function _next() {
+      if (i >= games.length) return;
+      const g = games[i++];
+      if (g.image) {
+        fetch(`${PGCDN_BASE}/${g.image}`, { cache: 'force-cache' }).catch(() => {});
+      }
+      if (i < games.length) setTimeout(_next, 60);
+    }
+    // Use requestIdleCallback if available, otherwise start after a short delay
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => setTimeout(_next, 200), { timeout: 2000 });
+    } else {
+      setTimeout(_next, 500);
+    }
   }
 
   async function pgcdnLaunch(game) {
@@ -528,16 +583,24 @@
     openViewer(`${PGCDN_BASE}/${game.path}`, game.name, game);
   }
 
+  let _searchTimer = null;
   document.getElementById('pgcdn-search').addEventListener('input', e => {
-    const q = e.target.value.trim().toLowerCase();
-    pgcdnRender(q ? _pgcdnGames.filter(g => g.name.toLowerCase().includes(q)) : _pgcdnGames);
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(() => {
+      const q = e.target.value.trim().toLowerCase();
+      pgcdnRender(q ? _pgcdnGames.filter(g => g.name.toLowerCase().includes(q)) : _pgcdnGames);
+    }, 150);
   });
 
   pgcdnInit();
 
+  let _histSearchTimer = null;
   document.getElementById('history-search').addEventListener('input', e => {
-    _historyQuery = e.target.value.trim().toLowerCase();
-    _renderHistory();
+    clearTimeout(_histSearchTimer);
+    _histSearchTimer = setTimeout(() => {
+      _historyQuery = e.target.value.trim().toLowerCase();
+      _renderHistory();
+    }, 150);
   });
 
   document.querySelectorAll('.history-sort-btn').forEach(btn => {
@@ -692,14 +755,19 @@
   viewerBar.addEventListener('mouseleave', () => { if (!_barManualHide) scheduleBarHide(); });
 
   const _vbtns = Array.from(viewerBar.querySelectorAll('.viewer-btn'));
+  let _vbarRaf = null;
   viewerBar.addEventListener('mousemove', e => {
-    _vbtns.forEach(btn => {
-      const r = btn.getBoundingClientRect();
-      const dist = Math.abs(e.clientX - (r.left + r.width / 2));
-      const t = Math.max(0, 1 - dist / 80);
-      const scale = 1 + 0.7 * t * t;
-      btn.style.transform = `scale(${scale.toFixed(3)})`;
-      btn.style.color = t > 0.85 ? 'var(--pink)' : '';
+    if (_vbarRaf) return;
+    _vbarRaf = requestAnimationFrame(() => {
+      _vbarRaf = null;
+      _vbtns.forEach(btn => {
+        const r = btn.getBoundingClientRect();
+        const dist = Math.abs(e.clientX - (r.left + r.width / 2));
+        const t = Math.max(0, 1 - dist / 80);
+        const scale = 1 + 0.7 * t * t;
+        btn.style.transform = `scale(${scale.toFixed(3)})`;
+        btn.style.color = t > 0.85 ? 'var(--pink)' : '';
+      });
     });
   });
   viewerBar.addEventListener('mouseleave', () => {
