@@ -65,7 +65,7 @@
 
     filtered.forEach(function (game) {
       const card = document.createElement('div');
-      card.className = 'cg-card';
+      card.className = 'cg-card glass';
 
       const tagPills = (game.tags || []).map(function (t) {
         return '<span class="cg-card__tag">' + t + '</span>';
@@ -85,7 +85,7 @@
   }
 
   // ── Load game list ────────────────────────────────────────────────────────
-  fetch('data/cloud.json')
+  fetch('../data/cloud.json')
     .then(function (r) { return r.json(); })
     .then(function (games) {
       _allGames = games;

@@ -1,0 +1,78 @@
+/* Plutonium design tokens — standalone layer for ported Plutonium pages.
+   Mirrors the :root token block from the root site's css/style.css. */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --pink: #e8175d;
+  --pink-rgb: 232,23,93;
+  --pink-muted: #971040;
+  --bg: #000000;
+  --text: #ffffff;
+  --muted: #a0a0a0;
+  --scrollbar-thumb: rgba(var(--pink-rgb),0.55);
+  --scrollbar-thumb-hover: rgba(var(--pink-rgb),0.85);
+  --scrollbar-track: rgba(255,255,255,0.04);
+
+  /* ── Blur tiers ──────────────────────────────────────────────────── */
+  --ui-blur:         blur(20px); /* panels, cards, sidebars, inputs     */
+  --ui-blur-heavy:   blur(28px); /* dropdowns, popups                   */
+  --ui-blur-overlay: blur(6px);  /* modal backdrops, scrims             */
+
+  /* ── Surface opacity tiers ───────────────────────────────────────── */
+  --panel-bg:      rgba(10,10,10,0.82);   /* floating panels, cards, sidebars  */
+  --panel-bg-dark: rgba(10,10,10,0.92);   /* modals, toasts, elevated panels   */
+  --overlay-bg:    rgba(0,0,0,0.75);      /* modal backdrops                   */
+  --surface-1:     rgba(255,255,255,0.02);/* lowest fill: app shells, gates    */
+  --surface-2:     rgba(255,255,255,0.04);/* inputs, button resting state      */
+  --surface-3:     rgba(255,255,255,0.07);/* hover / slightly raised           */
+  --surface-4:     rgba(255,255,255,0.1); /* active / focused border context   */
+  --border-subtle: rgba(255,255,255,0.07);/* standard divider / card border    */
+  --border-light:  rgba(255,255,255,0.11);/* input borders, secondary dividers */
+}
+
+/* ── Global scrollbars ───────────────────────────────────────────────────── */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Webkit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  line-height: 1.6;
+}

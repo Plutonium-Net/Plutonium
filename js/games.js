@@ -253,7 +253,7 @@
 
   function _buildCard(game, zone = 'grid') {
     const card = document.createElement('div');
-    card.className = 'pgcdn-card';
+    card.className = 'pgcdn-card glass';
     card.title = game.name;
     card.innerHTML = `
       <img class="pgcdn-card__img" src="${PGCDN_BASE}/${game.image}" alt="${game.name}" loading="lazy" />
@@ -276,7 +276,7 @@
   function _showCardCtx(e, game, zone) {
     const isFav    = _isFav(game.id);
     const isRecent = _data.recent.some(r => r.id === game.id);
-    const isPinned = typeof HomeDock !== 'undefined' && HomeDock.isPinned(game.id);
+    const isPinned = !!(window.parent && window.parent.Pins && window.parent.Pins.find(game.id));
 
     const items = [
       {
@@ -287,13 +287,16 @@
       'sep',
     ];
 
-    if (typeof HomeDock !== 'undefined') {
-      items.push({
-        icon:   isPinned ? 'fa-solid fa-thumbtack' : 'fa-solid fa-thumbtack',
-        label:  isPinned ? 'Unpin from Home' : 'Pin to Home',
-        action: () => isPinned ? HomeDock.unpin(game.id) : HomeDock.pin(game),
-      });
-    }
+    items.push({
+      icon:   'fa-solid fa-thumbtack',
+      label:  isPinned ? 'Unpin from Home' : 'Pin to Home',
+      action: () => {
+        const P = window.parent && window.parent.Pins;
+        if (!P) return;
+        if (P.find(game.id)) P.remove(game.id);
+        else P.add({ id: game.id, name: game.name, image: game.image || undefined });
+      },
+    });
 
     if (zone === 'favs') {
       items.push({
@@ -740,5 +743,34 @@
   });
 
   window.PGViewer = { open: openViewer, close: closeViewer };
+
+  // Accent-coloured favicon (img/logos/icon-<color>.png)
+  const ICON_MAP = {
+    '#e8175d': 'plutonium-pink',
+    '#7c3aed': 'violet',
+    '#2563eb': 'blue',
+    '#059669': 'emerald',
+    '#d97706': 'amber',
+    '#dc2626': 'red',
+    '#0891b2': 'cyan',
+    '#c026d3': 'fuchsia',
+  }
+  function accentIconFile() {
+    try {
+      const raw = localStorage.getItem('plu_theme')
+      const state = raw ? JSON.parse(raw) : {}
+      const accent = String(state.accentColor || '').trim().toLowerCase()
+      return ICON_MAP[accent] || 'plutonium-pink'
+    } catch { return 'plutonium-pink' }
+  }
+  const iconLink = document.querySelector('link[rel="icon"][type="image/png"]')
+  if (iconLink) {
+    iconLink.href = `../img/logos/icon-${accentIconFile()}.png`
+  }
+  window.addEventListener('storage', e => {
+    if (e.key !== 'plu_theme') return
+    const link = document.querySelector('link[rel="icon"][type="image/png"]')
+    if (link) link.href = `../img/logos/icon-${accentIconFile()}.png`
+  })
 
 })();

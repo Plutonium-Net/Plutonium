@@ -100,7 +100,10 @@ const sentinel        = document.getElementById('scroll-sentinel');
 async function loadFavorites() {
   try {
     const doc = await PlutoniumStore.getDoc(FS_FAVORITES).catch(() => null);
-    favoritesCache = doc ? (doc.items || {}) : {};
+    if (doc && doc.items) {
+      // Union: cloud wins, keep local-only favourites
+      favoritesCache = { ...favoritesCache, ...doc.items };
+    }
   } catch(e) { console.warn('loadFavorites', e); }
 }
 
@@ -114,7 +117,15 @@ async function saveFavorites() {
 async function loadContinueWatching() {
   try {
     const doc = await PlutoniumStore.getDoc(FS_CONTINUE).catch(() => null);
-    continueWatchingCache = doc ? (doc.items || {}) : {};
+    if (doc && doc.items) {
+      // Merge by id, newest progress wins; keep local-only entries
+      const merged = { ...continueWatchingCache };
+      for (const [id, entry] of Object.entries(doc.items)) {
+        const local = merged[id];
+        if (!local || (entry.ts || 0) >= (local.ts || 0)) merged[id] = entry;
+      }
+      continueWatchingCache = merged;
+    }
   } catch(e) { console.warn('loadContinueWatching', e); }
 }
 
@@ -665,7 +676,7 @@ function buildShelfCard(item, opts = {}) {
     : '';
 
   const card = document.createElement('div');
-  card.className   = 'shelf-card';
+  card.className   = 'shelf-card glass';
   card.dataset.id  = item.id;
   card.innerHTML   = `
     <div class="shelf-img-wrap">

@@ -1,95 +1,81 @@
-# Plutonium
+# Plutonium Network — `new/` build
 
-Plutonium is a web platform for games, web browsing, cloud gaming, and other stuff.
+A full browser-style web platform: Chrome-style tabs with a built-in web proxy,
+bookmarks & pins, plus the complete Plutonium Network feature set.
 
-It started as a place to play browser games, but has grown into more of a general-purpose web platform.
+This build started as the **crafted gamz** browser project, rebranded to
+**Plutonium Network**, with every feature backend replaced by Plutonium's own
+services and the Plutonium-only features (cloud gaming, streaming, Stelena AI,
+cloud-synced saves) added in.
 
-## Features
+## Pages
 
-* Game library
-* Import your own HTML games
-* Game favorites and play history
-* Pluto Proxy
-* Ultraviolet and Scramjet support
-* Hyperbeam
-* Cloud gaming
-* User accounts
-* Cloud storage
-* AI
-* Settings and customization
-* More stuff that's still being worked on
+| Route (address bar) | File | What it is |
+| --- | --- | --- |
+| `pluto://games` | `pages/games.html` | Games — Local library + **Cloud** (Plutonium GCDN) with favourites, recently played & save sync |
+| `pluto://movies` / `pluto://stream` | `pages/stream.html` | Streaming — movies / TV / anime, age gate, Videasy & VidCore players |
+| `pluto://ai` | `pages/ai.html` | **Stelena** — Plutonium AI (Groq worker, streaming, voice + TTS) |
+| `pluto://vms` | `pages/vms.html` | Cloud VMs (Hyperbeam via the Plutonium VM worker) |
+| `pluto://cloud` | `pages/cloud.html` | Cloud Gaming (cgapi worker: sessions, queue, WebRTC embed) |
+| `pluto://account` | `pages/account.html` | Account — sign in/up, guest mode, bookmark/pin import & export |
+| `pluto://about` | `pages/about.html` | About, credits & the Plutonium services list |
 
-## Games
+## Backends (all Plutonium's own)
 
-Plutonium has its own game library, while also allowing users to add their own games.
+| Service | Endpoint | Used by |
+| --- | --- | --- |
+| Accounts / Firestore proxy | `accounting.cdn.plutoniumnet.work` | `js/cloud-store.js` (auth, docs) |
+| Games CDN | `g.cdn.plutoniumnet.work` | `pages/games.html` (catalog, thumbnails, save sync) |
+| AI (Groq proxy) | `ai.cdn.plutoniumnet.work/chat` | `pages/ai.html` (Bearer idToken, SSE) |
+| VMs (Hyperbeam proxy) | `vm.cdn.plutoniumnet.work/session` | `pages/vms.html` (Bearer idToken) |
+| Cloud Gaming (cgapi) | `cgapi.cdn.plutoniumnet.work` | `pages/cloud.html` (sessions / queue / embed) |
+| Streaming | TMDB + Videasy / VidCore players | `pages/stream.html` |
 
-You can import an HTML game directly or import one from GitHub.
+All worker calls that need it carry `Authorization: Bearer <Firebase idToken>`
+from `PlutoniumStore` — the AI and VM pages gate on sign-in.
 
-Games are kept separate from the rest of the site, so they can be added or removed without changing the main application.
+## Shared shell
 
-## Proxy
+`index.html` is the browser: chrome tabs (`js/chrome-tabs.js`), toolbar with
+address bar & wisp-switcher (`js/proxy.js`, `js/url.js`, `js/navigation.js`),
+bookmarks bar (`js/bookmarks*.js`), home pins (`js/pins.js` — pinned games
+and a VM quick-launch, added from the Games/VMs pages), keyboard shortcuts
+(`js/keyboard.js`), panic/escape page (`js/escape.js`), loading screen
+(`js/loading.js`) and a new-tab page with
+the Plutonium logo, search and home pins (`js/main.js`).
 
-Pluto Proxy lets you browse the web through Plutonium.
+Local pages are opened in the tab iframe via `pluto://` URLs resolved in
+`js/url.js` (`LOCAL_PAGES`).
 
-It supports multiple proxy backends, including:
+## Theming & data
 
-* Ultraviolet
-* Scramjet
-* Hyperbeam
+- `js/theme-state.js` reads/writes `plu_theme` + `plu_settings`
+  (one-time migration from the old `cg_theme` / `cg_settings` keys).
+  Default accent is Plutonium pink `#e8175d`.
+- **Backgrounds** — `bg.html` + `js/bg.js` run the Plutonium background
+  engine (`bg/js/bg-init.js` + particles.js / Vanta.js): 13 animated effects
+  (particles, birds, fog, waves, clouds, globe, net, trunk, topology, dots,
+  rings, halo, none) tinted by the accent color, selected via the
+  `bgEffect` setting (mirrored to `plu_settings.bgStyle` for old-key
+  compatibility).
+- `js/account.js` — `window.accountManager` (PlutoniumStore-backed):
+  email/password + OAuth, bookmarks/pins/tabs cloud sync under
+  `bookmarks`, `pins`, `tabs` docs, with one-time migration of the old
+  `cg_bookmarks` / `cg_pins` / `cg_tabs` keys.
+- Games favourites/recently played live under `plu_games_data` and sync to
+  `games_data/saved`; per-game saves sync to `game_saves/{id}` via
+  `plu_sync_*` postMessage messages.
+- Ported Plutonium pages use `css/plu-tokens.css` (the Plutonium design
+  tokens) so the old Plutonium look is preserved inside the tab.
 
-## Cloud Gaming
+## Remaining third-party dependencies (intentional)
 
-Plutonium also has cloud gaming support.
+- Wisp servers: `wss://wisp-*.cgamz.online` (`js/proxy.js`) — shared infra the
+  old Plutonium site itself used.
 
-The cloud gaming backend handles things like sessions, queues, WebRTC signaling, and connecting users to game instances.
-
-## Cloud Storage
-
-Plutonium has its own storage system for user data.
-
-The frontend communicates with a Cloudflare Worker, which handles the Firebase requests instead of exposing the Firebase configuration directly to the client.
-
-## Repository
-
-```text
-Plutonium/
-├── cf-worker/
-├── css/
-├── data/
-├── img/
-├── js/
-├── sj/
-├── uv/
-├── account.html
-├── cloud.html
-├── games.html
-├── index.html
-├── settings.html
-└── web.html
-```
-
-## Running locally
-
-Clone the repository and serve it with a web server:
+## Serving locally
 
 ```bash
-git clone https://github.com/Plutonium-Net/Plutonium.git
-cd Plutonium
+npx http-server -p 8090 -a 127.0.0.1 -c-1
+# then open http://127.0.0.1:8090/new/
 ```
-
-Then open the site through your local server.
-
-Some features require the corresponding Plutonium backend services to be configured, so not everything will work from a basic local server.
-
-## Related projects
-
-* [PlutoPack](https://github.com/Plutonium-Net/plutopack) — package format for distributing web games and applications
-* [Plutonium-GCDN](https://github.com/Plutonium-Net/Plutonium-GCDN) — game CDN
-
-## Status
-
-Plutonium is still being developed. Some features are finished, while others are experimental or not available yet.
-
-## License
-
-See the repository for licensing information.

@@ -185,8 +185,8 @@
   }
 
   function init() {
-    var s       = (window.PluSettings && window.PluSettings.load()) || {};
-    var style   = s.bgStyle    || 'particles';
+    var s       = (window.BrowserThemeState && BrowserThemeState.loadThemeState()) || {};
+    var style   = s.bgEffect   || 'particles';
     var color   = s.accentColor || '#e8175d';
     var ptEl    = document.getElementById('particles-js');
     var vantaEl = document.getElementById('vanta-bg');

@@ -242,6 +242,85 @@ function handleScramjetRequest(e) {
 	e.response.finalURL = e.url.toString();
 }
 
+// ── Personal Games Service Worker ────────────────────────────────────────────
+const PG_DB_NAME    = 'plutonium_personal_games';
+const PG_DB_VERSION = 1;
+const PG_FILE_STORE = 'pg_files';
+const PG_META_STORE = 'pg_meta';
+
+function pgOpenDB() {
+	return new Promise((resolve, reject) => {
+		const req = indexedDB.open(PG_DB_NAME, PG_DB_VERSION);
+		req.onupgradeneeded = e => {
+			const db = e.target.result;
+			if (!db.objectStoreNames.contains(PG_META_STORE)) db.createObjectStore(PG_META_STORE, { keyPath: 'id' });
+			if (!db.objectStoreNames.contains(PG_FILE_STORE)) db.createObjectStore(PG_FILE_STORE);
+		};
+		req.onsuccess = e => resolve(e.target.result);
+		req.onerror   = e => reject(e.target.error);
+	});
+}
+
+function pgDbGet(db, store, key) {
+	return new Promise((resolve, reject) => {
+		const tx  = db.transaction(store, 'readonly');
+		const req = tx.objectStore(store).get(key);
+		req.onsuccess = e => resolve(e.target.result);
+		req.onerror   = e => reject(e.target.error);
+	});
+}
+
+function pgDbPut(db, store, value, key) {
+	return new Promise((resolve, reject) => {
+		const tx  = db.transaction(store, 'readwrite');
+		const req = key !== undefined
+			? tx.objectStore(store).put(value, key)
+			: tx.objectStore(store).put(value);
+		req.onsuccess = () => resolve();
+		req.onerror   = e => reject(e.target.error);
+	});
+}
+
+const PG_ROUTE_RE = /^\/pg-game\/([^/]+)\/(.+)$/;
+
+function handlePersonalGameFetch(event) {
+	const url = new URL(event.request.url);
+	const m   = PG_ROUTE_RE.exec(url.pathname);
+	if (!m) return null;
+
+	const gameId   = m[1];
+	const filePath = m[2];
+
+	event.respondWith(
+		pgOpenDB().then(db => pgDbGet(db, PG_FILE_STORE, `${gameId}/${filePath}`)).then(async entry => {
+			if (entry) {
+				return new Response(entry.data, {
+					status: 200,
+					headers: { 'Content-Type': entry.type || 'application/octet-stream' },
+				});
+			}
+			try {
+				const db = await pgOpenDB();
+				const meta = await pgDbGet(db, PG_META_STORE, gameId).catch(() => null);
+				if (meta && meta.github) {
+					const gh = meta.github;
+					const rawRel = gh.root ? (gh.root + '/' + filePath) : filePath;
+					const rawUrl = `https://raw.githubusercontent.com/${gh.owner}/${gh.repo}/${gh.branch}/${rawRel}`;
+					const fetched = await fetch(rawUrl);
+					if (fetched && fetched.ok) {
+						const buf = await fetched.arrayBuffer();
+						const ctype = fetched.headers.get('content-type') || 'application/octet-stream';
+						await pgDbPut(db, PG_FILE_STORE, { type: ctype, data: buf }, `${gameId}/${filePath}`);
+						return new Response(buf, { status: 200, headers: { 'Content-Type': ctype } });
+					}
+				}
+			} catch (_) {}
+			return new Response('File not found', { status: 404 });
+		}).catch(() => new Response('Service worker error', { status: 500 }))
+	);
+}
+
+// ── Service Worker Lifecycle ──────────────────────────────────────────────────
 self.addEventListener("install", () => self.skipWaiting());
 
 self.addEventListener("activate", (event) => {
@@ -253,6 +332,11 @@ const SJ_PREFIX = "/sj/service/";
 
 self.addEventListener("fetch", (event) => {
 	const url = event.request.url;
+
+	// Personal games — serve from IndexedDB
+	const pgResult = handlePersonalGameFetch(event);
+	if (pgResult) return;
+
 	// UV proxy requests
 	if (url.includes(UV_PREFIX)) {
 		event.respondWith(uvSW.fetch(event));

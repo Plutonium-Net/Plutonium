@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plutonium Network AI</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<link rel="stylesheet" href="../css/ai.css">
+<link rel="stylesheet" href="../css/glass.css">
+</head>
+<body>
+
+<div class="bg-container">
+  <iframe src="../bg.html"></iframe>
+</div>
+
+<main id="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-header-icon"><i class="fa-solid fa-robot"></i></div>
+      <div>
+        <div class="page-title">Plutonium AI</div>
+        <div class="page-subtitle">Connect with powerful LLM models</div>
+      </div>
+    </div>
+    <div class="model-pill" id="modelPill">
+      <i class="fas fa-microchip"></i>
+      <span id="selectedModelName">LLaMA 3.3 70B</span>
+      <i class="fas fa-chevron-down" style="font-size:10px;opacity:0.4"></i>
+    </div>
+  </div>
+
+  <div class="chat-panel glass">
+    <div class="glass-filter"></div>
+    <div class="glass-overlay"></div>
+    <div class="chat-panel-inner">
+      <div id="chatContainer">
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-icon"><i class="fas fa-robot"></i></div>
+          <div class="welcome-title">Welcome to Plutonium AI</div>
+          <div class="welcome-sub">Your intelligent companion ready to assist with coding, writing, research, and more.</div>
+          <div class="suggestion-grid">
+            <div class="suggestion-card" onclick="useSuggestion('Write a Python script to analyze CSV data')">
+              <div class="suggestion-card-label">Code</div>
+              <div class="suggestion-card-text">Write a Python script to analyze CSV data</div>
+            </div>
+            <div class="suggestion-card" onclick="useSuggestion('Explain quantum computing in simple terms')">
+              <div class="suggestion-card-label">Learn</div>
+              <div class="suggestion-card-text">Explain quantum computing in simple terms</div>
+            </div>
+            <div class="suggestion-card" onclick="useSuggestion('Create a creative story about time travel')">
+              <div class="suggestion-card-label">Creative</div>
+              <div class="suggestion-card-text">Create a creative story about time travel</div>
+            </div>
+            <div class="suggestion-card" onclick="useSuggestion('Help me plan a productive daily routine')">
+              <div class="suggestion-card-label">Productivity</div>
+              <div class="suggestion-card-text">Help me plan a productive daily routine</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-wrapper">
+          <button class="icon-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice input">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <textarea id="userInput" rows="1" placeholder="Let's talk about..."
+            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="icon-btn send" id="sendBtn" onclick="sendMessage()" title="Send">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modelOverlay">
+  <div class="modal-box glass">
+    <div class="modal-title">Select Model</div>
+    <div class="modal-sub">Choose the AI model for your conversation</div>
+    <div class="model-option selected" data-value="llama-3.3-70b-versatile" data-name="LLaMA 3.3 70B">
+      <div class="model-option-name">LLaMA 3.3 70B Versatile</div>
+      <div class="model-option-desc">Most capable — best for complex tasks</div>
+    </div>
+    <div class="model-option" data-value="llama-3.1-8b-instant" data-name="LLaMA 3.1 8B">
+      <div class="model-option-name">LLaMA 3.1 8B Instant</div>
+      <div class="model-option-desc">Fast and efficient for quick responses</div>
+    </div>
+    <div class="model-option" data-value="openai/gpt-oss-120b" data-name="GPT OSS 120B">
+      <div class="model-option-name">ChatGPT OSS 120B</div>
+      <div class="model-option-desc">Large open-source model with strong reasoning</div>
+    </div>
+    <div class="model-option" data-value="openai/gpt-oss-20b" data-name="GPT OSS 20B">
+      <div class="model-option-name">ChatGPT OSS 20B</div>
+      <div class="model-option-desc">Fast open-source model for everyday tasks</div>
+    </div>
+    <div class="model-option" data-value="qwen/qwen3.6-27b" data-name="Qwen 3.6 27B">
+      <div class="model-option-name">Qwen 3.6 27B</div>
+      <div class="model-option-desc">Efficient 27B model tuned for chat</div>
+    </div>
+    <div class="model-option" data-value="groq/compound" data-name="Groq Compound">
+      <div class="model-option-name">Groq Compound</div>
+      <div class="model-option-desc">Powerful mixture of experts model</div>
+    </div>
+    <div class="model-option" data-value="groq/compound-mini" data-name="Compound Mini">
+      <div class="model-option-name">Groq Compound Mini</div>
+      <div class="model-option-desc">Lightweight mixture of experts model</div>
+    </div>
+  </div>
+</div>
+<style>
+  .ai-gate {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 320px; padding: 24px;
+  }
+  .ai-gate__card {
+    text-align: center; max-width: 420px; padding: 36px 32px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .ai-gate__icon {
+    width: 64px; height: 64px; margin: 0 auto 18px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 18px; font-size: 26px; color: #e8175d;
+    background: rgba(232,23,93,0.12);
+    border: 1px solid rgba(232,23,93,0.35);
+  }
+  .ai-gate__title { font-size: 20px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+  .ai-gate__sub { font-size: 13.5px; color: rgba(255,255,255,0.55); line-height: 1.55; margin-bottom: 22px; }
+  .ai-gate__btn {
+    padding: 10px 22px; border: none; border-radius: 10px; cursor: pointer;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    color: #fff; background: #e8175d; transition: filter .15s, transform .15s;
+  }
+  .ai-gate__btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+</style>
+<script src="../js/cloud-store.js"></script>
+<script>
+  PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
+  window.PLU_NO_AUTO_AUTH = true;
+</script>
+<script src="../js/account.js"></script>
+<script src="../js/ai.js"></script>
+</body>
+</html>

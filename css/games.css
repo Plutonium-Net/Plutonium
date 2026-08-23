@@ -1,3 +1,57 @@
+:root {
+  --pink: #e8175d;
+  --pink-rgb: 232, 23, 93;
+  --pink-muted: #971040;
+  --text: #ffffff;
+  --muted: #a0a0a0;
+  --surface-1: rgba(255,255,255,0.02);
+  --surface-2: rgba(255,255,255,0.04);
+  --surface-3: rgba(255,255,255,0.07);
+  --surface-4: rgba(255,255,255,0.1);
+  --ui-blur: blur(20px);
+  --ui-blur-overlay: blur(6px);
+  --panel-bg: rgba(10,10,10,0.82);
+  --panel-bg-dark: rgba(10,10,10,0.92);
+  --border-subtle: rgba(255,255,255,0.07);
+  --bg: #0d0b0d;
+}
+
+/* ── Base (was provided by the site-wide style.css) ────────────────────── */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+/* Shared page layout (previously .plu-page in style.css) */
+.games-page {
+  position: relative;
+  z-index: 1;
+  padding: 24px 24px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.games-page__title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: var(--pink);
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+
+.games-page__subtitle {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0 0 36px;
+}
+
 .source-tabs {
   display: flex;
   gap: 4px;
@@ -924,4 +978,160 @@
   color: #e87c4e;
   border-color: rgba(232,124,78,0.3);
   background: rgba(232,124,78,0.08);
+}
+
+/* ── GitHub game picker ──────────────────────────────────────────────────── */
+.pg-github-picker {
+  margin-top: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-1);
+  overflow: hidden;
+}
+
+.pg-github-picker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+}
+
+.pg-github-picker__header > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pg-github-picker__header strong {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.pg-github-picker__header span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pg-github-picker__actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pg-github-picker__actions button {
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  color: var(--text);
+  font-size: 0.72rem;
+  font-family: inherit;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.pg-github-picker__actions button:hover {
+  background: var(--surface-4);
+  border-color: rgba(var(--pink-rgb), 0.4);
+}
+
+.pg-github-picker__list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.pg-github-game {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.pg-github-game:hover { background: var(--surface-2); }
+.pg-github-game + .pg-github-game { border-top: 1px solid rgba(255,255,255,0.04); }
+
+.pg-github-game__checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pg-github-game__check {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font-size: 9px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.pg-github-game__checkbox:checked + .pg-github-game__check {
+  background: var(--pink);
+  border-color: var(--pink);
+  color: #fff;
+}
+
+.pg-github-game__info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pg-github-game__info strong {
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pg-github-game__info small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pg-github-picker__footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pg-github-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.pg-github-empty i {
+  font-size: 1.3rem;
+  color: var(--muted);
+  opacity: 0.7;
 }

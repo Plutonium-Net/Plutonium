@@ -423,6 +423,35 @@
     return _currentUser.uid;
   }
 
+  // Cross-frame session propagation: the shell writes `plu_user` on
+  // sign-in/out; same-origin iframes (games/stream/personal pages) get a
+  // storage event and re-sync their session so their cloud data pulls.
+  window.addEventListener('storage', (e) => {
+    if (e.key !== 'plu_user') return;
+    try {
+      const raw = localStorage.getItem('plu_user');
+      if (!raw) {
+        if (_currentUser) _setUser(null);
+        return;
+      }
+      const user = JSON.parse(raw);
+      if (!user?.idToken) {
+        if (_currentUser) _setUser(null);
+        return;
+      }
+      const changed =
+        !_currentUser ||
+        _currentUser.uid !== user.uid ||
+        _currentUser.idToken !== user.idToken;
+      if (changed) {
+        _currentUser = user;
+        _persist();
+        _scheduleRefresh();
+        _authListeners.forEach(fn => { try { fn(_currentUser); } catch (_) {} });
+      }
+    } catch (_) {}
+  });
+
   _restoreSession();
 
   window.PlutoniumStore = {

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plutonium Network Games</title>
+  <link rel="icon" type="image/png" href="../img/brand/icon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="../css/games.css" />
+  <link rel="stylesheet" href="../css/glass.css" />
+</head>
+<body>
+
+  <div class="games-page plu-page">
+    <h1 class="games-page__title plu-page__title">Games</h1>
+    <p class="games-page__subtitle plu-page__subtitle">Browse and play games from multiple sources</p>
+
+    <div class="source-tabs">
+      <button class="source-tab active" data-panel="pgcdn">Plutonium-GCDN</button>
+      <button class="source-tab" data-panel="lumin">LuminSDK</button>
+      <button class="source-tab" data-panel="mygames">My Games</button>
+      <button class="source-tab" data-panel="history">History</button>
+    </div>
+
+    <!-- GCDN Panel -->
+    <div class="source-panel active" id="panel-pgcdn">
+      <div class="pgcdn-sync-badge" id="pgcdn-sync-badge"></div>
+
+      <div class="pgcdn-shelf" id="pgcdn-shelf-favs" style="display:none">
+        <div class="pgcdn-shelf__header">
+          <i class="fa-solid fa-heart"></i> Favourites
+        </div>
+        <div class="pgcdn-shelf__row" id="pgcdn-favs-row"></div>
+      </div>
+
+      <div class="pgcdn-shelf" id="pgcdn-shelf-recent" style="display:none">
+        <div class="pgcdn-shelf__header">
+          <i class="fa-solid fa-clock-rotate-left"></i> Recent
+        </div>
+        <div class="pgcdn-shelf__row" id="pgcdn-recent-row"></div>
+      </div>
+
+      <div class="pgcdn-toolbar">
+        <input class="pgcdn-search" id="pgcdn-search" type="search" placeholder="Search games…" />
+        <span class="pgcdn-count" id="pgcdn-count"></span>
+      </div>
+      <div id="pgcdn-grid-wrap">
+        <div class="pgcdn-status"><div class="pgcdn-spinner"></div><span>Loading games…</span></div>
+      </div>
+    </div>
+
+    <!-- LuminSDK Panel -->
+    <div class="source-panel" id="panel-lumin">
+      <div id="lumin-container"></div>
+    </div>
+
+    <!-- My Games Panel -->
+    <div class="source-panel" id="panel-mygames">
+      <div class="pg-panel-toolbar">
+        <span class="pgcdn-count" id="pg-personal-count"></span>
+        <span id="pg-cloud-badge" class="pg-cloud-badge"></span>
+        <div class="pg-add-btns">
+          <button class="pg-add-btn" id="pg-add-file-btn">
+            <i class="fa-solid fa-file-arrow-up"></i> Add HTML File
+          </button>
+        </div>
+      </div>
+      <div class="pgcdn-grid" id="pg-personal-grid"></div>
+      <div class="pgcdn-status" id="pg-personal-empty" style="display:none">
+        <i class="fa-solid fa-gamepad"></i>
+        <span>No personal games yet. Add an HTML file above (max 1 MiB)</span>
+      </div>
+    </div>
+
+    <!-- History Panel -->
+    <div class="source-panel" id="panel-history">
+      <div class="history-toolbar">
+        <input class="history-search" id="history-search" type="search" placeholder="Search history…" />
+        <div class="history-sort-group">
+          <button class="history-sort-btn active" data-sort="recent" title="Most recent">
+            <i class="fa-solid fa-clock"></i>
+          </button>
+          <button class="history-sort-btn" data-sort="plays" title="Most played">
+            <i class="fa-solid fa-fire"></i>
+          </button>
+          <button class="history-sort-btn" data-sort="az" title="A → Z">
+            <i class="fa-solid fa-arrow-down-a-z"></i>
+          </button>
+        </div>
+        <span class="history-count" id="history-count"></span>
+        <button class="history-clear-btn" id="history-clear">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+      <div id="history-list">
+        <div class="pgcdn-status"><i class="fa-solid fa-clock-rotate-left"></i><span>No history yet</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload / Edit Modals -->
+  <div id="pg-modal-overlay">
+    <div class="pg-modal glass" id="pg-modal-file">
+      <div class="pg-modal__header">
+        <span class="pg-modal__title"><i class="fa-solid fa-file-code"></i> Add HTML Game</span>
+        <button class="pg-modal__close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="pg-modal__body">
+        <div class="pg-drop-zone" id="pg-file-drop">
+          <i class="fa-solid fa-file-arrow-up pg-drop-zone__icon"></i>
+          <span class="pg-drop-zone__label" id="pg-file-drop-label">Click or drag an HTML file here</span>
+          <input type="file" id="pg-file-input" accept=".html,.htm" style="display:none" />
+        </div>
+        <div class="pg-field-group">
+          <label class="pg-field-label">Game name</label>
+          <input class="pg-field-input" id="pg-file-name" type="text" placeholder="Leave blank to use filename" />
+        </div>
+        <div class="pg-field-group">
+          <label class="pg-field-label">Import from GitHub</label>
+          <input class="pg-field-input" id="pg-github-url" type="url" placeholder="https://github.com/owner/repo" />
+          <div style="margin-top:8px">
+            <button class="pg-btn pg-btn--secondary" id="pg-github-import" type="button">
+              <i class="fa-solid fa-magnifying-glass"></i> Scan GitHub
+            </button>
+          </div>
+          <div id="pg-github-picker" class="pg-github-picker" style="display:none"></div>
+        </div>
+      </div>
+      <div class="pg-modal__footer">
+        <button class="pg-btn pg-btn--ghost" id="pg-file-cancel">Cancel</button>
+        <button class="pg-btn pg-btn--primary" id="pg-file-save">Add Game</button>
+      </div>
+    </div>
+
+    <div class="pg-modal glass" id="pg-modal-edit">
+      <div class="pg-modal__header">
+        <span class="pg-modal__title"><i class="fa-solid fa-pencil"></i> Edit Game</span>
+        <button class="pg-modal__close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="pg-modal__body">
+        <div class="pg-field-group">
+          <label class="pg-field-label">Game name</label>
+          <input class="pg-field-input" id="pg-edit-name" type="text" placeholder="Game name" />
+        </div>
+      </div>
+      <div class="pg-modal__footer">
+        <button class="pg-btn pg-btn--ghost" id="pg-edit-cancel">Cancel</button>
+        <button class="pg-btn pg-btn--primary" id="pg-edit-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pgcdn-ctx-menu" class="hidden"></div>
+
+  <div id="pgcdn-toast">
+    <span class="toast-msg" id="pgcdn-toast-msg"></span>
+    <div class="toast-actions" id="pgcdn-toast-actions"></div>
+  </div>
+
+  <!-- Game Viewer -->
+  <div id="game-viewer" class="glass">
+    <iframe id="game-iframe" allowfullscreen allow="autoplay; fullscreen"></iframe>
+    <div id="game-restore-overlay">
+      <div class="game-restore-spinner"></div>
+      <span class="game-restore-label">Restoring saves…</span>
+    </div>
+  </div>
+
+  <div id="viewer-bar" class="bar-hidden">
+    <button class="viewer-btn" id="vbtn-back" title="Back to games" aria-label="Back">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <div class="viewer-bar__sep"></div>
+    <span class="viewer-bar__title" id="viewer-title"></span>
+    <div class="viewer-bar__sep"></div>
+    <button class="viewer-btn" id="vbtn-fav" title="Favourite" aria-label="Favourite">
+      <i class="fa-regular fa-heart"></i>
+    </button>
+    <button class="viewer-btn" id="vbtn-reload" title="Reload game" aria-label="Reload">
+      <i class="fa-solid fa-rotate-right"></i>
+    </button>
+    <button class="viewer-btn" id="vbtn-fullscreen" title="Fullscreen" aria-label="Fullscreen">
+      <i class="fa-solid fa-expand"></i>
+    </button>
+    <button class="viewer-btn" id="vbtn-hide" title="Hide bar" aria-label="Hide bar">
+      <i class="fa-solid fa-chevron-down"></i>
+    </button>
+  </div>
+
+  <div id="viewer-bar-ghost"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js"></script>
+  <script src="../js/cloud-store.js"></script>
+  <script>
+    if (typeof PlutoniumStore !== 'undefined') {
+      PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
+    }
+  </script>
+  <script src="../js/games.js"></script>
+  <script src="../js/personal-games.js"></script>
+  <script>
+    // Modal cancel buttons
+    ['pg-file-cancel', 'pg-edit-cancel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', () => {
+        document.getElementById('pg-modal-overlay').classList.remove('active');
+        document.querySelectorAll('.pg-modal').forEach(m => m.classList.remove('active'));
+        document.body.style.overflow = '';
+      });
+    });
+  </script>
+</body>
+</html>

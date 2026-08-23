@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloud Gaming: Plutonium Network</title>
+  <link rel="icon" type="image/png" href="../img/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="../css/plu-tokens.css" />
+  <link rel="stylesheet" href="../css/glass.css" />
+  <link rel="stylesheet" href="../css/cloud.css" />
+</head>
+<body>
+
+  <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;z-index:-1;">
+    <iframe src="../bg.html" style="width:100%;height:100%;border:none;"></iframe>
+  </div>
+
+  <div class="cg-page">
+    <h1 class="cg-heading">Cloud Gaming</h1>
+
+    <div class="cg-toolbar">
+      <div class="cg-search-wrap">
+        <i class="fa-solid fa-magnifying-glass cg-search-icon"></i>
+        <input class="cg-search" id="cg-search" type="search" placeholder="Search games…" autocomplete="off" />
+      </div>
+      <span class="cg-count" id="cg-count"></span>
+    </div>
+
+    <div class="cg-tags" id="cg-tags"></div>
+
+    <div class="cg-grid" id="cg-grid"></div>
+  </div>
+
+  <script src="../js/cloud.js"></script>
+</body>
+</html>

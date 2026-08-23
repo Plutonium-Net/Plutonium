@@ -1,211 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plutonium Network</title>
-  <link rel="icon" type="image/png" href="img/brand/icon.png" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="css/style.css" />
-  <script src="js/settings-apply.js"></script>
+<meta charset="utf-8">
+<title>Plutonium Network</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="shortcut icon" href="img/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/glass.css">
 </head>
 <body>
+<div class="bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;z-index:-1;">
+  <iframe id="browser-bg-frame" src="bg.html" style="width:100%;height:100%;border:none;"></iframe>
+</div>
 
-  <div id="particles-js"></div>
-  <div id="vanta-bg"></div>
-  <section class="hero">
-    <div class="hero__inner">
-      <img class="hero__logo" src="img/brand/icon.png" alt="Plutonium logo" />
-      <h1 class="hero__title">Plutonium Network</h1>
-      <p class="hero__desc">
-        A next-generation network built for those who are done with individuals.
-        High-performance, completely wrapped, and beautifully crafted.
-      </p>
-      <div class="hero__dock" id="hero-dock">
-        <div class="hero__dock-empty">
-          <i class="fa-solid fa-thumbtack"></i>
-          <span>Right-click any game to pin it here</span>
+<div class="browser">
+
+  <div class="chrome glass">
+  <div class="titlebar">
+    <div class="chrome-tabs" style="--tab-content-margin:9px" id="tabs-el">
+      <div class="chrome-tabs-content">
+        <div class="chrome-tab" active data-url="newtab" data-title="New Tab">
+          <div class="chrome-tab-dividers"></div>
+          <div class="chrome-tab-background">
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg"><defs><symbol id="chrome-tab-geometry-left" viewBox="0 0 214 36"><path d="M17 0h197v36H0v-2c4.5 0 9-3.5 9-8V8c0-4.5 3.5-8 8-8z"/></symbol><symbol id="chrome-tab-geometry-right" viewBox="0 0 214 36"><use xlink:href="#chrome-tab-geometry-left"/></symbol><symbol id="chrome-tab-geometry-left-inactive" viewBox="0 0 214 36"><path d="M17 0h197v32H17c-4.5 0-8-3.5-8-8V8c0-4.5 3.5-8 8-8z"/></symbol><symbol id="chrome-tab-geometry-right-inactive" viewBox="0 0 214 36"><use xlink:href="#chrome-tab-geometry-left-inactive"/></symbol><clipPath id="crop"><rect class="mask" width="100%" height="100%" x="0"/></clipPath></defs><g class="tab-active-svg"><svg width="52%" height="100%"><use xlink:href="#chrome-tab-geometry-left" width="214" height="36" class="chrome-tab-geometry"/></svg><g transform="scale(-1,1)"><svg width="52%" height="100%" x="-100%" y="0"><use xlink:href="#chrome-tab-geometry-right" width="214" height="36" class="chrome-tab-geometry"/></svg></g></g><g class="tab-inactive-svg"><svg width="52%" height="100%"><use xlink:href="#chrome-tab-geometry-left-inactive" width="214" height="36" class="chrome-tab-geometry"/></svg><g transform="scale(-1,1)"><svg width="52%" height="100%" x="-100%" y="0"><use xlink:href="#chrome-tab-geometry-right-inactive" width="214" height="36" class="chrome-tab-geometry"/></svg></g></g></svg>
+          </div>
+          <div class="chrome-tab-content">
+            <div class="chrome-tab-favicon" style="background-image:url('img/favicon.png')"></div>
+            <div class="chrome-tab-title">New Tab</div>
+            <div class="chrome-tab-drag-handle"></div>
+            <div class="chrome-tab-close"></div>
+          </div>
+        </div>
+        <button class="newtab-btn chrome-tabs-newtab-btn" id="newtab-btn" title="New tab" aria-label="New tab"><svg class="newtab-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><line x1="9" y1="2" x2="9" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="9" x2="16" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="chrome-tabs-bottom-bar"></div>
+    </div>
+    <div class="titlebar-spacer"></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="nav-btn" id="btn-back" disabled><i class="fa-solid fa-arrow-left"></i></button>
+    <button class="nav-btn" id="btn-forward" disabled><i class="fa-solid fa-arrow-right"></i></button>
+    <button class="nav-btn" id="btn-refresh"><i class="fa-solid fa-rotate-right"></i></button>
+    <button class="nav-btn" id="btn-home"><i class="fa-solid fa-house"></i></button>
+    <div class="address-bar-wrap glass">
+      <button class="lock-icon-btn" id="lock-icon-btn" type="button" aria-label="Connection info">
+        <i class="fa-solid fa-circle-info lock-icon" id="lock-icon"></i>
+      </button>
+      <input type="text" id="url-input" placeholder="Search or enter address" spellcheck="false" autocomplete="off">
+      <button class="bookmark-star-btn" id="btn-bookmark-star" title="Bookmark this page" aria-label="Bookmark this page" style="display:none">
+        <i class="fa-regular fa-star"></i>
+      </button>
+      <div class="wisp-switcher-shell" id="wisp-switcher-btn" role="button" tabindex="0" title="Choose Wisp server" aria-label="Choose Wisp server" aria-haspopup="true" aria-expanded="false">
+        <div class="wisp-switcher-trigger">
+          <span class="wisp-switcher-icon wisp-flag" id="wisp-switcher-icon" aria-hidden="true"></span>
+          <span class="wisp-switcher-current" id="wisp-switcher-current">Auto</span>
+          <i class="fa-solid fa-chevron-down wisp-switcher-caret"></i>
+        </div>
+        <button class="wisp-switcher-collapse" id="wisp-switcher-collapse" type="button" aria-label="Minimize Wisp selector" hidden>
+          <i class="fa-solid fa-chevron-up"></i>
+        </button>
+        <div class="wisp-switcher-menu glass" id="wisp-switcher-menu" hidden>
+          <div class="wisp-switcher-menu-head">
+            <div class="wisp-switcher-menu-title">Wisp Regions</div>
+          </div>
+          <div class="wisp-switcher-menu-list" id="wisp-switcher-menu-list"></div>
+        </div>
+      </div>
+      <div class="connection-popup glass" id="connection-popup" hidden>
+        <div class="connection-popup-title" id="connection-popup-title">Connection</div>
+        <div class="connection-popup-desc" id="connection-popup-desc"></div>
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <div class="customize-wrap" id="customize-wrap">
+        <button class="nav-btn" id="btn-customize" title="Customize" aria-label="Customize" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-paintbrush"></i></button>
+      </div>
+      <button class="nav-btn" id="btn-about" title="About" aria-label="About"><i class="fa-solid fa-circle-info"></i></button>
+      <button class="nav-btn" id="btn-user-page" title="Account" aria-label="Account"><i class="fa-solid fa-user"></i></button>
+      <div class="waffle-wrap" id="waffle-wrap">
+        <button class="nav-btn" id="btn-waffle" title="Apps" aria-label="Apps" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+        <div class="waffle-menu glass" id="waffle-menu" hidden>
+          <div class="waffle-menu-title">Apps</div>
+          <button class="waffle-item" data-local-uri="pluto://games"><i class="fa-solid fa-gamepad"></i><span>Games</span></button>
+          <button class="waffle-item" data-local-uri="pluto://movies"><i class="fa-solid fa-film"></i><span>Movies</span></button>
+          <button class="waffle-item" data-local-uri="pluto://ai"><i class="fa-solid fa-robot"></i><span>AI</span></button>
+          <button class="waffle-item" data-local-uri="pluto://vms"><i class="fa-solid fa-server"></i><span>VMs</span></button>
+          <button class="waffle-item" data-local-uri="pluto://cloud"><i class="fa-solid fa-cloud"></i><span>Cloud Gaming</span></button>
+          <button class="waffle-item" data-local-uri="pluto://stream"><i class="fa-solid fa-clapperboard"></i><span>Streaming</span></button>
         </div>
       </div>
     </div>
-    <div class="hero__scroller" id="hero-scroller">
-      <div class="hero__scroller-track" id="hero-scroller-track"></div>
+  </div>
+  </div>
+
+  <div class="bookmarks-bar glass" id="bookmarks-bar"></div>
+
+  <div class="content-area">
+    <div class="new-tab-page" id="new-tab-page">
+
+<div class="logo" id="logo" role="img" aria-label="Plutonium"></div>
+
+<div class="search-box glass">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="text" id="newtab-search" placeholder="Search the web">
+</div>
+
+<div class="app-flanks" id="app-flanks">
+  <div class="app-column">
+    <button class="app-tile glass" data-local-uri="pluto://games"><span class="app-tile-icon"><i class="fa-solid fa-gamepad"></i></span><span>Games</span></button>
+    <button class="app-tile glass" data-local-uri="pluto://ai"><span class="app-tile-icon"><i class="fa-solid fa-robot"></i></span><span>AI</span></button>
+    <button class="app-tile glass" data-local-uri="pluto://cloud"><span class="app-tile-icon"><i class="fa-solid fa-cloud"></i></span><span>Cloud Gaming</span></button>
+  </div>
+  <div class="app-column">
+    <button class="app-tile glass" data-local-uri="pluto://movies"><span class="app-tile-icon"><i class="fa-solid fa-film"></i></span><span>Movies</span></button>
+    <button class="app-tile glass" data-local-uri="pluto://vms"><span class="app-tile-icon"><i class="fa-solid fa-server"></i></span><span>VMs</span></button>
+    <button class="app-tile glass" data-local-uri="pluto://stream"><span class="app-tile-icon"><i class="fa-solid fa-clapperboard"></i></span><span>Streaming</span></button>
+  </div>
+</div>
+
+<div class="proxy-engine-switch glass" role="group" aria-label="Proxy engine">
+  <button class="proxy-engine-btn active" data-engine="uv" title="Ultraviolet service worker proxy">
+    <i class="fa-solid fa-bolt"></i> UV
+  </button>
+  <button class="proxy-engine-btn" data-engine="sj" title="Scramjet service worker proxy">
+    <i class="fa-solid fa-shield-halved"></i> Scramjet
+  </button>
+  <button class="proxy-engine-btn" data-engine="hb" title="Hyperbeam cloud browser session">
+    <i class="fa-solid fa-desktop"></i> Hyperbeam
+  </button>
+</div>
+
+<div class="status-bar newtab-wisp glass" id="wisp-bar">
+  <span id="status-text"></span>
+  <span class="wisp-bar-label" id="wisp-bar-label"><i class="fa-solid fa-circle-notch fa-spin"></i> Connecting...</span>
+</div>
+
+<div class="shortcuts"></div>
+
     </div>
-    <div class="hero__scroller" id="hero-scroller-2">
-      <div class="hero__scroller-track" id="hero-scroller-track-2"></div>
-    </div>
-  </section>
-
-  <!-- ── Workers / Services ──────────────────────────────────────────────── -->
-  <section class="workers">
-    <div class="workers__inner">
-      <div class="workers__heading">Services &amp; Workers</div>
-      <div class="workers__grid">
-
-        <a class="worker-card" href="https://accounting.cdn.plutoniumnet.work" target="_blank" rel="noopener">
-          <div class="worker-card__name">Plutonium Firebase Proxy</div>
-          <div class="worker-card__route">accounting.cdn.plutoniumnet.work</div>
-          <p class="worker-card__desc">Proxies Firebase Auth, Firestore, and Realtime Database — keeping API keys server-side with CORS handling for browser clients.</p>
-          <div class="worker-card__tags">
-            <span class="worker-tag">GET /config</span>
-            <span class="worker-tag">POST /auth/email</span>
-            <span class="worker-tag">POST /auth/signup</span>
-            <span class="worker-tag">/firestore/…</span>
-            <span class="worker-tag">/rtdb/…</span>
-          </div>
-        </a>
-
-        <a class="worker-card" href="https://ai.cdn.plutoniumnet.work" target="_blank" rel="noopener">
-          <div class="worker-card__name">Plutonium Groq Worker</div>
-          <div class="worker-card__route">ai.cdn.plutoniumnet.work</div>
-          <p class="worker-card__desc">Proxies Groq chat completions — keeping the API key server-side with per-user rate limiting via KV.</p>
-          <div class="worker-card__tags">
-            <span class="worker-tag">POST /chat</span>
-            <span class="worker-tag">GET /models</span>
-            <span class="worker-tag">GET /ratelimit</span>
-          </div>
-        </a>
-
-        <a class="worker-card" href="https://proxy.cdn.plutoniumnet.work" target="_blank" rel="noopener">
-          <div class="worker-card__name">Plutonium Proxy Worker</div>
-          <div class="worker-card__route">proxy.cdn.plutoniumnet.work</div>
-          <p class="worker-card__desc">Spins up a borderless Hyperbeam kiosk session for a given URL — no auth required, API key stays server-side.</p>
-          <div class="worker-card__tags">
-            <span class="worker-tag">POST /session</span>
-            <span class="worker-tag">DELETE /session</span>
-          </div>
-        </a>
-
-        <a class="worker-card" href="https://vm.cdn.plutoniumnet.work" target="_blank" rel="noopener">
-          <div class="worker-card__name">Plutonium VM Worker</div>
-          <div class="worker-card__route">vm.cdn.plutoniumnet.work</div>
-          <p class="worker-card__desc">Proxies Hyperbeam VM session creation and deletion — keeping the API key server-side with per-user rate limits.</p>
-          <div class="worker-card__tags">
-            <span class="worker-tag">POST /session</span>
-            <span class="worker-tag">GET /stats</span>
-          </div>
-        </a>
-
-        <a class="worker-card" href="https://cgapi.cdn.plutoniumnet.work" target="_blank" rel="noopener">
-          <div class="worker-card__name">Plutonium-CGAPI</div>
-          <div class="worker-card__route">cgapi.cdn.plutoniumnet.work</div>
-          <p class="worker-card__desc">Self-hosted cloud gaming API — streams games over WebRTC with session lifecycle management, queue handling, and rate limiting.</p>
-          <div class="worker-card__tags">
-            <span class="worker-tag">POST /cloud/v1/createSession</span>
-            <span class="worker-tag">POST /cloud/v1/startGame</span>
-            <span class="worker-tag">WS /cloud/v1/signal/:uuid</span>
-          </div>
-        </a>
-
+    <iframe id="page-frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-top-navigation-by-user-activation"></iframe>
+    <div class="page-loading-screen glass" id="page-loading-screen" style="display:none">
+      <div class="page-loading-spinner">
+        <div class="pls-ring pls-ring-0"></div>
+        <div class="pls-ring pls-ring-1"></div>
+        <div class="pls-ring pls-ring-2"></div>
+        <div class="pls-orb"></div>
       </div>
+      <div class="page-loading-url" id="page-loading-url"></div>
     </div>
-  </section>
+  </div>
 
-  <script src="bg/js/particles.min.js"></script>
-  <script src="bg/js/three.min.js"></script>
-  <script src="bg/js/p5.min.js"></script>
-  <script src="bg/js/vanta.birds.min.js"></script>
-  <script src="bg/js/vanta.fog.min.js"></script>
-  <script src="bg/js/vanta.waves.min.js"></script>
-  <script src="bg/js/vanta.clouds.min.js"></script>
-  <script src="bg/js/vanta.globe.min.js"></script>
-  <script src="bg/js/vanta.net.min.js"></script>
-  <script src="bg/js/vanta.trunk.min.js"></script>
-  <script src="bg/js/vanta.topology.min.js"></script>
-  <script src="bg/js/vanta.dots.min.js"></script>
-  <script src="bg/js/vanta.rings.min.js"></script>
-  <script src="bg/js/vanta.halo.min.js"></script>
-  <script src="js/cloud-store.js"></script>
-  <script>
-    PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
-  </script>
-  <script src="js/home-dock.js"></script>
-  <script src="js/nav.js"></script>
-  <script src="bg/js/bg-init.js"></script>
-  <script>
-    (async function () {
-      try {
-        const res = await fetch('https://g.cdn.plutoniumnet.work/config.json');
-        const cfg = await res.json();
-        const games = (cfg.games || []).filter(g => g.image);
+</div>
 
-        const track  = document.getElementById('hero-scroller-track');
-        const track2 = document.getElementById('hero-scroller-track-2');
-        if (!track || !games.length) return;
+<div class="customize-scrim" id="customize-scrim"></div>
+<div class="customize-menu glass" id="customize-menu" hidden>
+  <div class="customize-menu-title">Customize</div>
+  <div class="customize-menu-scroll">
+    <div class="customize-section-label">Background</div>
+    <div class="customize-effect-grid" id="customize-effects"></div>
+    <div class="customize-section-label">Accent Color</div>
+    <div class="customize-swatches" id="customize-accent"></div>
+  </div>
+</div>
 
-        const shuffled = [...games].sort(() => Math.random() - 0.5);
-
-        [[track, games], [track2, shuffled]].forEach(([el, list]) => {
-          const all = [...list, ...list];
-          all.forEach(g => {
-            const img = document.createElement('img');
-            img.src = 'https://g.cdn.plutoniumnet.work/' + g.image;
-            img.alt = g.name;
-            img.className = 'hero__scroller-img';
-            img.loading = 'lazy';
-            img.dataset.gameId = g.id;
-            img.dataset.gameName = g.name;
-            el.appendChild(img);
-          });
-          const duration = list.length * 3.2;
-          el.style.animationDuration = duration + 's';
-        });
-
-        // Hover functionality
-        const scrollers = document.querySelectorAll('.hero__scroller');
-        
-        scrollers.forEach(scroller => {
-          const track = scroller.querySelector('.hero__scroller-track');
-          
-          scroller.addEventListener('mouseenter', () => {
-            track.classList.add('paused');
-            highlightFocusedImages(scroller);
-          });
-          
-          scroller.addEventListener('mouseleave', () => {
-            track.classList.remove('paused');
-            removeHighlights(scroller);
-          });
-          
-          scroller.addEventListener('click', (e) => {
-            if (e.target.classList.contains('hero__scroller-img') && e.target.classList.contains('highlighted')) {
-              const gameId = e.target.dataset.gameId;
-              if (gameId) {
-                window.location.href = `games.html#${gameId}`;
-              }
-            }
-          });
-        });
-
-        function highlightFocusedImages(scroller) {
-          const images = scroller.querySelectorAll('.hero__scroller-img');
-          const scrollerRect = scroller.getBoundingClientRect();
-          const centerY = scrollerRect.top + scrollerRect.height / 2;
-          
-          const imageDistances = [];
-          
-          images.forEach(img => {
-            const imgRect = img.getBoundingClientRect();
-            const imgCenterY = imgRect.top + imgRect.height / 2;
-            const distance = Math.abs(centerY - imgCenterY);
-            imageDistances.push({ img, distance });
-          });
-          
-          imageDistances.sort((a, b) => a.distance - b.distance);
-          
-          const top3 = imageDistances.slice(0, 3);
-          top3.forEach(item => {
-            item.img.classList.add('highlighted');
-          });
-        }
-
-        function removeHighlights(scroller) {
-          const highlighted = scroller.querySelectorAll('.hero__scroller-img.highlighted');
-          highlighted.forEach(img => img.classList.remove('highlighted'));
-        }
-
-      } catch (_) {}
-    })();
-  </script>
+<script src="js/cloud-store.js"></script>
+<script>
+  PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
+</script>
+<script src="js/account.js"></script>
+<script src="https://unpkg.com/draggabilly@2.2.0/dist/draggabilly.pkgd.min.js"></script>
+<script src="/baremux/index.js"></script>
+<script src="/uv/uv.bundle.js"></script>
+<script src="/uv/uv.config.js"></script>
+<script src="/sj/scramjet.all.js"></script>
+<script src="js/chrome-tabs.js"></script>
+<script src="js/bookmarks.js"></script>
+<script src="js/bookmarks-bar.js"></script>
+<script src="js/proxy.js"></script>
+<script src="js/url.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/keyboard.js"></script>
+<script src="js/pins.js"></script>
+<script src="js/theme-state.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/logo.js"></script>
+<script src="js/main.js"></script>
+<script src="js/tabs.js"></script>
+<script src="js/loading.js"></script>
+<script src="js/escape.js"></script>
 </body>
 </html>
