@@ -14,7 +14,7 @@ import colorsys
 ACCENTS = {
     "plutonium-pink": "#e8175d",
     "violet":         "#7c3aed",
-    "blue":           "#2563eb",
+    "blue":           "#3c5085",
     "emerald":        "#059669",
     "amber":          "#d97706",
     "red":            "#dc2626",

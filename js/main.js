@@ -81,7 +81,7 @@ const customizeWallpapers = document.getElementById('customize-wallpapers')
 const ACCENT_SWATCHES = [
   { color: '#e8175d', label: 'Plutonium Pink' },
   { color: '#7c3aed', label: 'Violet' },
-  { color: '#2563eb', label: 'Blue' },
+  { color: '#3c5085', label: 'Blue' },
   { color: '#059669', label: 'Emerald' },
   { color: '#d97706', label: 'Amber' },
   { color: '#dc2626', label: 'Red' },
@@ -409,10 +409,481 @@ function closeAboutDialog() {
 }
 
 // ── Account dialog ────────────────────────────────────────────────────────
+function acctShowToast(msg) {
+  const t = document.getElementById('acct-toast')
+  if (!t) return
+  t.textContent = msg
+  t.classList.add('show')
+  clearTimeout(t._tid)
+  t._tid = setTimeout(() => t.classList.remove('show'), 2200)
+}
+
+function acctScheduleLocalSync(type) {
+  const am = window.accountManager
+  try {
+    if (type === 'pins') {
+      if (typeof renderPins === 'function') renderPins()
+      if (am && typeof am.schedulePinSync === 'function') am.schedulePinSync()
+    } else if (type === 'bookmarks') {
+      if (am && typeof am.scheduleBookmarkSync === 'function') am.scheduleBookmarkSync()
+    }
+  } catch (_) {}
+}
+
+function acctConfirm(title, desc, onConfirm) {
+  const overlay = document.createElement('div')
+  overlay.className = 'confirm-overlay'
+  overlay.innerHTML = `
+    <div class="confirm-box">
+      <div class="confirm-box-title">${title}</div>
+      <div class="confirm-box-desc">${desc}</div>
+      <div class="confirm-box-actions">
+        <button class="btn btn-ghost" id="conf-cancel">Cancel</button>
+        <button class="btn btn-danger" id="conf-ok">Confirm</button>
+      </div>
+    </div>
+  `
+  document.body.appendChild(overlay)
+  overlay.querySelector('#conf-cancel').addEventListener('click', () => overlay.remove())
+  overlay.querySelector('#conf-ok').addEventListener('click', () => { overlay.remove(); onConfirm() })
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+}
+
+function acctExportData(type) {
+  const key = type === 'bookmarks' ? 'plu_bookmarks' : 'plu_pins'
+  let data = []
+  try { data = JSON.parse(localStorage.getItem(key)) || [] } catch {}
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `plu_${type}_${Date.now()}.json`
+  a.click()
+  acctShowToast(`${type.charAt(0).toUpperCase() + type.slice(1)} exported`)
+}
+
+function acctImportData(type) {
+  const input = document.getElementById('import-file-input')
+  if (!input) return
+  input.onchange = () => {
+    const file = input.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result)
+        if (!Array.isArray(data)) { acctShowToast('Invalid file format'); return }
+        const key = type === 'bookmarks' ? 'plu_bookmarks' : 'plu_pins'
+        localStorage.setItem(key, JSON.stringify(data))
+        acctShowToast(`Imported ${data.length} ${type}`)
+        acctRenderBookmarks()
+        acctUpdateStats()
+        acctScheduleLocalSync(type)
+      } catch { acctShowToast('Failed to parse file') }
+    }
+    reader.readAsText(file)
+    input.value = ''
+  }
+  input.click()
+}
+
+function acctClearData(type) {
+  acctConfirm(
+    `Clear all ${type}?`,
+    `This will permanently remove all your saved ${type} from this device. This cannot be undone.`,
+    () => {
+      const key = type === 'bookmarks' ? 'plu_bookmarks' : 'plu_pins'
+      localStorage.removeItem(key)
+      acctShowToast(`${type.charAt(0).toUpperCase() + type.slice(1)} cleared`)
+      acctRenderBookmarks()
+      acctUpdateStats()
+      acctScheduleLocalSync(type)
+    }
+  )
+}
+
+function acctRenderBookmarks() {
+  const list = document.getElementById('acct-bm-list')
+  if (!list) return
+  let bookmarks = []
+  try { bookmarks = JSON.parse(localStorage.getItem('plu_bookmarks')) || [] } catch {}
+
+  const countLabel = document.getElementById('bm-count-label')
+  const badge = document.getElementById('bm-count-badge')
+  if (countLabel) countLabel.textContent = bookmarks.length ? `${bookmarks.length} saved` : 'No bookmarks saved'
+  if (badge) {
+    badge.textContent = bookmarks.length
+    badge.className = 'badge ' + (bookmarks.length > 0 ? 'active' : 'inactive')
+  }
+
+  if (!bookmarks.length) {
+    list.innerHTML = '<div class="bm-empty">No bookmarks yet</div>'
+    return
+  }
+
+  list.innerHTML = ''
+  bookmarks.slice(0, 8).forEach(bm => {
+    const row = document.createElement('div')
+    row.className = 'bm-row'
+
+    const fav = document.createElement('div')
+    fav.className = 'bm-favicon'
+    const img = document.createElement('img')
+    img.src = `https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(bm.url)}`
+    img.onerror = () => { img.replaceWith(Object.assign(document.createElement('i'), { className: 'fa-solid fa-globe' })) }
+    fav.appendChild(img)
+
+    const title = document.createElement('div')
+    title.className = 'bm-title'
+    title.textContent = bm.title || bm.url
+
+    const url = document.createElement('div')
+    url.className = 'bm-url'
+    url.textContent = bm.url
+
+    const removeBtn = document.createElement('button')
+    removeBtn.className = 'bm-remove'
+    removeBtn.title = 'Remove'
+    removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>'
+    removeBtn.addEventListener('click', () => {
+      try {
+        let bms = JSON.parse(localStorage.getItem('plu_bookmarks')) || []
+        bms = bms.filter(b => b.url !== bm.url)
+        localStorage.setItem('plu_bookmarks', JSON.stringify(bms))
+      } catch {}
+      acctRenderBookmarks()
+      acctUpdateStats()
+      acctShowToast('Bookmark removed')
+    })
+
+    row.appendChild(fav)
+    row.appendChild(title)
+    row.appendChild(url)
+    row.appendChild(removeBtn)
+    list.appendChild(row)
+  })
+
+  if (bookmarks.length > 8) {
+    const more = document.createElement('div')
+    more.style.cssText = 'padding:10px 16px;font-size:11px;color:rgba(255,255,255,.3);text-align:center'
+    more.textContent = `+${bookmarks.length - 8} more`
+    list.appendChild(more)
+  }
+}
+
+function acctUpdateStats() {
+  let bms = []
+  try { bms = JSON.parse(localStorage.getItem('plu_bookmarks')) || [] } catch {}
+  let pins = []
+  try { pins = JSON.parse(localStorage.getItem('plu_pins')) || [] } catch {}
+  const bmEl = document.getElementById('stat-bookmarks')
+  const pinEl = document.getElementById('stat-pins')
+  const storEl = document.getElementById('stat-storage')
+  if (bmEl) bmEl.textContent = bms.length
+  if (pinEl) pinEl.textContent = pins.length
+  if (storEl) storEl.textContent = localStorage.length
+
+  const guestBm = document.getElementById('guest-bm-count')
+  const guestPin = document.getElementById('guest-pin-count')
+  if (guestBm) guestBm.textContent = bms.length + ' saved'
+  if (guestPin) guestPin.textContent = pins.length + ' pinned'
+}
+
+function acctFillProfile(am) {
+  const user = am.user
+  if (!user) return
+
+  const avatarEl = document.getElementById('acct-avatar')
+  if (user.photoURL) {
+    avatarEl.innerHTML = `<img src="${user.photoURL}" alt="avatar">`
+  } else {
+    avatarEl.textContent = (user.displayName || user.email || '?')[0].toUpperCase()
+  }
+
+  am.getUserProfile().then(profile => {
+    const name = (profile && profile.name) || user.displayName || user.email.split('@')[0]
+    document.getElementById('acct-name').textContent = name
+  }).catch(() => {
+    document.getElementById('acct-name').textContent = user.displayName || user.email.split('@')[0]
+  })
+
+  document.getElementById('acct-email').textContent = user.email
+}
+
+let _acctSyncInterval = null
+function acctRenderPage() {
+  const am = window.accountManager
+  if (!am || !am.firebaseLoaded) { setTimeout(acctRenderPage, 200); return }
+
+  const loadingEl = document.getElementById('loading-state')
+  if (loadingEl) loadingEl.style.display = 'none'
+
+  if (!am.user && !am.isGuest) { setTimeout(acctRenderPage, 200); return }
+
+  acctUpdateStats()
+
+  if (!am.user) {
+    const guestEl = document.getElementById('guest-state')
+    if (guestEl) guestEl.style.display = 'block'
+    const signedInEl = document.getElementById('signed-in-state')
+    if (signedInEl) signedInEl.style.display = 'none'
+    const signinBtn = document.getElementById('acct-signin-btn')
+    if (signinBtn) signinBtn.addEventListener('click', () => {
+      am.isGuest = false
+      am.showAuthPrompt()
+    })
+    return
+  }
+
+  const guestEl = document.getElementById('guest-state')
+  if (guestEl) guestEl.style.display = 'none'
+  const signedInEl = document.getElementById('signed-in-state')
+  if (signedInEl) signedInEl.style.display = 'block'
+
+  acctFillProfile(am)
+  acctRenderBookmarks()
+  acctSetupSignedInListeners(am)
+
+  if (_acctSyncInterval) clearInterval(_acctSyncInterval)
+  _acctSyncInterval = setInterval(() => { acctUpdateStats() }, 5000)
+}
+
+function acctSetupSignedInListeners(am) {
+  const signoutBtn = document.getElementById('signout-btn')
+  if (signoutBtn) {
+    signoutBtn.addEventListener('click', async () => {
+      await am.signOut()
+      acctShowToast('Signed out')
+      closeAccountDialog()
+    })
+  }
+
+  const deleteBtn = document.getElementById('delete-account-btn')
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      acctConfirm(
+        'Delete your account?',
+        'This permanently deletes your account and all synced data. This action cannot be undone.',
+        async () => {
+          try {
+            if (am.deleteAccount) await am.deleteAccount()
+            acctShowToast('Account deleted')
+            closeAccountDialog()
+          } catch { acctShowToast('Failed to delete account') }
+        }
+      )
+    })
+  }
+
+  acctSetupPasswordReset(am)
+}
+
+function acctSetupPasswordReset(am) {
+  const row = document.getElementById('pw-reset-row')
+  if (!row) return
+
+  let sending = false
+
+  row.addEventListener('click', async () => {
+    if (sending) return
+    const user = am.user
+    if (!user || !user.email) { acctShowToast('No email on file'); return }
+
+    sending = true
+    const sub = document.getElementById('pw-reset-sub')
+    const chevron = document.getElementById('pw-reset-chevron')
+    if (sub) sub.textContent = 'Sending…'
+    if (chevron) chevron.className = 'fa-solid fa-circle-notch fa-spin-custom'
+
+    try {
+      if (typeof am.resetPassword !== 'function') throw new Error('no-op')
+      await am.resetPassword(user.email)
+      acctShowToast('Reset link sent to ' + user.email)
+      if (sub) sub.textContent = 'Reset link sent — check your inbox'
+      if (chevron) chevron.className = 'row-chevron fa-solid fa-check'
+      setTimeout(() => {
+        if (sub) sub.textContent = 'Send a reset link to your email'
+        if (chevron) chevron.className = 'row-chevron fa-solid fa-chevron-right'
+        sending = false
+      }, 4000)
+    } catch (err) {
+      acctShowToast('Failed to send reset link')
+      if (sub) sub.textContent = 'Send a reset link to your email'
+      if (chevron) chevron.className = 'row-chevron fa-solid fa-chevron-right'
+      sending = false
+    }
+  })
+}
+
 function openAccountDialog() {
   const scrim = document.getElementById('account-scrim')
   const dlg = document.getElementById('account-dialog')
   if (!scrim || !dlg) return
+
+  // Inject inline HTML
+  dlg.innerHTML = `
+    <div class="account-dialog__head">
+      <span class="account-dialog__title"><i class="fa-solid fa-user" style="margin-right:6px;opacity:.5"></i>Account</span>
+      <button class="account-dialog__close" id="account-dialog-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="account-dialog__body">
+
+      <div id="loading-state">
+        <div class="profile-card glass">
+          <div class="avatar" style="background:rgba(255,255,255,.07)"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+            <div class="skeleton" style="width:140px;height:14px"></div>
+            <div class="skeleton" style="width:200px;height:11px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="guest-state" style="display:none">
+        <div class="guest-banner glass">
+          <i class="fa-solid fa-circle-info"></i>
+          <div class="guest-banner-text">
+            <strong>You\u2019re browsing as a guest</strong>
+            <span>Sign in to sync bookmarks, pins, and settings across devices.</span>
+          </div>
+          <button class="btn btn-primary" id="acct-signin-btn"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In</button>
+        </div>
+
+        <div class="section-label">Local Data</div>
+        <div class="card glass">
+          <div class="card-row">
+            <div class="row-icon grey"><i class="fa-solid fa-bookmark"></i></div>
+            <div class="row-body">
+              <div class="row-title">Bookmarks</div>
+              <div class="row-sub" id="guest-bm-count">Loading...</div>
+            </div>
+          </div>
+          <div class="card-row">
+            <div class="row-icon grey"><i class="fa-solid fa-thumbtack"></i></div>
+            <div class="row-body">
+              <div class="row-title">Pins</div>
+              <div class="row-sub" id="guest-pin-count">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="signed-in-state" style="display:none">
+
+        <div class="profile-card glass" id="profile-card">
+          <div class="avatar" id="acct-avatar">?</div>
+          <div class="profile-info">
+            <div class="profile-name" id="acct-name">\u2014</div>
+            <div class="profile-email" id="acct-email">\u2014</div>
+          </div>
+        </div>
+
+        <div class="stats-strip">
+          <div class="stat-box glass">
+            <div class="stat-value" id="stat-bookmarks">\u2014</div>
+            <div class="stat-label">Bookmarks</div>
+          </div>
+          <div class="stat-box glass">
+            <div class="stat-value" id="stat-pins">\u2014</div>
+            <div class="stat-label">Pins</div>
+          </div>
+          <div class="stat-box glass">
+            <div class="stat-value" id="stat-storage">\u2014</div>
+            <div class="stat-label">Local Keys</div>
+          </div>
+        </div>
+
+        <div class="section-label">Data</div>
+        <div class="card glass">
+          <div class="card-row">
+            <div class="row-icon blue"><i class="fa-solid fa-bookmark"></i></div>
+            <div class="row-body">
+              <div class="row-title">Bookmarks</div>
+              <div class="row-sub" id="bm-count-label">Loading...</div>
+            </div>
+            <div class="row-end">
+              <span id="bm-count-badge" class="badge active"></span>
+            </div>
+          </div>
+          <div id="acct-bm-list" class="bm-list"></div>
+          <div class="export-grid">
+            <button class="export-btn" id="acct-export-bm">
+              <i class="fa-solid fa-file-arrow-down"></i>
+              <div class="export-btn-body">
+                <div class="export-btn-title">Export Bookmarks</div>
+                <div class="export-btn-sub">Save as JSON</div>
+              </div>
+            </button>
+            <button class="export-btn" id="acct-import-bm">
+              <i class="fa-solid fa-file-arrow-up"></i>
+              <div class="export-btn-body">
+                <div class="export-btn-title">Import Bookmarks</div>
+                <div class="export-btn-sub">Load from JSON</div>
+              </div>
+            </button>
+            <button class="export-btn" id="acct-export-pins">
+              <i class="fa-solid fa-thumbtack"></i>
+              <div class="export-btn-body">
+                <div class="export-btn-title">Export Pins</div>
+                <div class="export-btn-sub">Save as JSON</div>
+              </div>
+            </button>
+            <button class="export-btn" id="acct-clear-bm">
+              <i class="fa-solid fa-trash-can" style="color:rgba(242,139,130,0.7)"></i>
+              <div class="export-btn-body">
+                <div class="export-btn-title" style="color:var(--ui-danger)">Clear Bookmarks</div>
+                <div class="export-btn-sub">Remove all saved bookmarks</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="section-label">Security</div>
+        <div class="card glass">
+          <div class="card-row clickable" id="pw-reset-row">
+            <div class="row-icon grey"><i class="fa-solid fa-key"></i></div>
+            <div class="row-body">
+              <div class="row-title">Change Password</div>
+              <div class="row-sub" id="pw-reset-sub">Send a reset link to your email</div>
+            </div>
+            <div class="row-end"><i class="row-chevron fa-solid fa-chevron-right" id="pw-reset-chevron"></i></div>
+          </div>
+        </div>
+
+        <div class="section-label">Account</div>
+        <div class="card glass">
+          <div class="card-row">
+            <div class="row-icon grey"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+            <div class="row-body">
+              <div class="row-title">Sign Out</div>
+              <div class="row-sub">Your synced data stays in the cloud</div>
+            </div>
+            <div class="row-end">
+              <button class="btn btn-ghost" id="signout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+            </div>
+          </div>
+          <div class="card-row">
+            <div class="row-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="row-body">
+              <div class="row-title" style="color:var(--ui-danger)">Delete Account</div>
+              <div class="row-sub">Permanently remove your account and all data</div>
+            </div>
+            <div class="row-end">
+              <button class="btn btn-danger" id="delete-account-btn"><i class="fa-solid fa-trash-can"></i> Delete</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  `
+
+  // Bind export/import/clear buttons
+  document.getElementById('acct-export-bm')?.addEventListener('click', () => acctExportData('bookmarks'))
+  document.getElementById('acct-import-bm')?.addEventListener('click', () => acctImportData('bookmarks'))
+  document.getElementById('acct-export-pins')?.addEventListener('click', () => acctExportData('pins'))
+  document.getElementById('acct-clear-bm')?.addEventListener('click', () => acctClearData('bookmarks'))
+
+  // Run account page logic
+  acctRenderPage()
 
   // show
   dlg.hidden = false
@@ -422,11 +893,7 @@ function openAccountDialog() {
   dlg.style.transform = 'translate(-50%,-50%) scale(1)'
   scrim.style.opacity = '1'
 
-  // refresh the frame content so state is current
-  const frame = document.getElementById('account-frame')
-  if (frame) frame.src = 'pages/account.html'
-
-  // close handlers (idempotent-ish: re-bind is fine since old ones die with the dialog)
+  // close handlers
   document.getElementById('account-dialog-close').addEventListener('click', closeAccountDialog)
   scrim.addEventListener('click', closeAccountDialog)
   document.addEventListener('keydown', function _esc(e) {
@@ -438,6 +905,7 @@ function closeAccountDialog() {
   const scrim = document.getElementById('account-scrim')
   const dlg = document.getElementById('account-dialog')
   if (!dlg || !scrim) return
+  if (_acctSyncInterval) { clearInterval(_acctSyncInterval); _acctSyncInterval = null }
   dlg.style.opacity = '0'
   dlg.style.transform = 'translate(-50%,-50%) scale(0.96)'
   scrim.style.opacity = '0'

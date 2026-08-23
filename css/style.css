@@ -651,6 +651,79 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .account-dialog__contact i{font-size:18px;color:var(--ui-accent)}
 .account-dialog__cache-btn{width:100%;padding:10px 16px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.06);color:var(--ui-text);font-size:12px;font-family:inherit;cursor:pointer;transition:background .12s}
 .account-dialog__cache-btn:hover{background:rgba(255,255,255,.1)}
+/* ── Inline account-page components ────────────────────────────────── */
+.account-dialog__body .profile-card{padding:20px 16px;display:flex;align-items:center;gap:16px;margin-bottom:10px}
+.account-dialog__body .avatar{width:52px;height:52px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.06));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#fff;overflow:hidden;border:2px solid rgba(255,255,255,.2);box-shadow:0 4px 12px rgba(var(--ui-shadow-rgb),.2)}
+.account-dialog__body .avatar img{width:100%;height:100%;object-fit:cover}
+.account-dialog__body .profile-info{flex:1;min-width:0}
+.account-dialog__body .profile-name{font-size:17px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-dialog__body .profile-email{font-size:12px;color:rgba(255,255,255,.5);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-dialog__body .stats-strip{display:flex;gap:8px;margin-bottom:10px}
+.account-dialog__body .stat-box{flex:1;padding:14px 12px;text-align:center}
+.account-dialog__body .stat-value{font-size:22px;font-weight:600;color:#fff;letter-spacing:-.5px}
+.account-dialog__body .stat-label{font-size:10px;color:rgba(255,255,255,.4);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.account-dialog__body .badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;letter-spacing:.3px;flex-shrink:0}
+.account-dialog__body .badge.active{background:rgba(var(--ui-success-rgb),.2);color:var(--ui-success);border:1px solid rgba(var(--ui-success-rgb),.35)}
+.account-dialog__body .badge.inactive{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15)}
+.account-dialog__body .section-label{font-size:10px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:rgba(255,255,255,.8);padding:0 4px;margin-bottom:6px}
+.account-dialog__body .card{overflow:hidden;margin-bottom:10px}
+.account-dialog__body .card-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);transition:background .12s;min-height:52px}
+.account-dialog__body .card-row:last-child{border-bottom:none}
+.account-dialog__body .card-row.clickable{cursor:pointer}
+.account-dialog__body .card-row.clickable:hover{background:rgba(255,255,255,.06)}
+.account-dialog__body .card-row.clickable:active{background:rgba(255,255,255,.04)}
+.account-dialog__body .row-icon{width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
+.account-dialog__body .row-icon.blue{background:rgba(255,255,255,.18);color:#fff}
+.account-dialog__body .row-icon.green{background:rgba(255,255,255,.18);color:#fff}
+.account-dialog__body .row-icon.purple{background:rgba(var(--row-0-rgb),.25);color:var(--row-0)}
+.account-dialog__body .row-icon.orange{background:rgba(var(--row-1-rgb),.25);color:var(--row-1)}
+.account-dialog__body .row-icon.red{background:rgba(var(--row-2-rgb),.22);color:var(--row-2)}
+.account-dialog__body .row-icon.grey{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+.account-dialog__body .row-icon.yellow{background:rgba(var(--row-3-rgb),.22);color:var(--row-3)}
+.account-dialog__body .row-icon.teal{background:rgba(var(--row-4-rgb),.22);color:var(--row-4)}
+.account-dialog__body .row-body{flex:1;min-width:0}
+.account-dialog__body .row-title{font-size:13px;color:#e8eaed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-dialog__body .row-sub{font-size:11px;color:rgba(255,255,255,.42);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-dialog__body .row-end{display:flex;align-items:center;gap:8px;flex-shrink:0;color:rgba(255,255,255,.3);font-size:12px}
+.account-dialog__body .row-chevron{font-size:11px;color:rgba(255,255,255,.25)}
+.account-dialog__body .btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;font-size:12px;font-family:inherit;padding:7px 13px;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s;white-space:nowrap;flex-shrink:0;font-weight:500}
+.account-dialog__body .btn-ghost{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.account-dialog__body .btn-ghost:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.28);color:#fff;box-shadow:0 4px 12px rgba(var(--ui-shadow-rgb),.15)}
+.account-dialog__body .btn-danger{border:1px solid rgba(var(--ui-danger-rgb),.35);background:rgba(var(--ui-danger-rgb),.12);color:var(--ui-danger);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.account-dialog__body .btn-danger:hover{background:rgba(var(--ui-danger-rgb),.2);border-color:rgba(var(--ui-danger-rgb),.55);box-shadow:0 4px 12px rgba(var(--ui-danger-rgb),.15)}
+.account-dialog__body .btn-primary{border:1px solid rgba(var(--row-6-rgb),.4);background:rgba(var(--row-6-rgb),.18);color:var(--row-6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.account-dialog__body .btn-primary:hover{background:rgba(var(--row-6-rgb),.28);border-color:rgba(var(--row-6-rgb),.6);box-shadow:0 4px 12px rgba(var(--row-6-rgb),.2)}
+.account-dialog__body .bm-list{display:flex;flex-direction:column}
+.account-dialog__body .bm-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06);transition:background .12s}
+.account-dialog__body .bm-row:last-child{border-bottom:none}
+.account-dialog__body .bm-row:hover{background:rgba(255,255,255,.05)}
+.account-dialog__body .bm-favicon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.account-dialog__body .bm-favicon img{width:16px;height:16px;object-fit:contain}
+.account-dialog__body .bm-favicon i{font-size:12px;color:rgba(255,255,255,.35)}
+.account-dialog__body .bm-title{flex:1;font-size:12px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-dialog__body .bm-url{font-size:11px;color:rgba(255,255,255,.32);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.account-dialog__body .bm-remove{width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:rgba(var(--ui-danger-rgb),.45);cursor:pointer;font-size:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
+.account-dialog__body .bm-remove:hover{background:rgba(var(--ui-danger-rgb),.12);color:var(--ui-danger)}
+.account-dialog__body .bm-empty{font-size:13px;color:rgba(255,255,255,.32);text-align:center;padding:24px 0}
+.account-dialog__body .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px}
+.account-dialog__body .export-btn{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 13px;cursor:pointer;transition:background .12s,border-color .12s,box-shadow .12s}
+.account-dialog__body .export-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);box-shadow:0 4px 12px rgba(var(--ui-shadow-rgb),.15)}
+.account-dialog__body .export-btn i{font-size:14px;color:rgba(255,255,255,.5);flex-shrink:0}
+.account-dialog__body .export-btn-title{font-size:12px;color:#ccc}
+.account-dialog__body .export-btn-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:1px}
+.account-dialog__body .guest-banner{display:flex;align-items:center;gap:14px;background:rgba(var(--ui-warn-rgb),.08);border:1px solid rgba(var(--ui-warn-rgb),.22);border-radius:12px;padding:16px;margin-bottom:12px;backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);box-shadow:0 4px 16px rgba(var(--ui-warn-rgb),.08),inset 0 1px 0 rgba(var(--ui-warn-rgb),.12)}
+.account-dialog__body .guest-banner i{font-size:20px;color:var(--ui-warn);flex-shrink:0}
+.account-dialog__body .guest-banner-text{flex:1}
+.account-dialog__body .guest-banner-text strong{display:block;font-size:13px;color:#fff;margin-bottom:2px}
+.account-dialog__body .guest-banner-text span{font-size:11px;color:rgba(255,255,255,.5)}
+.account-dialog__body .skeleton{background:linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.11) 50%,rgba(255,255,255,.06) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fa-spin-custom{animation:spin .7s linear infinite;display:inline-block}
+.account-dialog__contact{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;background:rgba(var(--ui-accent-rgb),.08);border:1px solid rgba(var(--ui-accent-rgb),.18);font-size:12px;color:var(--ui-text-sub)}
+.account-dialog__contact i{font-size:18px;color:var(--ui-accent)}
+.account-dialog__cache-btn{width:100%;padding:10px 16px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.06);color:var(--ui-text);font-size:12px;font-family:inherit;cursor:pointer;transition:background .12s}
+.account-dialog__cache-btn:hover{background:rgba(255,255,255,.1)}
 .pin-picker__header{padding:10px 14px 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--ui-text-muted)}
 .pin-picker__list{overflow-y:auto;flex:1;padding:0 6px 6px}
 .pin-picker__item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .12s}
@@ -771,8 +844,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   position:relative;z-index:1;
   transition:color .18s;
 }
-.proxy-engine-logo{width:18px;height:18px;object-fit:contain;filter:brightness(0) invert(1);opacity:.7}
-.proxy-engine-btn.active .proxy-engine-logo{opacity:1}
+.proxy-engine-logo{width:18px;height:18px;object-fit:contain;filter:grayscale(100%)}
 .proxy-engine-btn:hover{color:var(--ui-text)}
 .proxy-engine-btn.active{color:var(--ui-text)}
 .proxy-engine-slider{
@@ -949,8 +1021,8 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   animation:boot-letter 3s ease-in-out infinite;
 }
 .page-loading-spinner{
-  width:80px;height:80px;
-  padding:10px;border-radius:20px;box-sizing:border-box;
+  width:120px;height:120px;
+  padding:14px;border-radius:28px;box-sizing:border-box;
   position:relative;
   mask:conic-gradient(#000 0 0) content-box exclude,conic-gradient(#000 0 0);
   filter:blur(12px);
@@ -974,3 +1046,32 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.2px;
 }
+
+/* ── Account toast ───────────────────────────────────────────────────── */
+#acct-toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:rgba(255,255,255,.1);color:#fff;font-size:12px;
+  padding:8px 18px;border-radius:20px;
+  border:1px solid rgba(255,255,255,.2);
+  box-shadow:0 4px 20px rgba(var(--ui-shadow-rgb),.3),inset 0 1px 0 rgba(var(--ui-accent-rgb),.15);
+  backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  pointer-events:none;z-index:9999;
+  opacity:0;transition:opacity .18s,transform .18s;
+}
+#acct-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Confirm overlay ─────────────────────────────────────────────────── */
+.confirm-overlay{
+  position:fixed;inset:0;z-index:10000;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+}
+.confirm-box{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:14px;
+  box-shadow:0 16px 48px rgba(var(--ui-shadow-rgb),.4),inset 0 1px 0 rgba(var(--ui-accent-rgb),.15);
+  backdrop-filter:blur(32px) saturate(200%);-webkit-backdrop-filter:blur(32px) saturate(200%);
+  padding:24px;width:min(340px,90vw);
+}
+.confirm-box-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:8px}
+.confirm-box-desc{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:20px}
+.confirm-box-actions{display:flex;gap:8px;justify-content:flex-end}

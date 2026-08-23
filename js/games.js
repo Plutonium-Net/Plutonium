@@ -748,7 +748,7 @@
   const ICON_MAP = {
     '#e8175d': 'plutonium-pink',
     '#7c3aed': 'violet',
-    '#2563eb': 'blue',
+    '#3c5085': 'blue',
     '#059669': 'emerald',
     '#d97706': 'amber',
     '#dc2626': 'red',
