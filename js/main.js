@@ -13,10 +13,18 @@ const waffleWrap = document.getElementById('waffle-wrap')
 const waffleBtn = document.getElementById('btn-waffle')
 const waffleMenu = document.getElementById('waffle-menu')
 
+function positionWaffleMenu() {
+  if (!waffleBtn || !waffleMenu) return
+  const r = waffleBtn.getBoundingClientRect()
+  waffleMenu.style.top = Math.round(r.bottom + 8) + 'px'
+  waffleMenu.style.right = Math.round(window.innerWidth - r.right) + 'px'
+}
+
 function closeWaffleMenu() {
   waffleWrap && waffleWrap.classList.remove('is-open')
   waffleBtn && waffleBtn.setAttribute('aria-expanded', 'false')
   waffleMenu && (waffleMenu.hidden = true)
+  waffleMenu && waffleMenu.classList.remove('is-open')
 }
 
 function toggleWaffleMenu() {
@@ -24,9 +32,11 @@ function toggleWaffleMenu() {
   if (isOpen) {
     closeWaffleMenu()
   } else {
+    positionWaffleMenu()
     waffleWrap.classList.add('is-open')
     waffleBtn.setAttribute('aria-expanded', 'true')
     waffleMenu.hidden = false
+    requestAnimationFrame(() => waffleMenu.classList.add('is-open'))
   }
 }
 
@@ -42,11 +52,14 @@ if (waffleBtn) {
   })
   document.addEventListener('click', e => {
     if (!waffleWrap.classList.contains('is-open')) return
-    if (waffleWrap.contains(e.target)) return
+    if (waffleWrap.contains(e.target) || waffleMenu.contains(e.target)) return
     closeWaffleMenu()
   })
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeWaffleMenu()
+  })
+  window.addEventListener('resize', () => {
+    if (waffleWrap.classList.contains('is-open')) positionWaffleMenu()
   })
 }
 
@@ -177,9 +190,35 @@ if (customizeBtn) {
 window.addEventListener('storage', e => {
   if (e.key === 'plu_theme' || e.key === 'plu_settings') {
     if (customizeWrap && customizeWrap.classList.contains('is-open')) syncCustomizeMenu()
+    updateAccentFavicon()
   }
 })
 syncCustomizeMenu()
+
+// Swap the tab-bar favicon + browser favicon when the accent color changes
+function updateAccentFavicon() {
+  if (typeof BrowserThemeState === 'undefined' || !BrowserThemeState.getAccentIconPath) return
+  const path = BrowserThemeState.getAccentIconPath()
+  const link = document.getElementById('app-favicon')
+  if (link && link.href.split('/').pop() !== path.split('/').pop()) link.href = path
+  const ntIcon = document.getElementById('newtab-tab-favicon')
+  if (ntIcon && !ntIcon.style.backgroundImage.includes(path.split('/').pop())) {
+    ntIcon.style.backgroundImage = `url('${path}')`
+  }
+  const activeTab = typeof getActiveTab === 'function' ? getActiveTab() : null
+  if (activeTab && activeTab.dataset.url === 'newtab') {
+    const fav = activeTab.querySelector('.chrome-tab-favicon')
+    if (fav) fav.style.backgroundImage = `url('${path}')`
+  }
+}
+
+// Re-render the favicon when the theme changes within this page
+const favObserver = new MutationObserver(() => {
+  clearTimeout(favObserver._t)
+  favObserver._t = setTimeout(updateAccentFavicon, 150)
+})
+favObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })
+updateAccentFavicon()
 
 document.querySelectorAll('.proxy-engine-btn').forEach(btn => {
   btn.addEventListener('click', () => {

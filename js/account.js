@@ -335,7 +335,7 @@ class AccountManager {
         #plu-auth-box {
           position:relative;width:min(780px,92vw);aspect-ratio:16/9;
           border-radius:20px;overflow:hidden;
-          box-shadow:0 20px 60px rgba(0,0,0,.6);
+          box-shadow:0 20px 60px rgba(var(--ui-shadow-rgb),.6);
           display:flex;flex-direction:column;
         }
         .plu-glass {
@@ -345,7 +345,7 @@ class AccountManager {
         }
         .plu-glass-border {
           position:absolute;inset:0;border-radius:inherit;z-index:1;pointer-events:none;
-          box-shadow:inset 1px 1px 0 rgba(255,255,255,.15),inset 0 0 14px rgba(255,255,255,.05);
+          box-shadow:inset 1px 1px 0 rgba(var(--ui-accent-rgb),.15),inset 0 0 14px rgba(var(--ui-accent-rgb),.05);
         }
         .plu-auth-body { position:relative;z-index:2;display:flex;flex:1;min-height:0; }
         .plu-auth-left {
@@ -379,10 +379,10 @@ class AccountManager {
         }
         .plu-btn:disabled { opacity:.45;cursor:not-allowed;transform:none!important; }
         .plu-btn-google  { background:rgba(255,255,255,.94);color:#202124;border-color:transparent; }
-        .plu-btn-google:hover:not(:disabled)  { background:#fff;box-shadow:0 0 20px rgba(255,255,255,.2);transform:translateY(-1px); }
+        .plu-btn-google:hover:not(:disabled)  { background:#fff;box-shadow:0 0 20px rgba(var(--ui-accent-rgb),.2);transform:translateY(-1px); }
         .plu-btn-github  { background:rgba(22,27,34,.9);color:#fff;border-color:rgba(255,255,255,.1); }
         .plu-btn-github:hover:not(:disabled)  { background:rgba(22,27,34,1);transform:translateY(-1px); }
-        .plu-btn-primary { background:#e8175d;color:#fff;border-color:transparent; }
+        .plu-btn-primary { background:var(--pink);color:#fff;border-color:transparent; }
         .plu-btn-primary:hover:not(:disabled) { filter:brightness(1.1);transform:translateY(-1px); }
         .plu-btn-ghost   { background:transparent;color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.1);margin-bottom:0; }
         .plu-btn-ghost:hover { background:rgba(255,255,255,.07); }
@@ -391,7 +391,7 @@ class AccountManager {
           color:rgba(255,255,255,.38);font-size:12px;margin-bottom:12px;
         }
         .plu-divider::before,.plu-divider::after { content:'';flex:1;border-bottom:1px solid rgba(255,255,255,.1); }
-        .plu-error  { color:#f28b82;font-size:12px;min-height:16px;margin:-4px 0 8px; }
+        .plu-error  { color:var(--ui-danger);font-size:12px;min-height:16px;margin:-4px 0 8px; }
         .plu-toggle { text-align:center;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;margin-top:8px;transition:color .15s; }
         .plu-toggle:hover { color:#fff; }
         .plu-oauth-icon { width:17px;height:17px;flex-shrink:0; }

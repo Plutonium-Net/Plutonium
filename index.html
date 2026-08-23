@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Plutonium Network</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="shortcut icon" href="img/favicon.png" type="image/x-icon">
+<link rel="shortcut icon" id="app-favicon" href="img/favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/glass.css">
 </head>
@@ -25,7 +25,7 @@
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg"><defs><symbol id="chrome-tab-geometry-left" viewBox="0 0 214 36"><path d="M17 0h197v36H0v-2c4.5 0 9-3.5 9-8V8c0-4.5 3.5-8 8-8z"/></symbol><symbol id="chrome-tab-geometry-right" viewBox="0 0 214 36"><use xlink:href="#chrome-tab-geometry-left"/></symbol><symbol id="chrome-tab-geometry-left-inactive" viewBox="0 0 214 36"><path d="M17 0h197v32H17c-4.5 0-8-3.5-8-8V8c0-4.5 3.5-8 8-8z"/></symbol><symbol id="chrome-tab-geometry-right-inactive" viewBox="0 0 214 36"><use xlink:href="#chrome-tab-geometry-left-inactive"/></symbol><clipPath id="crop"><rect class="mask" width="100%" height="100%" x="0"/></clipPath></defs><g class="tab-active-svg"><svg width="52%" height="100%"><use xlink:href="#chrome-tab-geometry-left" width="214" height="36" class="chrome-tab-geometry"/></svg><g transform="scale(-1,1)"><svg width="52%" height="100%" x="-100%" y="0"><use xlink:href="#chrome-tab-geometry-right" width="214" height="36" class="chrome-tab-geometry"/></svg></g></g><g class="tab-inactive-svg"><svg width="52%" height="100%"><use xlink:href="#chrome-tab-geometry-left-inactive" width="214" height="36" class="chrome-tab-geometry"/></svg><g transform="scale(-1,1)"><svg width="52%" height="100%" x="-100%" y="0"><use xlink:href="#chrome-tab-geometry-right-inactive" width="214" height="36" class="chrome-tab-geometry"/></svg></g></g></svg>
           </div>
           <div class="chrome-tab-content">
-            <div class="chrome-tab-favicon" style="background-image:url('img/favicon.png')"></div>
+            <div class="chrome-tab-favicon" id="newtab-tab-favicon" style="background-image:url('img/favicon.png')"></div>
             <div class="chrome-tab-title">New Tab</div>
             <div class="chrome-tab-drag-handle"></div>
             <div class="chrome-tab-close"></div>
@@ -57,15 +57,6 @@
           <span class="wisp-switcher-current" id="wisp-switcher-current">Auto</span>
           <i class="fa-solid fa-chevron-down wisp-switcher-caret"></i>
         </div>
-        <button class="wisp-switcher-collapse" id="wisp-switcher-collapse" type="button" aria-label="Minimize Wisp selector" hidden>
-          <i class="fa-solid fa-chevron-up"></i>
-        </button>
-        <div class="wisp-switcher-menu glass" id="wisp-switcher-menu" hidden>
-          <div class="wisp-switcher-menu-head">
-            <div class="wisp-switcher-menu-title">Wisp Regions</div>
-          </div>
-          <div class="wisp-switcher-menu-list" id="wisp-switcher-menu-list"></div>
-        </div>
       </div>
       <div class="connection-popup glass" id="connection-popup" hidden>
         <div class="connection-popup-title" id="connection-popup-title">Connection</div>
@@ -80,15 +71,6 @@
       <button class="nav-btn" id="btn-user-page" title="Account" aria-label="Account"><i class="fa-solid fa-user"></i></button>
       <div class="waffle-wrap" id="waffle-wrap">
         <button class="nav-btn" id="btn-waffle" title="Apps" aria-label="Apps" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
-        <div class="waffle-menu glass" id="waffle-menu" hidden>
-          <div class="waffle-menu-title">Apps</div>
-          <button class="waffle-item" data-local-uri="pluto://games"><i class="fa-solid fa-gamepad"></i><span>Games</span></button>
-          <button class="waffle-item" data-local-uri="pluto://movies"><i class="fa-solid fa-film"></i><span>Movies</span></button>
-          <button class="waffle-item" data-local-uri="pluto://ai"><i class="fa-solid fa-robot"></i><span>AI</span></button>
-          <button class="waffle-item" data-local-uri="pluto://vms"><i class="fa-solid fa-server"></i><span>VMs</span></button>
-          <button class="waffle-item" data-local-uri="pluto://cloud"><i class="fa-solid fa-cloud"></i><span>Cloud Gaming</span></button>
-          <button class="waffle-item" data-local-uri="pluto://stream"><i class="fa-solid fa-clapperboard"></i><span>Streaming</span></button>
-        </div>
       </div>
     </div>
   </div>
@@ -151,6 +133,23 @@
     </div>
   </div>
 
+</div>
+
+<div class="wisp-switcher-menu glass" id="wisp-switcher-menu" hidden>
+  <div class="wisp-switcher-menu-head">
+    <div class="wisp-switcher-menu-title">Wisp Regions</div>
+  </div>
+  <div class="wisp-switcher-menu-list" id="wisp-switcher-menu-list"></div>
+</div>
+
+<div class="waffle-menu glass" id="waffle-menu" hidden>
+  <div class="waffle-menu-title">Apps</div>
+  <button class="waffle-item" data-local-uri="pluto://games"><i class="fa-solid fa-gamepad"></i><span>Games</span></button>
+  <button class="waffle-item" data-local-uri="pluto://movies"><i class="fa-solid fa-film"></i><span>Movies</span></button>
+  <button class="waffle-item" data-local-uri="pluto://ai"><i class="fa-solid fa-robot"></i><span>AI</span></button>
+  <button class="waffle-item" data-local-uri="pluto://vms"><i class="fa-solid fa-server"></i><span>VMs</span></button>
+  <button class="waffle-item" data-local-uri="pluto://cloud"><i class="fa-solid fa-cloud"></i><span>Cloud Gaming</span></button>
+  <button class="waffle-item" data-local-uri="pluto://stream"><i class="fa-solid fa-clapperboard"></i><span>Streaming</span></button>
 </div>
 
 <div class="customize-scrim" id="customize-scrim"></div>

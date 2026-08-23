@@ -4,7 +4,6 @@ const DEFAULT_WISP_REGION = 'us-east-1'
 const WISP_CONNECT_TIMEOUT_MS = 15000
 const WISP_PING_TIMEOUT_MS = 8000
 const WISP_BACKGROUND_PING_MS = 5000
-const WISP_SWITCHER_ANIM_MS = 240
 
 const WISP_SERVERS = [
   { id: 'us-east-1', label: 'US East 1', location: 'Virginia, USA',     flagSrc: 'img/flags/us.png', lat: 37.4316,  lon: -78.6569  },
@@ -72,11 +71,8 @@ let wispUiReady = false
 let proxyTransportGeneration = 0
 let wispBackgroundPingIntervalId = null
 let wispBackgroundPingInFlight = false
-let wispSwitcherAnimationTimerId = null
-let wispSwitcherTransitionToken = 0
 let wispSwitcherMenuState = 'closed'
-let wispSwitcherClosedSize = null
-let wispSwitcherOpenSize = null
+let wispSwitcherMenuStateTimer = null
 const wispPingByServerId = new Map()
 
 function _wispBar() { return document.getElementById('wisp-bar') }
@@ -85,255 +81,7 @@ function _wispSwitcherButton() { return document.getElementById('wisp-switcher-b
 function _wispSwitcherMenu() { return document.getElementById('wisp-switcher-menu') }
 function _wispSwitcherCurrent() { return document.getElementById('wisp-switcher-current') }
 function _wispSwitcherIcon() { return document.getElementById('wisp-switcher-icon') }
-function _wispSwitcherCollapse() { return document.getElementById('wisp-switcher-collapse') }
 function _wispSwitcherList() { return document.getElementById('wisp-switcher-menu-list') }
-
-function getWispSwitcherLayout() {
-  const shell = _wispSwitcherButton()
-  const menu = _wispSwitcherMenu()
-  const collapse = _wispSwitcherCollapse()
-  const wrap = shell ? shell.closest('.address-bar-wrap') : null
-
-  if (!shell || !menu || !collapse || !wrap) return null
-
-  return {
-    shell,
-    menu,
-    collapse,
-    wrap,
-    shellRect: shell.getBoundingClientRect(),
-    wrapRect: wrap.getBoundingClientRect(),
-  }
-}
-
-function measureWispSwitcherClosedSize(shell, menu, collapse) {
-  const prev = {
-    transition: shell.style.transition,
-    width: shell.style.width,
-    height: shell.style.height,
-    visibility: shell.style.visibility,
-    pointerEvents: shell.style.pointerEvents,
-    menuHidden: menu.hidden,
-    collapseHidden: collapse.hidden,
-    isOpen: shell.classList.contains('is-open'),
-    aria: shell.getAttribute('aria-expanded'),
-  }
-
-  shell.style.transition = 'none'
-  shell.style.visibility = 'hidden'
-  shell.style.pointerEvents = 'none'
-  shell.style.width = ''
-  shell.style.height = ''
-  shell.classList.remove('is-open')
-  shell.setAttribute('aria-expanded', 'false')
-  menu.hidden = true
-  collapse.hidden = true
-
-  const rect = shell.getBoundingClientRect()
-
-  shell.style.transition = prev.transition
-  shell.style.width = prev.width
-  shell.style.height = prev.height
-  shell.style.visibility = prev.visibility
-  shell.style.pointerEvents = prev.pointerEvents
-  shell.classList.toggle('is-open', prev.isOpen)
-  shell.setAttribute('aria-expanded', prev.aria || 'false')
-  menu.hidden = prev.menuHidden
-  collapse.hidden = prev.collapseHidden
-
-  return {
-    width: Math.max(1, Math.round(rect.width)),
-    height: Math.max(1, Math.round(rect.height)),
-  }
-}
-
-function measureWispSwitcherOpenSize(shell, menu, collapse, openWidth) {
-  const prev = {
-    transition: shell.style.transition,
-    width: shell.style.width,
-    height: shell.style.height,
-    visibility: shell.style.visibility,
-    pointerEvents: shell.style.pointerEvents,
-    menuHidden: menu.hidden,
-    collapseHidden: collapse.hidden,
-    menuOpacity: menu.style.opacity,
-    menuTransform: menu.style.transform,
-    isOpen: shell.classList.contains('is-open'),
-  }
-
-  shell.style.transition = 'none'
-  shell.style.visibility = 'hidden'
-  shell.style.pointerEvents = 'none'
-  shell.style.width = `${Math.max(1, Math.round(openWidth))}px`
-  shell.style.height = 'auto'
-  shell.classList.add('is-open')
-  shell.setAttribute('aria-expanded', 'true')
-  menu.hidden = false
-  collapse.hidden = false
-  menu.style.opacity = '1'
-  menu.style.transform = 'translateY(0) scale(1)'
-
-  const rect = shell.getBoundingClientRect()
-
-  shell.style.transition = prev.transition
-  shell.style.width = prev.width
-  shell.style.height = prev.height
-  shell.style.visibility = prev.visibility
-  shell.style.pointerEvents = prev.pointerEvents
-  shell.classList.toggle('is-open', prev.isOpen)
-  shell.setAttribute('aria-expanded', prev.isOpen ? 'true' : 'false')
-  menu.hidden = prev.menuHidden
-  collapse.hidden = prev.collapseHidden
-  menu.style.opacity = prev.menuOpacity
-  menu.style.transform = prev.menuTransform
-
-  return {
-    width: Math.max(1, Math.round(rect.width)),
-    height: Math.max(1, Math.round(rect.height)),
-  }
-}
-
-function finishWispSwitcherTransition(shell, menu, collapse, token, nextState) {
-  if (token !== wispSwitcherTransitionToken) return
-
-  window.clearTimeout(wispSwitcherAnimationTimerId)
-  wispSwitcherAnimationTimerId = null
-
-  shell.style.transition = ''
-
-  if (nextState === 'open') {
-    shell.classList.add('is-open')
-    shell.setAttribute('aria-expanded', 'true')
-    shell.style.visibility = ''
-    shell.style.pointerEvents = ''
-    menu.hidden = false
-    collapse.hidden = false
-    menu.style.opacity = '1'
-    menu.style.transform = 'translateY(0) scale(1)'
-    wispSwitcherMenuState = 'open'
-    wispSwitcherOpenSize = {
-      width: Math.max(1, Math.round(shell.getBoundingClientRect().width)),
-      height: Math.max(1, Math.round(shell.getBoundingClientRect().height)),
-    }
-    // Allow menu to escape address-bar-wrap
-    const addressBarWrap = document.querySelector('.address-bar-wrap')
-    if (addressBarWrap) addressBarWrap.classList.add('wisp-menu-open')
-    return
-  }
-
-  menu.hidden = true
-  collapse.hidden = true
-  shell.classList.remove('is-open')
-  shell.setAttribute('aria-expanded', 'false')
-  shell.style.width = ''
-  shell.style.height = ''
-  shell.style.visibility = ''
-  shell.style.pointerEvents = ''
-  menu.style.opacity = ''
-  menu.style.transform = ''
-  // Reset address-bar-wrap overflow
-  const addressBarWrap = document.querySelector('.address-bar-wrap')
-  if (addressBarWrap) addressBarWrap.classList.remove('wisp-menu-open')
-  wispSwitcherMenuState = 'closed'
-  wispSwitcherClosedSize = measureWispSwitcherClosedSize(shell, menu, collapse)
-}
-
-function animateWispSwitcherMenuOpen() {
-  const layout = getWispSwitcherLayout()
-  if (!layout) return
-
-  const { shell, menu, collapse } = layout
-  renderWispSwitcherMenu()
-
-  const closedSize = wispSwitcherClosedSize || measureWispSwitcherClosedSize(shell, menu, collapse)
-  const openWidth = Math.min(280, Math.max(220, window.innerWidth - 32))
-  const openSize = measureWispSwitcherOpenSize(shell, menu, collapse, openWidth)
-
-  wispSwitcherTransitionToken += 1
-  const token = wispSwitcherTransitionToken
-
-  window.clearTimeout(wispSwitcherAnimationTimerId)
-  wispSwitcherAnimationTimerId = null
-
-  shell.classList.add('is-open')
-  shell.setAttribute('aria-expanded', 'true')
-  menu.hidden = false
-  collapse.hidden = false
-  menu.style.opacity = '0'
-  menu.style.transform = 'translateY(-4px) scale(0.985)'
-  shell.style.transition = 'none'
-  shell.style.visibility = 'visible'
-  shell.style.pointerEvents = 'none'
-  shell.style.width = `${closedSize.width}px`
-  shell.style.height = `${closedSize.height}px`
-
-  shell.offsetHeight
-
-  requestAnimationFrame(() => {
-    if (token !== wispSwitcherTransitionToken) return
-    shell.style.transition = ''
-    shell.style.pointerEvents = ''
-    shell.style.width = `${openSize.width}px`
-    shell.style.height = `${openSize.height}px`
-    menu.style.opacity = '1'
-    menu.style.transform = 'translateY(0) scale(1)'
-    wispSwitcherMenuState = 'opening'
-    wispSwitcherAnimationTimerId = window.setTimeout(() => {
-      finishWispSwitcherTransition(shell, menu, collapse, token, 'open')
-    }, WISP_SWITCHER_ANIM_MS + 20)
-  })
-}
-
-function animateWispSwitcherMenuClose() {
-  const layout = getWispSwitcherLayout()
-  if (!layout) return
-
-  const { shell, menu, collapse } = layout
-  if (wispSwitcherMenuState === 'closed') {
-    shell.setAttribute('aria-expanded', 'false')
-    collapse.hidden = true
-    menu.hidden = true
-    return
-  }
-
-  const openSize = wispSwitcherOpenSize || {
-    width: Math.max(1, Math.round(shell.getBoundingClientRect().width)),
-    height: Math.max(1, Math.round(shell.getBoundingClientRect().height)),
-  }
-  const closedSize = wispSwitcherClosedSize || measureWispSwitcherClosedSize(shell, menu, collapse)
-
-  wispSwitcherTransitionToken += 1
-  const token = wispSwitcherTransitionToken
-
-  window.clearTimeout(wispSwitcherAnimationTimerId)
-  wispSwitcherAnimationTimerId = null
-
-  shell.classList.add('is-open')
-  shell.setAttribute('aria-expanded', 'true')
-  menu.hidden = false
-  collapse.hidden = false
-  shell.style.transition = 'none'
-  shell.style.width = `${openSize.width}px`
-  shell.style.height = `${openSize.height}px`
-  menu.style.opacity = '1'
-  menu.style.transform = 'translateY(0) scale(1)'
-  shell.offsetHeight
-
-  requestAnimationFrame(() => {
-    if (token !== wispSwitcherTransitionToken) return
-    shell.style.transition = ''
-    shell.classList.remove('is-open')
-    shell.setAttribute('aria-expanded', 'false')
-    shell.style.width = `${closedSize.width}px`
-    shell.style.height = `${closedSize.height}px`
-    menu.style.opacity = '0'
-    menu.style.transform = 'translateY(-4px) scale(0.985)'
-    wispSwitcherMenuState = 'closing'
-    wispSwitcherAnimationTimerId = window.setTimeout(() => {
-      finishWispSwitcherTransition(shell, menu, collapse, token, 'closed')
-    }, WISP_SWITCHER_ANIM_MS + 20)
-  })
-}
 
 function getConfiguredWispServers() {
   return WISP_SERVERS
@@ -388,13 +136,6 @@ function updateWispSwitcherButton() {
   currentIcon.className = 'wisp-switcher-icon wisp-flag'
   currentIcon.style.backgroundImage = server.flagSrc ? `url('${server.flagSrc}')` : ''
   button.setAttribute('aria-label', `Choose Wisp server: ${server.label}`)
-  if (wispSwitcherMenuState === 'closed') {
-    const layout = getWispSwitcherLayout()
-    if (layout) {
-      const { shell, menu, collapse } = layout
-      wispSwitcherClosedSize = measureWispSwitcherClosedSize(shell, menu, collapse)
-    }
-  }
 }
 
 function renderWispSwitcherMenu() {
@@ -436,20 +177,53 @@ function renderWispSwitcherMenu() {
   })
 }
 
+function positionWispSwitcherMenu() {
+  const shell = _wispSwitcherButton()
+  const menu = _wispSwitcherMenu()
+  if (!shell || !menu) return
+  const rect = shell.getBoundingClientRect()
+  menu.style.top = (rect.bottom + 8) + 'px'
+  menu.style.right = (window.innerWidth - rect.right) + 'px'
+  menu.style.left = 'auto'
+}
+
+function setWispMenuOpen(open) {
+  const shell = _wispSwitcherButton()
+  const menu = _wispSwitcherMenu()
+  if (!shell || !menu) return
+  shell.setAttribute('aria-expanded', open ? 'true' : 'false')
+  wispSwitcherMenuState = open ? 'open' : 'closed'
+
+  window.clearTimeout(wispSwitcherMenuStateTimer)
+  wispSwitcherMenuStateTimer = null
+
+  if (open) {
+    renderWispSwitcherMenu()
+    positionWispSwitcherMenu()
+    menu.hidden = false
+    void menu.offsetHeight
+    menu.classList.add('is-open')
+  } else {
+    menu.classList.remove('is-open')
+    // keep it in the DOM during the fade-out, then detach
+    wispSwitcherMenuStateTimer = window.setTimeout(() => {
+      menu.hidden = true
+    }, 260)
+  }
+}
+
 function showWispSwitcherMenu() {
-  if (wispSwitcherMenuState === 'open' || wispSwitcherMenuState === 'opening') return
-  animateWispSwitcherMenuOpen()
+  if (wispSwitcherMenuState === 'open') return
+  setWispMenuOpen(true)
 }
 
 function hideWispSwitcherMenu() {
-  if (wispSwitcherMenuState === 'closed' || wispSwitcherMenuState === 'closing') return
-  animateWispSwitcherMenuClose()
+  if (wispSwitcherMenuState === 'closed') return
+  setWispMenuOpen(false)
 }
 
 function toggleWispSwitcherMenu() {
-  const shell = _wispSwitcherButton()
-  if (!shell) return
-  if (wispSwitcherMenuState === 'open' || wispSwitcherMenuState === 'opening') hideWispSwitcherMenu()
+  if (wispSwitcherMenuState === 'open') hideWispSwitcherMenu()
   else showWispSwitcherMenu()
 }
 
@@ -457,11 +231,9 @@ function initWispUi() {
   if (wispUiReady) return
   const shell = _wispSwitcherButton()
   const menu = _wispSwitcherMenu()
-  const collapse = _wispSwitcherCollapse()
-  if (!shell || !menu || !collapse) return
+  if (!shell || !menu) return
 
   shell.addEventListener('click', event => {
-    if (collapse.contains(event.target)) return
     if (menu.contains(event.target)) return
     event.stopPropagation()
     toggleWispSwitcherMenu()
@@ -473,23 +245,27 @@ function initWispUi() {
     toggleWispSwitcherMenu()
   })
 
-  collapse.addEventListener('click', event => {
-    event.stopPropagation()
-    hideWispSwitcherMenu()
-  })
-
   document.addEventListener('click', event => {
-    if (wispSwitcherMenuState === 'closed') return
+    if (wispSwitcherMenuState !== 'open') return
     if (menu.contains(event.target) || shell.contains(event.target)) return
     hideWispSwitcherMenu()
   })
 
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && wispSwitcherMenuState === 'open') hideWispSwitcherMenu()
+  })
+
+  window.addEventListener('resize', () => {
+    if (wispSwitcherMenuState === 'open') positionWispSwitcherMenu()
+  })
+  window.addEventListener('scroll', () => {
+    if (wispSwitcherMenuState === 'open') positionWispSwitcherMenu()
+  }, true)
+
   updateWispSwitcherButton()
   renderWispSwitcherMenu()
   shell.setAttribute('aria-expanded', 'false')
-  collapse.hidden = true
   menu.hidden = true
-  wispSwitcherClosedSize = measureWispSwitcherClosedSize(shell, menu, collapse)
   wispUiReady = true
 }
 
@@ -814,6 +590,8 @@ function syncProxyEngineButtons() {
     btn.classList.toggle('active', btn.dataset.engine === selectedProxy)
   })
 }
+
+
 
 window.getProxyEngine = getProxyEngine
 window.setProxyEngine = setProxyEngine

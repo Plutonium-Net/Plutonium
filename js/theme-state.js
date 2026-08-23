@@ -238,6 +238,26 @@ const BrowserThemeState = (() => {
     return { key: presetKey, ...BACKGROUND_PRESETS[presetKey] }
   }
 
+  // Accent-coloured icon / logo variants (img/logos/icon-<color>.png)
+  const ACCENT_ICON_MAP = {
+    '#e8175d': 'plutonium-pink',
+    '#7c3aed': 'violet',
+    '#2563eb': 'blue',
+    '#059669': 'emerald',
+    '#d97706': 'amber',
+    '#dc2626': 'red',
+    '#0891b2': 'cyan',
+    '#c026d3': 'fuchsia',
+  }
+
+  function getAccentIconFile() {
+    return ACCENT_ICON_MAP[normalizeAccentColor(loadThemeState().accentColor)] || 'plutonium-pink'
+  }
+
+  function getAccentIconPath() {
+    return `img/logos/icon-${getAccentIconFile()}.png`
+  }
+
   return {
     THEME_KEY,
     SETTINGS_KEY,
@@ -249,6 +269,8 @@ const BrowserThemeState = (() => {
     getDefaultAccent,
     normalizeThemeState,
     getBackgroundPreset,
+    getAccentIconFile,
+    getAccentIconPath,
   }
 })()
 

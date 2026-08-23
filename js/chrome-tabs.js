@@ -192,7 +192,7 @@
         faviconEl.style.backgroundImage = `url('${tabProperties.favicon}')`
         faviconEl.removeAttribute('hidden')
       } else {
-        faviconEl.style.backgroundImage = `url('img/favicon.png')`
+        faviconEl.style.backgroundImage = `url('${typeof BrowserThemeState !== 'undefined' && BrowserThemeState.getAccentIconPath ? BrowserThemeState.getAccentIconPath() : 'img/favicon.png'}')`
         faviconEl.removeAttribute('hidden')
       }
       if (tabProperties.id) tabEl.setAttribute('data-tab-id', tabProperties.id)

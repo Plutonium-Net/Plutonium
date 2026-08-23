@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <link rel="stylesheet" href="../css/ai.css">
 <link rel="stylesheet" href="../css/glass.css">
+<script src="../js/page-theme.js"></script>
 </head>
 <body>
 
@@ -125,7 +126,7 @@
   .ai-gate__icon {
     width: 64px; height: 64px; margin: 0 auto 18px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 18px; font-size: 26px; color: #e8175d;
+    border-radius: 18px; font-size: 26px; color: var(--pink);
     background: rgba(232,23,93,0.12);
     border: 1px solid rgba(232,23,93,0.35);
   }
@@ -134,7 +135,7 @@
   .ai-gate__btn {
     padding: 10px 22px; border: none; border-radius: 10px; cursor: pointer;
     font-size: 14px; font-weight: 600; font-family: inherit;
-    color: #fff; background: #e8175d; transition: filter .15s, transform .15s;
+    color: #fff; background: var(--pink); transition: filter .15s, transform .15s;
   }
   .ai-gate__btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
 </style>

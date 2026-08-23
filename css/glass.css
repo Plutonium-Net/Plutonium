@@ -5,8 +5,8 @@
   backdrop-filter: blur(2px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 2rem;
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2),
-              inset 0 4px 20px rgba(255, 255, 255, 0.04);
+  box-shadow: 0 8px 32px rgba(var(--ui-accent-rgb), 0.2),
+              inset 0 4px 20px rgba(var(--ui-accent-rgb), 0.04);
 }
 .glass::after {
   content: '';
@@ -18,9 +18,9 @@
   background: rgba(255, 255, 255, 0.02);
   border-radius: 2rem;
   backdrop-filter: blur(1px);
-  box-shadow: inset -10px -8px 0px -11px rgba(255, 255, 255, 0.3),
-              inset 0px -9px 0px -8px rgba(255, 255, 255, 0.3);
+  box-shadow: inset -10px -8px 0px -11px rgba(var(--ui-accent-rgb), 0.3),
+              inset 0px -9px 0px -8px rgba(var(--ui-accent-rgb), 0.3);
   opacity: 0.2;
   z-index: -1;
-  filter: blur(1px) drop-shadow(10px 4px 6px black) brightness(100%);
+  filter: blur(1px) drop-shadow(10px 4px 6px rgba(var(--ui-shadow-rgb),0.75)) brightness(100%);
 }

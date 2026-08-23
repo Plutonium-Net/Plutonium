@@ -61,6 +61,61 @@ const Theme = (() => {
     )
   }
 
+  function hexToHsl(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255
+    const g = parseInt(hex.slice(3, 5), 16) / 255
+    const b = parseInt(hex.slice(5, 7), 16) / 255
+    const max = Math.max(r, g, b)
+    const min = Math.min(r, g, b)
+    let h = 0
+    let s = 0
+    const l = (max + min) / 2
+    if (max !== min) {
+      const d = max - min
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break
+        case g: h = (b - r) / d + 2; break
+        default: h = (r - g) / d + 4
+      }
+      h /= 6
+    }
+    return { h: h * 360, s, l }
+  }
+
+  function hslToHex(hue, sat, light) {
+    const h = (((hue % 360) + 360) % 360) / 360
+    const s = Math.max(0, Math.min(1, sat))
+    const l = Math.max(0, Math.min(1, light))
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+    const p = 2 * l - q
+    const channel = t => {
+      if (t < 0) t += 1
+      if (t > 1) t -= 1
+      if (t < 1 / 6) return p + (q - p) * 6 * t
+      if (t < 1 / 2) return q
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+      return p
+    }
+    const r = Math.round(channel(h + 1 / 3) * 255)
+    const g = Math.round(channel(h) * 255)
+    const b = Math.round(channel(h - 1 / 3) * 255)
+    return rgbToHex(r, g, b)
+  }
+
+  // Semantic status colors: canonical hues (red / green / amber) that inherit
+  // the accent's saturation and adapt lightness to the mode, so they always
+  // read correctly while staying part of the theme's palette.
+  function semanticColors(accent, isLight) {
+    const { s: accentSat } = hexToHsl(accent)
+    const sat = Math.max(0.55, Math.min(0.85, accentSat))
+    return {
+      danger: hslToHex(0, sat, isLight ? 0.42 : 0.6),
+      success: hslToHex(140, sat, isLight ? 0.38 : 0.56),
+      warn: hslToHex(45, sat, isLight ? 0.44 : 0.62),
+    }
+  }
+
   function applyVars(vars) {
     const root = document.documentElement
     Object.entries(vars).forEach(([key, value]) => root.style.setProperty(key, value))
@@ -104,6 +159,10 @@ const Theme = (() => {
       '--ui-search-bg': rgba(mixHex(base, accent, isLight ? 0.18 : 0.14), isLight ? 0.62 : 0.34),
       '--ui-accent': accent,
       '--ui-accent-rgb': `${hexToRgb(accent).r},${hexToRgb(accent).g},${hexToRgb(accent).b}`,
+      '--ui-shadow-rgb': (() => {
+        const s = hexToRgb(mixHex('#000000', accent, 0.18))
+        return `${s.r},${s.g},${s.b}`
+      })(),
       '--ui-text': text,
       '--ui-text-sub': textSub,
       '--ui-text-muted': textMuted,
@@ -111,6 +170,17 @@ const Theme = (() => {
       '--ui-divider': divider,
       '--ui-secure': isLight ? '#2f855a' : '#81c995',
       '--ui-star': isLight ? '#d69e2e' : '#f5c542',
+      ...(() => {
+        const sem = semanticColors(accent, isLight)
+        return {
+          '--ui-danger': sem.danger,
+          '--ui-danger-rgb': `${hexToRgb(sem.danger).r},${hexToRgb(sem.danger).g},${hexToRgb(sem.danger).b}`,
+          '--ui-success': sem.success,
+          '--ui-success-rgb': `${hexToRgb(sem.success).r},${hexToRgb(sem.success).g},${hexToRgb(sem.success).b}`,
+          '--ui-warn': sem.warn,
+          '--ui-warn-rgb': `${hexToRgb(sem.warn).r},${hexToRgb(sem.warn).g},${hexToRgb(sem.warn).b}`,
+        }
+      })(),
     }
   }
 

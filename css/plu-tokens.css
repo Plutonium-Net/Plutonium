@@ -10,6 +10,7 @@
   --pink: #e8175d;
   --pink-rgb: 232,23,93;
   --pink-muted: #971040;
+  --pink-soft: #f9a8c0;
   --bg: #000000;
   --text: #ffffff;
   --muted: #a0a0a0;
@@ -32,6 +33,28 @@
   --surface-4:     rgba(255,255,255,0.1); /* active / focused border context   */
   --border-subtle: rgba(255,255,255,0.07);/* standard divider / card border    */
   --border-light:  rgba(255,255,255,0.11);/* input borders, secondary dividers */
+
+  /* ── Accent-driven palette (overridden at runtime by js/page-theme.js) ── */
+  --ui-danger:      #f28b82; /* error / destructive        */
+  --ui-danger-rgb:  242,139,130;
+  --ui-success:     #7ec986; /* success / online           */
+  --ui-success-rgb: 126,201,134;
+  --ui-warn:        #f5c542; /* warning / star ratings     */
+  --ui-warn-rgb:    245,197,66;
+  --ui-star:        #f5c542;
+
+  /* Decorative rainbow (hue-rotates with the accent) */
+  --row-0:      #c49de8; --row-0-rgb:     196,157,232; /* purple */
+  --row-1:      #fba865; --row-1-rgb:     251,168,101; /* orange */
+  --row-2:      #f28b82; --row-2-rgb:     242,139,130; /* red    */
+  --row-3:      #fcd96b; --row-3-rgb:     252,217,107; /* yellow */
+  --row-4:      #5ed3d7; --row-4-rgb:     94,211,215;  /* teal   */
+  --row-5:      #f472b6; --row-5-rgb:     244,114,182; /* pink   */
+  --row-6:      #7ab3f8; --row-6-rgb:     122,179,248; /* blue   */
+  --row-7:      #7ec986; --row-7-rgb:     126,201,134; /* green  */
+
+  --ui-accent-rgb: 232,23,93;   /* glows follow the accent */
+  --ui-shadow-rgb:  12,12,14;   /* shadows get an accent cast */
 }
 
 /* ── Global scrollbars ───────────────────────────────────────────────────── */

@@ -452,7 +452,7 @@
   top: 7px;
   left: 7px;
   background: rgba(0,0,0,0.75);
-  color: #f5c518;
+  color: var(--ui-star);
   font-size: 0.68rem;
   font-weight: 600;
   padding: 3px 7px;
@@ -981,15 +981,15 @@
 }
 
 .details-chip--age {
-  background: rgba(220,38,38,0.15);
-  border-color: rgba(220,38,38,0.3);
-  color: #f87171;
+  background: rgba(var(--ui-danger-rgb),0.15);
+  border-color: rgba(var(--ui-danger-rgb),0.3);
+  color: var(--ui-danger);
 }
 
 .details-chip--rating {
-  background: rgba(245,197,24,0.1);
-  border-color: rgba(245,197,24,0.25);
-  color: #f5c518;
+  background: rgba(var(--ui-warn-rgb),0.1);
+  border-color: rgba(var(--ui-warn-rgb),0.25);
+  color: var(--ui-star);
   display: flex;
   align-items: center;
   gap: 4px;

@@ -118,7 +118,7 @@
 
 .cg-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 14px 36px rgba(var(--ui-shadow-rgb), 0.55);
   border-color: rgba(var(--pink-rgb, 232,23,93), 0.4);
 }
 
@@ -157,7 +157,7 @@
 .cg-card__tag {
   background: rgba(var(--pink-rgb, 232,23,93), 0.22);
   border: 1px solid rgba(var(--pink-rgb, 232,23,93), 0.35);
-  color: #f9a8c0;
+  color: var(--pink-soft);
   font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -319,7 +319,7 @@
 }
 
 .cg-detail-play:hover {
-  background: #c4104d;
+  background: var(--pink-muted);
   transform: translateY(-1px);
 }
 
@@ -427,7 +427,7 @@
   display: none;
   margin-top: 4px;
   font-size: 0.82rem;
-  color: #f87171;
+  color: var(--ui-danger);
   text-align: center;
 }
 
@@ -457,7 +457,7 @@
   -webkit-backdrop-filter: var(--ui-blur, blur(20px));
   border-radius: 60px;
   padding: 6px 18px;
-  box-shadow: 0 6px 32px rgba(0,0,0,0.7), 0 0 16px rgba(var(--pink-rgb, 232,23,93), 0.1);
+  box-shadow: 0 6px 32px rgba(var(--ui-shadow-rgb),0.7), 0 0 16px rgba(var(--pink-rgb, 232,23,93), 0.1);
   transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: all;
 }

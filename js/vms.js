@@ -63,7 +63,7 @@ function requireAuth() {
     containerMessage.innerHTML = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
         <div style="font-size: 24px; margin-bottom: 10px;"><i class="fa-solid fa-lock"></i></div>
         <div style="margin-bottom: 12px;">Sign in to launch a virtual machine</div>
-        <button id="vm-signin-btn" style="padding: 9px 20px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13.5px; font-weight: 600; color: #fff; background: #e8175d;">Sign In</button>
+        <button id="vm-signin-btn" style="padding: 9px 20px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13.5px; font-weight: 600; color: #fff; background: var(--pink);">Sign In</button>
     </div>`;
     const btn = document.getElementById('vm-signin-btn');
     if (btn) btn.addEventListener('click', () => {

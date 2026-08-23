@@ -297,7 +297,7 @@ btnHome.addEventListener('click', () => {
   if (tab) {
     tab.querySelector('.chrome-tab-title').textContent = 'New Tab'
     const homeFaviconEl = tab.querySelector('.chrome-tab-favicon')
-    homeFaviconEl.style.backgroundImage = `url('img/favicon.png')`
+    homeFaviconEl.style.backgroundImage = `url('${typeof BrowserThemeState !== 'undefined' && BrowserThemeState.getAccentIconPath ? BrowserThemeState.getAccentIconPath() : 'img/favicon.png'}')`
     homeFaviconEl.removeAttribute('hidden')
     tab.dataset.url = 'newtab'
     tabHistory.set(tab, { entries: ['newtab'], index: 0 })

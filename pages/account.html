@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="../css/account.css">
 <link rel="stylesheet" href="../css/glass.css">
+<script src="../js/page-theme.js"></script>
 </head>
 <body>
 <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;z-index:-1;">
@@ -122,7 +123,7 @@
         <button class="export-btn" onclick="clearData('bookmarks')">
           <i class="fa-solid fa-trash-can" style="color:rgba(242,139,130,0.7)"></i>
           <div class="export-btn-body">
-            <div class="export-btn-title" style="color:#f28b82">Clear Bookmarks</div>
+            <div class="export-btn-title" style="color:var(--ui-danger)">Clear Bookmarks</div>
             <div class="export-btn-sub">Remove all saved bookmarks</div>
           </div>
         </button>
@@ -156,7 +157,7 @@
       <div class="card-row">
         <div class="row-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
         <div class="row-body">
-          <div class="row-title" style="color:#f28b82">Delete Account</div>
+          <div class="row-title" style="color:var(--ui-danger)">Delete Account</div>
           <div class="row-sub">Permanently remove your account and all data</div>
         </div>
         <div class="row-end">
