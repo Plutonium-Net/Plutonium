@@ -1,0 +1,162 @@
+# PLUTONIUM LICENSE (PL) v1.0
+
+Copyright (c) 2026 Plutonium-Net
+
+## 1. PERMISSION
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of the Software and associated source code (the "Software"), to use, copy, modify, fork, and redistribute the Software, subject to the conditions stated in this License.
+
+Use of the Software as a dependency, library, tool, runtime, package format, or component of another project is permitted, provided that the Software itself is not copied or incorporated in violation of this License.
+
+## 2. RESTRICTIONS
+
+The following restrictions apply.
+
+### 2.1 NON-COMMERCIAL USE
+
+The Software may not be used for commercial purposes without explicit written permission from the copyright holder.
+
+This includes, but is not limited to:
+
+* Selling the Software or copies of it.
+* Selling modified versions of the Software.
+* Including the Software in a product or service that is sold for money.
+* Charging users specifically for access to the Software or a modified version of it.
+* Using the Software primarily to generate commercial revenue.
+
+Non-commercial personal, educational, research, and community use is permitted.
+
+### 2.2 SOURCE CODE INCORPORATION
+
+You may use the Software as a dependency, library, tool, package, runtime, or external component in another project.
+
+However, you may not copy or incorporate substantial portions of the Software's source code directly into another project, product, application, library, or service without explicit permission from the copyright holder.
+
+This restriction does not prohibit:
+
+* Linking against the Software.
+* Importing or depending on the Software.
+* Calling the Software through an API.
+* Using the Software as a command-line tool.
+* Using files produced by the Software.
+* Using a package, format, protocol, or specification implemented by the Software.
+* Creating an independent implementation of a documented specification.
+* Creating a separate project that interoperates with the Software.
+
+Forks and modified versions of the Software are permitted, provided that they remain identifiable as derivatives of the original Software and comply with this License.
+
+### 2.3 ATTRIBUTION
+
+Redistributions and modified versions must provide clear and reasonable attribution to Plutonium-Net and the original copyright holders.
+
+Attribution must identify:
+
+* Plutonium-Net.
+* The original project.
+* The original developers or copyright holders identified in the project's copyright notice.
+
+Attribution may be provided in documentation, a credits file, an "About" section, a repository description, or another reasonably visible location accompanying the Software.
+
+Attribution must not imply that the original authors endorse, sponsor, or officially support a modified or redistributed version.
+
+### 2.4 THIRD-PARTY MATERIAL
+
+Any third-party assets, code, libraries, media, or other material included in or distributed with the Software remain subject to their respective licenses.
+
+This includes, but is not limited to:
+
+* Code
+* Libraries
+* Images
+* Icons
+* Fonts
+* Audio
+* Video
+* Text
+* Documentation
+* Other creative or technical material
+
+This License does not grant ownership of or additional rights to third-party material.
+
+When redistributing the Software, applicable third-party copyright notices, licenses, and attribution requirements must be preserved.
+
+### 2.5 MODIFIED VERSION NAMING
+
+Modified or derivative versions of the Software must use a name that is clearly distinguishable from the official project.
+
+Modified versions may not:
+
+* Represent themselves as the official project.
+* Imply that they are an official release.
+* Use official project branding in a manner that suggests endorsement.
+* Use the original project's name as the primary name of a substantially modified project without permission.
+
+Forks may retain references to the original project for attribution and to identify their origin.
+
+## 3. REDISTRIBUTION
+
+You may redistribute the original or modified Software provided that:
+
+1. This License is included with the distribution.
+2. Required attribution is preserved.
+3. Applicable third-party licenses and notices are preserved.
+4. Modified versions comply with the naming requirements of Section 2.5.
+5. The recipient is not granted rights that conflict with this License.
+
+You may not impose additional restrictions that remove rights granted by this License.
+
+## 4. SOURCE CODE
+
+When redistributing a modified version of the Software, reasonable access to the modified source code must be provided to recipients.
+
+The source code may not be intentionally withheld, obfuscated, or otherwise made unavailable for the purpose of circumventing this requirement.
+
+This section does not require projects that merely use the Software as an external dependency or tool to disclose their own unrelated source code.
+
+## 5. NO ENDORSEMENT
+
+The names, trademarks, logos, branding, and other identifying marks associated with Plutonium-Net, its projects, or its contributors may not be used to endorse, advertise, or imply official affiliation with a modified or redistributed version without explicit permission.
+
+## 6. COPYRIGHT
+
+The Software and its original components remain protected by applicable copyright law.
+
+This License does not transfer ownership of the Software or its original components to any recipient.
+
+Contributors retain copyright to their original contributions unless otherwise agreed.
+
+Copyright notices included with the Software must not be removed from redistributed copies or substantial portions thereof.
+
+## 7. WARRANTY DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, OR NON-INFRINGEMENT.
+
+IN NO EVENT SHALL PLUTONIUM-NET, THE ORIGINAL COPYRIGHT HOLDERS, OR ANY CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE SOFTWARE.
+
+## 8. ACCEPTANCE
+
+By using, copying, modifying, forking, or redistributing the Software, you agree to the terms and conditions of this License.
+
+If you do not agree to these terms, you may not use, copy, modify, fork, or redistribute the Software.
+
+## 9. TERMINATION
+
+Any rights granted under this License automatically terminate if you violate its terms.
+
+Upon termination, you must cease use and redistribution of the Software unless and until you are otherwise authorized by the copyright holder.
+
+Rights granted to recipients who have not violated this License are not affected by another person's violation.
+
+## 10. LICENSE VERSION
+
+This License is the **Plutonium License (PL) v1.0**.
+
+The copyright holder may publish future versions of this License.
+
+Unless explicitly stated otherwise, projects distributed under PL v1.0 remain governed by PL v1.0.
+
+---
+
+**License:** Plutonium License (PL) v1.0
+**Copyright:** © 2026 Plutonium-Net
+**Organization:** Plutonium-Net
