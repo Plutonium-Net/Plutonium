@@ -1,822 +1,736 @@
 (function () {
   'use strict';
 
-  const PGCDN_BASE    = 'https://g.cdn.plutoniumnet.work';
-  const LS_KEY        = 'plu_games_data';
-  const CLOUD_DOC     = 'games_data/saved';
-  const SHELF_RECENT  = 10;
+  const PGCDN_BASE = 'https://g.cdn.plutoniumnet.work';
+  const LS_KEY = 'plu_games_data';
+  const CLOUD_DOC = 'games_data/saved';
+  const SHELF_LIMIT = 10;
+  // Grid tiles are 4× the original size (2 by 2 of the old tile).
+  const GRID_MIN = 300; // min card width (matches the CSS grid)
+  const GRID_GAP = 18;  // gap (matches the CSS grid)
 
-  let _pgcdnGames = [];
-  let _data       = { favourites: [], recent: [] };
+  let games = [];
+  let filteredGames = [];
+  let data = { favourites: [], recent: [] };
+  let knownSaves = null;
+  let pendingSaves = null;
+  let syncGameId = null;
+  let currentGame = null;
+  let historySort = 'recent';
+  let historyQuery = '';
+  let activePanel = 'pgcdn';
+  let luminStarted = false;
 
-  let _syncGameId    = null;
-  let _pendingSaves  = null;
-  let _knownSaves    = null;
+  const els = {};
 
-  function _loadLocal() {
+  function $(id) { return document.getElementById(id); }
+
+  function initEls() {
+    [
+      'pgcdn-grid-wrap', 'pgcdn-count', 'pgcdn-search', 'pgcdn-sync-badge',
+      'pgcdn-shelf-favs', 'pgcdn-favs-row', 'pgcdn-shelf-recent', 'pgcdn-recent-row',
+      'history-list', 'history-count', 'history-search', 'history-clear',
+      'pgcdn-ctx-menu', 'pgcdn-toast', 'pgcdn-toast-msg', 'pgcdn-toast-actions',
+      'game-viewer', 'game-iframe', 'game-restore-overlay', 'viewer-bar',
+      'viewer-bar-ghost', 'viewer-title', 'vbtn-fav',
+      'games-preload-overlay', 'games-preload-label'
+    ].forEach(id => { els[id] = $(id); });
+  }
+
+  function loadLocal() {
     try {
       const raw = localStorage.getItem(LS_KEY);
-      if (raw) _data = { favourites: [], recent: [], ...JSON.parse(raw) };
+      if (raw) data = { favourites: [], recent: [], ...JSON.parse(raw) };
     } catch (_) {}
   }
 
-  function _saveLocal() {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(_data)); } catch (_) {}
+  function saveLocal() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (_) {}
   }
 
-  async function _saveCloud() {
+  async function saveCloud() {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     try {
       await PlutoniumStore.setDoc(CLOUD_DOC, {
-        favourites: _data.favourites,
-        recent:     _data.recent.map(g => ({ id: g.id, ts: g.ts })),
+        favourites: data.favourites,
+        recent: data.recent.map(g => ({ id: g.id, ts: g.ts })),
+        savedGames: knownSaves ? Array.from(knownSaves) : undefined
       });
-      _setBadge(true);
+      setBadge(true);
     } catch (e) {
       console.warn('[games] cloud save failed:', e.message);
     }
   }
 
-  async function _loadCloud() {
+  async function loadCloud() {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     try {
       const doc = await PlutoniumStore.getDoc(CLOUD_DOC);
-      if (!doc) { _knownSaves = new Set(); return; }
+      if (!doc) {
+        knownSaves = new Set();
+        return;
+      }
 
-      _knownSaves = new Set(doc.savedGames || []);
-      const favSet = new Set([..._data.favourites, ...(doc.favourites || [])]);
-      _data.favourites = [...favSet];
+      knownSaves = new Set(doc.savedGames || []);
+      data.favourites = Array.from(new Set(data.favourites.concat(doc.favourites || [])));
 
       const cloudRecent = (doc.recent || [])
         .map(r => {
-          const game = _pgcdnGames.find(g => g.id === r.id);
+          const game = games.find(g => g.id === r.id);
           return game ? { ...game, ts: r.ts } : null;
         })
         .filter(Boolean);
 
-      const merged = [..._data.recent, ...cloudRecent];
-      const seen   = new Set();
-      _data.recent = merged
-        .filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; })
+      const seen = new Set();
+      data.recent = data.recent.concat(cloudRecent)
+        .filter(g => {
+          if (seen.has(g.id)) return false;
+          seen.add(g.id);
+          return true;
+        })
         .sort((a, b) => b.ts - a.ts);
 
-      _saveLocal();
-      _renderShelves();
-      _renderHistory();
-      _setBadge(true);
+      saveLocal();
+      renderShelves();
+      renderHistory();
+      renderGrid();
+      setBadge(true);
     } catch (e) {
       console.warn('[games] cloud load failed:', e.message);
     }
   }
 
-  async function _onSaveData(gameId, saves) {
+  function setBadge(synced) {
+    const badge = els['pgcdn-sync-badge'];
+    if (!badge) return;
+    badge.className = 'pgcdn-sync-badge ' + (synced ? 'synced' : 'unsynced');
+    badge.innerHTML = synced
+      ? '<i class="fa-solid fa-cloud-arrow-up"></i> Synced to account'
+      : '<i class="fa-solid fa-cloud"></i> Sign in to sync across devices';
+  }
+
+  function isFav(id) { return data.favourites.includes(id); }
+
+  function toggleFav(id) {
+    data.favourites = isFav(id)
+      ? data.favourites.filter(f => f !== id)
+      : data.favourites.concat(id);
+    saveLocal();
+    saveCloud();
+    renderShelves();
+    renderHistory();
+    renderGrid();
+    updateViewerFav();
+  }
+
+  function recordPlay(game) {
+    data.recent = data.recent.filter(g => g.id !== game.id);
+    data.recent.unshift({ ...game, ts: Date.now() });
+    saveLocal();
+    saveCloud();
+    renderShelves();
+    renderHistory();
+  }
+
+  async function onSaveData(gameId, saves) {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     if (!gameId || !saves || !Object.keys(saves).length) return;
     try {
-      await PlutoniumStore.setDoc(`game_saves/${gameId}`, { saves: JSON.stringify(saves) });
-      if (_knownSaves && !_knownSaves.has(gameId)) {
-        _knownSaves.add(gameId);
-        await PlutoniumStore.setDoc(CLOUD_DOC, { savedGames: [..._knownSaves] });
+      await PlutoniumStore.setDoc('game_saves/' + gameId, { saves: JSON.stringify(saves) });
+      if (knownSaves && !knownSaves.has(gameId)) {
+        knownSaves.add(gameId);
+        await saveCloud();
       }
     } catch (e) {
       console.warn('[games] save-sync write failed:', e.message);
     }
   }
 
-  const _restoreOverlay = document.getElementById('game-restore-overlay');
-  function _showRestoreOverlay() { _restoreOverlay?.classList.add('active'); }
-  function _hideRestoreOverlay() { _restoreOverlay?.classList.remove('active'); }
-
-  async function _prefetchGameSaves(gameId) {
-    _pendingSaves = null;
+  async function prefetchGameSaves(gameId) {
+    pendingSaves = null;
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
-    if (!gameId) return;
-    if (_knownSaves && !_knownSaves.has(gameId)) {
-      return;
-    }
-    _showRestoreOverlay();
+    if (!gameId || (knownSaves && !knownSaves.has(gameId))) return;
+    showRestoreOverlay();
     try {
-      const doc = await PlutoniumStore.getDoc(`game_saves/${gameId}`);
-      if (doc?.saves) {
-        _pendingSaves = JSON.parse(doc.saves);
-        _knownSaves?.add(gameId);
+      const doc = await PlutoniumStore.getDoc('game_saves/' + gameId);
+      if (doc && doc.saves) {
+        pendingSaves = JSON.parse(doc.saves);
+        if (knownSaves) knownSaves.add(gameId);
       }
     } catch (e) {
       console.warn('[games] save-sync prefetch failed:', e.message);
     } finally {
-      _hideRestoreOverlay();
+      hideRestoreOverlay();
     }
   }
 
-  function _pushPendingSaves() {
-    if (!_pendingSaves) return;
-    const iframeEl = document.getElementById('game-iframe');
-    if (!iframeEl?.contentWindow) return;
-    iframeEl.contentWindow.postMessage(
-      { plu: true, type: 'plu_sync_restore', saves: _pendingSaves },
-      '*'
-    );
-    _pendingSaves = null;
+  function showRestoreOverlay() {
+    if (els['game-restore-overlay']) els['game-restore-overlay'].classList.add('active');
   }
 
-  function _requestSaveSnapshot() {
-    if (!_syncGameId) return;
-    const iframeEl = document.getElementById('game-iframe');
-    if (!iframeEl?.contentWindow) return;
-    iframeEl.contentWindow.postMessage({ plu: true, type: 'plu_sync_request' }, '*');
+  function hideRestoreOverlay() {
+    if (els['game-restore-overlay']) els['game-restore-overlay'].classList.remove('active');
   }
 
-  window.addEventListener('message', function (e) {
-    if (!e.data?.plu) return;
+  function pushPendingSaves() {
+    const iframe = els['game-iframe'];
+    if (!pendingSaves || !iframe || !iframe.contentWindow) return;
+    iframe.contentWindow.postMessage({ plu: true, type: 'plu_sync_restore', saves: pendingSaves }, '*');
+    pendingSaves = null;
+  }
+
+  function requestSaveSnapshot() {
+    const iframe = els['game-iframe'];
+    if (!syncGameId || !iframe || !iframe.contentWindow) return;
+    iframe.contentWindow.postMessage({ plu: true, type: 'plu_sync_request' }, '*');
+  }
+
+  window.addEventListener('message', e => {
+    if (!e.data || !e.data.plu) return;
     if (e.data.type === 'plu_sync_ready') {
-      _pushPendingSaves();
-      setTimeout(_requestSaveSnapshot, 1000);
+      pushPendingSaves();
+      setTimeout(requestSaveSnapshot, 1000);
     }
-    if (e.data.type === 'plu_sync_data') {
-      if (_syncGameId) _onSaveData(_syncGameId, e.data.saves);
+    if (e.data.type === 'plu_sync_data' && syncGameId) {
+      onSaveData(syncGameId, e.data.saves);
     }
   });
 
-  function _setBadge(synced) {
-    const badge = document.getElementById('pgcdn-sync-badge');
-    if (!badge) return;
-    if (synced) {
-      badge.className = 'pgcdn-sync-badge synced';
-      badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Synced to account';
-    } else {
-      badge.className = 'pgcdn-sync-badge unsynced';
-      badge.innerHTML = '<i class="fa-solid fa-cloud"></i> Sign in to sync across devices';
-    }
-  }
+  let toastTimer = null;
 
-  function _isFav(id) { return _data.favourites.includes(id); }
-
-  function _toggleFav(id) {
-    if (_isFav(id)) {
-      _data.favourites = _data.favourites.filter(f => f !== id);
-    } else {
-      _data.favourites.push(id);
-    }
-    _saveLocal();
-    _saveCloud();
-    _renderShelves();
-    _updateAllFavBtns(id);
-    _updateViewerFavBtn();
-  }
-
-  function _updateAllFavBtns(id) {
-    document.querySelectorAll(`[data-fav-id="${id}"]`).forEach(btn => {
-      btn.classList.toggle('is-fav', _isFav(id));
-    });
-  }
-
-  function _recordPlay(game) {
-    _data.recent = _data.recent.filter(r => r.id !== game.id);
-    _data.recent.unshift({ ...game, ts: Date.now() });
-    _saveLocal();
-    _saveCloud();
-    _renderShelves();
-    _renderHistory();
-  }
-
-  const _toast        = document.getElementById('pgcdn-toast');
-  const _toastMsg     = document.getElementById('pgcdn-toast-msg');
-  const _toastActions = document.getElementById('pgcdn-toast-actions');
-  let _toastTimer     = null;
-
-  function _showToast(msg, actions = [], autoDismiss = 0) {
-    clearTimeout(_toastTimer);
-    _toastMsg.textContent = msg;
-    _toastActions.innerHTML = '';
-    actions.forEach(a => {
+  function showToast(message, actions, autoDismiss) {
+    clearTimeout(toastTimer);
+    if (!els['pgcdn-toast']) return;
+    els['pgcdn-toast-msg'].textContent = message;
+    els['pgcdn-toast-actions'].innerHTML = '';
+    (actions || []).forEach(action => {
       const btn = document.createElement('button');
-      btn.className = 'toast-btn' + (a.danger ? ' toast-btn--danger' : '');
-      btn.textContent = a.label;
-      btn.addEventListener('click', () => { _hideToast(); a.action(); });
-      _toastActions.appendChild(btn);
+      btn.className = 'toast-btn' + (action.danger ? ' toast-btn--danger' : '');
+      btn.textContent = action.label;
+      btn.addEventListener('click', () => {
+        hideToast();
+        action.action();
+      });
+      els['pgcdn-toast-actions'].appendChild(btn);
     });
-    _toast.classList.add('toast-visible');
-    if (autoDismiss > 0) _toastTimer = setTimeout(_hideToast, autoDismiss);
+    els['pgcdn-toast'].classList.add('toast-visible');
+    if (autoDismiss) toastTimer = setTimeout(hideToast, autoDismiss);
   }
 
-  function _hideToast() {
-    _toast.classList.remove('toast-visible');
-    clearTimeout(_toastTimer);
+  function hideToast() {
+    if (els['pgcdn-toast']) els['pgcdn-toast'].classList.remove('toast-visible');
+    clearTimeout(toastTimer);
   }
 
-  const _ctxMenu = document.getElementById('pgcdn-ctx-menu');
-  let _ctxDismiss = null;
-
-  function _showCtx(e, items) {
+  function showCtx(e, items) {
+    const menu = els['pgcdn-ctx-menu'];
+    if (!menu) return;
     e.preventDefault();
-    _ctxMenu.innerHTML = '';
-
+    menu.innerHTML = '';
     items.forEach(item => {
       if (item === 'sep') {
         const sep = document.createElement('div');
         sep.className = 'ctx-sep';
-        _ctxMenu.appendChild(sep);
+        menu.appendChild(sep);
         return;
       }
-      const el = document.createElement('div');
+      const el = document.createElement('button');
       el.className = 'ctx-item' + (item.danger ? ' ctx-item--danger' : '');
-      el.innerHTML = `<i class="${item.icon}"></i>${item.label}`;
-      el.addEventListener('click', () => { _hideCtx(); item.action(); });
-      _ctxMenu.appendChild(el);
+      el.innerHTML = '<i class="' + item.icon + '"></i><span>' + item.label + '</span>';
+      el.addEventListener('click', () => {
+        hideCtx();
+        item.action();
+      });
+      menu.appendChild(el);
     });
+    menu.classList.remove('hidden');
 
-    _ctxMenu.classList.remove('hidden');
-    const mw = _ctxMenu.offsetWidth;
-    const mh = _ctxMenu.offsetHeight;
-    let x = e.clientX, y = e.clientY;
-    if (x + mw > window.innerWidth  - 8) x = window.innerWidth  - mw - 8;
-    if (y + mh > window.innerHeight - 8) y = window.innerHeight - mh - 8;
-    _ctxMenu.style.left = x + 'px';
-    _ctxMenu.style.top  = y + 'px';
-
+    const rect = menu.getBoundingClientRect();
+    let x = e.clientX;
+    let y = e.clientY;
+    if (x + rect.width > window.innerWidth - 8) x = window.innerWidth - rect.width - 8;
+    if (y + rect.height > window.innerHeight - 8) y = window.innerHeight - rect.height - 8;
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
     setTimeout(() => {
-      _ctxDismiss = () => _hideCtx();
-      document.addEventListener('click',   _ctxDismiss, { once: true });
-      document.addEventListener('scroll',  _ctxDismiss, { once: true, capture: true });
-      document.addEventListener('keydown', _ctxEsc);
+      document.addEventListener('click', hideCtx, { once: true });
+      document.addEventListener('scroll', hideCtx, { once: true, capture: true });
     }, 0);
   }
 
-  function _ctxEsc(e) {
-    if (e.key === 'Escape') _hideCtx();
+  function hideCtx() {
+    if (els['pgcdn-ctx-menu']) els['pgcdn-ctx-menu'].classList.add('hidden');
   }
 
-  function _hideCtx() {
-    _ctxMenu.classList.add('hidden');
-    document.removeEventListener('keydown', _ctxEsc);
+  function pinGame(game) {
+    const P = window.parent && window.parent.Pins;
+    if (!P) return;
+    if (P.find(game.id)) P.remove(game.id);
+    else P.add({ id: game.id, name: game.name, image: game.image || undefined });
   }
 
-  function _buildCard(game, zone = 'grid') {
-    const card = document.createElement('div');
-    card.className = 'pgcdn-card glass';
+  function showCardCtx(e, game, zone) {
+    const pinned = !!(window.parent && window.parent.Pins && window.parent.Pins.find(game.id));
+    const fav = isFav(game.id);
+    const items = [
+      { icon: 'fa-solid fa-play', label: 'Play', action: () => launchGame(game) },
+      'sep',
+      { icon: 'fa-solid fa-thumbtack', label: pinned ? 'Unpin from Home' : 'Pin to Home', action: () => pinGame(game) },
+      { icon: 'fa-' + (fav ? 'solid' : 'regular') + ' fa-heart', label: fav ? 'Remove Favourite' : 'Add Favourite', action: () => toggleFav(game.id) }
+    ];
+    if (zone === 'recent' || zone === 'history') {
+      items.push({
+        icon: 'fa-solid fa-clock-rotate-left',
+        label: 'Remove from Recent',
+        danger: true,
+        action: () => {
+          data.recent = data.recent.filter(g => g.id !== game.id);
+          saveLocal();
+          saveCloud();
+          renderShelves();
+          renderHistory();
+        }
+      });
+    }
+    showCtx(e, items);
+  }
+
+  function gameImage(game) { return PGCDN_BASE + '/' + game.image; }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[ch]);
+  }
+
+  function buildCard(game, zone) {
+    const card = document.createElement('article');
+    card.className = 'pgcdn-card';
+    card.dataset.id = game.id;
     card.title = game.name;
-    card.innerHTML = `
-      <img class="pgcdn-card__img" src="${PGCDN_BASE}/${game.image}" alt="${game.name}" loading="lazy" />
-      <div class="pgcdn-card__name">${game.name}</div>
-      <button class="pgcdn-fav-btn ${_isFav(game.id) ? 'is-fav' : ''}" data-fav-id="${game.id}" title="Favourite" aria-label="Favourite">
-        <i class="fa-${_isFav(game.id) ? 'solid' : 'regular'} fa-heart"></i>
-      </button>
-    `;
+    card.innerHTML =
+      '<img class="pgcdn-card__img" src="' + gameImage(game) + '" alt="' + escapeHtml(game.name) + '" loading="lazy" decoding="async">' +
+      '<div class="pgcdn-card__name">' + escapeHtml(game.name) + '</div>' +
+      '<button class="pgcdn-fav-btn ' + (isFav(game.id) ? 'is-fav' : '') + '" type="button" title="Favourite" aria-label="Favourite">' +
+        '<i class="fa-' + (isFav(game.id) ? 'solid' : 'regular') + ' fa-heart"></i>' +
+      '</button>';
+    card.addEventListener('click', () => launchGame(game));
+    card.addEventListener('contextmenu', e => showCardCtx(e, game, zone || 'grid'));
     card.querySelector('.pgcdn-fav-btn').addEventListener('click', e => {
       e.stopPropagation();
-      const btn = e.currentTarget;
-      _toggleFav(game.id);
-      btn.innerHTML = `<i class="fa-${_isFav(game.id) ? 'solid' : 'regular'} fa-heart"></i>`;
+      toggleFav(game.id);
     });
-    card.addEventListener('click', () => pgcdnLaunch(game));
-    card.addEventListener('contextmenu', e => _showCardCtx(e, game, zone));
     return card;
   }
 
-  function _showCardCtx(e, game, zone) {
-    const isFav    = _isFav(game.id);
-    const isRecent = _data.recent.some(r => r.id === game.id);
-    const isPinned = !!(window.parent && window.parent.Pins && window.parent.Pins.find(game.id));
+  // The catalog is small (~100 games), so every tile is rendered once and the
+  // browser handles visibility via `content-visibility: auto`. Scrolling then
+  // requires zero JS, which keeps the page smooth.
+  let gridContainer = null;
 
-    const items = [
-      {
-        icon:   'fa-solid fa-play',
-        label:  'Play',
-        action: () => pgcdnLaunch(game),
-      },
-      'sep',
-    ];
+  function renderGrid() {
+    const wrap = els['pgcdn-grid-wrap'];
+    const total = filteredGames.length;
+    els['pgcdn-count'].textContent = total + ' game' + (total === 1 ? '' : 's');
 
-    items.push({
-      icon:   'fa-solid fa-thumbtack',
-      label:  isPinned ? 'Unpin from Home' : 'Pin to Home',
-      action: () => {
-        const P = window.parent && window.parent.Pins;
-        if (!P) return;
-        if (P.find(game.id)) P.remove(game.id);
-        else P.add({ id: game.id, name: game.name, image: game.image || undefined });
-      },
+    const frag = document.createDocumentFragment();
+    filteredGames.forEach(game => {
+      const card = buildCard(game, 'grid');
+      card.classList.add('pgcdn-card--virtual');
+      frag.appendChild(card);
     });
 
-    if (zone === 'favs') {
-      items.push({
-        icon:   'fa-solid fa-heart-crack',
-        label:  'Remove from Favourites',
-        danger: true,
-        action: () => {
-          _data.favourites = _data.favourites.filter(f => f !== game.id);
-          _saveLocal(); _saveCloud(); _renderShelves(); _updateAllFavBtns(game.id); _updateViewerFavBtn();
-        },
-      });
-    } else {
-      items.push({
-        icon:   `fa-${isFav ? 'solid' : 'regular'} fa-heart`,
-        label:  isFav ? 'Remove from Favourites' : 'Add to Favourites',
-        action: () => _toggleFav(game.id),
-      });
-    }
-
-    if (zone === 'recent' || zone === 'grid') {
-      if (isRecent) {
-        items.push({
-          icon:   'fa-solid fa-clock-rotate-left',
-          label:  'Remove from Recent',
-          danger: true,
-          action: () => {
-            _data.recent = _data.recent.filter(r => r.id !== game.id);
-            _saveLocal(); _saveCloud(); _renderShelves(); _renderHistory();
-          },
-        });
-      }
-    }
-
-    _showCtx(e, items);
+    wrap.innerHTML = '<div class="pgcdn-virtual" id="pgcdn-virtual"></div>';
+    gridContainer = $('pgcdn-virtual');
+    if (!total) gridContainer.classList.add('is-empty');
+    gridContainer.appendChild(frag);
+    measureGridWidth();
   }
 
-  function _renderShelves() {
-    const favShelf = document.getElementById('pgcdn-shelf-favs');
-    const favRow   = document.getElementById('pgcdn-favs-row');
-    const favGames = _data.favourites
-      .map(id => _pgcdnGames.find(g => g.id === id))
-      .filter(Boolean);
-
-    if (favGames.length) {
-      favRow.innerHTML = '';
-      favGames.forEach(g => favRow.appendChild(_buildCard(g, 'favs')));
-      favShelf.style.display = '';
-    } else {
-      favShelf.style.display = 'none';
-    }
-
-    const recentShelf = document.getElementById('pgcdn-shelf-recent');
-    const recentRow   = document.getElementById('pgcdn-recent-row');
-
-    if (_data.recent.length) {
-      recentRow.innerHTML = '';
-      _data.recent.slice(0, SHELF_RECENT).forEach(g => recentRow.appendChild(_buildCard(g, 'recent')));
-      recentShelf.style.display = '';
-    } else {
-      recentShelf.style.display = 'none';
-    }
+  // Keep the offscreen-size hint (`--card-w`) in sync with the real column
+  // width so the scrollbar never jumps while content-visibility skips layout.
+  function measureGridWidth() {
+    if (!gridContainer) return;
+    const width = gridContainer.clientWidth;
+    if (!width) return; // panel hidden — keep last good value
+    const columns = Math.max(1, Math.floor((width + GRID_GAP) / (GRID_MIN + GRID_GAP)));
+    const cardWidth = Math.floor((width - GRID_GAP * (columns - 1)) / columns);
+    gridContainer.style.setProperty('--card-w', cardWidth + 'px');
   }
 
-  let _historySort  = 'recent';
-  let _historyQuery = '';
-
-  function _getHistoryGames() {
-    let games = [..._data.recent];
-    if (_historyQuery) {
-      games = games.filter(g => g.name.toLowerCase().includes(_historyQuery));
-    }
-    if (_historySort === 'plays') {
-      const counts = {};
-      _data.recent.forEach(g => { counts[g.id] = (counts[g.id] || 0) + 1; });
-      games.sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
-    } else if (_historySort === 'az') {
-      games.sort((a, b) => a.name.localeCompare(b.name));
-    }
-    return games;
+  function applySearch(query) {
+    const q = query.trim().toLowerCase();
+    filteredGames = q ? games.filter(g => String(g.name || '').toLowerCase().includes(q)) : games.slice();
+    renderGrid();
   }
 
-  function _renderHistory() {
-    const list  = document.getElementById('history-list');
-    const count = document.getElementById('history-count');
+  function renderShelves() {
+    renderShelf('pgcdn-shelf-favs', 'pgcdn-favs-row',
+      data.favourites.map(id => games.find(g => g.id === id)).filter(Boolean),
+      'favs'
+    );
+    renderShelf('pgcdn-shelf-recent', 'pgcdn-recent-row', data.recent.slice(0, SHELF_LIMIT), 'recent');
+  }
+
+  function renderShelf(shelfId, rowId, shelfGames, zone) {
+    const shelf = els[shelfId];
+    const row = els[rowId];
+    if (!shelf || !row) return;
+    row.innerHTML = '';
+    if (!shelfGames.length) {
+      shelf.hidden = true;
+      return;
+    }
+    shelf.hidden = false;
+    shelfGames.forEach(game => row.appendChild(buildCard(game, zone)));
+  }
+
+  function getHistoryGames() {
+    let list = data.recent.slice();
+    if (historyQuery) list = list.filter(g => g.name.toLowerCase().includes(historyQuery));
+    if (historySort === 'az') list.sort((a, b) => a.name.localeCompare(b.name));
+    else list.sort((a, b) => b.ts - a.ts);
+    return list;
+  }
+
+  function renderHistory() {
+    const list = els['history-list'];
+    const count = els['history-count'];
     if (!list) return;
-
-    if (!_data.recent.length) {
-      count.textContent = '';
-      list.innerHTML = `<div class="pgcdn-status"><i class="fa-solid fa-clock-rotate-left"></i><span>No history yet</span></div>`;
+    const history = getHistoryGames();
+    count.textContent = data.recent.length ? history.length + ' of ' + data.recent.length + ' played' : '';
+    if (!data.recent.length) {
+      list.innerHTML = '<div class="pgcdn-status"><i class="fa-solid fa-clock-rotate-left"></i><span>No history yet</span></div>';
       return;
     }
-
-    const games = _getHistoryGames();
-
-    if (!games.length) {
-      count.textContent = 'No results';
-      list.innerHTML = `<div class="pgcdn-status"><i class="fa-solid fa-magnifying-glass"></i><span>No games found</span></div>`;
+    if (!history.length) {
+      list.innerHTML = '<div class="pgcdn-status"><i class="fa-solid fa-magnifying-glass"></i><span>No games found</span></div>';
       return;
     }
-
-    count.textContent = `${games.length} of ${_data.recent.length} played`;
-    list.innerHTML = '';
-
-    games.forEach(game => {
+    const frag = document.createDocumentFragment();
+    history.forEach(game => {
       const row = document.createElement('div');
       row.className = 'history-list__row';
-      row.innerHTML = `
-        <img class="history-list__thumb" src="${PGCDN_BASE}/${game.image}" alt="${game.name}" loading="lazy" />
-        <div class="history-list__info">
-          <div class="history-list__name">${game.name}</div>
-          <div class="history-list__time">${_relativeTime(game.ts)}</div>
-        </div>
-        <button class="history-list__fav ${_isFav(game.id) ? 'is-fav' : ''}" data-fav-id="${game.id}" title="Favourite" aria-label="Favourite">
-          <i class="fa-${_isFav(game.id) ? 'solid' : 'regular'} fa-heart"></i>
-        </button>
-      `;
+      row.innerHTML =
+        '<img class="history-list__thumb" src="' + gameImage(game) + '" alt="' + escapeHtml(game.name) + '" loading="lazy" decoding="async">' +
+        '<div class="history-list__info">' +
+          '<div class="history-list__name">' + escapeHtml(game.name) + '</div>' +
+          '<div class="history-list__time">' + relativeTime(game.ts) + '</div>' +
+        '</div>' +
+        '<button class="history-list__fav ' + (isFav(game.id) ? 'is-fav' : '') + '" type="button" title="Favourite" aria-label="Favourite">' +
+          '<i class="fa-' + (isFav(game.id) ? 'solid' : 'regular') + ' fa-heart"></i>' +
+        '</button>';
+      row.addEventListener('click', () => launchGame(game));
+      row.addEventListener('contextmenu', e => showCardCtx(e, game, 'history'));
       row.querySelector('.history-list__fav').addEventListener('click', e => {
         e.stopPropagation();
-        const btn = e.currentTarget;
-        _toggleFav(game.id);
-        btn.className = `history-list__fav ${_isFav(game.id) ? 'is-fav' : ''}`;
-        btn.innerHTML = `<i class="fa-${_isFav(game.id) ? 'solid' : 'regular'} fa-heart"></i>`;
+        toggleFav(game.id);
       });
-      row.addEventListener('click', () => pgcdnLaunch(game));
-      list.appendChild(row);
+      frag.appendChild(row);
     });
+    list.innerHTML = '';
+    list.appendChild(frag);
   }
 
-  function _relativeTime(ts) {
+  function relativeTime(ts) {
     const diff = Date.now() - ts;
-    const m = Math.floor(diff / 60000);
-    const h = Math.floor(diff / 3600000);
-    const d = Math.floor(diff / 86400000);
-    if (m < 1)  return 'Just now';
-    if (m < 60) return `${m}m ago`;
-    if (h < 24) return `${h}h ago`;
-    if (d < 30) return `${d}d ago`;
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return mins + 'm ago';
+    if (hours < 24) return hours + 'h ago';
+    if (days < 30) return days + 'd ago';
     return new Date(ts).toLocaleDateString();
   }
 
-  function _skelGrid(n) {
-    const wrap = document.getElementById('pgcdn-grid-wrap');
-    const grid = document.createElement('div');
-    grid.className = 'pgcdn-grid';
-    grid.innerHTML = Array.from({length: n}, () => `<div class="skel-card"><div class="skel skel-card__img"></div><div class="skel skel-card__name"></div></div>`).join('');
-    wrap.innerHTML = '';
-    wrap.appendChild(grid);
+  async function launchGame(game) {
+    syncGameId = game.id;
+    recordPlay(game);
+    await prefetchGameSaves(game.id);
+    openViewer(PGCDN_BASE + '/' + game.path, game.name, game);
   }
 
-  function _skelShelf(rowEl, n) {
-    rowEl.innerHTML = Array.from({length: n}, () =>
-      `<div class="skel-shelf-card"><div class="skel skel-shelf-card__img"></div><div class="skel skel-shelf-card__name"></div></div>`
-    ).join('');
-  }
+  let barTimer = null;
+  let barManualHide = false;
 
-  function _skelHistory(n) {
-    const list = document.getElementById('history-list');
-    if (!list) return;
-    list.innerHTML = Array.from({length: n}, () => `
-      <div class="skel-history-row">
-        <div class="skel skel-history-row__thumb"></div>
-        <div class="skel-history-row__lines">
-          <div class="skel skel-history-row__title"></div>
-          <div class="skel skel-history-row__sub"></div>
-        </div>
-      </div>`).join('');
-  }
-
-  async function pgcdnInit() {
-    _loadLocal();
-    _skelGrid(24);
-    const favRow    = document.getElementById('pgcdn-favs-row');
-    const recentRow = document.getElementById('pgcdn-recent-row');
-    if (_data.favourites.length) {
-      document.getElementById('pgcdn-shelf-favs').style.display = '';
-      _skelShelf(favRow, Math.min(_data.favourites.length, 6));
-    }
-    if (_data.recent.length) {
-      document.getElementById('pgcdn-shelf-recent').style.display = '';
-      _skelShelf(recentRow, Math.min(_data.recent.length, 6));
-    }
-    _skelHistory(Math.min(_data.recent.length || 5, 8));
-
-    try {
-      const res = await fetch(`${PGCDN_BASE}/config.json`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const cfg = await res.json();
-      _pgcdnGames = cfg.games || [];
-      pgcdnRender(_pgcdnGames);
-      _renderShelves();
-      _renderHistory();
-
-      const launchId = location.hash.slice(1);
-      if (launchId) {
-        const game = _pgcdnGames.find(g => g.id === launchId);
-        if (game) pgcdnLaunch(game);
-        history.replaceState(null, '', location.pathname);
-      }
-    } catch (e) {
-      document.getElementById('pgcdn-grid-wrap').innerHTML =
-        `<div class="pgcdn-status"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed to load games</span></div>`;
-    }
-  }
-
-  let _allCards   = [];  // { game, el } pairs built once
-  let _noResults  = null;
-
-  function _buildAllCards(games) {
-    const wrap  = document.getElementById('pgcdn-grid-wrap');
-    const count = document.getElementById('pgcdn-count');
-
-    // Tear down previous
-    wrap.innerHTML = '';
-    _allCards = [];
-
-    // No-results placeholder (always exists, toggled by visibility)
-    _noResults = document.createElement('div');
-    _noResults.className = 'pgcdn-status';
-    _noResults.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>No games found</span>';
-    _noResults.style.display = 'none';
-    wrap.appendChild(_noResults);
-
-    if (!games.length) {
-      _noResults.style.display = '';
-      count.textContent = '0 games';
-      return;
-    }
-
-    const grid = document.createElement('div');
-    grid.className = 'pgcdn-grid';
-    games.forEach(game => {
-      const el = _buildCard(game);
-      _allCards.push({ game, el });
-      grid.appendChild(el);
-    });
-    wrap.appendChild(grid);
-    count.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
-  }
-
-  function pgcdnRender(games) {
-    const count = document.getElementById('pgcdn-count');
-    count.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
-
-    if (!_allCards.length) {
-      _buildAllCards(games);
-      return;
-    }
-
-    // Toggle the no-results placeholder
-    _noResults.style.display = games.length ? 'none' : '';
-
-    const visibleSet = new Set(games);
-    _allCards.forEach(({ game, el }) => {
-      el.style.display = visibleSet.has(game) ? '' : 'none';
-    });
-  }
-
-  async function pgcdnLaunch(game) {
-    _syncGameId = game.id;
-    _recordPlay(game);
-    await _prefetchGameSaves(game.id);
-    openViewer(`${PGCDN_BASE}/${game.path}`, game.name, game);
-  }
-
-  let _searchTimer = null;
-  document.getElementById('pgcdn-search').addEventListener('input', e => {
-    clearTimeout(_searchTimer);
-    _searchTimer = setTimeout(() => {
-      const q = e.target.value.trim().toLowerCase();
-      pgcdnRender(q ? _pgcdnGames.filter(g => g.name.toLowerCase().includes(q)) : _pgcdnGames);
-    }, 150);
-  });
-
-  pgcdnInit();
-
-  let _histSearchTimer = null;
-  document.getElementById('history-search').addEventListener('input', e => {
-    clearTimeout(_histSearchTimer);
-    _histSearchTimer = setTimeout(() => {
-      _historyQuery = e.target.value.trim().toLowerCase();
-      _renderHistory();
-    }, 150);
-  });
-
-  document.querySelectorAll('.history-sort-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.history-sort-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      _historySort = btn.dataset.sort;
-      _renderHistory();
-    });
-  });
-
-  document.addEventListener('keydown', e => {
-    if (e.key !== '/') return;
-    const active = document.querySelector('.source-tab.active')?.dataset.panel;
-    const input  = active === 'history'
-      ? document.getElementById('history-search')
-      : document.getElementById('pgcdn-search');
-    if (!input) return;
-    const tag = document.activeElement?.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-    e.preventDefault();
-    input.focus();
-    input.select();
-  });
-
-  document.getElementById('history-clear').addEventListener('click', () => {
-    _showToast('Clear all play history?', [
-      {
-        label:  'Cancel',
-        action: () => {},
-      },
-      {
-        label:  'Clear',
-        danger: true,
-        action: () => {
-          _data.recent = [];
-          _saveLocal();
-          _saveCloud();
-          _renderShelves();
-          _renderHistory();
-          _showToast('History cleared', [], 2000);
-        },
-      },
-    ]);
-  });
-
-  if (typeof PlutoniumStore !== 'undefined') {
-    PlutoniumStore.onAuthChange(async user => {
-      if (user) {
-        await _loadCloud();
-      } else {
-        _setBadge(false);
-      }
-    });
-  } else {
-    _setBadge(false);
-  }
-
-  let _luminInited = false;
-
-  document.querySelectorAll('.source-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.source-panel').forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
-
-      if (tab.dataset.panel === 'lumin' && !_luminInited) {
-        _luminInited = true;
-        Lumin.init({
-          container: '#lumin-container',
-          theme: 'dark',
-          columns: 6,
-          rows: 4,
-        });
-      }
-    });
-  });
-
-  const viewer      = document.getElementById('game-viewer');
-  const iframe      = document.getElementById('game-iframe');
-  const viewerBar   = document.getElementById('viewer-bar');
-  const viewerGhost = document.getElementById('viewer-bar-ghost');
-  const viewerTitle = document.getElementById('viewer-title');
-  const vbtnFav     = document.getElementById('vbtn-fav');
-
-  let _barHideTimer  = null;
-  let _barManualHide = false;
-  let _currentGame   = null;
-
-  function _updateViewerFavBtn() {
-    if (!_currentGame) return;
-    const fav = _isFav(_currentGame.id);
-    vbtnFav.classList.toggle('is-fav', fav);
-    vbtnFav.querySelector('i').className = `fa-${fav ? 'solid' : 'regular'} fa-heart`;
+  function updateViewerFav() {
+    if (!currentGame || !els['vbtn-fav']) return;
+    const fav = isFav(currentGame.id);
+    els['vbtn-fav'].classList.toggle('is-fav', fav);
+    els['vbtn-fav'].querySelector('i').className = 'fa-' + (fav ? 'solid' : 'regular') + ' fa-heart';
   }
 
   function openViewer(url, name, game) {
+    const viewer = els['game-viewer'];
+    const iframe = els['game-iframe'];
+    if (!viewer || !iframe) return;
     iframe.src = url;
-    viewerTitle.textContent = name || '';
-    _currentGame = game || null;
+    currentGame = game || null;
+    els['viewer-title'].textContent = name || '';
     viewer.classList.add('active');
-    _barManualHide = false;
-    _updateViewerFavBtn();
-    document.getElementById('plu-nav')?.style.setProperty('display', 'none');
+    document.body.classList.add('viewer-open');
+    barManualHide = false;
+    updateViewerFav();
     showBar();
     scheduleBarHide();
   }
 
   function closeViewer() {
-    _requestSaveSnapshot();
-    _syncGameId = null;
-
-    viewer.classList.remove('active');
-    iframe.src = '';
-    viewerTitle.textContent = '';
-    _currentGame = null;
-    clearTimeout(_barHideTimer);
-    _barManualHide = false;
+    requestSaveSnapshot();
+    syncGameId = null;
+    if (els['game-viewer']) els['game-viewer'].classList.remove('active');
+    if (els['game-iframe']) els['game-iframe'].src = '';
+    if (els['viewer-title']) els['viewer-title'].textContent = '';
+    currentGame = null;
+    document.body.classList.remove('viewer-open');
+    clearTimeout(barTimer);
     hideBar();
-    document.getElementById('plu-nav')?.style.removeProperty('display');
   }
 
   function showBar() {
-    viewerBar.classList.remove('bar-hidden');
-    viewerGhost.classList.remove('ghost-visible');
+    els['viewer-bar'].classList.remove('bar-hidden');
+    els['viewer-bar-ghost'].classList.remove('ghost-visible');
   }
 
   function hideBar() {
-    viewerBar.classList.add('bar-hidden');
-    viewerGhost.classList.add('ghost-visible');
+    els['viewer-bar'].classList.add('bar-hidden');
+    els['viewer-bar-ghost'].classList.add('ghost-visible');
   }
 
   function scheduleBarHide() {
-    clearTimeout(_barHideTimer);
-    _barHideTimer = setTimeout(hideBar, 3000);
+    clearTimeout(barTimer);
+    barTimer = setTimeout(() => {
+      if (!barManualHide) hideBar();
+    }, 2600);
   }
 
-  viewer.addEventListener('mousemove', () => {
-    if (_barManualHide) return;
-    showBar();
-    scheduleBarHide();
-  });
+  function wireViewer() {
+    $('vbtn-back').addEventListener('click', closeViewer);
+    $('vbtn-reload').addEventListener('click', () => {
+      if (els['game-iframe']) els['game-iframe'].src = els['game-iframe'].src;
+    });
+    $('vbtn-fullscreen').addEventListener('click', () => {
+      const iframe = els['game-iframe'];
+      if (!iframe) return;
+      if (iframe.requestFullscreen) iframe.requestFullscreen();
+      else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+    });
+    $('vbtn-hide').addEventListener('click', () => {
+      barManualHide = true;
+      hideBar();
+    });
+    els['vbtn-fav'].addEventListener('click', () => {
+      if (currentGame) toggleFav(currentGame.id);
+    });
+    els['game-viewer'].addEventListener('mousemove', () => {
+      if (barManualHide) return;
+      showBar();
+      scheduleBarHide();
+    });
+    els['viewer-bar-ghost'].addEventListener('mouseenter', () => {
+      barManualHide = false;
+      showBar();
+      scheduleBarHide();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && els['game-viewer'].classList.contains('active') && !document.fullscreenElement) closeViewer();
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const icon = document.querySelector('#vbtn-fullscreen i');
+      if (icon) icon.className = document.fullscreenElement ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+    });
+  }
 
-  viewerGhost.addEventListener('mouseenter', () => {
-    _barManualHide = false;
-    showBar();
-    scheduleBarHide();
-  });
-
-  viewerBar.addEventListener('mouseenter', () => clearTimeout(_barHideTimer));
-  viewerBar.addEventListener('mouseleave', () => { if (!_barManualHide) scheduleBarHide(); });
-
-  const _vbtns = Array.from(viewerBar.querySelectorAll('.viewer-btn'));
-  let _vbarRaf = null;
-  viewerBar.addEventListener('mousemove', e => {
-    if (_vbarRaf) return;
-    _vbarRaf = requestAnimationFrame(() => {
-      _vbarRaf = null;
-      _vbtns.forEach(btn => {
-        const r = btn.getBoundingClientRect();
-        const dist = Math.abs(e.clientX - (r.left + r.width / 2));
-        const t = Math.max(0, 1 - dist / 80);
-        const scale = 1 + 0.7 * t * t;
-        btn.style.transform = `scale(${scale.toFixed(3)})`;
-        btn.style.color = t > 0.85 ? 'var(--pink)' : '';
+  function wireTabs() {
+    document.querySelectorAll('.source-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        activePanel = tab.dataset.panel;
+        document.querySelectorAll('.source-tab').forEach(t => t.classList.toggle('active', t === tab));
+        document.querySelectorAll('.source-panel').forEach(panel => panel.classList.toggle('active', panel.id === 'panel-' + activePanel));
+        if (activePanel === 'lumin' && !luminStarted && window.Lumin) {
+          luminStarted = true;
+          Lumin.init({ container: '#lumin-container', theme: 'dark', columns: 6, rows: 4 });
+        }
+        // Grid may have been resized while hidden — refresh the size hint.
+        if (activePanel === 'pgcdn') measureGridWidth();
       });
     });
-  });
-  viewerBar.addEventListener('mouseleave', () => {
-    _vbtns.forEach(btn => { btn.style.transform = ''; btn.style.color = ''; });
-  });
+  }
 
-  vbtnFav.addEventListener('click', () => {
-    if (!_currentGame) return;
-    _toggleFav(_currentGame.id);
-    _updateViewerFavBtn();
-  });
+  function wireInputs() {
+    let searchTimer = null;
+    els['pgcdn-search'].addEventListener('input', e => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => applySearch(e.target.value), 90);
+    });
 
-  document.getElementById('vbtn-back').addEventListener('click', closeViewer);
+    let historyTimer = null;
+    els['history-search'].addEventListener('input', e => {
+      clearTimeout(historyTimer);
+      historyTimer = setTimeout(() => {
+        historyQuery = e.target.value.trim().toLowerCase();
+        renderHistory();
+      }, 90);
+    });
 
-  document.getElementById('vbtn-reload').addEventListener('click', () => {
-    iframe.src = iframe.src;
-  });
+    document.querySelectorAll('.history-sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.history-sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        historySort = btn.dataset.sort;
+        renderHistory();
+      });
+    });
 
-  document.getElementById('vbtn-fullscreen').addEventListener('click', () => {
-    if (iframe.requestFullscreen) iframe.requestFullscreen();
-    else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
-  });
+    els['history-clear'].addEventListener('click', () => {
+      showToast('Clear all play history?', [
+        { label: 'Cancel', action: () => {} },
+        {
+          label: 'Clear',
+          danger: true,
+          action: () => {
+            data.recent = [];
+            saveLocal();
+            saveCloud();
+            renderShelves();
+            renderHistory();
+            showToast('History cleared', [], 1800);
+          }
+        }
+      ]);
+    });
 
-  document.getElementById('vbtn-hide').addEventListener('click', () => {
-    clearTimeout(_barHideTimer);
-    _barManualHide = true;
-    hideBar();
-  });
+    document.addEventListener('keydown', e => {
+      if (e.key !== '/') return;
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const target = activePanel === 'history' ? els['history-search'] : els['pgcdn-search'];
+      if (!target) return;
+      e.preventDefault();
+      target.focus();
+      target.select();
+    });
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && viewer.classList.contains('active') && !document.fullscreenElement) {
-      closeViewer();
+    window.addEventListener('resize', measureGridWidth);
+  }
+
+  // Preload every game thumbnail (e.g. `https://g.cdn.../img/...`) so the
+  // catalog is fully warm by the time the preload overlay is lifted.
+  function preloadImages(list, onProgress) {
+    return new Promise(resolve => {
+      const items = (list || []).filter(g => g && g.image);
+      const total = items.length;
+      if (!total) { resolve(); return; }
+      let finished = 0;
+      let settled = false;
+      const settle = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+      const tick = () => {
+        finished++;
+        if (onProgress) onProgress(finished, total);
+        if (finished >= total) settle();
+      };
+      items.forEach(g => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.onload = tick;
+        img.onerror = tick;
+        img.src = gameImage(g);
+      });
+      // Backstop: never leave the page blocked if a request hangs.
+      setTimeout(settle, 15000);
+    });
+  }
+
+  function finishPreload() {
+    const overlay = els['games-preload-overlay'];
+    if (!overlay) return;
+    overlay.classList.add('done');
+    document.body.classList.remove('preload-open');
+  }
+
+  async function loadGames() {
+    els['pgcdn-grid-wrap'].innerHTML = '<div class="pgcdn-status"><div class="pgcdn-spinner"></div><span>Loading games...</span></div>';
+    try {
+      const res = await fetch(PGCDN_BASE + '/config.json', { cache: 'default' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const cfg = await res.json();
+      games = (cfg.games || []).slice().sort((a, b) => String(a.name).localeCompare(String(b.name)));
+      filteredGames = games.slice();
+      renderGrid();
+      renderShelves();
+      renderHistory();
+
+      const launchId = decodeURIComponent(location.hash.slice(1));
+      if (launchId) {
+        // Deep-linked straight into a game — don't block on thumbnail preload.
+        const game = games.find(g => g.id === launchId);
+        if (game) launchGame(game);
+        history.replaceState(null, '', location.pathname);
+      } else {
+        // Preload all images before letting the user in.
+        await preloadImages(games, (done, total) => {
+          const label = els['games-preload-label'];
+          if (label) label.textContent = 'Preloading Images… (' + done + '/' + total + ')';
+        });
+      }
+    } catch (e) {
+      els['pgcdn-grid-wrap'].innerHTML = '<div class="pgcdn-status"><i class="fa-solid fa-triangle-exclamation"></i><span>Failed to load games</span></div>';
+    } finally {
+      finishPreload();
     }
-  });
+  }
 
-  document.addEventListener('fullscreenchange', () => {
-    const icon = document.querySelector('#vbtn-fullscreen i');
-    icon.className = document.fullscreenElement
-      ? 'fa-solid fa-compress'
-      : 'fa-solid fa-expand';
-  });
+  function setFavicon() {
+    const map = {
+      '#e8175d': 'plutonium-pink',
+      '#7c3aed': 'violet',
+      '#3c5085': 'blue',
+      '#059669': 'emerald',
+      '#d97706': 'amber',
+      '#dc2626': 'red',
+      '#0891b2': 'cyan',
+      '#c026d3': 'fuchsia'
+    };
+    function iconName() {
+      try {
+        const state = JSON.parse(localStorage.getItem('plu_theme') || '{}');
+        return map[String(state.accentColor || '').trim().toLowerCase()] || 'plutonium-pink';
+      } catch (_) {
+        return 'plutonium-pink';
+      }
+    }
+    const link = document.querySelector('link[rel="icon"][type="image/png"]');
+    if (link) link.href = '../img/logos/icon-' + iconName() + '.png';
+  }
+
+  async function init() {
+    initEls();
+    if (els['games-preload-overlay']) document.body.classList.add('preload-open');
+    loadLocal();
+    wireTabs();
+    wireInputs();
+    wireViewer();
+    setFavicon();
+    setBadge(false);
+    renderHistory();
+    await loadGames();
+    if (typeof PlutoniumStore !== 'undefined') {
+      PlutoniumStore.onAuthChange(user => {
+        if (user) loadCloud();
+        else setBadge(false);
+      });
+    }
+  }
 
   window.PGViewer = { open: openViewer, close: closeViewer };
-
-  // Accent-coloured favicon (img/logos/icon-<color>.png)
-  const ICON_MAP = {
-    '#e8175d': 'plutonium-pink',
-    '#7c3aed': 'violet',
-    '#3c5085': 'blue',
-    '#059669': 'emerald',
-    '#d97706': 'amber',
-    '#dc2626': 'red',
-    '#0891b2': 'cyan',
-    '#c026d3': 'fuchsia',
-  }
-  function accentIconFile() {
-    try {
-      const raw = localStorage.getItem('plu_theme')
-      const state = raw ? JSON.parse(raw) : {}
-      const accent = String(state.accentColor || '').trim().toLowerCase()
-      return ICON_MAP[accent] || 'plutonium-pink'
-    } catch { return 'plutonium-pink' }
-  }
-  const iconLink = document.querySelector('link[rel="icon"][type="image/png"]')
-  if (iconLink) {
-    iconLink.href = `../img/logos/icon-${accentIconFile()}.png`
-  }
-  window.addEventListener('storage', e => {
-    if (e.key !== 'plu_theme') return
-    const link = document.querySelector('link[rel="icon"][type="image/png"]')
-    if (link) link.href = `../img/logos/icon-${accentIconFile()}.png`
-  })
-
+  document.addEventListener('DOMContentLoaded', init);
 })();

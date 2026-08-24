@@ -2,7 +2,7 @@
 .glass {
   position: relative;
   background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(2px) saturate(180%);
+  backdrop-filter: blur(2.5px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 2rem;
   box-shadow: 0 8px 32px rgba(var(--ui-accent-rgb), 0.2),

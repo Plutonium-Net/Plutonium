@@ -381,6 +381,21 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
+	// Cloud gaming images — serve from Cache API (cache-first)
+	if (url.includes('/img/cloud/')) {
+		event.respondWith(
+			caches.open('plutonium-cloud-v1').then(function (cache) {
+				return cache.match(event.request).then(function (cached) {
+					return cached || fetch(event.request).then(function (network) {
+						if (network.ok) cache.put(event.request, network.clone());
+						return network;
+					});
+				});
+			})
+		);
+		return;
+	}
+
 	// UV proxy requests
 	if (url.includes(UV_PREFIX)) {
 		if (uvSW) {

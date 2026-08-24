@@ -9,6 +9,7 @@
   /* ── Background images to pre-cache ─────────────────────────────────── */
   const CACHE_KEY = 'plutonium-bg-v2';
   const GAMES_CACHE_KEY = 'plutonium-games-v1';
+  const CLOUD_CACHE_KEY = 'plutonium-cloud-v1';
   const PGCDN_BASE = 'https://g.cdn.plutoniumnet.work';
   const BG_IMAGES = [
     'img/backgrounds/coast.jpg',
@@ -167,6 +168,44 @@
     }
   }
 
+  async function contentLength(url) {
+    try {
+      var resp = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+      if (!resp.ok) return 0;
+      return parseInt(resp.headers.get('content-length') || '0', 10) || 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  async function contentLengths(urls) {
+    var lengths = new Array(urls.length).fill(0);
+    var next = 0;
+    var workerCount = Math.min(8, urls.length);
+
+    async function worker() {
+      while (next < urls.length) {
+        var index = next++;
+        lengths[index] = await contentLength(urls[index]);
+      }
+    }
+
+    var workers = [];
+    for (var i = 0; i < workerCount; i++) workers.push(worker());
+    await Promise.all(workers);
+    return lengths;
+  }
+
+  function sumBytes(lengths) {
+    return lengths.reduce(function (sum, bytes) { return sum + (bytes || 0); }, 0);
+  }
+
+  function normalizeCloudImagePath(path) {
+    if (!path) return '';
+    if (/^https?:\/\//i.test(path)) return path;
+    return path.replace(/^\.\.\//, '').replace(/^\.\//, '');
+  }
+
   /* ── hide logic ──────────────────────────────────────────────────── */
   function hideLoader() {
     overlay.style.opacity = '0';
@@ -214,15 +253,17 @@
       if (!missing.length) return;
 
       showProgress();
-      updateProgress(0, missing.length, 0, 0, 'Caching backgrounds:');
+      updateProgress(0, missing.length, 0, 0, 'Measuring backgrounds:');
 
+      var lengths = await contentLengths(missing);
       var bytesDone = 0;
-      var bytesTotal = 0;
+      var bytesTotal = sumBytes(lengths);
+      updateProgress(0, missing.length, 0, bytesTotal, 'Caching backgrounds:');
+
       for (var i = 0; i < missing.length; i++) {
         try {
           var resp = await fetch(missing[i], { cache: 'no-store' });
-          var len = parseInt(resp.headers.get('content-length') || '0', 10) || 0;
-          bytesTotal += len;
+          var len = lengths[i] || parseInt(resp.headers.get('content-length') || '0', 10) || 0;
           if (resp.ok) {
             var cachedResp = resp.clone();
             await bgCache.put(missing[i], cachedResp);
@@ -253,15 +294,17 @@
       if (!missing.length) return;
 
       showProgress();
-      updateProgress(0, missing.length, 0, 0, 'Caching games:');
+      updateProgress(0, missing.length, 0, 0, 'Measuring games:');
 
+      var lengths = await contentLengths(missing);
       var bytesDone = 0;
-      var bytesTotal = 0;
+      var bytesTotal = sumBytes(lengths);
+      updateProgress(0, missing.length, 0, bytesTotal, 'Caching games:');
+
       for (var gi = 0; gi < missing.length; gi++) {
         try {
           var gresp = await fetch(missing[gi], { cache: 'no-store' });
-          var len = parseInt(gresp.headers.get('content-length') || '0', 10) || 0;
-          bytesTotal += len;
+          var len = lengths[gi] || parseInt(gresp.headers.get('content-length') || '0', 10) || 0;
           if (gresp.ok) {
             var cachedResp = gresp.clone();
             await gameCache.put(missing[gi], cachedResp);
@@ -273,10 +316,61 @@
     } catch (_) {}
   }
 
+  /* ── cloud gaming image caching ─────────────────────────────────── */
+  async function cacheCloudImages() {
+    if (!('caches' in window)) return;
+    try {
+      var cres = await fetch('data/cloud.json', { cache: 'no-store' });
+      if (!cres.ok) return;
+      var cfg = await cres.json();
+      var cloudUrls = [];
+      (cfg || []).forEach(function (game) {
+        var image = normalizeCloudImagePath(game.image);
+        var cover = normalizeCloudImagePath(game.cover);
+        if (image) cloudUrls.push(image);
+        if (cover && cover !== image) cloudUrls.push(cover);
+      });
+
+      var cloudCache = await caches.open(CLOUD_CACHE_KEY);
+      var cloudKeys = await cloudCache.keys();
+      var alreadyCached = new Set(cloudKeys.map(function (r) { return r.url; }));
+      var seen = new Set();
+      var missing = cloudUrls.filter(function (url) {
+        var fullUrl = new URL(url, location.href).href;
+        if (seen.has(fullUrl) || alreadyCached.has(fullUrl)) return false;
+        seen.add(fullUrl);
+        return true;
+      });
+      if (!missing.length) return;
+
+      showProgress();
+      updateProgress(0, missing.length, 0, 0, 'Measuring cloud games:');
+
+      var lengths = await contentLengths(missing);
+      var bytesDone = 0;
+      var bytesTotal = sumBytes(lengths);
+      updateProgress(0, missing.length, 0, bytesTotal, 'Caching cloud games:');
+
+      for (var ci = 0; ci < missing.length; ci++) {
+        try {
+          var cResp = await fetch(missing[ci], { cache: 'no-store' });
+          var len = lengths[ci] || parseInt(cResp.headers.get('content-length') || '0', 10) || 0;
+          if (cResp.ok) {
+            var cachedResp = cResp.clone();
+            await cloudCache.put(missing[ci], cachedResp);
+            bytesDone += await responseBytes(cResp, len);
+          }
+        } catch (_) {}
+        updateProgress(ci + 1, missing.length, bytesDone, bytesTotal, 'Caching cloud games:');
+      }
+    } catch (_) {}
+  }
+
   async function cacheVisibleAssets() {
     try {
       await cacheBackgroundImages();
       await cacheGameImages();
+      await cacheCloudImages();
     } finally {
       cacheComplete = true;
       checkAndHide();
