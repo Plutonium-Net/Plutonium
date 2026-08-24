@@ -160,6 +160,7 @@ async function _openPinPicker(anchorEl) {
   searchInput.autocomplete = 'off'
   searchInput.spellcheck = false
   searchWrap.appendChild(searchInput)
+  picker.appendChild(searchWrap)
 
   const list = document.createElement('div')
   list.className = 'pin-picker__list'

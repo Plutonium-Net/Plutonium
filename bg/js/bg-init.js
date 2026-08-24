@@ -1,7 +1,7 @@
 /**
  * bg-init.js — Plutonium background manager
  * Handles particles.js and all Vanta.js effects.
- * Must be loaded at the bottom of <body>, after all Vanta/Three/p5 scripts.
+ * Loads only the scripts needed for the current effect (lazy).
  * Exposes window.PluBG.init() and window.PluBG.destroy().
  */
 (function () {
@@ -22,7 +22,25 @@
   };
 
   var _instance = null;
+  var _loadedScripts = {};
 
+  /* ── Script loader ─────────────────────────────────────────────── */
+  function loadScript(url) {
+    if (_loadedScripts[url]) return Promise.resolve();
+    return new Promise(function (resolve) {
+      var s = document.createElement('script');
+      s.src = url;
+      s.onload = function () { _loadedScripts[url] = true; resolve(); };
+      s.onerror = function () { _loadedScripts[url] = true; resolve(); };
+      document.body.appendChild(s);
+    });
+  }
+
+  function loadScripts(urls) {
+    return Promise.all(urls.map(loadScript));
+  }
+
+  /* ── Helpers ───────────────────────────────────────────────────── */
   function hexToInt(hex) {
     return parseInt((hex || '#000000').replace('#', ''), 16);
   }
@@ -58,6 +76,7 @@
     }
   }
 
+  /* ── Particles ─────────────────────────────────────────────────── */
   function _launchParticles(s, color) {
     if (typeof particlesJS === 'undefined') return;
     try {
@@ -81,6 +100,7 @@
     } catch (e) {}
   }
 
+  /* ── Vanta effect launcher ─────────────────────────────────────── */
   function _launchVanta(style, color, vantaEl) {
     var key = VANTA_KEY[style];
     if (!key || !window.VANTA || !window.VANTA[key]) return;
@@ -184,6 +204,19 @@
     } catch (e) {}
   }
 
+  /* ── Build script URL list for a given effect ──────────────────── */
+  function _scriptsForEffect(style) {
+    var base = 'bg/js/';
+    if (style === 'particles') return [base + 'particles.min.js'];
+    if (!VANTA_KEY[style]) return [];
+    // three.js is needed by all Vanta effects; p5.js is needed by some
+    var scripts = [base + 'three.min.js'];
+    if (style === 'clouds' || style === 'fog') scripts.push(base + 'p5.min.js');
+    scripts.push(base + 'vanta.' + style + '.min.js');
+    return scripts;
+  }
+
+  /* ── init ──────────────────────────────────────────────────────── */
   function init() {
     var s       = (window.BrowserThemeState && BrowserThemeState.loadThemeState()) || {};
     var style   = s.bgEffect   || 'particles';
@@ -200,14 +233,18 @@
     if (vantaEl) vantaEl.style.display = isVanta     ? 'block' : 'none';
 
     if (isParticles) {
-      _launchParticles(s, color);
+      loadScripts(_scriptsForEffect('particles')).then(function () {
+        _launchParticles(s, color);
+      });
       return;
     }
 
     if (!isVanta || !vantaEl) return;
 
-    requestAnimationFrame(function () {
-      _launchVanta(style, color, vantaEl);
+    loadScripts(_scriptsForEffect(style)).then(function () {
+      requestAnimationFrame(function () {
+        _launchVanta(style, color, vantaEl);
+      });
     });
   }
 
