@@ -535,3 +535,57 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ── Context menu ───────────────────────────────────────────── */
+.cg-ctx-menu {
+  position: fixed;
+  z-index: 300;
+  background: var(--panel-bg-dark, rgba(20,20,20,0.95));
+  border: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
+  border-radius: 10px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  min-width: 180px;
+  padding: 5px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.cg-ctx-menu.hidden { display: none; }
+
+.cg-ctx-menu .ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--text, #fff);
+  cursor: pointer;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+
+.cg-ctx-menu .ctx-item:hover {
+  background: var(--surface-2, rgba(255,255,255,0.08));
+}
+
+.cg-ctx-menu .ctx-item--danger {
+  color: var(--ui-danger, #dc2626);
+}
+
+.cg-ctx-menu .ctx-item--danger:hover {
+  background: rgba(220, 38, 38, 0.12);
+}
+
+.cg-ctx-menu .ctx-item i {
+  width: 16px;
+  text-align: center;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.cg-ctx-menu .ctx-sep {
+  height: 1px;
+  background: var(--border-subtle, rgba(255,255,255,0.08));
+  margin: 4px 8px;
+}

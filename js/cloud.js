@@ -16,6 +16,62 @@
   let _activeTag  = null;
   let _searchQ    = '';
 
+  // ── Pin helpers (access parent Pins if in iframe) ──────────────────────────
+  function _parentPins() {
+    try { return window.parent && window.parent.Pins; } catch (_) { return null; }
+  }
+
+  function _isPinned(game) {
+    const P = _parentPins();
+    return P ? !!P.find('cloud:' + game.game_key) : false;
+  }
+
+  function _togglePin(game) {
+    const P = _parentPins();
+    if (!P) return;
+    const pinId = 'cloud:' + game.game_key;
+    if (P.find(pinId)) {
+      P.remove(pinId);
+    } else {
+      // Normalize image path from '../img/cloud/...' to 'img/cloud/...' for root-relative display
+      const img = game.image ? game.image.replace(/^\.\.\//, '') : undefined;
+      P.add({ id: pinId, name: game.name, image: img, type: 'cloud' });
+    }
+  }
+
+  // ── Context menu ──────────────────────────────────────────────────────────
+  function _showCtxMenu(e, items) {
+    e.preventDefault();
+    const ctxMenu = document.getElementById('cg-ctx-menu');
+    if (!ctxMenu) return;
+    ctxMenu.innerHTML = '';
+    items.forEach(function (item) {
+      if (item === 'sep') {
+        var sep = document.createElement('div');
+        sep.className = 'ctx-sep';
+        ctxMenu.appendChild(sep);
+        return;
+      }
+      var el = document.createElement('div');
+      el.className = 'ctx-item' + (item.danger ? ' ctx-item--danger' : '');
+      el.innerHTML = '<i class="' + item.icon + '"></i>' + item.label;
+      el.addEventListener('click', function () { ctxMenu.classList.add('hidden'); item.action(); });
+      ctxMenu.appendChild(el);
+    });
+    ctxMenu.classList.remove('hidden');
+    var mw = ctxMenu.offsetWidth;
+    var mh = ctxMenu.offsetHeight;
+    var x = e.clientX, y = e.clientY;
+    if (x + mw > window.innerWidth - 8) x = window.innerWidth - mw - 8;
+    if (y + mh > window.innerHeight - 8) y = window.innerHeight - mh - 8;
+    ctxMenu.style.left = x + 'px';
+    ctxMenu.style.top = y + 'px';
+    setTimeout(function () {
+      document.addEventListener('click', function () { ctxMenu.classList.add('hidden'); }, { once: true });
+      document.addEventListener('scroll', function () { ctxMenu.classList.add('hidden'); }, { once: true, capture: true });
+    }, 0);
+  }
+
   // ── Build tag filter pills ────────────────────────────────────────────────
   function _buildTagPills(games) {
     const tagSet = new Set();
@@ -80,6 +136,18 @@
         '</div>';
 
       card.addEventListener('click', function () { _openDetail(game); });
+      card.addEventListener('contextmenu', function (e) {
+        var pinned = _isPinned(game);
+        _showCtxMenu(e, [
+          { icon: 'fa-solid fa-play', label: 'Play', action: function () { _launch(game); } },
+          'sep',
+          {
+            icon: 'fa-solid fa-thumbtack',
+            label: pinned ? 'Unpin from Home' : 'Pin to Home',
+            action: function () { _togglePin(game); }
+          }
+        ]);
+      });
       grid.appendChild(card);
     });
   }
@@ -91,6 +159,17 @@
       _allGames = games;
       _buildTagPills(games);
       _renderGrid();
+
+      // Support auto-launch via URL hash (e.g. pluto://cloud#cloud:jy0108)
+      var hash = location.hash.slice(1);
+      if (hash) {
+        var targetKey = hash.startsWith('cloud:') ? hash.slice(6) : hash;
+        var launchGame = _allGames.find(function (g) { return g.game_key === targetKey; });
+        if (launchGame) {
+          history.replaceState(null, '', location.pathname);
+          _launch(launchGame);
+        }
+      }
     })
     .catch(function () {
       grid.innerHTML = '<p class="cg-empty">Failed to load games.</p>';
