@@ -1,0 +1,13 @@
+{
+  "sections": [
+    {
+      "articles": [
+        { "title": "Plutonium Beta Released!", "desc": "How else would you be reading this?" },
+        { "title": "New Music tech incoming.", "desc": "We will soon be launching a new type of music streaming service." },
+        { "title": "Proxy tech overcome.", "desc": "We now incorporate Hyperbeam into our platform as a proxy option." },
+        { "title": "Stream Forever.", "desc": "WE HAVE ANIME, SHOWS, AND MOVIES!" },
+        { "title": "UI overhaul.", "desc": "Just look at it!" }
+      ]
+    }
+  ]
+}
