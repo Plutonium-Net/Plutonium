@@ -11,6 +11,9 @@
 <link rel="shortcut icon" id="app-favicon" href="img/favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/glass.css">
+<link rel="stylesheet" href="css/plu-tokens.css">
+<link rel="stylesheet" href="css/workspace.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 </head>
 <body>
 <div class="bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;z-index:-1;">
@@ -102,9 +105,8 @@
     <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://games" data-name="Games" data-desc="Play hundreds of browser games instantly"><span class="app-tile-icon"><i class="fa-solid fa-gamepad"></i></span><span>Games</span></button></div>
     <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://ai" data-name="Artificial Intelligence" data-desc="Chat with AI assistants and tools"><span class="app-tile-icon"><i class="fa-solid fa-robot"></i></span><span>AI</span></button></div>
     <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://cloud" data-name="Cloud Gaming" data-desc="Stream high-end games from the cloud"><span class="app-tile-icon"><i class="fa-solid fa-cloud"></i></span><span>Cloud Gaming</span></button></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://movies" data-name="Movies" data-desc="Watch the latest movies and shows"><span class="app-tile-icon"><i class="fa-solid fa-film"></i></span><span>Movies</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://media" data-name="Media" data-desc="Watch movies, TV, and anime"><span class="app-tile-icon"><i class="fa-solid fa-film"></i></span><span>Media</span></button></div>
     <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://vms" data-name="Virtual Machines" data-desc="Access remote virtual machines"><span class="app-tile-icon"><i class="fa-solid fa-server"></i></span><span>VMs</span></button></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" data-local-uri="pluto://stream" data-name="Streaming" data-desc="Watch live streams and content"><span class="app-tile-icon"><i class="fa-solid fa-clapperboard"></i></span><span>Streaming</span></button></div>
   </div>
 </div>
 
@@ -139,7 +141,7 @@
 </div>
 
     </div>
-    <iframe id="page-frame" style="display:none" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-top-navigation-by-user-activation"></iframe>
+    <div id="workspace-root" hidden></div>
     <div class="page-loading-screen" id="page-loading-screen" style="display:none">
       <div class="page-loading-title">
         <span class="page-loading-letter" style="animation-delay:0s">P</span>
@@ -179,11 +181,10 @@
 <div class="waffle-menu glass" id="waffle-menu" hidden>
   <div class="waffle-menu-title">Apps</div>
   <button class="waffle-item" data-local-uri="pluto://games"><i class="fa-solid fa-gamepad"></i><span>Games</span></button>
-  <button class="waffle-item" data-local-uri="pluto://movies"><i class="fa-solid fa-film"></i><span>Movies</span></button>
+  <button class="waffle-item" data-local-uri="pluto://media"><i class="fa-solid fa-film"></i><span>Media</span></button>
   <button class="waffle-item" data-local-uri="pluto://ai"><i class="fa-solid fa-robot"></i><span>AI</span></button>
   <button class="waffle-item" data-local-uri="pluto://vms"><i class="fa-solid fa-server"></i><span>VMs</span></button>
   <button class="waffle-item" data-local-uri="pluto://cloud"><i class="fa-solid fa-cloud"></i><span>Cloud Gaming</span></button>
-  <button class="waffle-item" data-local-uri="pluto://stream"><i class="fa-solid fa-clapperboard"></i><span>Streaming</span></button>
 </div>
 
 <div class="customize-scrim" id="customize-scrim"></div>
@@ -214,10 +215,12 @@
 <script src="js/bookmarks-bar.js"></script>
 <script src="js/proxy.js"></script>
 <script src="js/url.js"></script>
+<script src="js/workspaces.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/keyboard.js"></script>
 <script src="js/pins.js"></script>
 <script src="js/theme-state.js"></script>
+<script src="js/page-theme.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/logo.js"></script>
 <script src="js/main.js"></script>

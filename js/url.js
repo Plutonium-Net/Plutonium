@@ -1,10 +1,16 @@
 const LOCAL_PAGES = {
-  games: '/pages/games.html',
-  movies: '/pages/stream.html',
-  stream: '/pages/stream.html',
-  ai: '/pages/ai.html',
-  vms: '/pages/vms.html',
-  cloud: '/pages/cloud.html',
+  games: 'games',
+  media: 'media',
+  movies: 'media',
+  stream: 'media',
+  ai: 'ai',
+  vms: 'vms',
+  cloud: 'cloud',
+}
+
+const LOCAL_PAGE_ALIASES = {
+  movies: 'media',
+  stream: 'media',
 }
 
 const lockIcon = document.getElementById('lock-icon')
@@ -25,16 +31,17 @@ function resolvePluUrl(input) {
     suffix = rest.slice(suffixAt)
     rest = rest.slice(0, suffixAt)
   }
-  const target = LOCAL_PAGES[rest]
+  const canonicalKey = LOCAL_PAGE_ALIASES[rest] || rest
+  const target = LOCAL_PAGES[canonicalKey]
   if (!target) return null
-  return { key: rest, target: target + suffix, display: `pluto://${rest}${suffix}` }
+  return { key: canonicalKey, target, suffix, display: `pluto://${canonicalKey}${suffix}` }
 }
 
 function getDisplayUrl(rawUrl) {
   try {
     const absolute = new URL(rawUrl, window.location.origin)
-    const entry = Object.entries(LOCAL_PAGES).find(([, path]) => absolute.pathname === path)
-    if (entry) return `pluto://${entry[0]}`
+    const entry = Object.entries(LOCAL_PAGES).find(([, path]) => absolute.pathname === '/' + path)
+    if (entry) return `pluto://${entry[0]}${absolute.search}${absolute.hash}`
   } catch (e) {}
   return rawUrl
 }

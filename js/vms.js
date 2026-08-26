@@ -29,7 +29,7 @@ const VM_PIN = { id: 'vm', name: 'Virtual Machine', type: 'vm' };
 const pinBtn = document.getElementById('vm-pin-btn');
 
 function shellPins() {
-  try { return window.parent && window.parent.Pins } catch (_) { return null; }
+  try { return window.Pins || (window.parent && window.parent.Pins) } catch (_) { return null; }
 }
 
 function updatePinBtn() {
@@ -276,6 +276,6 @@ console.log('VM.js loaded, API endpoint:', API_ENDPOINT);
 updatePinBtn();
 
 // Quick launch from a home pin: pluto://vms?autostart=1
-if (new URLSearchParams(location.search).get('autostart') === '1') {
+if (new URLSearchParams(window.PluWorkspaceRouteSuffix || location.search).get('autostart') === '1') {
   setTimeout(() => startSession(), 400);
 }

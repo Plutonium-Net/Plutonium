@@ -100,7 +100,7 @@ async function _fetchCloudGames() {
 // a root-relative path that works from index.html.
 function _cloudImgRoot(img) {
   if (!img) return ''
-  // Strip leading '../' that is relative to pages/cloud.html
+  // Strip leading '../' from legacy catalog data paths
   return img.replace(/^\.\.\//, '')
 }
 

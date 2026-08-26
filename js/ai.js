@@ -284,7 +284,7 @@ function addMessage(content, type) {
   avatar.className = `msg-avatar ${type}`;
   if (type === 'ai') {
     const img = document.createElement('img');
-    img.src = `../img/logos/logo-${accentLogoFile()}.png`;
+    img.src = `img/logos/logo-${accentLogoFile()}.png`;
     img.alt = 'Stelena';
     avatar.appendChild(img);
   } else {
@@ -318,7 +318,7 @@ function showTyping() {
   const avatar = document.createElement('div');
   avatar.className = 'msg-avatar ai';
   const img = document.createElement('img');
-  img.src = `../img/logos/logo-${accentLogoFile()}.png`;
+  img.src = `img/logos/logo-${accentLogoFile()}.png`;
   img.alt = 'Stelena';
   avatar.appendChild(img);
   const bubble = document.createElement('div');

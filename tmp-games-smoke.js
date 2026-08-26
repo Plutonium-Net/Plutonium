@@ -12,7 +12,7 @@ const { chromium } = require('C:/Users/its_c/.cache/codex-runtimes/codex-primary
     }
   });
 
-  await page.goto('http://localhost:4173/pages/games.html', {
+  await page.goto('http://localhost:4173/index.html', {
     waitUntil: 'domcontentloaded',
     timeout: 30000
   });

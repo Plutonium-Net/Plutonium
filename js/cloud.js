@@ -18,7 +18,7 @@
 
   // ── Pin helpers (access parent Pins if in iframe) ──────────────────────────
   function _parentPins() {
-    try { return window.parent && window.parent.Pins; } catch (_) { return null; }
+    try { return window.Pins || (window.parent && window.parent.Pins); } catch (_) { return null; }
   }
 
   function _isPinned(game) {
@@ -34,7 +34,7 @@
       P.remove(pinId);
     } else {
       // Normalize image path from '../img/cloud/...' to 'img/cloud/...' for root-relative display
-      const img = game.image ? game.image.replace(/^\.\.\//, '') : undefined;
+      const img = game.image ? game.image.replace(/^\.\.\//, '').replace(/^img\//, 'img/') : undefined;
       P.add({ id: pinId, name: game.name, image: img, type: 'cloud' });
     }
   }
@@ -153,7 +153,7 @@
   }
 
   // ── Load game list ────────────────────────────────────────────────────────
-  fetch('../data/cloud.json')
+  fetch('data/cloud.json')
     .then(function (r) { return r.json(); })
     .then(function (games) {
       _allGames = games;
@@ -161,11 +161,13 @@
       _renderGrid();
 
       // Support auto-launch via URL hash (e.g. pluto://cloud#cloud:jy0108)
-      var hash = location.hash.slice(1);
+      var routeSuffix = window.PluWorkspaceRouteSuffix || '';
+      var hash = (routeSuffix.match(/#(.*)$/) || [,''])[1];
       if (hash) {
         var targetKey = hash.startsWith('cloud:') ? hash.slice(6) : hash;
         var launchGame = _allGames.find(function (g) { return g.game_key === targetKey; });
         if (launchGame) {
+          window.PluWorkspaceRouteSuffix = '';
           history.replaceState(null, '', location.pathname);
           _launch(launchGame);
         }

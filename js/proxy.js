@@ -518,7 +518,7 @@ function currentProxyAddress() {
 function reconnectActiveProxyPage(url) {
   if (!url) return
 
-  const frame = document.getElementById('page-frame')
+  const frame = null
   const newTabPage = document.getElementById('new-tab-page')
   const statusText = document.getElementById('status-text')
 
@@ -717,7 +717,7 @@ async function launchHbProxy(raw) {
   await terminateHbSession()
 
   const statusText = document.getElementById('status-text')
-  const pageFrame = document.getElementById('page-frame')
+  const pageFrame = null
   if (statusText) statusText.textContent = 'Starting Hyperbeam session…'
 
   try {

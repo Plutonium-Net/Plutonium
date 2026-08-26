@@ -37,7 +37,9 @@
   }
 
   function loadScripts(urls) {
-    return Promise.all(urls.map(loadScript));
+    return urls.reduce(function (chain, url) {
+      return chain.then(function () { return loadScript(url); });
+    }, Promise.resolve());
   }
 
   /* ── Helpers ───────────────────────────────────────────────────── */
@@ -211,7 +213,7 @@
     if (!VANTA_KEY[style]) return [];
     // three.js is needed by all Vanta effects; p5.js is needed by some
     var scripts = [base + 'three.min.js'];
-    if (style === 'clouds' || style === 'fog') scripts.push(base + 'p5.min.js');
+    if (style === 'clouds' || style === 'fog' || style === 'topology' || style === 'trunk') scripts.push(base + 'p5.min.js');
     scripts.push(base + 'vanta.' + style + '.min.js');
     return scripts;
   }

@@ -1,4 +1,4 @@
-const pageFrame = document.getElementById('page-frame')
+const pageFrame = null
 const newTabPage = document.getElementById('new-tab-page')
 const pageLoadingScreen = document.getElementById('page-loading-screen')
 const pageLoadingUrl = document.getElementById('page-loading-url')
@@ -45,13 +45,30 @@ function pushTabHistory(tabEl, url) {
   state.index = state.entries.length - 1
 }
 
+function workspaceTitle(key) {
+  return ({ games: 'Games', ai: 'AI', cloud: 'Cloud Gaming', media: 'Media', vms: 'VMs' })[key] || key
+}
+
+function updateLocalTab(tab, local, display) {
+  if (!tab) return
+  tab.querySelector('.chrome-tab-title').textContent = workspaceTitle(local.key)
+  tab.querySelector('.chrome-tab-favicon').setAttribute('hidden', '')
+  tab.dataset.url = display
+  tab.dataset.title = workspaceTitle(local.key)
+  pushTabHistory(tab, display)
+  syncNavButtons(tab)
+  updateBookmarkStar(display)
+}
+
 function showLoadingScreen(url) {
   if (!pageLoadingScreen) return
   let display = url
   try { display = new URL(url).hostname.replace(/^www\./, '') } catch {}
   pageLoadingUrl.textContent = display
   newTabPage.style.display = 'none'
-  pageFrame.style.display = 'none'
+  if (window.Workspaces) Workspaces.deactivate()
+  if (pageFrame) pageFrame.style.display = 'none'
+
   pageLoadingScreen.style.display = 'flex'
 }
 
@@ -61,25 +78,22 @@ function hideLoadingScreen() {
 
 function unloadPageFrame() {
   try {
-    if (pageFrame.contentWindow && typeof pageFrame.contentWindow.stop === 'function') {
-      pageFrame.contentWindow.stop()
-    }
+    if (pageFrame && pageFrame.contentWindow && typeof pageFrame.contentWindow.stop === 'function') pageFrame.contentWindow.stop()
   } catch (e) {}
 
   lastSyncedFrameUrl = ''
   statusText.textContent = ''
-  pageFrame.style.display = 'none'
-  pageFrame.src = 'about:blank'
+  if (window.Workspaces) Workspaces.deactivate()
+  if (pageFrame) pageFrame.style.display = 'none'
+
+  if (pageFrame) pageFrame.src = 'about:blank'
 }
 
 function syncFromFrameLocation() {
+  if (!pageFrame) return
   if (pageFrame.style.display === 'none') return
   let currentUrl = ''
-  try {
-    currentUrl = pageFrame.contentWindow.location.href || ''
-  } catch (e) {
-    currentUrl = pageFrame.src || ''
-  }
+  try { currentUrl = pageFrame.contentWindow.location.href || '' } catch (e) { currentUrl = pageFrame.src || '' }
   currentUrl = getRealUrlFromProxy(currentUrl)
   currentUrl = getDisplayUrl(currentUrl)
   if (!currentUrl || currentUrl === lastSyncedFrameUrl) return
@@ -107,6 +121,22 @@ function startUrlSyncLoop() {
   urlSyncIntervalId = window.setInterval(syncFromFrameLocation, 350)
 }
 
+async function activateLocal(local, tabEl = getActiveTab()) {
+  if (!local || !window.Workspaces) return false
+  unloadPageFrame()
+  newTabPage.style.display = 'none'
+  hideLoadingScreen()
+  urlInput.value = local.display
+  setAddressIndicator(local.display)
+  setBookmarksBarVisible(false)
+  statusText.textContent = ''
+  const ok = await Workspaces.activate(local.key, local.suffix || '')
+  if (!ok) return false
+  updateLocalTab(tabEl, local, local.display)
+  saveTabsSnapshot()
+  return true
+}
+
 async function openHistoryEntry(tabEl, index) {
   const state = ensureTabHistory(tabEl)
   if (!state) return
@@ -117,22 +147,17 @@ async function openHistoryEntry(tabEl, index) {
   if (!url || url === 'newtab') { showNewTabPage(); return }
   const local = resolvePluUrl(url)
   if (local) {
-    pageFrame.style.display = 'none'
-    newTabPage.style.display = 'none'
-    hideLoadingScreen()
-    pageFrame.src = local.target
-    urlInput.value = local.display
-    setAddressIndicator(local.display)
+    await activateLocal(local, tabEl)
     syncNavButtons(tabEl)
-    updateBookmarkStar(local.display)
-    setBookmarksBarVisible(false)
     return
   }
   if (!uvReady || !baremuxReady) await initProxyStack()
-  pageFrame.style.display = 'none'
+  if (window.Workspaces) Workspaces.deactivate()
+  if (pageFrame) pageFrame.style.display = 'none'
+
   newTabPage.style.display = 'none'
   showLoadingScreen(url)
-  pageFrame.src = getProxyUrl(url)
+  if (pageFrame) pageFrame.src = getProxyUrl(url)
   urlInput.value = url
   setAddressIndicator(url)
   syncNavButtons(tabEl)
@@ -156,10 +181,9 @@ function showNewTabPage() {
 
 async function navigate(url) {
   if (!uvReady || !baremuxReady) await initProxyStack()
-  let full = url.trim()
+  let full = (url || '').trim()
   if (!full) return
 
-  // Hyperbeam engine — proxy the target via a worker-hosted kiosk session
   if (typeof getProxyEngine === 'function' && getProxyEngine() === 'hb') {
     if (typeof launchHbProxy === 'function') {
       await launchHbProxy(full)
@@ -183,42 +207,21 @@ async function navigate(url) {
 
   const local = resolvePluUrl(full)
   if (local) {
-    full = local.display
-    urlInput.value = full
-    newTabPage.style.display = 'none'
-    pageFrame.style.display = 'none'
-    pageLoadingScreen && (pageLoadingScreen.style.display = 'none')
-    pageFrame.src = local.target
-    lastSyncedFrameUrl = full
-    startUrlSyncLoop()
-    setAddressIndicator(full)
-    const localTab = getActiveTab()
-    if (localTab) {
-      localTab.querySelector('.chrome-tab-title').textContent = local.key.charAt(0).toUpperCase() + local.key.slice(1)
-      localTab.querySelector('.chrome-tab-favicon').setAttribute('hidden', '')
-      localTab.dataset.url = full
-      localTab.dataset.title = local.key
-      pushTabHistory(localTab, full)
-    }
-    statusText.textContent = ''
-    syncNavButtons(localTab)
-    updateBookmarkStar(full)
-    setBookmarksBarVisible(false)
-    saveTabsSnapshot()
+    await activateLocal(local, getActiveTab())
     return
   }
+
   if (!/^https?:\/\//i.test(full) && !full.startsWith('about:')) {
-    if (full.includes('.') && !full.includes(' ')) {
-      full = 'https://' + full
-    } else {
-      full = 'https://www.duckduckgo.com/search?q=' + encodeURIComponent(full)
-    }
+    if (full.includes('.') && !full.includes(' ')) full = 'https://' + full
+    else full = 'https://www.duckduckgo.com/search?q=' + encodeURIComponent(full)
   }
   urlInput.value = full
   newTabPage.style.display = 'none'
-  pageFrame.style.display = 'none'
+  if (window.Workspaces) Workspaces.deactivate()
+  if (pageFrame) pageFrame.style.display = 'none'
+
   showLoadingScreen(full)
-  pageFrame.src = getProxyUrl(full)
+  if (pageFrame) pageFrame.src = getProxyUrl(full)
   lastSyncedFrameUrl = full
   startUrlSyncLoop()
   setAddressIndicator(full)
@@ -243,11 +246,12 @@ async function navigate(url) {
   saveTabsSnapshot()
 }
 
-pageFrame.addEventListener('load', () => {
+if (pageFrame) pageFrame.addEventListener('load', () => {
   const rawFrameSrc = pageFrame.getAttribute('src') || ''
   const activeTab = getActiveTab()
   if (isBlankFrameSrc(rawFrameSrc) || !activeTab || (activeTab.dataset.url || 'newtab') === 'newtab') {
-    pageFrame.style.display = 'none'
+    if (pageFrame) pageFrame.style.display = 'none'
+
     hideLoadingScreen()
     statusText.textContent = ''
     return
@@ -255,9 +259,7 @@ pageFrame.addEventListener('load', () => {
 
   statusText.textContent = ''
   hideLoadingScreen()
-  const wasHidden = pageFrame.style.display === 'none'
   pageFrame.style.display = 'block'
-  if (wasHidden && !pageFrame.src) return
   let currentUrl = pageFrame.src || urlInput.value
   try { currentUrl = pageFrame.contentWindow.location.href || currentUrl } catch (e) {}
   currentUrl = getRealUrlFromProxy(currentUrl)
@@ -287,6 +289,11 @@ pageFrame.addEventListener('load', () => {
 })
 
 btnRefresh.addEventListener('click', () => {
+  if (Workspaces.active) {
+    const current = urlInput.value
+    const local = resolvePluUrl(current)
+    if (local) { window.location.reload(); return }
+  }
   if (pageFrame.style.display === 'none') return
   try { pageFrame.contentWindow.location.reload() } catch (e) { pageFrame.src = pageFrame.src }
 })
@@ -321,45 +328,33 @@ btnForward.addEventListener('click', async () => {
 
 btnAbout.addEventListener('click', () => { if (typeof openAboutDialog === 'function') openAboutDialog() })
 btnUserPage.addEventListener('click', () => { if (typeof openAccountDialog === 'function') openAccountDialog() })
-
 urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') navigate(urlInput.value) })
 urlInput.addEventListener('focus', () => urlInput.select())
 
-
 function saveTabsSnapshot() {
-  if (window.accountManager && typeof window.accountManager.scheduleTabSync === 'function') {
-    window.accountManager.scheduleTabSync()
-  }
+  if (window.accountManager && typeof window.accountManager.scheduleTabSync === 'function') window.accountManager.scheduleTabSync()
 }
 
 async function restoreTabs(tabList) {
   if (!Array.isArray(tabList) || !tabList.length) return
-
   const existing = [...chromeTabs.tabEls]
   existing.forEach(t => t.parentNode.removeChild(t))
-
   let activeTabEl = null
-
   for (const tabData of tabList) {
     chromeTabs.addTab({ title: tabData.title || 'New Tab', favicon: false }, { background: true, animate: false })
     const tabEl = chromeTabs.tabEls[chromeTabs.tabEls.length - 1]
-    tabEl.dataset.url   = tabData.url   || 'newtab'
+    tabEl.dataset.url = tabData.url || 'newtab'
     tabEl.dataset.title = tabData.title || 'New Tab'
     ensureTabHistory(tabEl)
     if (tabData.active) activeTabEl = tabEl
   }
-
   const target = activeTabEl || chromeTabs.tabEls[0]
   if (target) {
     chromeTabs.setCurrentTab(target)
     const url = target.dataset.url || 'newtab'
-    if (url === 'newtab') {
-      showNewTabPage()
-    } else {
-      await navigate(url)
-    }
+    if (url === 'newtab') showNewTabPage()
+    else await navigate(url)
   }
-
   syncNavButtons()
   console.log('[Tabs] Restored', tabList.length, 'tabs from account')
 }

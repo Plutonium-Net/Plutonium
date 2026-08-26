@@ -263,14 +263,15 @@
   }
 
   function pinGame(game) {
-    const P = window.parent && window.parent.Pins;
+    const P = window.Pins || (window.parent && window.parent.Pins);
     if (!P) return;
     if (P.find(game.id)) P.remove(game.id);
     else P.add({ id: game.id, name: game.name, image: game.image || undefined });
   }
 
   function showCardCtx(e, game, zone) {
-    const pinned = !!(window.parent && window.parent.Pins && window.parent.Pins.find(game.id));
+    const P = window.Pins || (window.parent && window.parent.Pins);
+    const pinned = !!(P && P.find(game.id));
     const fav = isFav(game.id);
     const items = [
       { icon: 'fa-solid fa-play', label: 'Play', action: () => launchGame(game) },
@@ -669,11 +670,13 @@
       renderShelves();
       renderHistory();
 
-      const launchId = decodeURIComponent(location.hash.slice(1));
+      const routeSuffix = window.PluWorkspaceRouteSuffix || '';
+      const launchId = decodeURIComponent((routeSuffix.match(/#(.*)$/) || [,''])[1]);
       if (launchId) {
         // Deep-linked straight into a game — don't block on thumbnail preload.
         const game = games.find(g => g.id === launchId);
         if (game) launchGame(game);
+        window.PluWorkspaceRouteSuffix = '';
         history.replaceState(null, '', location.pathname);
       } else {
         // Preload all images before letting the user in.
@@ -709,7 +712,7 @@
       }
     }
     const link = document.querySelector('link[rel="icon"][type="image/png"]');
-    if (link) link.href = '../img/logos/icon-' + iconName() + '.png';
+    if (link) link.href = 'img/logos/icon-' + iconName() + '.png';
   }
 
   async function init() {
@@ -732,5 +735,6 @@
   }
 
   window.PGViewer = { open: openViewer, close: closeViewer };
-  document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();

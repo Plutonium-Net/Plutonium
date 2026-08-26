@@ -878,18 +878,18 @@ document.querySelectorAll('.media-tab').forEach(tab => {
 ───────────────────────────────────────────────────────────────────────── */
 
 function syncUrlState() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.PluWorkspaceRouteSuffix || window.location.search);
   const typeMap = { movie:'m', tv:'t', anime:'a' };
   params.set('category', typeMap[mediaType] || 'm');
   const q = getCurrentQuery();
   if (q) params.set('search', q); else params.delete('search');
-  window.history.replaceState({}, '', window.location.pathname + '?' + params.toString());
+  window.PluWorkspaceRouteSuffix = '?' + params.toString();
 }
 
 function getCurrentQuery() { return searchInput.value.trim(); }
 
 async function initializeFromUrl() {
-  const params   = new URLSearchParams(window.location.search);
+  const params   = new URLSearchParams(window.PluWorkspaceRouteSuffix || window.location.search);
   const category = params.get('category');
   const q        = params.get('search') || '';
   if (category === 't') mediaType = 'tv';
@@ -1404,6 +1404,8 @@ scrollObserver.observe(sentinel);
    Auth state (PlutoniumStore)
 ───────────────────────────────────────────────────────────────────────── */
 
+let _streamInitialized = false;
+
 PlutoniumStore.onAuthChange(async user => {
   if (user) {
     // Load user prefs
@@ -1435,5 +1437,3 @@ PlutoniumStore.onAuthChange(async user => {
     await initializeFromUrl();
   }
 });
-
-let _streamInitialized = false;

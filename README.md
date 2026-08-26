@@ -12,11 +12,11 @@ cloud-synced saves) added in.
 
 | Route (address bar) | File | What it is |
 | --- | --- | --- |
-| `pluto://games` | `pages/games.html` | Games — Local library + **Cloud** (Plutonium GCDN) with favourites, recently played & save sync |
-| `pluto://movies` / `pluto://stream` | `pages/stream.html` | Streaming — movies / TV / anime, age gate, Videasy & VidCore players |
-| `pluto://ai` | `pages/ai.html` | **Stelena** — Plutonium AI (Groq worker, streaming, voice + TTS) |
-| `pluto://vms` | `pages/vms.html` | Cloud VMs (Hyperbeam via the Plutonium VM worker) |
-| `pluto://cloud` | `pages/cloud.html` | Cloud Gaming (cgapi worker: sessions, queue, WebRTC embed) |
+| `pluto://games` | `js/workspaces.js` | Games — Local library + **Cloud** (Plutonium GCDN) with favourites, recently played & save sync |
+| `pluto://media` | `js/workspaces.js` | Media — movies / TV / anime, age gate, Videasy & VidCore players |
+| `pluto://ai` | `js/workspaces.js` | **Stelena** — Plutonium AI (Groq worker, streaming, voice + TTS) |
+| `pluto://vms` | `js/workspaces.js` | Cloud VMs (Hyperbeam via the Plutonium VM worker) |
+| `pluto://cloud` | `js/workspaces.js` | Cloud Gaming (cgapi worker: sessions, queue, WebRTC embed) |
 | `pluto://account` | `pages/account.html` | Account — sign in/up, guest mode, bookmark/pin import & export |
 | `pluto://about` | `pages/about.html` | About, credits & the Plutonium services list |
 
@@ -25,11 +25,11 @@ cloud-synced saves) added in.
 | Service | Endpoint | Used by |
 | --- | --- | --- |
 | Accounts / Firestore proxy | `accounting.cdn.plutoniumnet.work` | `js/cloud-store.js` (auth, docs) |
-| Games CDN | `g.cdn.plutoniumnet.work` | `pages/games.html` (catalog, thumbnails, save sync) |
-| AI (Groq proxy) | `ai.cdn.plutoniumnet.work/chat` | `pages/ai.html` (Bearer idToken, SSE) |
-| VMs (Hyperbeam proxy) | `vm.cdn.plutoniumnet.work/session` | `pages/vms.html` (Bearer idToken) |
-| Cloud Gaming (cgapi) | `cgapi.cdn.plutoniumnet.work` | `pages/cloud.html` (sessions / queue / embed) |
-| Streaming | TMDB + Videasy / VidCore players | `pages/stream.html` |
+| Games CDN | `g.cdn.plutoniumnet.work` | `js/games.js` (catalog, thumbnails, save sync) |
+| AI (Groq proxy) | `ai.cdn.plutoniumnet.work/chat` | `js/ai.js` (Bearer idToken, SSE) |
+| VMs (Hyperbeam proxy) | `vm.cdn.plutoniumnet.work/session` | `js/vms.js` (Bearer idToken) |
+| Cloud Gaming (cgapi) | `cgapi.cdn.plutoniumnet.work` | `js/cloud.js` (sessions / queue / embed) |
+| Streaming | TMDB + Videasy / VidCore players | `js/stream.js` |
 
 All worker calls that need it carry `Authorization: Bearer <Firebase idToken>`
 from `PlutoniumStore` — the AI and VM pages gate on sign-in.
@@ -44,8 +44,8 @@ and a VM quick-launch, added from the Games/VMs pages), keyboard shortcuts
 (`js/loading.js`) and a new-tab page with
 the Plutonium logo, search and home pins (`js/main.js`).
 
-Local pages are opened in the tab iframe via `pluto://` URLs resolved in
-`js/url.js` (`LOCAL_PAGES`).
+Workspace views are injected into the single `index.html` document by
+`js/workspaces.js`; `pluto://` URLs are resolved in `js/url.js`.
 
 ## Theming & data
 
