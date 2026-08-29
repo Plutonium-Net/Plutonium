@@ -294,7 +294,7 @@ function pgDbPut(db, store, value, key) {
 	});
 }
 
-const PG_ROUTE_RE = /^\/pg-game\/([^/]+)\/(.+)$/;
+const PG_ROUTE_RE = /^\/pg-game\/([^/]+)\/(.*)$/;
 
 function handlePersonalGameFetch(event) {
 	const url = new URL(event.request.url);
@@ -317,7 +317,7 @@ function handlePersonalGameFetch(event) {
 				const meta = await pgDbGet(db, PG_META_STORE, gameId).catch(() => null);
 				if (meta && meta.github) {
 					const gh = meta.github;
-					const rawRel = gh.root ? (gh.root + '/' + filePath) : filePath;
+					const rawRel = gh.root ? (gh.root + (filePath ? '/' + filePath : '')) : filePath;
 					const rawUrl = `https://raw.githubusercontent.com/${gh.owner}/${gh.repo}/${gh.branch}/${rawRel}`;
 					const fetched = await fetch(rawUrl);
 					if (fetched && fetched.ok) {

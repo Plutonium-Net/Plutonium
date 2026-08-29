@@ -195,6 +195,14 @@
     btn.addEventListener('click', () => closeModal());
   });
 
+  document.getElementById('pg-file-cancel')?.addEventListener('click', () => {
+    closeModal('file');
+  });
+
+  document.getElementById('pg-edit-cancel')?.addEventListener('click', () => {
+    closeModal('edit');
+  });
+
   /* ============================================================
      LOCAL HTML FILE IMPORT
      ============================================================ */
@@ -527,12 +535,11 @@
       meta.name;
 
     card.innerHTML = `
-      <div class="pgcdn-card__img pg-no-art">
-        <i class="fa-solid fa-file-code"></i>
-      </div>
+      <div class="pgcdn-card__img pg-no-art pg-plutonium-logo" aria-label="Game" role="img"><i class="fa-solid fa-gamepad"></i></div>
 
       <div class="pgcdn-card__name">
-        ${escapeHtml(meta.name)}
+        <strong>${escapeHtml(meta.name)}</strong>
+        <small>Added ${new Date(meta.addedAt).toLocaleDateString()}</small>
       </div>
 
       <button
@@ -1284,6 +1291,15 @@
     };
   }
 
+  function rewriteHtmlAssetReferences(html, gameRoot, importedRoot) {
+    return html.replace(/((?:src|href|data-(?:src|main|file))\s*=\s*["'])([^"']+)(["'])/ig, (full, prefix, rawRef, suffix) => {
+      const normalized = normalizeRelativePath(gameRoot, rawRef.trim());
+      if (!normalized || !normalized.startsWith(importedRoot + '/') && normalized !== importedRoot) return full;
+      const localPath = normalized.slice(importedRoot.length).replace(/^\//, '');
+      return prefix + localPath + suffix;
+    });
+  }
+
   function normalizeRelativePath(
     basePath,
     relative
@@ -1694,6 +1710,17 @@
     }
   }
 
+  async function getGitHubFiles(owner, repo, branch, rootPath) {
+    const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`GitHub tree request failed: ${response.status}`);
+    const json = await response.json();
+    const prefix = rootPath ? rootPath + '/' : '';
+    return (json.tree || [])
+      .filter(entry => entry.type === 'blob' && (!rootPath || entry.path === rootPath || entry.path.startsWith(prefix)))
+      .map(entry => entry.path);
+  }
+
   async function importSingleGitHubGame(
     game,
     githubInfo
@@ -1729,14 +1756,20 @@
       );
     }
 
-    const indexHtml =
-      fetchedIndex.data;
+    const indexHtml = fetchedIndex.data;
+
+    // Include every file beneath the selected game folder so nested assets
+    // (for example js/lib/* or assets/images/*) are available offline.
+    const treeFiles = await getGitHubFiles(owner, repo, branch, game.path);
 
     /*
      * Find local assets referenced by index.html.
      */
-    const assetPaths =
-      new Set();
+    const assetPaths = new Set(
+      treeFiles
+        .filter(path => path !== game.indexPath)
+        .map(path => path.slice(game.path ? game.path.length + 1 : 0))
+    );
 
     const regex =
       /(?:src|href)\s*=\s*["']([^"']+)["']/ig;
@@ -1755,9 +1788,8 @@
           rawRef
         );
 
-      if (normalized) {
-        assetPaths.add(
-          normalized
+      if (normalized) {          assetPaths.add(
+          normalized.slice(game.path ? game.path.length + 1 : 0)
         );
       }
     }
@@ -1774,9 +1806,8 @@
           m[1].trim()
         );
 
-      if (normalized) {
-        assetPaths.add(
-          normalized
+      if (normalized) {          assetPaths.add(
+          normalized.slice(game.path ? game.path.length + 1 : 0)
         );
       }
     }

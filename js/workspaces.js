@@ -7,6 +7,7 @@
   let activeKey = '';
   let activeStyle = null;
   let activeWorkspaceStyle = null;
+  let sharedGlassStyle = null;
 
   const views = {
     games: `<section class="workspace-view workspace-games" data-workspace="games">
@@ -21,7 +22,6 @@
         </div>
         <div class="source-panel active" id="panel-pgcdn">
           <div class="pgcdn-sync-badge" id="pgcdn-sync-badge"></div>
-          <div class="pgcdn-shelf" id="pgcdn-shelf-favs" style="display:none"><div class="pgcdn-shelf__header"><i class="fa-solid fa-heart"></i> Favourites</div><div class="pgcdn-shelf__row" id="pgcdn-favs-row"></div></div>
           <div class="pgcdn-shelf" id="pgcdn-shelf-recent" style="display:none"><div class="pgcdn-shelf__header"><i class="fa-solid fa-clock-rotate-left"></i> Recent</div><div class="pgcdn-shelf__row" id="pgcdn-recent-row"></div></div>
           <div class="pgcdn-toolbar"><input class="pgcdn-search" id="pgcdn-search" type="search" placeholder="Search games..." /><span class="pgcdn-count" id="pgcdn-count"></span></div>
           <div id="pgcdn-grid-wrap"><div class="pgcdn-status"><div class="pgcdn-spinner"></div><span>Loading games...</span></div></div>
@@ -137,6 +137,13 @@
     activeWorkspaceStyle.href = 'css/workspace.css';
     activeWorkspaceStyle.dataset.workspaceShared = 'true';
     document.head.appendChild(activeWorkspaceStyle);
+    if (!sharedGlassStyle) {
+      sharedGlassStyle = document.createElement('link');
+      sharedGlassStyle.rel = 'stylesheet';
+      sharedGlassStyle.href = 'css/glass.css';
+      sharedGlassStyle.dataset.workspaceGlass = 'true';
+      document.head.appendChild(sharedGlassStyle);
+    }
     return true;
   }
 
@@ -148,6 +155,7 @@
     root.dataset.activeWorkspace = '';
     if (activeStyle) { activeStyle.remove(); activeStyle = null; }
     if (activeWorkspaceStyle) { activeWorkspaceStyle.remove(); activeWorkspaceStyle = null; }
+    if (sharedGlassStyle) { sharedGlassStyle.remove(); sharedGlassStyle = null; }
     window.PluWorkspaceRouteSuffix = '';
   }
 

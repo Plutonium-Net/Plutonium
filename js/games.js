@@ -28,7 +28,7 @@
   function initEls() {
     [
       'pgcdn-grid-wrap', 'pgcdn-count', 'pgcdn-search', 'pgcdn-sync-badge',
-      'pgcdn-shelf-favs', 'pgcdn-favs-row', 'pgcdn-shelf-recent', 'pgcdn-recent-row',
+      'pgcdn-shelf-recent', 'pgcdn-recent-row',
       'history-list', 'history-count', 'history-search', 'history-clear',
       'pgcdn-ctx-menu', 'pgcdn-toast', 'pgcdn-toast-msg', 'pgcdn-toast-actions',
       'game-viewer', 'game-iframe', 'game-restore-overlay', 'viewer-bar',
@@ -272,12 +272,10 @@
   function showCardCtx(e, game, zone) {
     const P = window.Pins || (window.parent && window.parent.Pins);
     const pinned = !!(P && P.find(game.id));
-    const fav = isFav(game.id);
     const items = [
       { icon: 'fa-solid fa-play', label: 'Play', action: () => launchGame(game) },
       'sep',
-      { icon: 'fa-solid fa-thumbtack', label: pinned ? 'Unpin from Home' : 'Pin to Home', action: () => pinGame(game) },
-      { icon: 'fa-' + (fav ? 'solid' : 'regular') + ' fa-heart', label: fav ? 'Remove Favourite' : 'Add Favourite', action: () => toggleFav(game.id) }
+      { icon: 'fa-solid fa-thumbtack', label: pinned ? 'Unpin from Home' : 'Pin to Home', action: () => pinGame(game) }
     ];
     if (zone === 'recent' || zone === 'history') {
       items.push({
@@ -316,15 +314,9 @@
     card.innerHTML =
       '<img class="pgcdn-card__img" src="' + gameImage(game) + '" alt="' + escapeHtml(game.name) + '" loading="lazy" decoding="async">' +
       '<div class="pgcdn-card__name">' + escapeHtml(game.name) + '</div>' +
-      '<button class="pgcdn-fav-btn ' + (isFav(game.id) ? 'is-fav' : '') + '" type="button" title="Favourite" aria-label="Favourite">' +
-        '<i class="fa-' + (isFav(game.id) ? 'solid' : 'regular') + ' fa-heart"></i>' +
-      '</button>';
+      '';
     card.addEventListener('click', () => launchGame(game));
     card.addEventListener('contextmenu', e => showCardCtx(e, game, zone || 'grid'));
-    card.querySelector('.pgcdn-fav-btn').addEventListener('click', e => {
-      e.stopPropagation();
-      toggleFav(game.id);
-    });
     return card;
   }
 
@@ -370,10 +362,6 @@
   }
 
   function renderShelves() {
-    renderShelf('pgcdn-shelf-favs', 'pgcdn-favs-row',
-      data.favourites.map(id => games.find(g => g.id === id)).filter(Boolean),
-      'favs'
-    );
     renderShelf('pgcdn-shelf-recent', 'pgcdn-recent-row', data.recent.slice(0, SHELF_LIMIT), 'recent');
   }
 
@@ -422,15 +410,9 @@
           '<div class="history-list__name">' + escapeHtml(game.name) + '</div>' +
           '<div class="history-list__time">' + relativeTime(game.ts) + '</div>' +
         '</div>' +
-        '<button class="history-list__fav ' + (isFav(game.id) ? 'is-fav' : '') + '" type="button" title="Favourite" aria-label="Favourite">' +
-          '<i class="fa-' + (isFav(game.id) ? 'solid' : 'regular') + ' fa-heart"></i>' +
-        '</button>';
+        '';
       row.addEventListener('click', () => launchGame(game));
       row.addEventListener('contextmenu', e => showCardCtx(e, game, 'history'));
-      row.querySelector('.history-list__fav').addEventListener('click', e => {
-        e.stopPropagation();
-        toggleFav(game.id);
-      });
       frag.appendChild(row);
     });
     list.innerHTML = '';
@@ -547,11 +529,24 @@
     });
   }
 
+  function positionSourceSlider() {
+    const tabs = document.querySelector('.source-tabs');
+    const active = tabs && tabs.querySelector('.source-tab.active');
+    if (!tabs || !active) return;
+    const tabsRect = tabs.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    const borderOffset = tabs.clientLeft;
+    tabs.style.setProperty('--source-slider-left', (activeRect.left - tabsRect.left - borderOffset) + 'px');
+    tabs.style.setProperty('--source-slider-width', activeRect.width + 'px');
+    tabs.classList.add('is-positioned');
+  }
+
   function wireTabs() {
     document.querySelectorAll('.source-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         activePanel = tab.dataset.panel;
         document.querySelectorAll('.source-tab').forEach(t => t.classList.toggle('active', t === tab));
+        positionSourceSlider();
         document.querySelectorAll('.source-panel').forEach(panel => panel.classList.toggle('active', panel.id === 'panel-' + activePanel));
         if (activePanel === 'lumin' && !luminStarted && window.Lumin) {
           luminStarted = true;
@@ -561,6 +556,15 @@
         if (activePanel === 'pgcdn') measureGridWidth();
       });
     });
+    // The workspace can still be transitioning into view when tabs are wired,
+    // so the first measurement may use stale/hidden geometry. Re-measure once
+    // the browser has committed the initial layout and again after the first paint.
+    positionSourceSlider();
+    requestAnimationFrame(() => {
+      positionSourceSlider();
+      requestAnimationFrame(positionSourceSlider);
+    });
+    window.addEventListener('resize', positionSourceSlider);
   }
 
   function wireInputs() {
@@ -579,14 +583,34 @@
       }, 90);
     });
 
+    function positionHistorySlider() {
+      const group = document.querySelector('.history-sort-group');
+      if (!group) return;
+      const buttons = Array.from(group.querySelectorAll('.history-sort-btn'));
+      if (!buttons.length) return;
+      const active = group.querySelector('.history-sort-btn.active') || buttons[0];
+      buttons.forEach(btn => btn.classList.toggle('active', btn === active));
+      const buttonIndex = buttons.indexOf(active);
+      const buttonWidth = active.getBoundingClientRect().width;
+      const gap = parseFloat(getComputedStyle(group).gap) || 0;
+      group.style.setProperty('--history-slider-offset', (buttonIndex * (buttonWidth + gap)) + 'px');
+    }
+
     document.querySelectorAll('.history-sort-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.history-sort-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         historySort = btn.dataset.sort;
+        positionHistorySlider();
         renderHistory();
       });
     });
+    positionHistorySlider();
+    requestAnimationFrame(() => {
+      positionHistorySlider();
+      requestAnimationFrame(positionHistorySlider);
+    });
+    window.addEventListener('resize', positionHistorySlider);
 
     els['history-clear'].addEventListener('click', () => {
       showToast('Clear all play history?', [
