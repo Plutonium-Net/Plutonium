@@ -70,13 +70,9 @@ function corsResponse(body, status, allowed) {
 // ── Models ────────────────────────────────────────────────────────────────────
 
 const MODELS = [
-  { id: 'llama-3.3-70b-versatile',  label: 'Llama 3.3 70B',      speed: '280 t/s',  ctx: '131K' },
-  { id: 'llama-3.1-8b-instant',     label: 'Llama 3.1 8B',       speed: '560 t/s',  ctx: '131K' },
   { id: 'openai/gpt-oss-120b',      label: 'GPT OSS 120B',       speed: '500 t/s',  ctx: '131K' },
   { id: 'openai/gpt-oss-20b',       label: 'GPT OSS 20B',        speed: '1000 t/s', ctx: '131K' },
-  { id: 'qwen/qwen3.6-27b',         label: 'Qwen 3.6 27B',       speed: '500 t/s',  ctx: '131K' },
   { id: 'groq/compound',            label: 'Groq Compound',      speed: '450 t/s',  ctx: '131K' },
-  { id: 'groq/compound-mini',       label: 'Groq Compound Mini', speed: '450 t/s',  ctx: '131K' },
 ];
 
 function handleModels(allowed) {

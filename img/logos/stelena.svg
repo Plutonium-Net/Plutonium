@@ -1,0 +1,394 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+
+  <defs>
+    <linearGradient id="sGradient"
+      x1="150" y1="150"
+      x2="850" y2="850"
+      gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#62F6FF"/>
+      <stop offset=".28" stop-color="#338CFF"/>
+      <stop offset=".55" stop-color="#5555FF"/>
+      <stop offset=".78" stop-color="#9955FF"/>
+      <stop offset="1" stop-color="#E29BFF"/>
+    </linearGradient>
+
+    <linearGradient id="shine"
+      x1="200" y1="200"
+      x2="800" y2="700"
+      gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset=".35" stop-color="#8FFFFF"/>
+      <stop offset=".7" stop-color="#6D6CFF"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+
+    <radialGradient id="core">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset=".2" stop-color="#B8FFFF"/>
+      <stop offset=".55" stop-color="#5A7CFF"/>
+      <stop offset="1" stop-color="#6B35FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+  </defs>
+
+
+  <!-- BACKGROUND -->
+
+  <rect width="1000" height="1000" rx="140" fill="#03050B"/>
+
+  <circle
+    cx="500"
+    cy="410"
+    r="290"
+    fill="#354DFF"
+    opacity=".08"
+    filter="url(#softGlow)"
+  />
+
+
+  <!-- OUTER ORBITS -->
+
+  <g fill="none" stroke-linecap="round">
+
+    <ellipse
+      cx="500"
+      cy="410"
+      rx="350"
+      ry="145"
+      transform="rotate(-20 500 410)"
+      stroke="url(#sGradient)"
+      stroke-width="3"
+      opacity=".55"
+    />
+
+    <ellipse
+      cx="500"
+      cy="410"
+      rx="300"
+      ry="205"
+      transform="rotate(30 500 410)"
+      stroke="url(#sGradient)"
+      stroke-width="2"
+      opacity=".3"
+    />
+
+    <!-- broken orbital arcs -->
+
+    <path
+      d="M175 300
+         C225 190 350 125 470 125"
+      stroke="url(#sGradient)"
+      stroke-width="9"
+    />
+
+    <path
+      d="M535 125
+         C690 145 790 235 825 345"
+      stroke="url(#sGradient)"
+      stroke-width="5"
+      opacity=".65"
+    />
+
+    <path
+      d="M825 475
+         C785 595 670 670 545 685"
+      stroke="url(#sGradient)"
+      stroke-width="8"
+    />
+
+    <path
+      d="M455 685
+         C320 670 215 600 175 505"
+      stroke="url(#sGradient)"
+      stroke-width="4"
+      opacity=".6"
+    />
+
+  </g>
+
+
+  <!-- ================================================= -->
+  <!-- THE S -->
+  <!-- ================================================= -->
+
+  <!-- Glow behind S -->
+
+  <path
+    d="
+      M700 265
+
+      C645 190 545 155 435 160
+
+      C320 165 250 215 250 295
+
+      C250 380 325 420 425 435
+
+      C515 449 565 470 565 525
+
+      C565 585 485 620 390 615
+
+      C315 610 250 575 205 520
+    "
+    fill="none"
+    stroke="url(#sGradient)"
+    stroke-width="82"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity=".25"
+    filter="url(#glow)"
+  />
+
+  <!-- Main S -->
+
+  <path
+    d="
+      M700 265
+
+      C645 190 545 155 435 160
+
+      C320 165 250 215 250 295
+
+      C250 380 325 420 425 435
+
+      C515 449 565 470 565 525
+
+      C565 585 485 620 390 615
+
+      C315 610 250 575 205 520
+    "
+    fill="none"
+    stroke="url(#sGradient)"
+    stroke-width="62"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+
+  <!-- S inner depth -->
+
+  <path
+    d="
+      M678 258
+      C620 205 535 182 445 185
+      C355 188 292 225 290 285
+      C288 345 350 375 435 388
+      C535 403 600 435 600 515
+      C600 595 505 650 395 645
+    "
+    fill="none"
+    stroke="#171B69"
+    stroke-width="14"
+    stroke-linecap="round"
+    opacity=".55"
+  />
+
+
+  <!-- S highlight -->
+
+  <path
+    d="
+      M688 248
+      C630 185 535 170 435 178
+      C335 185 278 230 275 292
+    "
+    fill="none"
+    stroke="url(#shine)"
+    stroke-width="7"
+    stroke-linecap="round"
+    opacity=".9"
+  />
+
+  <path
+    d="
+      M550 525
+      C545 580 475 605 395 602
+    "
+    fill="none"
+    stroke="#A4F9FF"
+    stroke-width="6"
+    stroke-linecap="round"
+    opacity=".65"
+  />
+
+
+  <!-- ================================================= -->
+  <!-- AI CORE -->
+  <!-- ================================================= -->
+
+  <circle
+    cx="500"
+    cy="445"
+    r="95"
+    fill="url(#core)"
+    opacity=".35"
+    filter="url(#glow)"
+  />
+
+  <circle
+    cx="500"
+    cy="445"
+    r="35"
+    fill="#101743"
+    stroke="url(#sGradient)"
+    stroke-width="4"
+  />
+
+  <circle
+    cx="500"
+    cy="445"
+    r="18"
+    fill="url(#core)"
+  />
+
+  <circle
+    cx="500"
+    cy="445"
+    r="7"
+    fill="#FFFFFF"
+    filter="url(#softGlow)"
+  />
+
+
+  <!-- CORE CIRCUITS -->
+
+  <g
+    fill="none"
+    stroke="url(#sGradient)"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+
+    <path d="M500 410 V380 H470"/>
+    <path d="M500 480 V510 H530"/>
+
+    <path d="M465 445 H430 V420 H400"/>
+    <path d="M535 445 H570 V470 H600"/>
+
+  </g>
+
+  <g fill="#FFFFFF">
+    <circle cx="400" cy="420" r="5"/>
+    <circle cx="600" cy="470" r="5"/>
+    <circle cx="470" cy="380" r="4"/>
+    <circle cx="530" cy="510" r="4"/>
+  </g>
+
+
+  <!-- ================================================= -->
+  <!-- ORBITING NODES -->
+  <!-- ================================================= -->
+
+  <g filter="url(#softGlow)">
+
+    <circle cx="175" cy="300" r="8" fill="#5FFAFF"/>
+    <circle cx="825" cy="345" r="7" fill="#A66CFF"/>
+    <circle cx="825" cy="475" r="8" fill="#5B8DFF"/>
+    <circle cx="455" cy="685" r="6" fill="#62F6FF"/>
+
+  </g>
+
+
+  <!-- ================================================= -->
+  <!-- STARS -->
+  <!-- ================================================= -->
+
+  <g fill="#FFFFFF" filter="url(#softGlow)">
+
+    <path d="
+      M220 180
+      L230 207
+      L257 217
+      L230 227
+      L220 254
+      L210 227
+      L183 217
+      L210 207 Z
+    "/>
+
+    <path d="
+      M770 205
+      L777 224
+      L796 231
+      L777 238
+      L770 257
+      L763 238
+      L744 231
+      L763 224 Z
+    "/>
+
+    <path d="
+      M755 575
+      L763 596
+      L784 604
+      L763 612
+      L755 633
+      L747 612
+      L726 604
+      L747 596 Z
+    "/>
+
+  </g>
+
+
+  <!-- ================================================= -->
+  <!-- WORDMARK -->
+  <!-- ================================================= -->
+
+  <text
+    x="500"
+    y="820"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="88"
+    font-weight="700"
+    letter-spacing="24"
+    fill="url(#shine)">
+    STELENA
+  </text>
+
+
+  <!-- WORDMARK LINE -->
+
+  <path
+    d="M190 865 H430"
+    stroke="url(#sGradient)"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+
+  <path
+    d="M570 865 H810"
+    stroke="url(#sGradient)"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+
+  <!-- Center sparkle -->
+
+  <path
+    d="
+      M500 842
+      L506 858
+      L522 864
+      L506 870
+      L500 886
+      L494 870
+      L478 864
+      L494 858 Z
+    "
+    fill="#FFFFFF"
+  />
+
+</svg>

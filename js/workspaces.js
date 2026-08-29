@@ -49,11 +49,40 @@
     </section>`,
 
     ai: `<section class="workspace-view workspace-ai" data-workspace="ai">
+      <aside class="ai-sidebar" id="aiSidebar">
+        <button class="ai-new-chat" id="aiNewChat" type="button"><i class="fa-solid fa-plus"></i>New chat</button>
+        <div class="ai-chat-list" id="aiChatList"></div>
+      </aside>
       <main id="main-content">
-        <div class="page-header"><div class="page-header-left"><div class="page-header-icon"><i class="fa-solid fa-robot"></i></div><div><div class="page-title">Plutonium AI</div><div class="page-subtitle">Connect with powerful LLM models</div></div></div><div class="model-pill" id="modelPill"><i class="fas fa-microchip"></i><span id="selectedModelName">LLaMA 3.3 70B</span><i class="fas fa-chevron-down" style="font-size:10px;opacity:0.4"></i></div></div>
-        <div class="chat-panel glass"><div class="glass-filter"></div><div class="glass-overlay"></div><div class="chat-panel-inner"><div id="chatContainer"><div class="welcome-screen" id="welcomeScreen"><div class="welcome-icon"><i class="fas fa-robot"></i></div><div class="welcome-title">Welcome to Plutonium AI</div><div class="welcome-sub">Your intelligent companion ready to assist with coding, writing, research, and more.</div><div class="suggestion-grid"><div class="suggestion-card" onclick="useSuggestion('Write a Python script to analyze CSV data')"><div class="suggestion-card-label">Code</div><div class="suggestion-card-text">Write a Python script to analyze CSV data</div></div><div class="suggestion-card" onclick="useSuggestion('Explain quantum computing in simple terms')"><div class="suggestion-card-label">Learn</div><div class="suggestion-card-text">Explain quantum computing in simple terms</div></div><div class="suggestion-card" onclick="useSuggestion('Create a creative story about time travel')"><div class="suggestion-card-label">Creative</div><div class="suggestion-card-text">Create a creative story about time travel</div></div><div class="suggestion-card" onclick="useSuggestion('Help me plan a productive daily routine')"><div class="suggestion-card-label">Productivity</div><div class="suggestion-card-text">Help me plan a productive daily routine</div></div></div></div></div><div class="input-area"><div class="input-wrapper"><button class="icon-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice input"><i class="fas fa-microphone"></i></button><textarea id="userInput" rows="1" placeholder="Let's talk about..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea><button class="icon-btn send" id="sendBtn" onclick="sendMessage()" title="Send"><i class="fas fa-paper-plane"></i></button></div></div></div></div>
+        <header class="ai-header">
+          <div class="ai-brand">
+            <div class="ai-brand__logo"><img id="ai-logo" src="img/logos/stelena.svg" alt="Stelena" /></div>
+            <div class="ai-brand__copy"><div class="ai-brand__name">Stelena AI</div><div class="ai-brand__sub">Plutonium Network's assistant</div></div>
+          </div>
+          <div class="ai-header__actions">
+            <button class="model-pill" id="modelPill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-microchip"></i><span id="selectedModelName">GPT OSS 120B</span><i class="fas fa-chevron-down model-pill__caret"></i></button>
+            <button class="ai-clear-btn" id="ai-clear-btn" title="Clear conversation"><i class="fas fa-trash"></i></button>
+          </div>
+        </header>
+        <div class="chat-panel"><div class="chat-panel-inner"><div id="chatContainer"><div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-icon"><img id="welcome-logo" src="img/logos/stelena.svg" alt="Stelena" /></div>
+          <div class="welcome-title">How can I help you?</div>
+          <div class="welcome-sub">Ask Stelena anything — coding, research, writing, or just brainstorm ideas.</div>
+          <div class="suggestion-grid">
+            <button class="suggestion-card" onclick="useSuggestion('Write a Python script to analyze CSV data')"><span class="suggestion-card-label">Code</span><span class="suggestion-card-text">Write a Python script to analyze CSV data</span></button>
+            <button class="suggestion-card" onclick="useSuggestion('Explain quantum computing in simple terms')"><span class="suggestion-card-label">Learn</span><span class="suggestion-card-text">Explain quantum computing in simple terms</span></button>
+            <button class="suggestion-card" onclick="useSuggestion('Create a creative story about time travel')"><span class="suggestion-card-label">Creative</span><span class="suggestion-card-text">Create a creative story about time travel</span></button>
+            <button class="suggestion-card" onclick="useSuggestion('Help me plan a productive daily routine')"><span class="suggestion-card-label">Productivity</span><span class="suggestion-card-text">Help me plan a productive daily routine</span></button>
+          </div>
+        </div></div></div></div>
       </main>
-      <div class="modal-overlay" id="modelOverlay"><div class="modal-box glass"><div class="modal-title">Select Model</div><div class="modal-sub">Choose the AI model for your conversation</div><div class="model-option selected" data-value="llama-3.3-70b-versatile" data-name="LLaMA 3.3 70B"><div class="model-option-name">LLaMA 3.3 70B Versatile</div><div class="model-option-desc">Most capable - best for complex tasks</div></div><div class="model-option" data-value="llama-3.1-8b-instant" data-name="LLaMA 3.1 8B"><div class="model-option-name">LLaMA 3.1 8B Instant</div><div class="model-option-desc">Fast and efficient for quick responses</div></div><div class="model-option" data-value="openai/gpt-oss-120b" data-name="GPT OSS 120B"><div class="model-option-name">ChatGPT OSS 120B</div><div class="model-option-desc">Large open-source model with strong reasoning</div></div><div class="model-option" data-value="openai/gpt-oss-20b" data-name="ChatGPT OSS 20B"><div class="model-option-name">ChatGPT OSS 20B</div><div class="model-option-desc">Fast open-source model for everyday tasks</div></div><div class="model-option" data-value="qwen/qwen3.6-27b" data-name="Qwen 3.6 27B"><div class="model-option-name">Qwen 3.6 27B</div><div class="model-option-desc">Efficient 27B model tuned for chat</div></div><div class="model-option" data-value="groq/compound" data-name="Groq Compound"><div class="model-option-name">Groq Compound</div><div class="model-option-desc">Powerful mixture of experts model</div></div><div class="model-option" data-value="groq/compound-mini" data-name="Compound Mini"><div class="model-option-name">Groq Compound Mini</div><div class="model-option-desc">Lightweight mixture of experts model</div></div></div></div>
+      <div class="composer" id="composer" role="form">
+        <textarea id="userInput" rows="1" placeholder="Message Stelena..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="composer__btn" id="stopBtn" title="Stop generating" style="display:none"><i class="fas fa-stop"></i></button>
+        <button class="composer__btn composer__btn--voice" id="voiceBtn" title="Voice input" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button>
+        <button class="composer__btn composer__btn--send" id="sendBtn" title="Send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+      </div>
+      <div class="model-menu" id="modelMenu" role="listbox"><div class="model-menu__head">Choose a model</div><div class="model-menu__list" id="model-menu-list"></div></div>
     </section>`,
 
     cloud: `<section class="workspace-view workspace-cloud" data-workspace="cloud">

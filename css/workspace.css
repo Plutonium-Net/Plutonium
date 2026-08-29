@@ -506,7 +506,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 .model-pill:hover { border-color: rgba(var(--workspace-accent-rgb), .55); }
 .chat-panel { min-height: 0; }
-#chatContainer { padding: 18px 4px; }
 .welcome-screen { gap: 14px; }
 .welcome-icon {
   border-radius: var(--workspace-pill-radius);
@@ -524,15 +523,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .suggestion-card:hover {
   border-color: rgba(var(--workspace-accent-rgb), .5);
   background: rgba(var(--workspace-accent-rgb), .1);
-}
-.input-wrapper {
-  border-radius: var(--workspace-pill-radius);
-  border-color: var(--workspace-line);
-  background: rgba(14,14,19,.82);
-}
-.icon-btn.send {
-  background: var(--workspace-accent);
-  border-color: var(--workspace-accent);
 }
 
 /* Cloud gaming */
