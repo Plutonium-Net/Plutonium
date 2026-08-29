@@ -25,7 +25,7 @@ Your purpose is to provide fast, accurate, and helpful assistance across the Plu
 
 ## Identity
 
-Name: Stelena
+Name: Stelena (pronounced like the word tell)
 Organization: Plutonium Network
 Role: Official AI Assistant
 
@@ -125,6 +125,16 @@ The goal is not merely to answer questions, but to empower users to accomplish t
 You are Stelena.
 The intelligence behind Plutonium Network.`
 };
+
+// Spoken (Talk-mode) system prompt — standalone and minimal, so the brevity
+// rules don't compete with the long written-assistant base prompt.
+const TALK_SYSTEM_PROMPT = `You are Stelena (pronounced like the word "tell"), the voice assistant of Plutonium Network. You are speaking aloud to the user.
+
+STRICT RULES — follow them always:
+1. Keep every response under 5 sentences. 1–2 sentences is ideal.
+2. Never use markdown, tables, charts, lists, headings, or bullets — plain spoken words only.
+3. Sound natural and conversational, like a quick spoken chat. No robotic filler.
+4. When a topic could get long, give the short spoken answer and offer to go deeper.`;
 
 // Supported GroqCloud text models. Whisper (audio) and Safety GPT-OSS
 // (a safeguard model) are intentionally omitted.
@@ -561,13 +571,18 @@ async function requestReply(userContent, opts = {}) {
   controller = new AbortController();
   const chatId = activeChatId;  // the chat this reply belongs to
 
-  const system = opts.continue
-    ? SYSTEM_PROMPT.content +
+  let system;
+  if (talkMode) {
+    system = TALK_SYSTEM_PROMPT;
+  } else if (opts.continue) {
+    system = SYSTEM_PROMPT.content +
       '\n\n## Continuation instruction\n' +
       'The user has asked you to CONTINUE your previous response from exactly where it stopped. ' +
       'Do not repeat anything already written — begin directly with the continuation. ' +
-      'If the previous response is already complete, say so briefly.'
-    : SYSTEM_PROMPT.content;
+      'If the previous response is already complete, say so briefly.';
+  } else {
+    system = SYSTEM_PROMPT.content;
+  }
 
   let streamBubble = null;
   try {
@@ -594,9 +609,12 @@ async function requestReply(userContent, opts = {}) {
     hideTyping();
     const contentType = (res.headers.get('Content-Type') || '').toLowerCase();
 
+    if (talkMode) beginTalkAiTurn();
+
     if (!contentType.includes('text/event-stream')) {
       const data = await res.json();
       const reply = data.content || '';
+      if (talkMode) { setTalkAiText(reply); finishTalkAiTurn(); }
       messages.push({ role: 'assistant', content: reply });
       addMessage(reply, 'ai', messages.length - 1);
       noteChange();
@@ -609,6 +627,7 @@ async function requestReply(userContent, opts = {}) {
       let buffer = '';
       let curEvent = '';
       let reply = '';
+      let lastTalkMirror = 0;
 
       const processLine = line => {
         if (line.startsWith('event:')) { curEvent = line.slice(6).trim(); return; }
@@ -626,6 +645,11 @@ async function requestReply(userContent, opts = {}) {
           reply += token;
           streamBubble.innerHTML = marked.parse(reply);
           scrollBottom();
+          // Stream the reply into the mini chat (throttled) during Talk mode.
+          if (talkMode && Date.now() - lastTalkMirror > 80) {
+            setTalkAiText(reply);
+            lastTalkMirror = Date.now();
+          }
         }
       };
 
@@ -642,6 +666,7 @@ async function requestReply(userContent, opts = {}) {
       messages.push({ role: 'assistant', content: reply });
       attachAiActions(streamBubble, messages.length - 1);
       noteChange();
+      if (talkMode) { setTalkAiText(reply); finishTalkAiTurn(); }
       if (talkMode && reply) speakReply(reply);
     }
   } catch (err) {
@@ -650,6 +675,7 @@ async function requestReply(userContent, opts = {}) {
       if (streamBubble) {
         const partial = streamBubble.textContent.trim();
         if (partial) {
+          if (talkMode) { setTalkAiText(partial); finishTalkAiTurn(); }
           // Route the partial reply to the chat that was streaming, even if
           // the user switched chats mid-stream (openChat aborts the request).
           const target = chats.find(c => c.id === chatId);
@@ -667,6 +693,11 @@ async function requestReply(userContent, opts = {}) {
         } else if (streamBubble.closest('.msg-row')) {
           streamBubble.closest('.msg-row').remove();
         }
+      }
+      if (talkMode) {
+        const lastMini = talkMini[talkMini.length - 1];
+        if (lastMini && lastMini.role === 'ai' && !lastMini.text) talkMini.pop();
+        finishTalkAiTurn();
       }
       addSystem('Generation stopped.');
     } else {
@@ -940,6 +971,12 @@ function stripMarkdown(text) {
     .trim();
 }
 
+// TTS pronunciation fixes — Stelena is spoken "sss-tell-n-a". Hyphenated
+// spellings make Orpheus read the word as written.
+function ttsFixPronunciations(text) {
+  return String(text || '').replace(/\bStelena\b/gi, 'Sss-tell-n-a');
+}
+
 function resetTtsBtns() {
   document.querySelectorAll('.msg-act.playing').forEach(b => {
     b.classList.remove('playing');
@@ -974,7 +1011,7 @@ function speakText(text, btn) {
     },
     body: JSON.stringify({
       model: TTS_MODEL,
-      input: clean,
+      input: ttsFixPronunciations(clean),
       voice: ttsVoice,
       response_format: 'wav',
     }),
@@ -1012,16 +1049,81 @@ let talkRecorder = null;
 let talkCtx = null;
 let talkAnalyser = null;
 let talkSilenceTimer = null;
+let talkLiveTimer = null;
+let talkLiveBusy = false;
+let talkChunks = [];
+let talkMini = [];          // mini chat under the orb: [{role, text, final}]
+let talkAiStreaming = false;
+let talkPlaySrc = null;     // active TTS AudioBufferSource (so Stop can halt speech)
+let talkStopReq = false;    // stop requested while TTS audio was still being generated
+let talkGenId = 0;          // bumps on stop — invalidates pending speak continuations
+let talkOutAnalyser = null; // taps spoken audio so the shader orb throbs with the voice
+let talkPulseRAF = null;
+let talkCurPulse = 0;
+let _talkLevelBuf = null;
 
 function setOrbState(state) {
   const orb = document.getElementById('talkOrb');
   const st = document.getElementById('talkStatus');
-  if (orb) orb.dataset.state = state;
+  const stopEl = document.getElementById('talkStop');
+  if (orb) {
+    orb.dataset.state = state;
+    if (window.PlutoniumOrb) {
+      window.PlutoniumOrb.setState(state === 'listening' ? 0 : state === 'thinking' ? 1 : state === 'voicing' ? 2 : 3);
+    }
+  }
   if (st) {
     st.textContent = state === 'listening' ? 'Listening…'
       : state === 'thinking' ? 'Thinking…'
+      : state === 'voicing' ? 'Generating voice…'
       : 'Speaking…';
   }
+  if (stopEl) stopEl.style.display = (state === 'thinking' || state === 'voicing' || state === 'speaking') ? 'flex' : 'none';
+  const sendEl = document.getElementById('talkSend');
+  if (sendEl) sendEl.style.display = state === 'listening' ? 'flex' : 'none';
+}
+
+function renderTalkMini() {
+  const box = document.getElementById('talkMiniChat');
+  if (!box) return;
+  box.innerHTML = '';
+  talkMini.slice(-8).forEach((m, i, arr) => {
+    const el = document.createElement('div');
+    el.className = 'talk-minichat__msg ' + (m.role === 'user' ? 'talk-minichat__msg--user' : 'talk-minichat__msg--ai');
+    if (m.role === 'ai' && talkAiStreaming && i === arr.length - 1) el.classList.add('streaming');
+    if (m.role === 'ai') el.innerHTML = marked.parse(m.text || '');
+    else el.textContent = m.text;
+    box.appendChild(el);
+  });
+  box.scrollTop = box.scrollHeight;
+}
+
+// Live/interim user text — creates a user bubble on first audio, updates it.
+function setTalkUserText(text, final) {
+  if (!text) return;
+  const last = talkMini[talkMini.length - 1];
+  if (!last || last.role !== 'user' || last.final) talkMini.push({ role: 'user', text: '', final: false });
+  const e = talkMini[talkMini.length - 1];
+  e.text = text;
+  if (final) e.final = true;
+  renderTalkMini();
+}
+
+function beginTalkAiTurn() {
+  talkMini.push({ role: 'ai', text: '' });
+  talkAiStreaming = true;
+  renderTalkMini();
+}
+
+function setTalkAiText(text) {
+  if (!talkMini.length || talkMini[talkMini.length - 1].role !== 'ai') beginTalkAiTurn();
+  talkMini[talkMini.length - 1].text = text;
+  renderTalkMini();
+}
+
+function finishTalkAiTurn() {
+  talkAiStreaming = false;
+  renderTalkMini();
 }
 
 function openOverlay() {
@@ -1043,10 +1145,55 @@ async function startTalkMode() {
   if (!currentUser() || !authed) { addSystem('Please sign in to use Talk mode.'); return; }
   if (!window.MediaRecorder) { addSystem('Voice recording is not supported in this browser.'); return; }
   talkMode = true;
+
+  // Give the voice conversation its own chat — unless the current one is
+  // still empty, in which case reuse it instead of stacking empty chats.
+  const curChat = activeChat();
+  if (curChat && curChat.messages.length) newChat();
+
   openOverlay();
+
+  // WebGL shader orb (falls back to the CSS core if WebGL is unavailable).
+  const orbCanvas = document.getElementById('talkOrbCanvas');
+  if (orbCanvas && window.PlutoniumOrb) {
+    const accent = (getComputedStyle(document.documentElement).getPropertyValue('--workspace-accent-rgb') || '232,23,93').trim();
+    const rgb = accent.split(',').map(Number);
+    const ok = window.PlutoniumOrb.attach(orbCanvas, { accent: rgb });
+    const orbEl = orbCanvas.closest('.talk-orb');
+    if (orbEl) orbEl.classList.toggle('shader-on', ok);
+  }
+  startTalkPulse();
+
   const btn = document.getElementById('talkBtn');
   if (btn) btn.classList.add('active');
   await beginListen();
+}
+
+function getTalkLevel(analyser) {
+  if (!analyser) return 0;
+  if (!_talkLevelBuf || _talkLevelBuf.length !== analyser.fftSize) _talkLevelBuf = new Uint8Array(analyser.fftSize);
+  analyser.getByteTimeDomainData(_talkLevelBuf);
+  let sum = 0;
+  for (let i = 0; i < _talkLevelBuf.length; i++) { const v = (_talkLevelBuf[i] - 128) / 128; sum += v * v; }
+  return Math.min(1, Math.sqrt(sum / _talkLevelBuf.length) * 5);
+}
+
+// Feed the live voice level into the shader: mic while listening, spoken
+// audio while speaking. Smoothed so the orb swells rather than jitters.
+function talkPulseLoop() {
+  if (!talkMode) { talkPulseRAF = null; return; }
+  const orbEl = document.getElementById('talkOrb');
+  const state = orbEl ? orbEl.dataset.state : '';
+  let level = 0;
+  if (state === 'listening') level = getTalkLevel(talkAnalyser);
+  else if (state === 'speaking') level = getTalkLevel(talkOutAnalyser);
+  talkCurPulse += (level - talkCurPulse) * 0.16;
+  if (window.PlutoniumOrb) window.PlutoniumOrb.setPulse(talkCurPulse);
+  talkPulseRAF = requestAnimationFrame(talkPulseLoop);
+}
+
+function startTalkPulse() {
+  if (!talkPulseRAF) talkPulseRAF = requestAnimationFrame(talkPulseLoop);
 }
 
 async function beginListen() {
@@ -1068,37 +1215,54 @@ async function beginListen() {
   talkAnalyser = talkCtx.createAnalyser();
   talkAnalyser.fftSize = 1024;
   src.connect(talkAnalyser);
+  // Tap for spoken audio — lets the orb throb with Stelena's voice.
+  talkOutAnalyser = talkCtx.createAnalyser();
+  talkOutAnalyser.fftSize = 1024;
 
   const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+  talkChunks = [];
   talkRecorder = new MediaRecorder(talkStream, mime ? { mimeType: mime } : undefined);
-  const chunks = [];
-  talkRecorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  talkRecorder.ondataavailable = e => { if (e.data.size) talkChunks.push(e.data); };
   talkRecorder.onstop = () => {
     if (talkAbort || !talkMode) return;
-    const blob = new Blob(chunks, { type: mime || 'audio/webm' });
+    const blob = new Blob(talkChunks, { type: mime || 'audio/webm' });
     transcribeAndReply(blob);
   };
-  talkRecorder.start();
+  talkRecorder.start(1000);   // timeslice → chunks arrive every second for live captions
 
-  // Watch for silence: stop ~1.4s after the last speech with audio captured.
-  const buf = new Uint8Array(talkAnalyser.fftSize);
-  let lastVoice = Date.now();
-  let anyAudio = false;
-  talkSilenceTimer = setInterval(() => {
-    talkAnalyser.getByteTimeDomainData(buf);
-    let sum = 0;
-    for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
-    const rms = Math.sqrt(sum / buf.length);
-    if (rms > 0.03) { lastVoice = Date.now(); anyAudio = true; }
-    if (anyAudio && Date.now() - lastVoice > 1400) {
-      stopTalkRecording();
-    }
-  }, 200);
+  // Live captioning: re-transcribe the audio so far every ~2.5s.
+  talkLiveTimer = setInterval(runLiveTranscribe, 2500);
+
+  // No auto-stop: the user taps Send when they're done talking. The analyser
+  // stays wired so the shader orb can still pulse with the mic level.
 }
 
 function stopTalkRecording() {
   if (talkSilenceTimer) { clearInterval(talkSilenceTimer); talkSilenceTimer = null; }
+  if (talkLiveTimer) { clearInterval(talkLiveTimer); talkLiveTimer = null; }
   if (talkRecorder && talkRecorder.state !== 'inactive') talkRecorder.stop();
+}
+
+// Best-effort live transcription of the audio captured so far.
+async function runLiveTranscribe() {
+  if (talkLiveBusy || !talkMode || !talkChunks.length) return;
+  talkLiveBusy = true;
+  try {
+    const blob = new Blob(talkChunks.slice(), { type: 'audio/webm' });
+    const form = new FormData();
+    form.append('file', blob, 'talk.webm');
+    form.append('model', 'whisper-large-v3-turbo');
+    const res = await fetch(`${GROQ_WORKER}/transcribe`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${currentUser().idToken}` },
+      body: form,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && talkMode && (data.text || '').trim()) {
+      setTalkUserText(data.text.trim());
+    }
+  } catch (e) { /* live captions are best-effort */ }
+  finally { talkLiveBusy = false; }
 }
 
 async function transcribeAndReply(blob) {
@@ -1120,6 +1284,7 @@ async function transcribeAndReply(blob) {
       resumeListening();
       return;
     }
+    setTalkUserText(text, true);
     const input = inputEl();
     input.value = text;
     sendMessage();   // pushes the user message + streams the reply
@@ -1131,18 +1296,19 @@ async function transcribeAndReply(blob) {
 }
 
 function speakReply(text) {
-  const clean = stripMarkdown(text);
+  const clean = ttsFixPronunciations(stripMarkdown(text));
   if (!clean) { resumeListening(); return; }
-  setOrbState('speaking');
-  playTts(clean)
-    .then(() => resumeListening())
-    .catch(() => { addSystem('Voice playback failed.'); resumeListening(); });
+  const genId = talkGenId;
+  setOrbState('voicing');   // reply done — generating the audio
+  playTts(clean, () => { if (genId === talkGenId) setOrbState('speaking'); })
+    .then(() => { if (genId === talkGenId) resumeListening(); })
+    .catch(() => { if (genId === talkGenId) { addSystem('Voice playback failed.'); resumeListening(); } });
 }
 
 // Play Groq TTS without a button (used by Talk mode). Plays through the mic
 // AudioContext (created under the user's click gesture) so autoplay policy
-// doesn't block the spoken reply.
-async function playTts(text) {
+// doesn't block the spoken reply. `onStart` fires when playback begins.
+async function playTts(text, onStart) {
   const res = await fetch(`${GROQ_WORKER}/tts`, {
     method: 'POST',
     headers: {
@@ -1156,13 +1322,18 @@ async function playTts(text) {
   if (talkCtx && talkCtx.state === 'suspended') { try { await talkCtx.resume(); } catch (_) {} }
   const ctx = talkCtx || new (window.AudioContext || window.webkitAudioContext)();
   const audioBuf = await ctx.decodeAudioData(buf);
+  if (talkStopReq) { talkStopReq = false; return; }   // stopped while audio was generating
   await new Promise((resolve, reject) => {
     const src = ctx.createBufferSource();
     src.buffer = audioBuf;
     src.connect(ctx.destination);
-    src.onended = () => resolve();
-    src.onerror = () => reject(new Error('playback'));
+    if (talkOutAnalyser && ctx === talkCtx) src.connect(talkOutAnalyser);
+    const done = () => { if (talkPlaySrc === src) talkPlaySrc = null; resolve(); };
+    src.onended = done;
+    src.onerror = () => { if (talkPlaySrc === src) talkPlaySrc = null; reject(new Error('playback')); };
+    talkPlaySrc = src;
     src.start();
+    if (onStart) onStart();
   });
 }
 
@@ -1175,6 +1346,7 @@ function resumeListening() {
 
 function cleanupTalkAudio() {
   if (talkSilenceTimer) { clearInterval(talkSilenceTimer); talkSilenceTimer = null; }
+  if (talkLiveTimer) { clearInterval(talkLiveTimer); talkLiveTimer = null; }
   if (talkRecorder && talkRecorder.state !== 'inactive') {
     try { talkRecorder.stop(); } catch (_) {}
   }
@@ -1182,22 +1354,52 @@ function cleanupTalkAudio() {
   if (talkStream) { talkStream.getTracks().forEach(t => t.stop()); talkStream = null; }
   if (talkCtx) { try { talkCtx.close(); } catch (_) {} talkCtx = null; }
   talkAnalyser = null;
+  talkOutAnalyser = null;
+}
+
+// Manual send — stops the recorder, which fires onstop → transcribeAndReply.
+function sendTalkNow() {
+  if (!talkMode) return;
+  stopTalkRecording();
 }
 
 function stopTalkMode() {
   talkMode = false;
   talkAbort = true;
   if (controller) controller.abort();   // stop any in-flight reply
+  if (talkPlaySrc) { try { talkPlaySrc.stop(); } catch (_) {} talkPlaySrc = null; }
   stopTalkRecording();
   cleanupTalkAudio();
+  if (window.PlutoniumOrb) window.PlutoniumOrb.detach();
+  if (talkPulseRAF) { cancelAnimationFrame(talkPulseRAF); talkPulseRAF = null; }
+  talkCurPulse = 0;
+  talkMini = [];
+  talkAiStreaming = false;
+  renderTalkMini();
   closeOverlay();
   const btn = document.getElementById('talkBtn');
   if (btn) btn.classList.remove('active');
 }
 
+// Stop the current response (streaming or spoken) and return to listening.
+function stopTalkResponse() {
+  if (!talkMode) return;
+  talkGenId++;
+  talkStopReq = true;
+  if (talkPlaySrc) { try { talkPlaySrc.stop(); } catch (_) {} talkPlaySrc = null; }
+  if (controller) controller.abort();
+  setOrbState('listening');
+  cleanupTalkAudio();
+  beginListen();
+}
+
 function initTalkMode() {
   const close = document.getElementById('talkClose');
   if (close) close.addEventListener('click', stopTalkMode);
+  const stop = document.getElementById('talkStop');
+  if (stop) stop.addEventListener('click', stopTalkResponse);
+  const send = document.getElementById('talkSend');
+  if (send) send.addEventListener('click', sendTalkNow);
   const orb = document.getElementById('talkOrb');
   if (orb) orb.addEventListener('click', stopTalkMode);
   document.addEventListener('keydown', e => {

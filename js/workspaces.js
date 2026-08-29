@@ -93,11 +93,18 @@
           <div class="talk-orb__ring"></div>
           <div class="talk-orb__ring"></div>
           <div class="talk-orb__ring"></div>
+          <canvas class="talk-orb__canvas" id="talkOrbCanvas"></canvas>
           <div class="talk-orb__scan"></div>
+          <div class="talk-orb__audio"></div>
           <div class="talk-orb__core"></div>
         </div>
+        <div class="talk-minichat" id="talkMiniChat"></div>
         <div class="talk-status" id="talkStatus">Listening…</div>
-        <div class="talk-hint">Speak naturally — it stops when you pause · Esc to end</div>
+        <div class="talk-actions">
+          <button class="talk-send" id="talkSend" type="button" style="display:none"><i class="fas fa-paper-plane"></i>Send</button>
+          <button class="talk-stop" id="talkStop" type="button" style="display:none"><i class="fas fa-stop"></i>Stop responding</button>
+        </div>
+        <div class="talk-hint">Speak, then tap Send when you're done · Esc to end</div>
         <button class="talk-close" id="talkClose" title="End talk session" aria-label="End talk session"><i class="fas fa-xmark"></i></button>
       </div>
     </section>`,
@@ -123,7 +130,7 @@
 
   const bundles = {
     games: { css: 'css/games.css', scripts: ['https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js', 'js/games.js', 'js/personal-games.js'] },
-    ai: { css: 'css/ai.css', scripts: ['js/ai.js'] },
+    ai: { css: 'css/ai.css', scripts: ['js/orb.js', 'js/ai.js'] },
     cloud: { css: 'css/cloud.css', scripts: ['js/cloud.js'] },
     media: { css: 'css/stream.css', scripts: ['js/stream.js?v=20260825'] },
     vms: { css: 'css/vms.css', scripts: ['js/vms.js'], module: true }
