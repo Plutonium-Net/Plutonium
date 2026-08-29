@@ -22,6 +22,13 @@
   overflow: hidden;
 }
 
+/* .stream-controls hosts an absolutely-positioned custom dropdown, so it must
+   not clip it — keep the glass surfaces for the bar itself only. */
+#workspace-root .workspace-view .stream-controls {
+  overflow: visible;
+  z-index: 30;
+}
+
 #workspace-root .workspace-view :is(.source-tabs, .pgcdn-toolbar, .history-toolbar, .pg-panel-toolbar, .cg-toolbar, .media-tabs, .stream-controls, .vm-panel, .vm-frame-shell, .age-verify__box, .adult-gate__box)::before {
   content: '';
   position: absolute;

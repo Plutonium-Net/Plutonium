@@ -94,30 +94,15 @@
   flex-wrap: wrap;
 }
 
-.stream-search-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 200px;
-}
-
-.stream-search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted);
-  font-size: 0.8rem;
-  pointer-events: none;
-}
-
 .stream-search {
-  width: 100%;
+  flex: 0 1 220px;
+  min-width: 0;
   background: var(--surface-2);
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
+  border-radius: 10px;
   color: #fff;
   font-size: 0.88rem;
-  padding: 9px 12px 9px 34px;
+  padding: 9px 14px;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -169,6 +154,80 @@
   color: var(--pink);
   border-color: var(--pink);
   background: rgba(var(--pink-rgb),0.1);
+}
+
+/* ── Custom age-rating dropdown ─────────────────────────────────────────── */
+
+.stream-select-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.stream-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stream-select-caret {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  pointer-events: none;
+  transition: transform 0.18s ease;
+}
+
+.stream-select-wrap.open .stream-select-caret {
+  transform: rotate(180deg);
+}
+
+.stream-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 158px;
+  z-index: 40;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--panel-bg-dark, rgba(10,10,10,0.92));
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+}
+
+.stream-select-wrap.open .stream-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.stream-dropdown__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 8px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.stream-dropdown__item:hover {
+  background: var(--surface-2);
+  color: #fff;
+}
+
+.stream-dropdown__item.active {
+  color: var(--pink);
+  background: rgba(var(--pink-rgb),0.08);
 }
 
 /* ── Genre tags ──────────────────────────────────────────────────────────── */
@@ -660,8 +719,8 @@
 
 .fb-toast {
   position: fixed;
-  top: 24px;
-  right: 24px;
+  bottom: 24px;
+  left: 50%;
   background: #1a1a1a;
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
@@ -674,13 +733,15 @@
   z-index: 700;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-8px);
+  transform: translateX(-50%) translateY(20px);
   transition: opacity 0.2s, transform 0.2s;
+  max-width: calc(100vw - 48px);
+  white-space: nowrap;
 }
 
 .fb-toast.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
 }
 
 .fb-toast .fa-heart { color: var(--pink); }
@@ -1167,15 +1228,56 @@
   pointer-events: auto;
 }
 
+/* Floating control bar — a centered pill at the bottom edge, mirroring the
+   game viewer bar. It auto-hides after a pause and a glowing ghost pill lets
+   you bring it back. */
 .player__bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  z-index: 425;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: rgba(0,0,0,0.85);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  gap: 6px;
+  background: rgba(10,10,10,0.82);
+  border: 1px solid rgba(var(--pink-rgb),0.22);
+  border-radius: 60px;
+  padding: 6px 16px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.7), 0 0 16px rgba(var(--pink-rgb),0.1);
+  backdrop-filter: var(--ui-blur, blur(20px));
+  -webkit-backdrop-filter: var(--ui-blur, blur(20px));
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  max-width: calc(100vw - 24px);
   flex-shrink: 0;
-  z-index: 1;
+}
+
+.player__bar.bar-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(16px);
+}
+
+.player-bar-ghost {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  border-radius: 3px;
+  background: rgba(var(--pink-rgb),0.22);
+  box-shadow: 0 0 10px 3px rgba(var(--pink-rgb),0.45), 0 0 24px 6px rgba(var(--pink-rgb),0.2);
+  z-index: 425;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+}
+
+.player-bar-ghost.ghost-visible {
+  opacity: 1;
+  pointer-events: all;
 }
 
 .player__btn {

@@ -602,6 +602,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   max-width: 1360px;
   padding: 0 clamp(18px, 4vw, 52px) 26px;
 }
+.stream-hero__inner {
+  width: 100%;
+  text-align: center;
+}
 .stream-hero__title {
   font-size: clamp(2rem, 4vw, 3rem);
   letter-spacing: 0;
@@ -612,43 +616,150 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   padding: 0 clamp(18px, 4vw, 52px) 72px;
 }
 .media-tabs {
+  position: relative;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 18px;
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-pill-radius);
   padding: 4px;
   gap: 4px;
-  border-bottom: 1px solid var(--workspace-line-soft);
   background: rgba(10,10,14,.55);
 }
+.media-tabs.is-positioned::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: var(--media-tab-slider-left, 0px);
+  width: var(--media-tab-slider-width, 0px);
+  border: 2px solid var(--workspace-accent);
+  border-radius: var(--workspace-pill-radius);
+  background: rgba(var(--workspace-accent-rgb), .08);
+  box-shadow: 0 0 8px rgba(var(--workspace-accent-rgb), .35);
+  pointer-events: none;
+  z-index: 0;
+  transition: left .28s cubic-bezier(.22,1,.36,1), width .28s cubic-bezier(.22,1,.36,1);
+}
 .media-tab {
+  position: relative;
+  z-index: 1;
   border: 0;
   border-radius: var(--workspace-pill-radius);
   padding: 9px 15px;
+  white-space: nowrap;
 }
 .media-tab.active {
   color: #fff;
   border-color: transparent;
-  background: var(--workspace-glass-bg-strong);
-  box-shadow: inset 0 0 0 1px rgba(var(--workspace-accent-rgb), .42);
+  background: transparent;
 }
 .stream-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 18px;
   padding: 9px;
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-pill-radius);
   background: rgba(13,13,18,.82);
 }
-.stream-search, .stream-select, .adult-toggle {
+.stream-search {
   border-radius: var(--workspace-pill-radius);
   border-color: var(--workspace-line);
+  background: rgba(255,255,255,.055);
+  flex: 0 1 220px;
+  width: 220px;
+  min-width: 0;
+  height: 38px;
+  transition: flex-basis .25s ease, width .25s ease, box-shadow .2s ease, border-color .2s ease;
 }
-.tag.active { color: #fff; background: rgba(var(--workspace-accent-rgb), .18); border-color: var(--workspace-accent); }
+.stream-search:focus {
+  flex-basis: min(400px, 58vw);
+  width: min(400px, 58vw);
+  border-color: rgba(var(--workspace-accent-rgb), .65);
+  box-shadow: 0 0 0 2px rgba(var(--workspace-accent-rgb), .12), 0 0 18px rgba(var(--workspace-accent-rgb), .16);
+}
+.stream-select, .adult-toggle {
+  border-radius: var(--workspace-pill-radius);
+  border-color: var(--workspace-line);
+  background: rgba(255,255,255,.055);
+}
+.stream-dropdown {
+  border-radius: var(--workspace-pill-radius);
+  border-color: rgba(var(--workspace-accent-rgb), .25);
+  background: rgba(18,18,23,.92);
+}
+.stream-dropdown__item.active {
+  color: var(--workspace-accent);
+  background: rgba(var(--workspace-accent-rgb), .12);
+}
+
+/* Wisp pill slider for the genre/type tags bar */
+.tags-bar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.tags-bar::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: var(--media-slider-left, 0px);
+  width: var(--media-slider-width, 0px);
+  border: 2px solid var(--workspace-accent);
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: 0 0 8px rgba(var(--workspace-accent-rgb), .35);
+  pointer-events: none;
+  opacity: var(--media-slider-visible, 0);
+  transition: left .28s cubic-bezier(.22,1,.36,1), width .28s cubic-bezier(.22,1,.36,1), opacity .15s;
+}
+.tag {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  border-color: transparent;
+}
+.tag:hover { background: transparent; border-color: transparent; }
+.tag.active { color: #fff; background: transparent; border-color: transparent; }
 
 /* Mature-content dialogs use the same shared glass surface as the rest of Media. */
 #workspace-root .workspace-media .age-verify__box,
 #workspace-root .workspace-media .adult-gate__box {
-  border-radius: var(--workspace-pill-radius);
+  border-radius: 2.6rem;
   border-color: rgba(var(--workspace-accent-rgb), .34);
   box-shadow: 0 18px 60px rgba(var(--workspace-shadow), .5), inset 0 1px 0 rgba(255,255,255,.14);
 }
+#workspace-root .workspace-media .age-verify__deny,
+#workspace-root .workspace-media .age-verify__confirm,
+#workspace-root .workspace-media .adult-gate__deny,
+#workspace-root .workspace-media .adult-gate__confirm {
+  border-radius: 999px;
+}
+
+/* Details modal (movie / TV / anime info popup) — rounder surfaces */
+#workspace-root .workspace-media .details-modal__inner {
+  border-radius: 2.2rem;
+  border-color: rgba(var(--workspace-accent-rgb), .3);
+  box-shadow: 0 18px 60px rgba(var(--workspace-shadow), .5), inset 0 1px 0 rgba(255,255,255,.14);
+}
+#workspace-root .workspace-media .details-poster { border-radius: 1.15rem; }
+#workspace-root .workspace-media .details-chip { border-radius: 999px; }
+#workspace-root .workspace-media .detail-dropdown__btn,
+#workspace-root .workspace-media .details-watch-btn,
+#workspace-root .workspace-media .details-fav-btn {
+  border-radius: 999px;
+}
+#workspace-root .workspace-media .detail-dropdown__menu { border-radius: 1rem; }
+#workspace-root .workspace-media .detail-option { border-radius: 999px; padding-left: 14px; }
 
 /* Games context menu */
 #workspace-root .workspace-games #pgcdn-ctx-menu {
@@ -717,7 +828,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .source-tab, .media-tab { white-space: nowrap; flex: 0 0 auto; }
   .suggestion-grid { grid-template-columns: 1fr; }
   .stream-controls { align-items: stretch; }
-  .stream-search-wrap { min-width: 100%; }
   .stream-filters { justify-content: space-between; }
   .cg-grid { grid-template-columns: 1fr; }
   #workspace-root #main-content .page-header { align-items: flex-start; gap: 12px; }

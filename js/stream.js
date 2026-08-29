@@ -824,6 +824,7 @@ function buildTags(cats) {
       if (currentSpecialView) exitSpecialView();
       document.querySelectorAll('.tag').forEach(b => b.classList.remove('active'));
       t.classList.add('active');
+      positionTagSlider();
       currentCategory = c.key;
       searchInput.value = '';
       isSearchMode = false;
@@ -832,14 +833,52 @@ function buildTags(cats) {
     });
     tagsBar.appendChild(t);
   });
+  positionTagSlider();
+}
+
+// Position the ::after wisp pill so it hugs the active tag (mirrors the
+// genre/tags bars on the cloud-gaming page).
+function positionTagSlider() {
+  const active = tagsBar.querySelector('.tag.active');
+  if (!active) {
+    tagsBar.style.setProperty('--media-slider-left',    '0px');
+    tagsBar.style.setProperty('--media-slider-width',   '0px');
+    tagsBar.style.setProperty('--media-slider-visible', '0');
+    return;
+  }
+  const barRect  = tagsBar.getBoundingClientRect();
+  const pillRect = active.getBoundingClientRect();
+  tagsBar.style.setProperty('--media-slider-left',    (pillRect.left - barRect.left) + 'px');
+  tagsBar.style.setProperty('--media-slider-width',   pillRect.width + 'px');
+  tagsBar.style.setProperty('--media-slider-visible', '1');
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
    Media type tabs
 ───────────────────────────────────────────────────────────────────────── */
 
+// Position the ::after wisp pill on the Movies / TV / Anime tabs so it glides
+// to whichever tab is active (mirrors the source-tabs slider on the games page).
+function positionTabSlider() {
+  const tabs = document.querySelector('.media-tabs');
+  if (!tabs) return;
+  const active = tabs.querySelector('.media-tab.active');
+  if (!active) return;
+  const tabsRect    = tabs.getBoundingClientRect();
+  const activeRect  = active.getBoundingClientRect();
+  const borderOffset = tabs.clientLeft;
+  tabs.style.setProperty('--media-tab-slider-left',  (activeRect.left - tabsRect.left - borderOffset) + 'px');
+  tabs.style.setProperty('--media-tab-slider-width', activeRect.width + 'px');
+  tabs.classList.add('is-positioned');
+}
+
 function applyMediaTypeUI() {
   document.querySelectorAll('.media-tab').forEach(t => t.classList.toggle('active', t.dataset.type === mediaType));
+  positionTabSlider();
+  requestAnimationFrame(() => {
+    positionTabSlider();
+    requestAnimationFrame(positionTabSlider);
+  });
   currentCategory = 'all';
   if (mediaType === 'movie') {
     document.getElementById('hero-title').innerHTML  = 'Watch <em>Cinema</em>';
@@ -1128,6 +1167,45 @@ function buildPlayerSrc(item, season, episode, resumeTs) {
   return resumeTs ? `${base}?progress=${resumeTs}` : base;
 }
 
+/* Floating control-bar behaviour (mirrors the game viewer bar): show it on
+   pointer movement over the player, auto-hide after a pause, and expose a
+   glowing ghost pill that brings it back. */
+const playerEl    = document.getElementById('player');
+const playerBar   = document.querySelector('.player__bar');
+const playerGhost = document.getElementById('player-bar-ghost');
+let   playerBarTimer = null;
+
+function showPlayerBar() {
+  if (playerBar) playerBar.classList.remove('bar-hidden');
+  if (playerGhost) playerGhost.classList.remove('ghost-visible');
+  clearTimeout(playerBarTimer);
+}
+
+function peekPlayerBar() {
+  showPlayerBar();
+  if (playerEl && playerEl.classList.contains('open')) {
+    clearTimeout(playerBarTimer);
+    playerBarTimer = setTimeout(() => {
+      if (playerEl.classList.contains('open')) {
+        if (playerBar) playerBar.classList.add('bar-hidden');
+        if (playerGhost) playerGhost.classList.add('ghost-visible');
+      }
+    }, 3000);
+  }
+}
+
+function hidePlayerBar() {
+  clearTimeout(playerBarTimer);
+  if (playerBar) playerBar.classList.add('bar-hidden');
+  if (playerGhost) playerGhost.classList.remove('ghost-visible');
+}
+
+if (playerEl && playerBar) {
+  playerEl.addEventListener('mousemove', peekPlayerBar);
+  playerEl.addEventListener('mouseenter', peekPlayerBar);
+  if (playerGhost) playerGhost.addEventListener('mouseenter', peekPlayerBar);
+}
+
 async function openPlayer(item, options = {}) {
   currentPlayerItem = item;
   document.getElementById('player-title').textContent = item.name + (item.year ? ' · ' + item.year : '');
@@ -1159,6 +1237,7 @@ async function openPlayer(item, options = {}) {
   document.getElementById('player').classList.add('open');
   document.getElementById('player-backdrop').classList.add('open');
   updateBodyScrollLock();
+  peekPlayerBar();
 }
 
 function closePlayer() {
@@ -1180,6 +1259,7 @@ function closePlayer() {
   currentTVShow = null;
   playerState   = { season:1, episode:1 };
   updateBodyScrollLock();
+  hidePlayerBar();
 }
 window.closePlayer = closePlayer;
 
@@ -1325,6 +1405,16 @@ searchInput.addEventListener('input', e => {
   searchTimeout = setTimeout(() => searchTMDB(e.target.value), 450);
 });
 
+// '/' focuses the search field (matching the html5 game / cloud search)
+document.addEventListener('keydown', e => {
+  if (e.key !== '/') return;
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  e.preventDefault();
+  searchInput.focus();
+  searchInput.select();
+});
+
 function openAgeVerify()  {
   document.getElementById('age-verify').classList.add('open');
   document.getElementById('age-verify-backdrop').classList.add('open');
@@ -1372,10 +1462,47 @@ adultToggle.addEventListener('click', async () => {
   }
 });
 
-document.getElementById('age-sort-select')?.addEventListener('change', async e => {
-  ageRatingFilter = e.target.value;
-  await refreshCurrentView();
-});
+// Custom age-rating dropdown
+const ageWrap   = document.getElementById('age-sort-wrap');
+const ageBtn    = document.getElementById('age-sort-btn');
+const ageMenu   = document.getElementById('age-sort-menu');
+const ageLabel  = document.getElementById('age-sort-label');
+
+function setAgeFilter(value) {
+  ageRatingFilter = value;
+  if (ageMenu) {
+    ageMenu.querySelectorAll('.stream-dropdown__item').forEach(it =>
+      it.classList.toggle('active', it.dataset.value === value));
+  }
+  if (ageLabel) ageLabel.textContent = (value === 'all') ? 'All ratings' : value;
+  if (ageWrap) ageWrap.classList.remove('open');
+  if (ageBtn) ageBtn.setAttribute('aria-expanded', 'false');
+  refreshCurrentView();
+}
+
+if (ageBtn && ageMenu && ageWrap) {
+  ageBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = ageWrap.classList.toggle('open');
+    ageBtn.setAttribute('aria-expanded', String(open));
+  });
+  ageMenu.querySelectorAll('.stream-dropdown__item').forEach(item => {
+    item.addEventListener('click', () => setAgeFilter(item.dataset.value));
+  });
+  // close on outside click or Escape
+  document.addEventListener('click', () => {
+    if (ageWrap.classList.contains('open')) {
+      ageWrap.classList.remove('open');
+      ageBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && ageWrap.classList.contains('open')) {
+      ageWrap.classList.remove('open');
+      ageBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
 
 document.getElementById('continue-see-all')?.addEventListener('click', () => enterSpecialView('continue'));
 document.getElementById('favorites-see-all')?.addEventListener('click', () => enterSpecialView('favorites'));
