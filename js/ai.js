@@ -4,7 +4,18 @@ const STELENA_LOGO = 'img/logos/stelena.svg';
 
 // Groq TTS (Orpheus) — generated server-side by the worker, played as WAV.
 const TTS_MODEL = 'canopylabs/orpheus-v1-english';
-const TTS_VOICE = 'hannah';
+const TTS_VOICES = [
+  { id: 'hannah', label: 'Hannah', desc: 'Female · balanced' },
+  { id: 'autumn', label: 'Autumn', desc: 'Female · warm' },
+  { id: 'diana',  label: 'Diana',  desc: 'Female · clear' },
+  { id: 'austin', label: 'Austin', desc: 'Male · confident' },
+  { id: 'daniel', label: 'Daniel', desc: 'Male · deep' },
+  { id: 'troy',   label: 'Troy',   desc: 'Male · upbeat' },
+];
+// Selected voice — persisted locally and synced to the account (ai_chats doc).
+let ttsVoice = (() => {
+  try { return localStorage.getItem('plu_ai_voice') || 'hannah'; } catch (_) { return 'hannah'; }
+})();
 
 const SYSTEM_PROMPT = {
   role: 'system',
@@ -216,6 +227,8 @@ function setStreaming(on) {
   if (input) input.disabled = on;
   if (sendBtn()) sendBtn().disabled = on || !authed;
   if (voiceBtn()) voiceBtn().disabled = on;
+  const talk = document.getElementById('talkBtn');
+  if (talk) talk.disabled = on;
   if (stop) stop.style.display = on ? 'flex' : 'none';
 }
 
@@ -320,6 +333,66 @@ function initModelSelect() {
   syncActive();
 }
 
+// ── Voice selector (Orpheus TTS voices, synced to account) ────────────────
+
+function initVoiceSelect() {
+  const pill = document.getElementById('voicePill');
+  const menu = document.getElementById('voiceMenu');
+  const list = document.getElementById('voice-menu-list');
+  const nameEl = document.getElementById('selectedVoiceName');
+  if (!pill || !menu || !list) return;
+
+  TTS_VOICES.forEach(v => {
+    const opt = document.createElement('button');
+    opt.className = 'ai-model-option';
+    opt.dataset.value = v.id;
+    opt.innerHTML = `<span class="ai-model-option__name">${v.label}</span><span class="ai-model-option__desc">${v.desc}</span>`;
+    opt.addEventListener('click', () => selectVoice(v.id));
+    list.appendChild(opt);
+  });
+
+  function syncActive() {
+    list.querySelectorAll('.ai-model-option').forEach(o => o.classList.toggle('active', o.dataset.value === ttsVoice));
+  }
+  function openMenu() { menu.classList.add('open'); pill.classList.add('open'); pill.setAttribute('aria-expanded', 'true'); }
+  function closeMenu() { menu.classList.remove('open'); pill.classList.remove('open'); pill.setAttribute('aria-expanded', 'false'); }
+
+  function selectVoice(id) {
+    ttsVoice = id;
+    const v = TTS_VOICES.find(x => x.id === id);
+    if (v && nameEl) nameEl.textContent = v.label;
+    try { localStorage.setItem('plu_ai_voice', id); } catch (_) {}
+    syncActive();
+    closeMenu();
+    scheduleSync();   // voice preference syncs to the account
+  }
+  window._aiSelectVoice = selectVoice;
+
+  const current = TTS_VOICES.find(x => x.id === ttsVoice);
+  if (current && nameEl) nameEl.textContent = current.label;
+
+  pill.addEventListener('click', e => {
+    e.stopPropagation();
+    if (menu.classList.contains('open')) closeMenu();
+    else { syncActive(); openMenu(); }
+  });
+  document.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  syncActive();
+}
+
+// Apply a voice choice pulled from the cloud (sign-in merge).
+function applyVoice(id) {
+  if (!TTS_VOICES.some(v => v.id === id)) return;
+  ttsVoice = id;
+  try { localStorage.setItem('plu_ai_voice', id); } catch (_) {}
+  const nameEl = document.getElementById('selectedVoiceName');
+  const v = TTS_VOICES.find(x => x.id === id);
+  if (v && nameEl) nameEl.textContent = v.label;
+  const list = document.getElementById('voice-menu-list');
+  if (list) list.querySelectorAll('.ai-model-option').forEach(o => o.classList.toggle('active', o.dataset.value === id));
+}
+
 // ── Chat UI helpers ────────────────────────────────────────────────────────
 
 function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px'; }
@@ -421,6 +494,14 @@ function attachAiActions(bubble, idx) {
   regen.addEventListener('click', () => regenerateMessage(idx));
   wrap.appendChild(regen);
 
+  if (idx === messages.length - 1) {
+    const cont = document.createElement('button');
+    cont.className = 'msg-act';
+    cont.innerHTML = '<i class="fa-solid fa-forward"></i> Continue';
+    cont.addEventListener('click', () => continueReply(idx));
+    wrap.appendChild(cont);
+  }
+
   bubble.appendChild(wrap);
 }
 
@@ -474,11 +555,19 @@ function stopGeneration() {
   if (controller) controller.abort();
 }
 
-async function requestReply(userContent) {
+async function requestReply(userContent, opts = {}) {
   setStreaming(true);
   showTyping();
   controller = new AbortController();
   const chatId = activeChatId;  // the chat this reply belongs to
+
+  const system = opts.continue
+    ? SYSTEM_PROMPT.content +
+      '\n\n## Continuation instruction\n' +
+      'The user has asked you to CONTINUE your previous response from exactly where it stopped. ' +
+      'Do not repeat anything already written — begin directly with the continuation. ' +
+      'If the previous response is already complete, say so briefly.'
+    : SYSTEM_PROMPT.content;
 
   let streamBubble = null;
   try {
@@ -491,7 +580,7 @@ async function requestReply(userContent) {
       },
       body: JSON.stringify({
         model: currentModel,
-        system: SYSTEM_PROMPT.content,
+        system,
         messages: messages.map(m => ({ role: m.role, content: m.content })),
       }),
       signal: controller.signal,
@@ -511,6 +600,7 @@ async function requestReply(userContent) {
       messages.push({ role: 'assistant', content: reply });
       addMessage(reply, 'ai', messages.length - 1);
       noteChange();
+      if (talkMode && reply) speakReply(reply);
     } else {
       // SSE streaming into an empty bubble, then attach actions when done.
       streamBubble = addMessage('', 'ai');
@@ -552,6 +642,7 @@ async function requestReply(userContent) {
       messages.push({ role: 'assistant', content: reply });
       attachAiActions(streamBubble, messages.length - 1);
       noteChange();
+      if (talkMode && reply) speakReply(reply);
     }
   } catch (err) {
     hideTyping();
@@ -600,6 +691,16 @@ function regenerateMessage(idx) {
   renderConversation();
   noteChange();
   requestReply(prev.content);
+}
+
+// Ask the model to extend its latest reply. The continuation streams in as a
+// new assistant message (no user turn is added).
+function continueReply(idx) {
+  if (streaming || idx == null) return;
+  if (idx !== messages.length - 1) return;   // only the most recent AI reply
+  const last = messages[idx];
+  if (!last || last.role !== 'assistant') return;
+  requestReply('', { continue: true });
 }
 
 function editMessage(idx) {
@@ -657,7 +758,7 @@ function scheduleSync() {
 async function pushChats() {
   if (!currentUser()) return;
   try {
-    await PlutoniumStore.setDoc(AI_CHATS_DOC, { chats, lastSync: new Date() });
+    await PlutoniumStore.setDoc(AI_CHATS_DOC, { chats, voice: ttsVoice, lastSync: new Date() });
   } catch (e) { console.warn('[ai] chat sync push failed:', e); }
 }
 
@@ -665,14 +766,17 @@ async function pullChats() {
   if (!currentUser()) return;
   try {
     const doc = await PlutoniumStore.getDoc(AI_CHATS_DOC);
-    if (doc && Array.isArray(doc.chats) && doc.chats.length) {
-      chats = mergeChats(chats, doc.chats);
-      if (!chats.some(c => c.id === activeChatId)) activeChatId = null;
-      persistLocal();
-      renderChatList();
-      const target = chats.find(c => c.id === activeChatId) || chats[0] || null;
-      if (target) openChat(target.id);
-      else { messages = []; renderConversation(); }
+    if (doc) {
+      if (doc.voice) applyVoice(doc.voice);
+      if (Array.isArray(doc.chats) && doc.chats.length) {
+        chats = mergeChats(chats, doc.chats);
+        if (!chats.some(c => c.id === activeChatId)) activeChatId = null;
+        persistLocal();
+        renderChatList();
+        const target = chats.find(c => c.id === activeChatId) || chats[0] || null;
+        if (target) openChat(target.id);
+        else { messages = []; renderConversation(); }
+      }
     }
   } catch (e) { console.warn('[ai] chat sync pull failed:', e); }
 }
@@ -771,6 +875,17 @@ function renderChatList() {
       `<span class="ai-chat-item__tools"><button class="ai-chat-del" type="button" title="Delete chat" data-id="${chat.id}"><i class="fa-solid fa-trash"></i></button></span>`;
     item.addEventListener('click', () => openChat(chat.id));
     item.addEventListener('dblclick', e => { e.stopPropagation(); startRename(item, chat); });
+    // Direct handler (not delegated) so the click never bubbles to the item's
+    // openChat handler — otherwise the list re-renders and the armed state is lost.
+    const del = item.querySelector('.ai-chat-del');
+    if (del) del.addEventListener('click', e => {
+      e.stopPropagation();
+      if (del.dataset.armed === '1') { deleteChat(chat.id); return; }
+      del.dataset.armed = '1';
+      del.classList.add('armed');
+      del.title = 'Click again to delete';
+      setTimeout(() => { delete del.dataset.armed; del.classList.remove('armed'); del.title = 'Delete chat'; }, 2500);
+    });
     list.appendChild(item);
   });
   if (!chats.length) {
@@ -808,21 +923,8 @@ function startRename(item, chat) {
 }
 
 function initChatList() {
-  const list = document.getElementById('aiChatList');
   const nc = document.getElementById('aiNewChat');
   if (nc) nc.addEventListener('click', newChat);
-  if (list) {
-    list.addEventListener('click', e => {
-      const del = e.target.closest('.ai-chat-del');
-      if (!del) return;
-      e.stopPropagation();
-      if (del.dataset.armed === '1') { deleteChat(del.dataset.id); return; }
-      del.dataset.armed = '1';
-      del.classList.add('armed');
-      del.title = 'Click again to delete';
-      setTimeout(() => { delete del.dataset.armed; del.classList.remove('armed'); del.title = 'Delete chat'; }, 2500);
-    });
-  }
 }
 
 // ── Text to speech (Groq Orpheus) ─────────────────────────────────────────
@@ -873,7 +975,7 @@ function speakText(text, btn) {
     body: JSON.stringify({
       model: TTS_MODEL,
       input: clean,
-      voice: TTS_VOICE,
+      voice: ttsVoice,
       response_format: 'wav',
     }),
   })
@@ -901,6 +1003,208 @@ function speakText(text, btn) {
     });
 }
 
+// ── Talk mode (Jarvis orb, voice-to-voice loop) ───────────────────────────
+
+let talkMode = false;
+let talkAbort = false;
+let talkStream = null;
+let talkRecorder = null;
+let talkCtx = null;
+let talkAnalyser = null;
+let talkSilenceTimer = null;
+
+function setOrbState(state) {
+  const orb = document.getElementById('talkOrb');
+  const st = document.getElementById('talkStatus');
+  if (orb) orb.dataset.state = state;
+  if (st) {
+    st.textContent = state === 'listening' ? 'Listening…'
+      : state === 'thinking' ? 'Thinking…'
+      : 'Speaking…';
+  }
+}
+
+function openOverlay() {
+  const ov = document.getElementById('talkOverlay');
+  if (ov) { ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); }
+}
+
+function closeOverlay() {
+  const ov = document.getElementById('talkOverlay');
+  if (ov) { ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); }
+}
+
+function toggleTalk() {
+  if (talkMode) stopTalkMode();
+  else startTalkMode();
+}
+
+async function startTalkMode() {
+  if (!currentUser() || !authed) { addSystem('Please sign in to use Talk mode.'); return; }
+  if (!window.MediaRecorder) { addSystem('Voice recording is not supported in this browser.'); return; }
+  talkMode = true;
+  openOverlay();
+  const btn = document.getElementById('talkBtn');
+  if (btn) btn.classList.add('active');
+  await beginListen();
+}
+
+async function beginListen() {
+  if (!talkMode) return;
+  setOrbState('listening');
+  talkAbort = false;
+  try {
+    talkStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    console.error('[ai] mic denied:', e);
+    addSystem('Microphone unavailable — allow mic access to use Talk mode.');
+    stopTalkMode();
+    return;
+  }
+
+  // Analyser for silence detection (auto-stop when the user pauses).
+  talkCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const src = talkCtx.createMediaStreamSource(talkStream);
+  talkAnalyser = talkCtx.createAnalyser();
+  talkAnalyser.fftSize = 1024;
+  src.connect(talkAnalyser);
+
+  const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+  talkRecorder = new MediaRecorder(talkStream, mime ? { mimeType: mime } : undefined);
+  const chunks = [];
+  talkRecorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  talkRecorder.onstop = () => {
+    if (talkAbort || !talkMode) return;
+    const blob = new Blob(chunks, { type: mime || 'audio/webm' });
+    transcribeAndReply(blob);
+  };
+  talkRecorder.start();
+
+  // Watch for silence: stop ~1.4s after the last speech with audio captured.
+  const buf = new Uint8Array(talkAnalyser.fftSize);
+  let lastVoice = Date.now();
+  let anyAudio = false;
+  talkSilenceTimer = setInterval(() => {
+    talkAnalyser.getByteTimeDomainData(buf);
+    let sum = 0;
+    for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+    const rms = Math.sqrt(sum / buf.length);
+    if (rms > 0.03) { lastVoice = Date.now(); anyAudio = true; }
+    if (anyAudio && Date.now() - lastVoice > 1400) {
+      stopTalkRecording();
+    }
+  }, 200);
+}
+
+function stopTalkRecording() {
+  if (talkSilenceTimer) { clearInterval(talkSilenceTimer); talkSilenceTimer = null; }
+  if (talkRecorder && talkRecorder.state !== 'inactive') talkRecorder.stop();
+}
+
+async function transcribeAndReply(blob) {
+  if (!talkMode) return;
+  setOrbState('thinking');
+  try {
+    const form = new FormData();
+    form.append('file', blob, 'talk.webm');
+    form.append('model', 'whisper-large-v3-turbo');
+    const res = await fetch(`${GROQ_WORKER}/transcribe`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${currentUser().idToken}` },
+      body: form,
+    });
+    const data = await res.json().catch(() => ({}));
+    const text = (data.text || '').trim();
+    if (!res.ok || !text) {
+      addSystem('Could not hear you — please try again.');
+      resumeListening();
+      return;
+    }
+    const input = inputEl();
+    input.value = text;
+    sendMessage();   // pushes the user message + streams the reply
+  } catch (e) {
+    console.error('[ai] transcribe failed:', e);
+    addSystem('Voice error — try again.');
+    resumeListening();
+  }
+}
+
+function speakReply(text) {
+  const clean = stripMarkdown(text);
+  if (!clean) { resumeListening(); return; }
+  setOrbState('speaking');
+  playTts(clean)
+    .then(() => resumeListening())
+    .catch(() => { addSystem('Voice playback failed.'); resumeListening(); });
+}
+
+// Play Groq TTS without a button (used by Talk mode). Plays through the mic
+// AudioContext (created under the user's click gesture) so autoplay policy
+// doesn't block the spoken reply.
+async function playTts(text) {
+  const res = await fetch(`${GROQ_WORKER}/tts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${currentUser().idToken}`,
+    },
+    body: JSON.stringify({ model: TTS_MODEL, input: text, voice: ttsVoice, response_format: 'wav' }),
+  });
+  if (!res.ok) throw new Error(`TTS HTTP ${res.status}`);
+  const buf = await (await res.blob()).arrayBuffer();
+  if (talkCtx && talkCtx.state === 'suspended') { try { await talkCtx.resume(); } catch (_) {} }
+  const ctx = talkCtx || new (window.AudioContext || window.webkitAudioContext)();
+  const audioBuf = await ctx.decodeAudioData(buf);
+  await new Promise((resolve, reject) => {
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuf;
+    src.connect(ctx.destination);
+    src.onended = () => resolve();
+    src.onerror = () => reject(new Error('playback'));
+    src.start();
+  });
+}
+
+// Stop the mic/analyser and listen again (conversation loop).
+function resumeListening() {
+  if (!talkMode) return;
+  cleanupTalkAudio();
+  beginListen();
+}
+
+function cleanupTalkAudio() {
+  if (talkSilenceTimer) { clearInterval(talkSilenceTimer); talkSilenceTimer = null; }
+  if (talkRecorder && talkRecorder.state !== 'inactive') {
+    try { talkRecorder.stop(); } catch (_) {}
+  }
+  talkRecorder = null;
+  if (talkStream) { talkStream.getTracks().forEach(t => t.stop()); talkStream = null; }
+  if (talkCtx) { try { talkCtx.close(); } catch (_) {} talkCtx = null; }
+  talkAnalyser = null;
+}
+
+function stopTalkMode() {
+  talkMode = false;
+  talkAbort = true;
+  if (controller) controller.abort();   // stop any in-flight reply
+  stopTalkRecording();
+  cleanupTalkAudio();
+  closeOverlay();
+  const btn = document.getElementById('talkBtn');
+  if (btn) btn.classList.remove('active');
+}
+
+function initTalkMode() {
+  const close = document.getElementById('talkClose');
+  if (close) close.addEventListener('click', stopTalkMode);
+  const orb = document.getElementById('talkOrb');
+  if (orb) orb.addEventListener('click', stopTalkMode);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && talkMode) stopTalkMode();
+  });
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 
 let _inited = false;
@@ -921,6 +1225,8 @@ function init() {
 
   initSpeech();
   initModelSelect();
+  initVoiceSelect();
+  initTalkMode();
 
   const clearBtn = document.getElementById('ai-clear-btn');
   if (clearBtn) clearBtn.addEventListener('click', clearConversation);

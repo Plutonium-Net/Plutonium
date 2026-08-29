@@ -16,7 +16,7 @@ html,body{
 /* ── Header / brand ─────────────────────────────────────────────────────── */
 
 .ai-header{
-  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
   flex-shrink:0;padding:4px 0 14px;
 }
 .ai-brand{display:flex;align-items:center;gap:12px}
@@ -43,6 +43,35 @@ html,body{
 .model-pill i{color:var(--workspace-accent);font-size:13px}
 .model-pill .model-pill__caret{font-size:10px;opacity:.6;transition:transform .2s ease}
 .model-pill.open .model-pill__caret{transform:rotate(180deg)}
+
+.voice-pill-wrap{position:relative}
+.voice-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px;border-radius:999px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);
+  color:#fff;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit;
+  transition:background .18s,border-color .18s,box-shadow .18s;
+}
+.voice-pill:hover{background:rgba(255,255,255,0.09);border-color:rgba(var(--workspace-accent-rgb),.55)}
+.voice-pill i{color:var(--workspace-accent);font-size:13px}
+.voice-pill .voice-pill__caret{font-size:10px;opacity:.6;transition:transform .2s ease}
+.voice-pill.open .voice-pill__caret{transform:rotate(180deg)}
+.voice-menu{
+  position:absolute;top:calc(100% + 10px);right:0;z-index:520;
+  width:min(240px,calc(100vw - 32px));
+  background:rgba(18,18,23,.94);border:1px solid rgba(255,255,255,0.13);
+  border-radius:24px;padding:8px;
+  box-shadow:0 16px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);
+  backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
+  opacity:0;visibility:hidden;transform:translateY(-8px);
+  transition:opacity .18s ease,transform .18s ease,visibility .18s;
+}
+.voice-menu.open{opacity:1;visibility:visible;transform:translateY(0)}
+.voice-menu__head{
+  padding:6px 14px 8px;font-size:11px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:rgba(255,255,255,0.4);
+}
+.voice-menu__list{display:flex;flex-direction:column;gap:4px}
 
 .ai-clear-btn{
   width:38px;height:38px;border-radius:50%;flex-shrink:0;
@@ -145,7 +174,8 @@ html,body{
 }
 .ai-chat-item__meta{display:block;font-size:10.5px;color:rgba(255,255,255,0.4);margin-top:2px}
 .ai-chat-item__tools{flex-shrink:0;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .15s}
-.ai-chat-item:hover .ai-chat-item__tools{opacity:1}
+.ai-chat-item:hover .ai-chat-item__tools,
+.ai-chat-item.active .ai-chat-item__tools{opacity:1}
 .ai-chat-del{
   width:26px;height:26px;border-radius:8px;border:none;cursor:pointer;
   background:transparent;color:rgba(255,255,255,0.4);font-size:11px;
@@ -328,7 +358,63 @@ html,body{
 }
 .composer__btn--send:hover{background:var(--workspace-accent);filter:brightness(1.08);transform:scale(1.04)}
 .composer__btn--voice.listening{color:#fff;background:rgba(220,38,38,.85);animation:pulse 1s infinite}
+.composer__btn--talk{color:var(--workspace-accent);border-color:rgba(var(--workspace-accent-rgb),.45);background:rgba(var(--workspace-accent-rgb),.12)}
+.composer__btn--talk:hover{background:rgba(var(--workspace-accent-rgb),.22);color:var(--workspace-accent)}
+.composer__btn--talk.active{color:#fff;background:var(--workspace-accent);border-color:var(--workspace-accent);box-shadow:0 0 20px rgba(var(--workspace-accent-rgb),.55);animation:pulse 1.6s infinite}
 #stopBtn{color:#fff;background:rgba(220,38,38,.85);border-color:transparent}
+
+/* ── Talk mode (Jarvis orb) ──────────────────────────────────────────────── */
+
+.talk-overlay{
+  position:fixed;inset:0;z-index:1000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  background:radial-gradient(circle at 50% 42%, rgba(var(--workspace-accent-rgb),.14), rgba(2,3,8,.72) 72%);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s;
+}
+.talk-overlay.open{opacity:1;visibility:visible}
+.talk-orb{
+  position:relative;width:190px;height:190px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.talk-orb__ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:2px solid rgba(var(--workspace-accent-rgb),.45);
+  opacity:0;animation:talk-ring 2.4s ease-out infinite;
+}
+.talk-orb__ring:nth-child(2){animation-delay:.8s}
+.talk-orb__ring:nth-child(3){animation-delay:1.6s}
+.talk-orb__core{
+  position:absolute;width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 34% 28%, rgba(255,255,255,.95), var(--workspace-accent) 46%, rgba(40,20,90,.95) 100%);
+  box-shadow:0 0 70px rgba(var(--workspace-accent-rgb),.65),0 0 140px rgba(var(--workspace-accent-rgb),.3),inset 0 0 34px rgba(255,255,255,.28);
+}
+.talk-orb__scan{
+  position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg, transparent 0 335deg, rgba(255,255,255,.9) 360deg);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  mask:radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  opacity:0;
+}
+.talk-orb[data-state="thinking"] .talk-orb__scan{opacity:1;animation:talk-spin 1.5s linear infinite}
+.talk-orb[data-state="thinking"] .talk-orb__core{animation:talk-breathe 1.5s ease-in-out infinite}
+.talk-orb[data-state="speaking"] .talk-orb__core{animation:talk-speak .9s ease-in-out infinite}
+@keyframes talk-ring{0%{transform:scale(.8);opacity:.7}100%{transform:scale(1.55);opacity:0}}
+@keyframes talk-spin{to{transform:rotate(360deg)}}
+@keyframes talk-breathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(.97);filter:brightness(1.25)}}
+@keyframes talk-speak{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+.talk-status{
+  font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#fff;
+  min-height:20px;
+}
+.talk-hint{font-size:12px;color:rgba(255,255,255,.5)}
+.talk-close{
+  position:fixed;top:22px;right:24px;width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;
+  font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .15s;
+}
+.talk-close:hover{background:rgba(255,255,255,.16);transform:rotate(90deg)}
 
 /* ── Auth gate ──────────────────────────────────────────────────────────── */
 

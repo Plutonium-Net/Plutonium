@@ -498,13 +498,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 #workspace-root #main-content .page-title { font-size: 22px; letter-spacing: 0; }
 #workspace-root #main-content .page-subtitle { color: var(--workspace-muted); }
-.model-pill {
+.model-pill, .voice-pill {
   border-radius: var(--workspace-pill-radius);
   padding: 9px 12px;
   border-color: var(--workspace-line);
   background: rgba(255,255,255,.055);
 }
-.model-pill:hover { border-color: rgba(var(--workspace-accent-rgb), .55); }
+.model-pill:hover, .voice-pill:hover { border-color: rgba(var(--workspace-accent-rgb), .55); }
 .chat-panel { min-height: 0; }
 .welcome-screen { gap: 14px; }
 .welcome-icon {

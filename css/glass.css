@@ -9,7 +9,7 @@
               inset 0 4px 20px rgba(var(--ui-accent-rgb), 0.04);
 }
 /* Workspace surfaces opt into the same glass treatment via shared selectors. */
-#workspace-root .workspace-view :is(.source-tabs, .pgcdn-toolbar, .history-toolbar, .pg-panel-toolbar, .model-pill, .suggestion-card, .input-wrapper, .cg-toolbar, .cg-card, .media-tabs, .stream-controls, .vm-panel, .vm-frame-shell, .vm-status-card, .vm-note, .vm-timer, .vm-btn, .page-header-icon, .welcome-icon, .age-verify__box, .adult-gate__box) {
+#workspace-root .workspace-view :is(.source-tabs, .pgcdn-toolbar, .history-toolbar, .pg-panel-toolbar, .model-pill, .voice-pill, .suggestion-card, .input-wrapper, .cg-toolbar, .cg-card, .media-tabs, .stream-controls, .vm-panel, .vm-frame-shell, .vm-status-card, .vm-note, .vm-timer, .vm-btn, .page-header-icon, .welcome-icon, .age-verify__box, .adult-gate__box) {
   background: rgba(255, 255, 255, 0.075);
   border-color: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(16px) saturate(180%);

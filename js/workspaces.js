@@ -61,6 +61,10 @@
           </div>
           <div class="ai-header__actions">
             <button class="model-pill" id="modelPill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-microchip"></i><span id="selectedModelName">GPT OSS 120B</span><i class="fas fa-chevron-down model-pill__caret"></i></button>
+            <div class="voice-pill-wrap">
+              <button class="voice-pill" id="voicePill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-waveform"></i><span id="selectedVoiceName">Hannah</span><i class="fas fa-chevron-down voice-pill__caret"></i></button>
+              <div class="voice-menu" id="voiceMenu" role="listbox"><div class="voice-menu__head">Choose a voice</div><div class="voice-menu__list" id="voice-menu-list"></div></div>
+            </div>
             <button class="ai-clear-btn" id="ai-clear-btn" title="Clear conversation"><i class="fas fa-trash"></i></button>
           </div>
         </header>
@@ -80,9 +84,22 @@
         <textarea id="userInput" rows="1" placeholder="Message Stelena..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
         <button class="composer__btn" id="stopBtn" title="Stop generating" style="display:none"><i class="fas fa-stop"></i></button>
         <button class="composer__btn composer__btn--voice" id="voiceBtn" title="Voice input" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button>
+        <button class="composer__btn composer__btn--talk" id="talkBtn" title="Talk with me" onclick="toggleTalk()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.4 4.4l2 2M17.6 17.6l2 2M19.6 4.4l-2 2M6.4 17.6l-2 2"/></svg></button>
         <button class="composer__btn composer__btn--send" id="sendBtn" title="Send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
       </div>
       <div class="model-menu" id="modelMenu" role="listbox"><div class="model-menu__head">Choose a model</div><div class="model-menu__list" id="model-menu-list"></div></div>
+      <div class="talk-overlay" id="talkOverlay" aria-hidden="true">
+        <div class="talk-orb" id="talkOrb" data-state="listening" title="Click to end">
+          <div class="talk-orb__ring"></div>
+          <div class="talk-orb__ring"></div>
+          <div class="talk-orb__ring"></div>
+          <div class="talk-orb__scan"></div>
+          <div class="talk-orb__core"></div>
+        </div>
+        <div class="talk-status" id="talkStatus">Listening…</div>
+        <div class="talk-hint">Speak naturally — it stops when you pause · Esc to end</div>
+        <button class="talk-close" id="talkClose" title="End talk session" aria-label="End talk session"><i class="fas fa-xmark"></i></button>
+      </div>
     </section>`,
 
     cloud: `<section class="workspace-view workspace-cloud" data-workspace="cloud">

@@ -26,6 +26,9 @@ export default {
       if (path === '/tts' && request.method === 'POST') {
         return handleTts(request, env, allowed);
       }
+      if (path === '/transcribe' && request.method === 'POST') {
+        return handleTranscribe(request, env, allowed);
+      }
 
       if (path === '/ratelimit' && request.method === 'GET') {
         return handleRateLimit(request, env, allowed);
@@ -143,6 +146,50 @@ async function handleTts(request, env, allowed) {
     status: 200,
     headers: corsHeaders(allowed, { 'Content-Type': contentType, 'Cache-Control': 'no-cache' }),
   });
+}
+
+// ── Speech to text (Whisper) ─────────────────────────────────────────────────
+
+const STT_MODELS = ['whisper-large-v3', 'whisper-large-v3-turbo'];
+
+async function handleTranscribe(request, env, allowed) {
+  const auth = request.headers.get('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) {
+    return corsResponse({ error: 'Unauthorized' }, 401, allowed);
+  }
+
+  const contentType = request.headers.get('Content-Type') || '';
+  if (!contentType.includes('multipart/')) {
+    return corsResponse({ error: 'Expected multipart/form-data with a file field' }, 400, allowed);
+  }
+
+  const form = await request.formData();
+  const file = form.get('file');
+  const model = form.get('model') || 'whisper-large-v3-turbo';
+  if (!file) return corsResponse({ error: 'Missing file field' }, 400, allowed);
+  if (!STT_MODELS.includes(model)) {
+    return corsResponse({ error: 'Invalid or unsupported STT model' }, 400, allowed);
+  }
+
+  const groqKey = env.GROQ_API_KEY;
+  if (!groqKey) return corsResponse({ error: 'GROQ_API_KEY not configured' }, 500, allowed);
+
+  const out = new FormData();
+  out.append('file', file, file.name || 'talk.webm');
+  out.append('model', model);
+  out.append('response_format', 'json');
+
+  const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${groqKey}` },
+    body: out,
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return corsResponse({ error: data.error?.message || 'Groq transcription error' }, res.status, allowed);
+  }
+  return corsResponse({ text: data.text || '' }, 200, allowed);
 }
 
 const RL_MAX    = 100;
@@ -382,6 +429,7 @@ function handleHomepage() {
 <tbody>
 <tr><td><code>POST</code></td><td><code>/chat</code></td><td>Send messages, get a completion</td></tr>
 <tr><td><code>POST</code></td><td><code>/tts</code></td><td>Generate speech audio (Orpheus TTS)</td></tr>
+<tr><td><code>POST</code></td><td><code>/transcribe</code></td><td>Transcribe audio (Whisper STT)</td></tr>
 <tr><td><code>GET</code></td><td><code>/models</code></td><td>List supported models</td></tr>
 </tbody>
 </table>
