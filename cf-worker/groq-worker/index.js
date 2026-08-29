@@ -23,6 +23,10 @@ export default {
         return handleModels(allowed);
       }
 
+      if (path === '/tts' && request.method === 'POST') {
+        return handleTts(request, env, allowed);
+      }
+
       if (path === '/ratelimit' && request.method === 'GET') {
         return handleRateLimit(request, env, allowed);
       }
@@ -81,6 +85,65 @@ function handleModels(allowed) {
 
 // ── Rate limiting (KV-based) ──────────────────────────────────────────────────
 // 100 requests per 12-hour window, keyed per Firebase token prefix (per account).
+
+// ── Text to speech (Orpheus) ─────────────────────────────────────────────────
+
+const TTS_MODELS      = ['canopylabs/orpheus-v1-english', 'canopylabs/orpheus-arabic-saudi'];
+const TTS_VOICES_EN   = ['autumn', 'diana', 'hannah', 'austin', 'daniel', 'troy'];
+const TTS_MAX_CHARS   = 3000;
+
+async function handleTts(request, env, allowed) {
+  const auth = request.headers.get('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) {
+    return corsResponse({ error: 'Unauthorized' }, 401, allowed);
+  }
+
+  const body = await request.json().catch(() => null);
+  if (!body) return corsResponse({ error: 'Invalid JSON' }, 400, allowed);
+
+  const { model, input, voice } = body;
+  if (!TTS_MODELS.includes(model)) {
+    return corsResponse({ error: 'Invalid or unsupported TTS model' }, 400, allowed);
+  }
+  if (model === 'canopylabs/orpheus-v1-english' && !TTS_VOICES_EN.includes(voice)) {
+    return corsResponse({ error: 'Invalid voice for this model' }, 400, allowed);
+  }
+  const text = String(input || '').trim();
+  if (!text) return corsResponse({ error: 'input text required' }, 400, allowed);
+  if (text.length > TTS_MAX_CHARS) {
+    return corsResponse({ error: `input too long (max ${TTS_MAX_CHARS} chars)` }, 400, allowed);
+  }
+
+  const groqKey = env.GROQ_API_KEY;
+  if (!groqKey) {
+    return corsResponse({ error: 'GROQ_API_KEY not configured' }, 500, allowed);
+  }
+
+  const res = await fetch('https://api.groq.com/openai/v1/audio/speech', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${groqKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      input: text,
+      voice,
+      response_format: 'wav',
+    }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    return corsResponse({ error: data.error?.message || 'Groq TTS error' }, res.status, allowed);
+  }
+
+  const contentType = res.headers.get('Content-Type') || 'audio/wav';
+  return new Response(res.body, {
+    status: 200,
+    headers: corsHeaders(allowed, { 'Content-Type': contentType, 'Cache-Control': 'no-cache' }),
+  });
+}
 
 const RL_MAX    = 100;
 const RL_WINDOW = 60 * 60 * 12; // 12 hours in seconds
@@ -318,6 +381,7 @@ function handleHomepage() {
 <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
 <tbody>
 <tr><td><code>POST</code></td><td><code>/chat</code></td><td>Send messages, get a completion</td></tr>
+<tr><td><code>POST</code></td><td><code>/tts</code></td><td>Generate speech audio (Orpheus TTS)</td></tr>
 <tr><td><code>GET</code></td><td><code>/models</code></td><td>List supported models</td></tr>
 </tbody>
 </table>

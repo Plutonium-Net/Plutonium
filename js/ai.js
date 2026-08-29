@@ -2,6 +2,10 @@ const GROQ_WORKER = 'https://ai.cdn.plutoniumnet.work';
 
 const STELENA_LOGO = 'img/logos/stelena.svg';
 
+// Groq TTS (Orpheus) — generated server-side by the worker, played as WAV.
+const TTS_MODEL = 'canopylabs/orpheus-v1-english';
+const TTS_VOICE = 'hannah';
+
 const SYSTEM_PROMPT = {
   role: 'system',
   content: `You are Stelena, the official AI assistant of Plutonium Network.
@@ -123,7 +127,7 @@ let currentModel = 'openai/gpt-oss-120b';
 let messages = [];
 let recognition = null;
 let isListening = false;
-let currentAudio = null;
+let ttsAudio = null;   // Audio element for Groq TTS playback
 let authed = false;
 let streaming = false;
 let controller = null;   // AbortController for the in-flight request
@@ -441,7 +445,7 @@ function renderConversation() {
   const c = chatContainer();
   if (!c) return;
   c.querySelectorAll('.msg-row, .msg-system, #typingRow').forEach(n => n.remove());
-  messages.forEach((m, i) => addMessage(m.content, m.role === 'ai' ? 'ai' : 'user', i));
+  messages.forEach((m, i) => addMessage(m.content, (m.role === 'ai' || m.role === 'assistant') ? 'ai' : 'user', i));
   if (!messages.length) restoreWelcome();
   scrollBottom();
 }
@@ -821,23 +825,10 @@ function initChatList() {
   }
 }
 
-// ── Text to speech ─────────────────────────────────────────────────────────
+// ── Text to speech (Groq Orpheus) ─────────────────────────────────────────
 
-function speakText(text, btn) {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-    document.querySelectorAll('.msg-act.playing').forEach(b => {
-      b.classList.remove('playing');
-      b.innerHTML = '<i class="fa-solid fa-volume-up"></i> Listen';
-    });
-  }
-  if (btn && btn.classList.contains('playing')) {
-    btn.classList.remove('playing');
-    btn.innerHTML = '<i class="fa-solid fa-volume-up"></i> Listen';
-    return;
-  }
-  const clean = text
+function stripMarkdown(text) {
+  return String(text || '')
     .replace(/#{1,6}\s/g, '')
     .replace(/\*\*/g, '')
     .replace(/\*/g, '')
@@ -845,23 +836,69 @@ function speakText(text, btn) {
     .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
     .replace(/^\s*[-*+]\s/gm, '')
     .trim();
-  if (!('speechSynthesis' in window)) { alert('Text-to-speech not supported.'); return; }
-  const utt = new SpeechSynthesisUtterance(clean);
-  utt.rate = 1.0; utt.pitch = 1.0; utt.volume = 1.0;
+}
+
+function resetTtsBtns() {
+  document.querySelectorAll('.msg-act.playing').forEach(b => {
+    b.classList.remove('playing');
+    b.innerHTML = '<i class="fa-solid fa-volume-up"></i> Listen';
+  });
+}
+
+// Speak an AI reply with Groq's Orpheus TTS (proxied by the worker).
+function speakText(text, btn) {
+  if (ttsAudio && !ttsAudio.paused) {   // toggle off while playing
+    ttsAudio.pause();
+    ttsAudio = null;
+    resetTtsBtns();
+    return;
+  }
+  resetTtsBtns();
+  if (!currentUser()) { addSystem('Please sign in to use voice output.'); return; }
+
+  const clean = stripMarkdown(text);
+  if (!clean) return;
+
   if (btn) {
     btn.classList.add('playing');
-    btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating';
   }
-  utt.onend = utt.onerror = () => {
-    if (btn) {
-      btn.classList.remove('playing');
-      btn.innerHTML = '<i class="fa-solid fa-volume-up"></i> Listen';
-    }
-    currentAudio = null;
-  };
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utt);
-  currentAudio = { pause: () => window.speechSynthesis.cancel() };
+
+  fetch(`${GROQ_WORKER}/tts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${currentUser().idToken}`,
+    },
+    body: JSON.stringify({
+      model: TTS_MODEL,
+      input: clean,
+      voice: TTS_VOICE,
+      response_format: 'wav',
+    }),
+  })
+    .then(res => {
+      if (!res.ok) throw new Error(`TTS HTTP ${res.status}`);
+      return res.blob();
+    })
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      ttsAudio = audio;
+      const cleanup = () => { resetTtsBtns(); URL.revokeObjectURL(url); ttsAudio = null; };
+      audio.onended = cleanup;
+      audio.onerror = cleanup;
+      if (btn) {
+        btn.classList.add('playing');
+        btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+      }
+      audio.play().catch(cleanup);
+    })
+    .catch(err => {
+      resetTtsBtns();
+      addSystem('Voice generation failed. Try again.');
+      console.error('[ai] tts failed:', err);
+    });
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
