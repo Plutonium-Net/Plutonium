@@ -545,6 +545,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   font-size: clamp(1.8rem, 3vw, 2.45rem);
   letter-spacing: 0;
   margin-bottom: 22px;
+  text-align: center;
 }
 .cg-heading::after {
   content: "";
@@ -552,21 +553,47 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   width: 42px;
   height: 3px;
   margin-top: 12px;
+  margin-left: auto;
+  margin-right: auto;
   border-radius: 2px;
   background: var(--workspace-accent);
   box-shadow: 0 0 18px rgba(var(--workspace-accent-rgb), .55);
 }
 .cg-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 12px;
+  position: static;
+  top: auto;
   padding: 9px;
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-pill-radius);
   background: rgba(13,13,18,.82);
 }
-.cg-search { border-radius: var(--workspace-pill-radius); border-color: var(--workspace-line); }
+.cg-search {
+  border-radius: var(--workspace-pill-radius);
+  border-color: var(--workspace-line);
+  background: rgba(255,255,255,.055);
+  flex: 0 1 180px;
+  width: 180px;
+  min-width: 0;
+  height: 38px;
+  transition: flex-basis .25s ease, width .25s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.cg-search:focus {
+  flex-basis: min(520px, 70vw);
+  width: min(520px, 70vw);
+  border-color: rgba(var(--workspace-accent-rgb), .65);
+  box-shadow: 0 0 0 2px rgba(var(--workspace-accent-rgb), .12), 0 0 18px rgba(var(--workspace-accent-rgb), .16);
+}
 .cg-grid { grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 14px; }
 .cg-card { border-radius: var(--workspace-soft-radius); border-color: var(--workspace-line-soft); }
 .cg-card:hover { border-color: rgba(var(--workspace-accent-rgb), .58); }
-.cg-tag-pill.active { background: var(--workspace-accent); border-color: var(--workspace-accent); }
+.cg-tag-pill.active { background: transparent; border-color: transparent; color: var(--ui-text, #fff); }
 
 /* Media */
 .stream-hero {

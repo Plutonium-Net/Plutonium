@@ -18,40 +18,25 @@
 .cg-toolbar {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   margin-bottom: 14px;
 }
 
-.cg-search-wrap {
-  position: relative;
-  flex: 1;
-  max-width: 380px;
-}
-
-.cg-search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted, #a0a0a0);
-  font-size: 0.82rem;
-  pointer-events: none;
-}
-
 .cg-search {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   background: var(--surface-2, rgba(255,255,255,0.04));
   border: 1px solid var(--border-subtle, rgba(255,255,255,0.07));
-  border-radius: 8px;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 0.88rem;
   color: var(--text, #fff);
-  font-size: 0.875rem;
-  padding: 8px 12px 8px 34px;
   outline: none;
   transition: border-color 0.15s;
 }
 
 .cg-search:focus {
-  border-color: var(--pink, #e8175d);
+  border-color: rgba(var(--pink-rgb, 232,23,93), 0.5);
 }
 
 .cg-search::placeholder {
@@ -67,35 +52,78 @@
   white-space: nowrap;
 }
 
-/* ── Tag filter pills ───────────────────────────────────────── */
+/* ── Tag filter bars ───────────────────────────────────────── */
 .cg-tags {
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cg-tags--secondary {
+  margin-bottom: 22px;
+}
+
+.cg-tags__label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted, #a0a0a0);
+  margin: 0 0 8px;
+  text-align: center;
+}
+
+.cg-tags__row {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-bottom: 22px;
+  gap: 8px;
+  position: relative;
   min-height: 30px;
+  justify-content: center;
+}
+
+/* Sliding "wisp pill" — a single outline that glides to whichever pill is
+   selected (mirrors the source-tabs / history-sort sliders on the html5
+   games page). When nothing is selected it fades out. */
+.cg-tags__row::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: var(--cg-slider-left, 0px);
+  width: var(--cg-slider-width, 0px);
+  border: 2px solid var(--workspace-accent, var(--pink, #e8175d));
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: 0 0 8px rgba(var(--workspace-accent-rgb, var(--pink-rgb, 232,23,93)), .35);
+  pointer-events: none;
+  opacity: var(--cg-slider-visible, 0);
+  transition: left .28s cubic-bezier(.22,1,.36,1), width .28s cubic-bezier(.22,1,.36,1), opacity .15s;
 }
 
 .cg-tag-pill {
-  background: var(--surface-2, rgba(255,255,255,0.04));
-  border: 1px solid var(--border-subtle, rgba(255,255,255,0.07));
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 20px;
   color: var(--muted, #a0a0a0);
   font-size: 0.75rem;
   padding: 4px 12px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: color 0.15s, border-color 0.15s;
   line-height: 1.4;
 }
 
 .cg-tag-pill:hover {
-  background: var(--surface-3, rgba(255,255,255,0.07));
   color: var(--text, #fff);
 }
 
 .cg-tag-pill.active {
-  background: var(--pink, #e8175d);
-  border-color: var(--pink, #e8175d);
+  background: transparent;
+  border-color: transparent;
   color: #fff;
 }
 
@@ -201,7 +229,6 @@
 @media (max-width: 600px) {
   .cg-page  { padding: 24px 14px 60px; }
   .cg-grid  { grid-template-columns: 1fr; gap: 16px; }
-  .cg-search-wrap { max-width: 100%; }
 }
 
 /* ── Detail modal ───────────────────────────────────────────── */

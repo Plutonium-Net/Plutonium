@@ -57,7 +57,7 @@
     </section>`,
 
     cloud: `<section class="workspace-view workspace-cloud" data-workspace="cloud">
-      <div class="cg-page"><h1 class="cg-heading">Cloud Gaming</h1><div class="cg-toolbar"><div class="cg-search-wrap"><i class="fa-solid fa-magnifying-glass cg-search-icon"></i><input class="cg-search" id="cg-search" type="search" placeholder="Search games..." autocomplete="off" /></div><span class="cg-count" id="cg-count"></span></div><div class="cg-tags" id="cg-tags"></div><div class="cg-grid" id="cg-grid"></div></div><div class="cg-ctx-menu hidden" id="cg-ctx-menu"></div>
+      <div class="cg-page"><h1 class="cg-heading">Cloud Gaming</h1><div class="cg-toolbar"><input class="cg-search" id="cg-search" type="search" placeholder="Search games..." autocomplete="off" /><span class="cg-count" id="cg-count"></span></div><div class="cg-tags"><span class="cg-tags__label">Genre</span><div class="cg-tags__row" id="cg-tags"></div></div><div class="cg-tags cg-tags--secondary"><span class="cg-tags__label">Tags</span><div class="cg-tags__row" id="cg-tags-sub"></div></div><div class="cg-grid" id="cg-grid"></div></div><div class="cg-ctx-menu hidden" id="cg-ctx-menu"></div>
     </section>`,
 
     media: `<section class="workspace-view workspace-media" data-workspace="media">

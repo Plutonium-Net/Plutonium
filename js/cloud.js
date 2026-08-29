@@ -7,14 +7,23 @@
   const AUTH    = 'Bearer ' + API_KEY;
 
   // ── State ─────────────────────────────────────────────────────────────────
-  const grid       = document.getElementById('cg-grid');
+  const grid        = document.getElementById('cg-grid');
   const searchInput = document.getElementById('cg-search');
-  const countEl    = document.getElementById('cg-count');
-  const tagsRow    = document.getElementById('cg-tags');
+  const countEl     = document.getElementById('cg-count');
+  const tagsRow     = document.getElementById('cg-tags');
+  const tagsSubRow  = document.getElementById('cg-tags-sub');
 
-  let _allGames   = [];
-  let _activeTag  = null;
-  let _searchQ    = '';
+  // Genre/type tags get their own bar; everything else (3A, Challenge,
+  // Multiplayer, ...) goes into a secondary "Tags" bar below it.
+  const GENRE_TAGS = new Set([
+    'Action', 'Adventure', 'RPG', 'Strategy', 'Shooting', 'Fighting',
+    'Sports', 'Racing', 'Simulation', 'Puzzle', 'Indie'
+  ]);
+
+  let _allGames    = [];
+  let _activeGenre = null;   // selected pill in the genre bar
+  let _activeTag   = null;   // selected pill in the secondary tag bar
+  let _searchQ     = '';
 
   // ── Pin helpers (access parent Pins if in iframe) ──────────────────────────
   function _parentPins() {
@@ -72,34 +81,64 @@
     }, 0);
   }
 
-  // ── Build tag filter pills ────────────────────────────────────────────────
+  // ── Build the two tag-filter bars (genre + other tags) ───────────────────
   function _buildTagPills(games) {
-    const tagSet = new Set();
+    const genreSet = new Set();
+    const tagSet   = new Set();
     games.forEach(function (g) {
-      (g.tags || []).forEach(function (t) { tagSet.add(t); });
+      (g.tags || []).forEach(function (t) {
+        if (GENRE_TAGS.has(t)) genreSet.add(t);
+        else tagSet.add(t);
+      });
     });
-    const sorted = Array.from(tagSet).sort();
-    tagsRow.innerHTML = '';
+    _renderTagBar(tagsRow,    Array.from(genreSet).sort(), 'genre');
+    _renderTagBar(tagsSubRow, Array.from(tagSet).sort(),   'tag');
+  }
 
-    sorted.forEach(function (tag) {
+  // Render one bar of toggle pills and drop the sliding wisp indicator on it.
+  function _renderTagBar(bar, tags, kind) {
+    bar.innerHTML = '';
+    tags.forEach(function (tag) {
       const btn = document.createElement('button');
       btn.className = 'cg-tag-pill';
       btn.textContent = tag;
       btn.dataset.tag = tag;
       btn.addEventListener('click', function () {
-        if (_activeTag === tag) {
-          _activeTag = null;
-          btn.classList.remove('active');
-        } else {
-          _activeTag = tag;
-          tagsRow.querySelectorAll('.cg-tag-pill').forEach(function (b) {
-            b.classList.toggle('active', b.dataset.tag === tag);
-          });
-        }
+        const active = kind === 'genre' ? _activeGenre : _activeTag;
+        if (kind === 'genre') _activeGenre = active === tag ? null : tag;
+        else                  _activeTag   = active === tag ? null : tag;
+        _syncBarActive(bar, kind);
+        _positionTagSlider(bar);
         _renderGrid();
       });
-      tagsRow.appendChild(btn);
+      bar.appendChild(btn);
     });
+    _syncBarActive(bar, kind);
+    _positionTagSlider(bar);
+  }
+
+  function _syncBarActive(bar, kind) {
+    const active = kind === 'genre' ? _activeGenre : _activeTag;
+    bar.querySelectorAll('.cg-tag-pill').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.tag === active);
+    });
+  }
+
+  // Position the ::after wisp pill so it hugs the active pill; fade it out
+  // (opacity 0) when nothing is selected in this bar.
+  function _positionTagSlider(bar) {
+    const active = bar.querySelector('.cg-tag-pill.active');
+    if (!active) {
+      bar.style.setProperty('--cg-slider-left',    '0px');
+      bar.style.setProperty('--cg-slider-width',   '0px');
+      bar.style.setProperty('--cg-slider-visible', '0');
+      return;
+    }
+    const barRect  = bar.getBoundingClientRect();
+    const pillRect = active.getBoundingClientRect();
+    bar.style.setProperty('--cg-slider-left',    (pillRect.left - barRect.left) + 'px');
+    bar.style.setProperty('--cg-slider-width',   pillRect.width + 'px');
+    bar.style.setProperty('--cg-slider-visible', '1');
   }
 
   // ── Filter + render cards ─────────────────────────────────────────────────
@@ -107,8 +146,9 @@
     const q = _searchQ.trim().toLowerCase();
     const filtered = _allGames.filter(function (g) {
       const matchSearch = !q || g.name.toLowerCase().includes(q) || (g.description || '').toLowerCase().includes(q);
-      const matchTag    = !_activeTag || (g.tags || []).includes(_activeTag);
-      return matchSearch && matchTag;
+      const matchGenre  = !_activeGenre || (g.tags || []).includes(_activeGenre);
+      const matchTag    = !_activeTag   || (g.tags || []).includes(_activeTag);
+      return matchSearch && matchGenre && matchTag;
     });
 
     countEl.textContent = filtered.length + ' game' + (filtered.length !== 1 ? 's' : '');
@@ -179,9 +219,23 @@
 
   // ── Search input ──────────────────────────────────────────────────────────
   if (searchInput) {
+    let searchTimer = null;
     searchInput.addEventListener('input', function () {
-      _searchQ = searchInput.value;
-      _renderGrid();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        _searchQ = searchInput.value;
+        _renderGrid();
+      }, 90);
+    });
+
+    // '/' focuses the search field (matching the html5 game search)
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== '/') return;
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
     });
   }
 
