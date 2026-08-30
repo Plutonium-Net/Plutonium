@@ -19,7 +19,7 @@
     'img/backgrounds/lake-dusk.jpg',
     'img/backgrounds/lake-twilight.jpg',
     'img/backgrounds/light-stream.jpg',
-    'img/backgrounds/Lightning.jpg',
+    'img/backgrounds/lightning.jpg',
     'img/backgrounds/lines.png',
     'img/backgrounds/mojave.jpg',
     'img/backgrounds/refraction-green.png',

@@ -36,7 +36,7 @@ const BrowserThemeState = (() => {
     { id: 'lake-dusk',         label: 'Lake Dusk',         file: 'img/backgrounds/lake-dusk.jpg',        tint: '#3a1a00', tintOpacity: 0.7 },
     { id: 'lake-twilight',     label: 'Lake Twilight',     file: 'img/backgrounds/lake-twilight.jpg',    tint: '#1a0a30', tintOpacity: 0.7 },
     { id: 'light-stream',      label: 'Light Stream',      file: 'img/backgrounds/light-stream.jpg',     tint: '#0a2e1a', tintOpacity: 0.70 },
-    { id: 'lightning',         label: 'Lightning',         file: 'img/backgrounds/Lightning.jpg',        tint: '#0a0a20', tintOpacity: 0.4 },
+    { id: 'lightning',         label: 'Lightning',         file: 'img/backgrounds/lightning.jpg',        tint: '#0a0a20', tintOpacity: 0.4 },
     { id: 'lines',             label: 'Lines',             file: 'img/backgrounds/lines.png',            tint: '#1a1a1a', tintOpacity: 0.7 },
     { id: 'mojave',            label: 'Mojave',            file: 'img/backgrounds/mojave.jpg',           tint: '#2a1040', tintOpacity: 0.20 },
     { id: 'refraction-green',  label: 'Refraction Green',  file: 'img/backgrounds/refraction-green.png', tint: '#2a2a2a', tintOpacity: 0.65 },
