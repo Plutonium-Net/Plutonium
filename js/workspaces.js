@@ -212,5 +212,26 @@
     window.PluWorkspaceRouteSuffix = '';
   }
 
-  window.Workspaces = { activate, deactivate, build, has: key => !!views[key], get active() { return activeKey; } };
+  // Re-mount a single workspace in place — a genuine reload of the tab *inside*
+  // the shell, without reloading the shell document itself (which would wipe every
+  // other open tab). Rebuilds the view markup and re-runs its bundle scripts fresh.
+  async function reload(key, suffix = '') {
+    if (!views[key] || !root) return false;
+    build();
+    root.hidden = false;
+    // Wipe the bundle cache so the workspace's scripts re-execute on re-injection.
+    const bundle = bundles[key];
+    if (bundle) for (const src of bundle.scripts) loadedScripts.delete(src);
+    // Replace the section's markup with the fresh template to fully reset it.
+    const view = root.querySelector(`.workspace-view[data-workspace="${key}"]`);
+    if (view) view.outerHTML = views[key];
+    root.querySelectorAll('.workspace-view').forEach(v => { v.hidden = v.dataset.workspace !== key; });
+    activeKey = key;
+    root.dataset.activeWorkspace = key;
+    window.PluWorkspaceRouteSuffix = suffix || '';
+    await loadBundle(key);
+    return true;
+  }
+
+  window.Workspaces = { activate, deactivate, reload, build, has: key => !!views[key], get active() { return activeKey; } };
 })();

@@ -197,6 +197,8 @@ function setWispMenuOpen(open) {
   window.clearTimeout(wispSwitcherMenuStateTimer)
   wispSwitcherMenuStateTimer = null
 
+  if (window.SoundFX) window.SoundFX.play(open ? 'wispOpen' : 'wispClose')
+
   if (open) {
     renderWispSwitcherMenu()
     positionWispSwitcherMenu()

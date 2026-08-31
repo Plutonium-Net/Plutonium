@@ -185,6 +185,14 @@ async function navigate(url) {
   if (!full) return
   if (window.SoundFX) window.SoundFX.play('launch')
 
+  // Built-in (pluto://) pages are local — always load them directly, never
+  // through the proxy, regardless of which proxy tech is selected.
+  const local = resolvePluUrl(full)
+  if (local) {
+    await activateLocal(local, getActiveTab())
+    return
+  }
+
   if (typeof getProxyEngine === 'function' && getProxyEngine() === 'hb') {
     if (typeof launchHbProxy === 'function') {
       await launchHbProxy(full)
@@ -205,12 +213,6 @@ async function navigate(url) {
   }
 
   await terminateHbSession()
-
-  const local = resolvePluUrl(full)
-  if (local) {
-    await activateLocal(local, getActiveTab())
-    return
-  }
 
   if (!/^https?:\/\//i.test(full) && !full.startsWith('about:')) {
     if (full.includes('.') && !full.includes(' ')) full = 'https://' + full
@@ -289,13 +291,19 @@ if (pageFrame) pageFrame.addEventListener('load', () => {
   if (Bookmarks.isBookmarked(currentUrl)) Bookmarks.refreshFavicon(currentUrl)
 })
 
-btnRefresh.addEventListener('click', () => {
+btnRefresh.addEventListener('click', async () => {
   if (Workspaces.active) {
     const current = urlInput.value
     const local = resolvePluUrl(current)
+    if (local && window.Workspaces && typeof window.Workspaces.reload === 'function') {
+      // Reload only the active tab *inside* the shell (the workspace view), not the
+      // shell's own browser tab — so the other open tabs and shell state survive.
+      await window.Workspaces.reload(local.key, local.suffix)
+      return
+    }
     if (local) { window.location.reload(); return }
   }
-  if (pageFrame.style.display === 'none') return
+  if (!pageFrame || pageFrame.style.display === 'none') return
   try { pageFrame.contentWindow.location.reload() } catch (e) { pageFrame.src = pageFrame.src }
 })
 

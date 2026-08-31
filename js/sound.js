@@ -17,6 +17,11 @@ window.SoundFX = (() => {
   let lastTick = 0
   const TICK_GAP_MS = 45
 
+  // Throttle per-keystroke search sounds + alternate pitch slightly per key.
+  let lastType = 0
+  let typeStep = 0
+  const TYPE_GAP_MS = 28
+
   function getStoredEnabled() {
     try {
       const raw = localStorage.getItem(SETTINGS_KEY)
@@ -101,6 +106,33 @@ window.SoundFX = (() => {
     switch:     () => playTone({ type: 'triangle', freq: 620, freqEnd: 720, duration: 0.05, gain: 0.04 }),
     // Launch a game / app / navigate somewhere — small two-note chime.
     launch:     () => { playTone({ type: 'sine', freq: 480, duration: 0.07, gain: 0.05 }); playTone({ type: 'sine', freq: 640, when: 0.06, duration: 0.10, gain: 0.055 }) },
+    // Selecting / focusing a search bar — bright little "armed" blip.
+    searchFocus: () => playTone({ type: 'sine', freq: 580, freqEnd: 760, duration: 0.08, gain: 0.05 }),
+    // Typing in a search bar — short soft key tap, pitch drifts per keystroke.
+    searchType:  () => {
+      const now = Date.now()
+      if (now - lastType < TYPE_GAP_MS) return
+      lastType = now
+      typeStep = typeStep ? 0 : 1
+      const f = 980 + typeStep * 80
+      playTone({ type: 'triangle', freq: f, freqEnd: f + 20, duration: 0.035, gain: 0.034 })
+    },
+    // Wisp region menu open — rising "connect" sweep.
+    wispOpen:    () => { playTone({ type: 'triangle', freq: 430, freqEnd: 700, duration: 0.12, gain: 0.05 }); playTone({ type: 'sine', freq: 700, freqEnd: 900, when: 0.07, duration: 0.09, gain: 0.04 }) },
+    // Wisp region menu close — soft falling sweep.
+    wispClose:   () => playTone({ type: 'triangle', freq: 640, freqEnd: 460, duration: 0.09, gain: 0.04 }),
+    // Customize (paintbrush) open — soft two-step "tune" sweep.
+    customizeOpen:  () => { playTone({ type: 'triangle', freq: 440, freqEnd: 560, duration: 0.10, gain: 0.05 }); playTone({ type: 'sine', freq: 560, freqEnd: 700, when: 0.07, duration: 0.12, gain: 0.045 }) },
+    // Customize (paintbrush) close — gentle falling counterpart.
+    customizeClose: () => { playTone({ type: 'triangle', freq: 580, freqEnd: 460, duration: 0.09, gain: 0.045 }); playTone({ type: 'sine', freq: 460, freqEnd: 380, when: 0.06, duration: 0.10, gain: 0.04 }) },
+    // Waffle (apps) open — snappy two-note "grid" blip.
+    waffleOpen:     () => { playTone({ type: 'triangle', freq: 560, freqEnd: 680, duration: 0.07, gain: 0.05 }); playTone({ type: 'triangle', freq: 680, freqEnd: 780, when: 0.05, duration: 0.07, gain: 0.04 }) },
+    // Waffle (apps) close — reversed, slightly lower blip.
+    waffleClose:    () => { playTone({ type: 'triangle', freq: 700, freqEnd: 580, duration: 0.07, gain: 0.04 }); playTone({ type: 'triangle', freq: 580, freqEnd: 500, when: 0.05, duration: 0.07, gain: 0.035 }) },
+    // Account dialog open — bright two-note "ding".
+    accountOpen:    () => { playTone({ type: 'sine', freq: 520, duration: 0.08, gain: 0.05 }); playTone({ type: 'sine', freq: 660, when: 0.07, duration: 0.12, gain: 0.05 }) },
+    // Account dialog close — soft falling chime.
+    accountClose:   () => { playTone({ type: 'sine', freq: 660, freqEnd: 560, duration: 0.10, gain: 0.045 }); playTone({ type: 'sine', freq: 520, when: 0.06, duration: 0.10, gain: 0.04 }) },
   }
 
   function play(name) {
@@ -142,7 +174,7 @@ window.SoundFX = (() => {
     // Actions with their own dedicated sound skip the generic tick.
     // (tab strip handled by tabAdd/tabRemove events; app tiles + waffle items
     //  fire a richer launch chime through navigate(); game cards through the viewer.)
-    if (t.closest && t.closest('.newtab-btn, .app-tile, .waffle-item, .pgcdn-card, .history-list__row, #customize-menu, #waffle-menu')) return
+    if (t.closest && t.closest('.newtab-btn, .app-tile, .waffle-item, .pgcdn-card, .history-list__row, #customize-menu, #waffle-menu, #wisp-switcher-btn, #btn-customize, #btn-waffle, #btn-user-page')) return
     play('tick')
   })
 
@@ -154,6 +186,16 @@ window.SoundFX = (() => {
     tabsEl.addEventListener('activeTabChange', () => play('switch'))
     tabsEl.addEventListener('tabReorder', () => play('switch'))
   }
+
+  // Search / address bar — a distinct chime on focus, a soft key tap while typing.
+  function wireSearchSound(id) {
+    const el = document.getElementById(id)
+    if (!el) return
+    el.addEventListener('focus', () => play('searchFocus'))
+    el.addEventListener('input', () => play('searchType'))
+  }
+  wireSearchSound('url-input')   // address bar
+  wireSearchSound('newtab-search') // new-tab page search
 
   return {
     play,

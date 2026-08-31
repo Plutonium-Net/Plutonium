@@ -21,6 +21,7 @@ function positionWaffleMenu() {
 }
 
 function closeWaffleMenu() {
+  if (waffleWrap && waffleWrap.classList.contains('is-open') && window.SoundFX) window.SoundFX.play('waffleClose')
   waffleWrap && waffleWrap.classList.remove('is-open')
   waffleBtn && waffleBtn.setAttribute('aria-expanded', 'false')
   waffleMenu && (waffleMenu.hidden = true)
@@ -32,6 +33,7 @@ function toggleWaffleMenu() {
   if (isOpen) {
     closeWaffleMenu()
   } else {
+    if (window.SoundFX) window.SoundFX.play('waffleOpen')
     positionWaffleMenu()
     waffleWrap.classList.add('is-open')
     waffleBtn.setAttribute('aria-expanded', 'true')
@@ -110,6 +112,7 @@ const ACCENT_SWATCHES = [
 ]
 
 function closeCustomizeMenu() {
+  if (customizeWrap && customizeWrap.classList.contains('is-open') && window.SoundFX) window.SoundFX.play('customizeClose')
   customizeWrap && customizeWrap.classList.remove('is-open')
   customizeScrim && customizeScrim.classList.remove('is-open')
   customizeBtn && customizeBtn.setAttribute('aria-expanded', 'false')
@@ -122,6 +125,7 @@ function toggleCustomizeMenu() {
   if (isOpen) {
     closeCustomizeMenu()
   } else {
+    if (window.SoundFX) window.SoundFX.play('customizeOpen')
     syncCustomizeMenu()
     customizeWrap.classList.add('is-open')
     customizeScrim.classList.add('is-open')
@@ -1209,6 +1213,7 @@ function openAccountDialog() {
   dlg.style.opacity = '1'
   dlg.style.transform = 'translate(-50%,-50%) scale(1)'
   scrim.style.opacity = '1'
+  if (window.SoundFX) window.SoundFX.play('accountOpen')
 
   // close handlers
   document.getElementById('account-dialog-close').addEventListener('click', closeAccountDialog)
@@ -1223,6 +1228,7 @@ function closeAccountDialog() {
   const dlg = document.getElementById('account-dialog')
   if (!dlg || !scrim) return
   if (_acctSyncInterval) { clearInterval(_acctSyncInterval); _acctSyncInterval = null }
+  if (window.SoundFX) window.SoundFX.play('accountClose')
   dlg.style.opacity = '0'
   dlg.style.transform = 'translate(-50%,-50%) scale(0.96)'
   scrim.style.opacity = '0'
