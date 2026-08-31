@@ -548,6 +548,9 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 
 
 .content-area{flex:1;position:relative;overflow:hidden}
+#page-frame.page-frame{
+  position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;
+}
 
 .new-tab-page{
   position:absolute;inset:0;

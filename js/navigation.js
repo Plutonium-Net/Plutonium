@@ -1,4 +1,4 @@
-const pageFrame = null
+const pageFrame = document.getElementById('page-frame')
 const newTabPage = document.getElementById('new-tab-page')
 const pageLoadingScreen = document.getElementById('page-loading-screen')
 const pageLoadingUrl = document.getElementById('page-loading-url')
