@@ -137,6 +137,24 @@ async function activateLocal(local, tabEl = getActiveTab()) {
   return true
 }
 
+async function activateHbTab(url, tabEl) {
+  if (typeof launchHbProxy !== 'function') return false
+  const ok = await launchHbProxy(url)
+  if (tabEl) {
+    tabEl.querySelector('.chrome-tab-title').textContent = url.replace(/^https?:\/\//i, '').replace(/\/$/, '') || 'Hyperbeam'
+    const faviconEl = tabEl.querySelector('.chrome-tab-favicon')
+    if (faviconEl) faviconEl.setAttribute('hidden', '')
+    tabEl.dataset.url = url
+    tabEl.dataset.title = url
+    pushTabHistory(tabEl, url)
+    syncNavButtons(tabEl)
+  }
+  updateBookmarkStar(url)
+  setBookmarksBarVisible(false)
+  saveTabsSnapshot()
+  return ok
+}
+
 async function openHistoryEntry(tabEl, index) {
   const state = ensureTabHistory(tabEl)
   if (!state) return
@@ -149,6 +167,10 @@ async function openHistoryEntry(tabEl, index) {
   if (local) {
     await activateLocal(local, tabEl)
     syncNavButtons(tabEl)
+    return
+  }
+  if (typeof getProxyEngine === 'function' && getProxyEngine() === 'hb') {
+    await activateHbTab(url, tabEl)
     return
   }
   if (!uvReady || !baremuxReady) await initProxyStack()
@@ -195,21 +217,7 @@ async function navigate(url) {
   }
 
   if (typeof getProxyEngine === 'function' && getProxyEngine() === 'hb') {
-    if (typeof launchHbProxy === 'function') {
-      await launchHbProxy(full)
-      const hbTab = getActiveTab()
-      if (hbTab) {
-        hbTab.querySelector('.chrome-tab-title').textContent = full.replace(/^https?:\/\//i, '').replace(/\/$/, '') || 'Hyperbeam'
-        hbTab.querySelector('.chrome-tab-favicon')?.setAttribute('hidden', '')
-        hbTab.dataset.url = full
-        hbTab.dataset.title = full
-        pushTabHistory(hbTab, full)
-        syncNavButtons(hbTab)
-        updateBookmarkStar(full)
-        setBookmarksBarVisible(false)
-        saveTabsSnapshot()
-      }
-    }
+    await activateHbTab(full, getActiveTab())
     return
   }
 

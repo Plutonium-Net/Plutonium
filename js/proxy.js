@@ -520,7 +520,7 @@ function currentProxyAddress() {
 function reconnectActiveProxyPage(url) {
   if (!url) return
 
-  const frame = null
+  const frame = document.getElementById('page-frame')
   const newTabPage = document.getElementById('new-tab-page')
   const statusText = document.getElementById('status-text')
 
@@ -555,7 +555,9 @@ async function switchWispServer(serverId) {
   if (!connected) return false
 
   const ready = await initBaremux()
-  if (ready && pageUrl) reconnectActiveProxyPage(pageUrl)
+  // Hyperbeam sessions don't use the wisp transport — never re-route one
+  // through UV/Scramjet just because the wisp server changed.
+  if (ready && pageUrl && getProxyEngine() !== 'hb') reconnectActiveProxyPage(pageUrl)
   return ready
 }
 
@@ -573,6 +575,7 @@ function getProxyEngine() { return selectedProxy }
 
 function setProxyEngine(engine) {
   if (!['uv', 'sj', 'hb'].includes(engine)) return
+  const previous = selectedProxy
   selectedProxy = engine
   localStorage.setItem(PROXY_ENGINE_KEY, engine)
   syncProxyEngineButtons()
@@ -583,6 +586,8 @@ function setProxyEngine(engine) {
     // HB sessions are launched on demand from navigate(); nothing to re-init.
     return
   }
+  // Leaving Hyperbeam — tear down any running cloud session.
+  if (previous === 'hb' && typeof terminateHbSession === 'function') terminateHbSession()
   const pageUrl = currentProxyAddress()
   if (pageUrl) reconnectActiveProxyPage(pageUrl)
 }
@@ -769,6 +774,9 @@ window.launchHbProxy = launchHbProxy
 window.terminateHbSession = terminateHbSession
 
 function getProxyUrl(url) {
+  // Hyperbeam pages live in a remote VM embed, not a rewritten URL — never
+  // hand one to UV/Scramjet.
+  if (selectedProxy === 'hb') return url
   if (selectedProxy === 'sj') {
     if (sjReady && sjController) return sjController.encodeUrl(url)
     return url
