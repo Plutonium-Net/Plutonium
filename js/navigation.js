@@ -189,6 +189,7 @@ async function navigate(url) {
   // through the proxy, regardless of which proxy tech is selected.
   const local = resolvePluUrl(full)
   if (local) {
+    if (typeof terminateHbSession === 'function') terminateHbSession()
     await activateLocal(local, getActiveTab())
     return
   }

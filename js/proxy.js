@@ -719,7 +719,7 @@ async function launchHbProxy(raw) {
   await terminateHbSession()
 
   const statusText = document.getElementById('status-text')
-  const pageFrame = null
+  const pageFrame = document.getElementById('page-frame')
   if (statusText) statusText.textContent = 'Starting Hyperbeam session…'
 
   try {
