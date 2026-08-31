@@ -95,6 +95,7 @@ const customizeMenu = document.getElementById('customize-menu')
 const customizeEffects = document.getElementById('customize-effects')
 const customizeAccent = document.getElementById('customize-accent')
 const customizeWallpapers = document.getElementById('customize-wallpapers')
+const customizeSound = document.getElementById('customize-sound')
 
 const ACCENT_SWATCHES = [
   { color: '#e8175d', label: 'Plutonium Pink' },
@@ -207,10 +208,31 @@ function buildCustomizeWallpapers() {
   })
 }
 
+function buildCustomizeSound() {
+  if (!customizeSound) return
+  if (!window.SoundFX) { customizeSound.innerHTML = ''; return }
+  const on = SoundFX.isEnabled()
+  customizeSound.innerHTML = `
+    <div class="customize-sound-row">
+      <span class="customize-sound-label"><i class="fa-solid fa-volume-high"></i> Sound effects</span>
+      <label class="plu-switch">
+        <input type="checkbox" id="customize-sound-switch" ${on ? 'checked' : ''}>
+        <span class="plu-switch-track"></span>
+      </label>
+    </div>
+    <button class="customize-sound-test" id="customize-sound-test" type="button"><i class="fa-solid fa-play"></i> Play test</button>
+  `
+  const sw = document.getElementById('customize-sound-switch')
+  if (sw) sw.addEventListener('change', e => SoundFX.setEnabled(e.target.checked))
+  const test = document.getElementById('customize-sound-test')
+  if (test) test.addEventListener('click', () => SoundFX.preview())
+}
+
 function syncCustomizeMenu() {
   buildCustomizeEffects()
   buildCustomizeWallpapers()
   buildCustomizeAccent()
+  buildCustomizeSound()
 }
 
 const customizeScrim = document.getElementById('customize-scrim')

@@ -452,6 +452,7 @@
     const viewer = els['game-viewer'];
     const iframe = els['game-iframe'];
     if (!viewer || !iframe) return;
+    if (window.SoundFX) window.SoundFX.play('launch');
     iframe.src = url;
     currentGame = game || null;
     els['viewer-title'].textContent = name || '';
@@ -464,6 +465,7 @@
   }
 
   function closeViewer() {
+    if (window.SoundFX) window.SoundFX.play('close');
     requestSaveSnapshot();
     syncGameId = null;
     if (els['game-viewer']) els['game-viewer'].classList.remove('active');

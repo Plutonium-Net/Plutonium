@@ -513,6 +513,39 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .customize-wallpaper.active{border-color:var(--ui-accent);box-shadow:0 0 0 1px var(--ui-accent)}
 .customize-wallpaper.active .customize-wallpaper-label{color:var(--ui-accent)}
 
+/* Sound toggle — Customize menu */
+.customize-sound{display:flex;flex-direction:column;gap:8px;padding:0 8px 8px}
+.customize-sound-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 6px;border-radius:8px;background:var(--ui-hover-2);
+}
+.customize-sound-label{
+  display:flex;align-items:center;gap:8px;
+  color:var(--ui-text);font-size:13px;font-weight:500;
+}
+.customize-sound-label i{font-size:12px;color:var(--ui-accent)}
+.plu-switch{position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0;cursor:pointer}
+.plu-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.plu-switch-track{
+  position:absolute;inset:0;border-radius:999px;background:var(--ui-border);
+  transition:background .18s ease;pointer-events:none;
+}
+.plu-switch-track::after{
+  content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.35);transition:transform .18s cubic-bezier(0.16,1,0.3,1);
+}
+.plu-switch input:checked + .plu-switch-track{background:var(--ui-accent)}
+.plu-switch input:checked + .plu-switch-track::after{transform:translateX(16px)}
+.plu-switch input:focus-visible + .plu-switch-track{outline:2px solid var(--ui-accent);outline-offset:2px}
+.customize-sound-test{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  border:1px solid var(--ui-border-sub);border-radius:8px;background:var(--ui-hover-2);
+  color:var(--ui-text-sub);font-size:12px;font-weight:500;font-family:inherit;
+  padding:7px 10px;cursor:pointer;transition:background .12s,color .12s;
+}
+.customize-sound-test:hover{background:var(--ui-hover);color:var(--ui-text)}
+.customize-sound-test i{font-size:10px;color:var(--ui-accent)}
+
 
 .content-area{flex:1;position:relative;overflow:hidden}
 

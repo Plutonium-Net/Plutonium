@@ -183,6 +183,7 @@ async function navigate(url) {
   if (!uvReady || !baremuxReady) await initProxyStack()
   let full = (url || '').trim()
   if (!full) return
+  if (window.SoundFX) window.SoundFX.play('launch')
 
   if (typeof getProxyEngine === 'function' && getProxyEngine() === 'hb') {
     if (typeof launchHbProxy === 'function') {
