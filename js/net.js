@@ -877,6 +877,26 @@ function netCountdownInputs() {
   return ['url-input', 'newtab-search'].map(id => document.getElementById(id)).filter(Boolean)
 }
 
+function repositionAddrNetButton() {
+  const input = document.getElementById('url-input')
+  const btn = document.getElementById('addr-net-info-btn')
+  if (!input || !btn || btn.style.display === 'none') return
+  try {
+    const cs = getComputedStyle(input)
+    const canvas = repositionAddrNetButton._canvas || (repositionAddrNetButton._canvas = document.createElement('canvas'))
+    const ctx = canvas.getContext('2d')
+    ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+    const textWidth = ctx.measureText(input.value).width
+    const bar = input.parentElement
+    const barCS = getComputedStyle(bar)
+    const lockBtn = document.getElementById('lock-icon-btn')
+    const padLeft = parseFloat(barCS.paddingLeft) || 0
+    const lockWidth = lockBtn ? lockBtn.offsetWidth : 0
+    const gap = 6
+    btn.style.left = `${Math.round(padLeft + lockWidth + gap + textWidth + gap)}px`
+  } catch (_) { /* keep CSS fallback position */ }
+}
+
 function scheduleNetInit() {
   const inputs = netCountdownInputs()
   const startedAt = Date.now()
@@ -890,6 +910,7 @@ function scheduleNetInit() {
       if (document.activeElement === input) return
       if (input.value && !input.value.startsWith('Initializing Network')) return
       input.value = `Initializing Network Systems in ${remaining}s`
+      repositionAddrNetButton()
     })
   }
 
@@ -907,6 +928,7 @@ async function runNetInit() {
   const inputs = netCountdownInputs()
   inputs.forEach(input => {
     if (input.value.startsWith('Initializing Network')) input.value = 'Initializing Network Systems…'
+      repositionAddrNetButton()
   })
   try {
     await chooseBestRelayServer()

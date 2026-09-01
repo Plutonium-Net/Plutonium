@@ -1254,6 +1254,9 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .net-info-box-actions{display:flex;gap:8px;justify-content:flex-end}
 .net-info-close-btn{
   border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;
-  background:var(--ui-accent);color:#fff;cursor:pointer;font-family:inherit;
+  background:#fff;color:#000;cursor:pointer;font-family:inherit;
 }
-.net-info-close-btn:hover{filter:brightness(1.1)}
+.net-info-close-btn:hover{filter:brightness(0.92)}
+
+/* Address-bar info button hugs the input text (left set by JS each tick) */
+.address-bar-wrap .net-info-btn{position:absolute;top:7px;left:auto}
