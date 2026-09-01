@@ -299,7 +299,7 @@ function stopVoice() {
   if (btn) { btn.classList.remove('listening'); btn.innerHTML = '<i class="fas fa-microphone"></i>'; }
 }
 
-// ── Model selector (wisp-style dropdown) ───────────────────────────────────
+// ── Model selector (relay-style dropdown) ───────────────────────────────────
 
 function initModelSelect() {
   const pill = document.getElementById('modelPill');

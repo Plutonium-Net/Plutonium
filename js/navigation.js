@@ -94,7 +94,7 @@ function syncFromFrameLocation() {
   if (pageFrame.style.display === 'none') return
   let currentUrl = ''
   try { currentUrl = pageFrame.contentWindow.location.href || '' } catch (e) { currentUrl = pageFrame.src || '' }
-  currentUrl = getRealUrlFromProxy(currentUrl)
+  currentUrl = getRealUrlFromNet(currentUrl)
   currentUrl = getDisplayUrl(currentUrl)
   if (!currentUrl || currentUrl === lastSyncedFrameUrl) return
   lastSyncedFrameUrl = currentUrl
@@ -137,11 +137,11 @@ async function activateLocal(local, tabEl = getActiveTab()) {
   return true
 }
 
-async function activateHbTab(url, tabEl) {
-  if (typeof launchHbProxy !== 'function') return false
-  const ok = await launchHbProxy(url)
+async function activateRemoteTab(url, tabEl) {
+  if (typeof launchRemoteSession !== 'function') return false
+  const ok = await launchRemoteSession(url)
   if (tabEl) {
-    tabEl.querySelector('.chrome-tab-title').textContent = url.replace(/^https?:\/\//i, '').replace(/\/$/, '') || 'Hyperbeam'
+    tabEl.querySelector('.chrome-tab-title').textContent = url.replace(/^https?:\/\//i, '').replace(/\/$/, '') || 'Remote'
     const faviconEl = tabEl.querySelector('.chrome-tab-favicon')
     if (faviconEl) faviconEl.setAttribute('hidden', '')
     tabEl.dataset.url = url
@@ -158,7 +158,7 @@ async function activateHbTab(url, tabEl) {
 async function openHistoryEntry(tabEl, index) {
   const state = ensureTabHistory(tabEl)
   if (!state) return
-  if (typeof terminateHbSession === 'function') terminateHbSession()
+  if (typeof endRemoteSession === 'function') endRemoteSession()
   if (index < 0 || index >= state.entries.length) return
   state.index = index
   const url = state.entries[state.index]
@@ -169,17 +169,17 @@ async function openHistoryEntry(tabEl, index) {
     syncNavButtons(tabEl)
     return
   }
-  if (typeof getProxyEngine === 'function' && getProxyEngine() === 'hb') {
-    await activateHbTab(url, tabEl)
+  if (typeof getNetEngine === 'function' && getNetEngine() === 'remote') {
+    await activateRemoteTab(url, tabEl)
     return
   }
-  if (!uvReady || !baremuxReady) await initProxyStack()
+  if (!coreReady || !bridgeReady) await initNetStack()
   if (window.Workspaces) Workspaces.deactivate()
   if (pageFrame) pageFrame.style.display = 'none'
 
   newTabPage.style.display = 'none'
   showLoadingScreen(url)
-  if (pageFrame) pageFrame.src = getProxyUrl(url)
+  if (pageFrame) pageFrame.src = getNetUrl(url)
   urlInput.value = url
   setAddressIndicator(url)
   syncNavButtons(tabEl)
@@ -188,7 +188,7 @@ async function openHistoryEntry(tabEl, index) {
 }
 
 function showNewTabPage() {
-  if (typeof terminateHbSession === 'function') terminateHbSession()
+  if (typeof endRemoteSession === 'function') endRemoteSession()
   unloadPageFrame()
   newTabPage.style.display = 'flex'
   hideLoadingScreen()
@@ -202,26 +202,26 @@ function showNewTabPage() {
 }
 
 async function navigate(url) {
-  if (!uvReady || !baremuxReady) await initProxyStack()
+  if (!coreReady || !bridgeReady) await initNetStack()
   let full = (url || '').trim()
   if (!full) return
   if (window.SoundFX) window.SoundFX.play('launch')
 
   // Built-in (pluto://) pages are local — always load them directly, never
-  // through the proxy, regardless of which proxy tech is selected.
+  // through the net engine, regardless of which engine is selected.
   const local = resolvePluUrl(full)
   if (local) {
-    if (typeof terminateHbSession === 'function') terminateHbSession()
+    if (typeof endRemoteSession === 'function') endRemoteSession()
     await activateLocal(local, getActiveTab())
     return
   }
 
-  if (typeof getProxyEngine === 'function' && getProxyEngine() === 'hb') {
-    await activateHbTab(full, getActiveTab())
+  if (typeof getNetEngine === 'function' && getNetEngine() === 'remote') {
+    await activateRemoteTab(full, getActiveTab())
     return
   }
 
-  await terminateHbSession()
+  await endRemoteSession()
 
   if (!/^https?:\/\//i.test(full) && !full.startsWith('about:')) {
     if (full.includes('.') && !full.includes(' ')) full = 'https://' + full
@@ -233,7 +233,7 @@ async function navigate(url) {
   if (pageFrame) pageFrame.style.display = 'none'
 
   showLoadingScreen(full)
-  if (pageFrame) pageFrame.src = getProxyUrl(full)
+  if (pageFrame) pageFrame.src = getNetUrl(full)
   lastSyncedFrameUrl = full
   startUrlSyncLoop()
   setAddressIndicator(full)
@@ -274,7 +274,7 @@ if (pageFrame) pageFrame.addEventListener('load', () => {
   pageFrame.style.display = 'block'
   let currentUrl = pageFrame.src || urlInput.value
   try { currentUrl = pageFrame.contentWindow.location.href || currentUrl } catch (e) {}
-  currentUrl = getRealUrlFromProxy(currentUrl)
+  currentUrl = getRealUrlFromNet(currentUrl)
   currentUrl = getDisplayUrl(currentUrl)
   if (currentUrl) lastSyncedFrameUrl = currentUrl
   if (currentUrl) urlInput.value = currentUrl

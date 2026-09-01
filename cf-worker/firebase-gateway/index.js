@@ -61,7 +61,7 @@ export default {
 
       return corsResponse({ error: 'Not found' }, 404, allowed);
     } catch (err) {
-      console.error('[firebase-proxy]', err);
+      console.error('[firebase-gateway]', err);
       return corsResponse({ error: 'Internal error' }, 500, allowed);
     }
   },
@@ -423,7 +423,7 @@ async function handleVMSession(request, env, allowed) {
     });
 
     const data = await res.json();
-    if (!res.ok) return corsResponse({ error: data.message || 'Hyperbeam error' }, res.status, allowed);
+    if (!res.ok) return corsResponse({ error: data.message || 'Remote engine error' }, res.status, allowed);
 
     return corsResponse({
       session_id: data.session_id,
@@ -447,7 +447,7 @@ function handleHomepage() {
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Plutonium Firebase Proxy</title>
+<title>Plutonium Firebase Gateway</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root { --pink: #e8175d; --bg: #000000; --text: #ffffff; --muted: #a0a0a0; }
@@ -469,7 +469,7 @@ function handleHomepage() {
 <body>
 <div class="hero">
 <div class="hero__inner">
-<h1 class="hero__title">Plutonium Firebase Proxy</h1>
+<h1 class="hero__title">Plutonium Firebase Gateway</h1>
 <p class="hero__desc">A Cloudflare Worker that proxies Firebase Auth, Firestore, and Realtime Database — keeping API keys server-side and adding CORS handling for browser clients.</p>
 <div class="section">
 <div class="section__heading">Endpoints</div>
@@ -484,8 +484,8 @@ function handleHomepage() {
 <tr><td><code>POST</code></td><td><code>/auth/delete</code></td><td>Delete the authenticated account</td></tr>
 <tr><td><code>GET</code></td><td><code>/auth/oauth/start</code></td><td>Redirect to GitHub or Google OAuth</td></tr>
 <tr><td><code>GET</code></td><td><code>/auth/oauth/callback</code></td><td>OAuth callback — exchanges code for Firebase token</td></tr>
-<tr><td><code>*</code></td><td><code>/firestore/…</code></td><td>Proxy to Firestore REST API</td></tr>
-<tr><td><code>*</code></td><td><code>/rtdb/…</code></td><td>Proxy to Realtime Database REST API</td></tr>
+<tr><td><code>*</code></td><td><code>/firestore/…</code></td><td>Gateway to Firestore REST API</td></tr>
+<tr><td><code>*</code></td><td><code>/rtdb/…</code></td><td>Gateway to Realtime Database REST API</td></tr>
 </tbody>
 </table>
 </div>

@@ -84,7 +84,7 @@
   justify-content: center;
 }
 
-/* Sliding "wisp pill" — a single outline that glides to whichever pill is
+/* Sliding "relay pill" — a single outline that glides to whichever pill is
    selected (mirrors the source-tabs / history-sort sliders on the html5
    games page). When nothing is selected it fades out. */
 .cg-tags__row::after {

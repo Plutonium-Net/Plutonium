@@ -39,11 +39,11 @@ function purgeTabSession(url) {
     window.speechSynthesis.cancel()
   }
 
-  // A non-built-in tab in Hyperbeam mode is a remote browser session — end it.
+  // A non-built-in tab in Remote mode is a remote browser session — end it.
   if (!key && url && url !== 'newtab' &&
-      typeof getProxyEngine === 'function' && getProxyEngine() === 'hb' &&
-      typeof terminateHbSession === 'function') {
-    terminateHbSession()
+      typeof getNetEngine === 'function' && getNetEngine() === 'remote' &&
+      typeof endRemoteSession === 'function') {
+    endRemoteSession()
   }
 }
 

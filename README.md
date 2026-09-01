@@ -1,6 +1,6 @@
 # Plutonium Network — `new/` build
 
-A full browser-style web platform: Chrome-style tabs with a built-in web proxy,
+A full browser-style web platform: Chrome-style tabs with a built-in secure browsing,
 bookmarks & pins, plus the complete Plutonium Network feature set.
 
 This build started as the **crafted gamz** browser project, rebranded to
@@ -15,7 +15,7 @@ cloud-synced saves) added in.
 | `pluto://games` | `js/workspaces.js` | Games — Local library + **Cloud** (Plutonium GCDN) with favourites, recently played & save sync |
 | `pluto://media` | `js/workspaces.js` | Media — movies / TV / anime, age gate, Videasy & VidCore players |
 | `pluto://ai` | `js/workspaces.js` | **Stelena** — Plutonium AI (Groq worker, streaming, voice + TTS) |
-| `pluto://vms` | `js/workspaces.js` | Cloud VMs (Hyperbeam via the Plutonium VM worker) |
+| `pluto://vms` | `js/workspaces.js` | Cloud VMs (remote sessions via the Plutonium VM worker) |
 | `pluto://cloud` | `js/workspaces.js` | Cloud Gaming (cgapi worker: sessions, queue, WebRTC embed) |
 | `pluto://account` | `pages/account.html` | Account — sign in/up, guest mode, bookmark/pin import & export |
 | `pluto://about` | `pages/about.html` | About, credits & the Plutonium services list |
@@ -24,10 +24,10 @@ cloud-synced saves) added in.
 
 | Service | Endpoint | Used by |
 | --- | --- | --- |
-| Accounts / Firestore proxy | `accounting.cdn.plutoniumnet.work` | `js/cloud-store.js` (auth, docs) |
+| Accounts / Firestore gateway | `accounting.cdn.plutoniumnet.work` | `js/cloud-store.js` (auth, docs) |
 | Games CDN | `g.cdn.plutoniumnet.work` | `js/games.js` (catalog, thumbnails, save sync) |
-| AI (Groq proxy) | `ai.cdn.plutoniumnet.work/chat` | `js/ai.js` (Bearer idToken, SSE) |
-| VMs (Hyperbeam proxy) | `vm.cdn.plutoniumnet.work/session` | `js/vms.js` (Bearer idToken) |
+| AI (Groq gateway) | `ai.cdn.plutoniumnet.work/chat` | `js/ai.js` (Bearer idToken, SSE) |
+| VMs (remote sessions) | `vm.cdn.plutoniumnet.work/session` | `js/vms.js` (Bearer idToken) |
 | Cloud Gaming (cgapi) | `cgapi.cdn.plutoniumnet.work` | `js/cloud.js` (sessions / queue / embed) |
 | Streaming | TMDB + Videasy / VidCore players | `js/stream.js` |
 
@@ -37,7 +37,7 @@ from `PlutoniumStore` — the AI and VM pages gate on sign-in.
 ## Shared shell
 
 `index.html` is the browser: chrome tabs (`js/chrome-tabs.js`), toolbar with
-address bar & wisp-switcher (`js/proxy.js`, `js/url.js`, `js/navigation.js`),
+address bar & relay-switcher (`js/net.js`, `js/url.js`, `js/navigation.js`),
 bookmarks bar (`js/bookmarks*.js`), home pins (`js/pins.js` — pinned games
 and a VM quick-launch, added from the Games/VMs pages), keyboard shortcuts
 (`js/keyboard.js`), panic/escape page (`js/escape.js`), loading screen
@@ -70,7 +70,7 @@ Workspace views are injected into the single `index.html` document by
 
 ## Remaining third-party dependencies (intentional)
 
-- Wisp servers: `wss://wisp-*.cgamz.online` (`js/proxy.js`) — shared infra the
+- Relay servers: `wss://wisp-*.cgamz.online` (`js/net.js`) — shared infra the
   old Plutonium site itself used.
 
 ## Serving locally

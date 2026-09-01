@@ -117,10 +117,10 @@ window.SoundFX = (() => {
       const f = 980 + typeStep * 80
       playTone({ type: 'triangle', freq: f, freqEnd: f + 20, duration: 0.035, gain: 0.034 })
     },
-    // Wisp region menu open — rising "connect" sweep.
-    wispOpen:    () => { playTone({ type: 'triangle', freq: 430, freqEnd: 700, duration: 0.12, gain: 0.05 }); playTone({ type: 'sine', freq: 700, freqEnd: 900, when: 0.07, duration: 0.09, gain: 0.04 }) },
-    // Wisp region menu close — soft falling sweep.
-    wispClose:   () => playTone({ type: 'triangle', freq: 640, freqEnd: 460, duration: 0.09, gain: 0.04 }),
+    // Relay region menu open — rising "connect" sweep.
+    relayOpen:    () => { playTone({ type: 'triangle', freq: 430, freqEnd: 700, duration: 0.12, gain: 0.05 }); playTone({ type: 'sine', freq: 700, freqEnd: 900, when: 0.07, duration: 0.09, gain: 0.04 }) },
+    // Relay region menu close — soft falling sweep.
+    relayClose:   () => playTone({ type: 'triangle', freq: 640, freqEnd: 460, duration: 0.09, gain: 0.04 }),
     // Customize (paintbrush) open — soft two-step "tune" sweep.
     customizeOpen:  () => { playTone({ type: 'triangle', freq: 440, freqEnd: 560, duration: 0.10, gain: 0.05 }); playTone({ type: 'sine', freq: 560, freqEnd: 700, when: 0.07, duration: 0.12, gain: 0.045 }) },
     // Customize (paintbrush) close — gentle falling counterpart.
@@ -174,7 +174,7 @@ window.SoundFX = (() => {
     // Actions with their own dedicated sound skip the generic tick.
     // (tab strip handled by tabAdd/tabRemove events; app tiles + waffle items
     //  fire a richer launch chime through navigate(); game cards through the viewer.)
-    if (t.closest && t.closest('.newtab-btn, .app-tile, .waffle-item, .pgcdn-card, .history-list__row, #customize-menu, #waffle-menu, #wisp-switcher-btn, #btn-customize, #btn-waffle, #btn-user-page')) return
+    if (t.closest && t.closest('.newtab-btn, .app-tile, .waffle-item, .pgcdn-card, .history-list__row, #customize-menu, #waffle-menu, #relay-switcher-btn, #btn-customize, #btn-waffle, #btn-user-page')) return
     play('tick')
   })
 

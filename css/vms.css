@@ -218,16 +218,16 @@ html,body{
   box-shadow:0 20px 60px rgba(var(--ui-shadow-rgb),0.3),inset 0 1px 0 rgba(var(--ui-accent-rgb),0.1);
 }
 
-#hyperbeam-container{
+#remote-container{
   position:relative;
   flex:1;min-height:0;height:100%;
   background:#050505;
   overflow:hidden;
 }
-#hyperbeam-container > :not(#containerMessage),
-#hyperbeam-container iframe,
-#hyperbeam-container canvas,
-#hyperbeam-container video{
+#remote-container > :not(#containerMessage),
+#remote-container iframe,
+#remote-container canvas,
+#remote-container video{
   width:100%!important;height:100%!important;border:none;display:block;
 }
 #containerMessage{
@@ -245,7 +245,7 @@ html,body{
   box-shadow:none;
   background:#000;
 }
-.vm-frame-shell:fullscreen #hyperbeam-container{
+.vm-frame-shell:fullscreen #remote-container{
   height:100%;
   background:#000;
 }
@@ -258,7 +258,7 @@ html,body{
   box-shadow:none;
   background:#000;
 }
-.vm-frame-shell:-webkit-full-screen #hyperbeam-container{
+.vm-frame-shell:-webkit-full-screen #remote-container{
   height:100%;
   background:#000;
 }

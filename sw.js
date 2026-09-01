@@ -6,27 +6,27 @@ if (navigator.userAgent.includes("Firefox")) {
 }
 
 let ScramjetServiceWorker = null;
-let uvSW = null;
+let coreSW = null;
 
 try {
-	importScripts("/uv/uv.bundle.js");
-	importScripts("/uv/uv.config.js");
-	importScripts("/uv/uv.sw.js");
-	uvSW = new UVServiceWorker();
+	importScripts("/core/bundle.js");
+	importScripts("/core/config.js");
+	importScripts("/core/sw-handler.js");
+	coreSW = new UVServiceWorker();
 } catch (e) {
-	console.warn("[sw] UV scripts failed to load — UV proxy disabled:", e);
+	console.warn("[sw] UV scripts failed to load — Core engine disabled:", e);
 }
 
 try {
-	importScripts("/sj/scramjet.all.js");
+	importScripts("/runtime/all.js");
 	({ ScramjetServiceWorker } = $scramjetLoadWorker());
 } catch (e) {
-	console.warn("[sw] Scramjet scripts failed to load — SJ proxy disabled:", e);
+	console.warn("[sw] Scramjet scripts failed to load — Runtime engine disabled:", e);
 }
 
 const CONFIG = {
 	inject: {
-		html: "\x3c!-- pr0x1ed by vapor's static sj --\x3e",
+		html: "\x3c!-- rendered via static service --\x3e",
 	},
 	blocked: [
 		"youtube.com/get_video_info?*adformat=*",
@@ -92,8 +92,8 @@ const CONFIG = {
 	],
 };
 
-const SCRAMJET_DB_NAME = "$scramjet";
-const SCRAMJET_REQUIRED_STORES = [
+const RUNTIME_DB_NAME = "$runtime";
+const RUNTIME_REQUIRED_STORES = [
 	"config",
 	"cookies",
 	"redirectTrackers",
@@ -123,17 +123,17 @@ function deleteIndexedDb(name) {
 	});
 }
 
-async function repairScramjetDatabase() {
+async function repairRuntimeDatabase() {
 	let db;
 
 	try {
-		db = await openIndexedDb(SCRAMJET_DB_NAME);
+		db = await openIndexedDb(RUNTIME_DB_NAME);
 	} catch (err) {
-		console.warn("Unable to inspect Scramjet database in service worker:", err);
+		console.warn("Unable to inspect runtime database in service worker:", err);
 		return;
 	}
 
-	const missingStores = SCRAMJET_REQUIRED_STORES.filter(
+	const missingStores = RUNTIME_REQUIRED_STORES.filter(
 		(store) => !db.objectStoreNames.contains(store)
 	);
 
@@ -141,26 +141,26 @@ async function repairScramjetDatabase() {
 
 	if (missingStores.length === 0) return;
 
-	console.warn("Repairing Scramjet database in service worker, missing stores:", missingStores);
-	await deleteIndexedDb(SCRAMJET_DB_NAME);
+	console.warn("Repairing runtime database in service worker, missing stores:", missingStores);
+	await deleteIndexedDb(RUNTIME_DB_NAME);
 }
 
-let scramjetPromise = null;
+let runtimePromise = null;
 
-async function getScramjet() {
-	if (!ScramjetServiceWorker) throw new Error("Scramjet not available");
-	if (!scramjetPromise) {
-		scramjetPromise = (async () => {
-			await repairScramjetDatabase();
-			const scramjet = new ScramjetServiceWorker();
-			scramjet.addEventListener("request", handleScramjetRequest);
-			return scramjet;
+async function getRuntime() {
+	if (!ScramjetServiceWorker) throw new Error("Runtime not available");
+	if (!runtimePromise) {
+		runtimePromise = (async () => {
+			await repairRuntimeDatabase();
+			const runtime = new ScramjetServiceWorker();
+			runtime.addEventListener("request", handleRuntimeRequest);
+			return runtime;
 		})().catch((err) => {
-			scramjetPromise = null;
+			runtimePromise = null;
 			throw err;
 		});
 	}
-	return scramjetPromise;
+	return runtimePromise;
 }
 
 function toRegex(pattern) {
@@ -196,14 +196,14 @@ function inject(html) {
 let playgroundData;
 
 async function handleRequest(event) {
-	const scramjet = await getScramjet();
-	await scramjet.loadConfig();
+	const runtime = await getRuntime();
+	await runtime.loadConfig();
 
-	if (!scramjet.route(event)) {
+	if (!runtime.route(event)) {
 		return fetch(event.request);
 	}
 
-	const response    = await scramjet.fetch(event);
+	const response    = await runtime.fetch(event);
 	const contentType = response.headers.get("content-type") || "";
 
 	if (!contentType.includes("text/html")) return response;
@@ -220,7 +220,7 @@ async function handleRequest(event) {
 	});
 }
 
-function handleScramjetRequest(e) {
+function handleRuntimeRequest(e) {
 	if (isBlocked(e.url.hostname, e.url.pathname)) {
 		e.response = new Response("Site Blocked", { status: 403 });
 		return;
@@ -341,8 +341,8 @@ self.addEventListener("activate", (event) => {
 	event.waitUntil(self.clients.claim());
 });
 
-const UV_PREFIX = "/uv/service/";
-const SJ_PREFIX = "/sj/service/";
+const CORE_PREFIX = "/core/service/";
+const RUNTIME_PREFIX = "/runtime/service/";
 
 self.addEventListener("fetch", (event) => {
 	const url = event.request.url;
@@ -357,7 +357,7 @@ self.addEventListener("fetch", (event) => {
 			caches.open('plutonium-bg-v2').then(function (cache) {
 				return cache.match(event.request).then(function (cached) {
 					return cached || fetch(event.request).then(function (network) {
-						if (network.ok) cache.put(event.request, network.clone());
+						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());
 						return network;
 					});
 				});
@@ -372,7 +372,7 @@ self.addEventListener("fetch", (event) => {
 			caches.open('plutonium-games-v1').then(function (cache) {
 				return cache.match(event.request).then(function (cached) {
 					return cached || fetch(event.request).then(function (network) {
-						if (network.ok) cache.put(event.request, network.clone());
+						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());
 						return network;
 					});
 				});
@@ -387,7 +387,7 @@ self.addEventListener("fetch", (event) => {
 			caches.open('plutonium-cloud-v1').then(function (cache) {
 				return cache.match(event.request).then(function (cached) {
 					return cached || fetch(event.request).then(function (network) {
-						if (network.ok) cache.put(event.request, network.clone());
+						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());
 						return network;
 					});
 				});
@@ -396,17 +396,17 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// UV proxy requests
-	if (url.includes(UV_PREFIX)) {
-		if (uvSW) {
-			event.respondWith(uvSW.fetch(event));
+	// Core engine requests
+	if (url.includes(CORE_PREFIX)) {
+		if (coreSW) {
+			event.respondWith(coreSW.fetch(event));
 		} else {
 			event.respondWith(fetch(event.request));
 		}
 		return;
 	}
-	// SJ proxy requests
-	if (url.includes(SJ_PREFIX)) {
+	// Runtime engine requests
+	if (url.includes(RUNTIME_PREFIX)) {
 		if (ScramjetServiceWorker) {
 			event.respondWith(handleRequest(event));
 		} else {

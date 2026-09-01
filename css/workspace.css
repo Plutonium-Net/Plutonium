@@ -689,7 +689,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   background: rgba(var(--workspace-accent-rgb), .12);
 }
 
-/* Wisp pill slider for the genre/type tags bar */
+/* Relay pill slider for the genre/type tags bar */
 .tags-bar {
   position: relative;
   display: flex;

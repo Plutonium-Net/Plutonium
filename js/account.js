@@ -168,17 +168,17 @@ class AccountManager {
     }
   }
 
-  // ── Settings (theme / proxy engine / wisp) ────────────────────────────
+  // ── Settings (theme / browsing engine / relay) ────────────────────────
 
   _getSettings() {
     const out = {}
     try {
       const theme = localStorage.getItem('plu_theme')
       if (theme) out.theme = theme
-      const proxy = localStorage.getItem('plu_proxy_engine')
-      if (proxy) out.proxyEngine = proxy
-      const wisp = localStorage.getItem('plu_wisp_server')
-      if (wisp) out.wispServer = wisp
+      const mode = localStorage.getItem('plu_net_mode') || localStorage.getItem('plu_proxy_engine')
+      if (mode) out.proxyEngine = mode
+      const relay = localStorage.getItem('plu_relay_server') || localStorage.getItem('plu_wisp_server')
+      if (relay) out.wispServer = relay
       // bgImage is embedded in the plu_theme JSON but also stored as a
       // top-level field so the pull side can merge it even when the
       // remote plu_theme predates the bgImage feature.
@@ -210,8 +210,8 @@ class AccountManager {
     try {
       const doc = await PlutoniumStore.getDoc('settings')
       if (!doc) return
-      // account.js may load before theme-state.js / proxy.js — retry once
-      const ready = window.BrowserThemeState && window.setProxyEngine && window.switchWispServer
+      // account.js may load before theme-state.js / net.js — retry once
+      const ready = window.BrowserThemeState && window.setNetEngine && window.switchRelayServer
       if (!ready) {
         setTimeout(() => this.pullSettings(), 2500)
         return
@@ -224,8 +224,10 @@ class AccountManager {
           window.BrowserThemeState.saveThemeState(parsed)
         } catch (_) {}
       }
-      if (doc.proxyEngine) window.setProxyEngine(doc.proxyEngine)
-      if (doc.wispServer) window.switchWispServer(doc.wispServer)
+      // Migrate pre-rename engine values stored on the remote doc.
+      const legacyMode = { uv: 'core', sj: 'runtime', hb: 'remote' }
+      if (doc.proxyEngine) window.setNetEngine(legacyMode[doc.proxyEngine] || doc.proxyEngine)
+      if (doc.wispServer) window.switchRelayServer(doc.wispServer)
     } catch (e) {
       console.warn('[Account] Settings pull failed:', e)
     }

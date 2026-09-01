@@ -47,7 +47,10 @@ function getDisplayUrl(rawUrl) {
 }
 
 function currentAddressValue() {
-  return (urlInput.value || '').trim() || 'newtab'
+  const value = (urlInput.value || '').trim() || 'newtab'
+  // The countdown text in the address bar isn't a real address.
+  if (value.startsWith('Initializing net')) return 'newtab'
+  return value
 }
 
 function setAddressIndicator(url) {
@@ -61,9 +64,9 @@ function getConnectionDetails(url) {
   if (url === 'newtab') return { title: 'New Tab', desc: 'This is a local new-tab screen. No website connection is active.' }
   if (LOCAL_SCHEME.test(url)) return { title: 'Local System Page', desc: 'This page is loaded from local files and is not proxied.' }
   if (url.startsWith('https://')) {
-    const wisp = typeof getWispConnectionSummary === 'function' ? getWispConnectionSummary() : null
-    const proxyDetails = wisp ? ` Proxied traffic is currently routed through ${wisp.label}${Number.isFinite(wisp.latency) ? ` (${wisp.latencyText})` : ''}.` : ''
-    return { title: 'Secure HTTPS', desc: `Your connection uses HTTPS encryption.${proxyDetails}` }
+    const relay = typeof getRelayConnectionSummary === 'function' ? getRelayConnectionSummary() : null
+    const routeDetails = relay ? ` Traffic is currently routed through ${relay.label}${Number.isFinite(relay.latency) ? ` (${relay.latencyText})` : ''}.` : ''
+    return { title: 'Secure HTTPS', desc: `Your connection uses HTTPS encryption.${routeDetails}` }
   }
   return { title: 'Not Fully Secure', desc: 'This page is not using HTTPS encryption. Avoid entering sensitive information.' }
 }

@@ -106,7 +106,7 @@
 
   if ('serviceWorker' in navigator) {
     // Personal games are served by the root sw.js (which also handles the
-    // UV + Scramjet proxy prefixes and the /pg-game/ route from IndexedDB).
+    // engine prefixes and the /pg-game/ route from IndexedDB).
     navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(err => {
       console.warn('[personal-games] SW registration failed:', err);
     });

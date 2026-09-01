@@ -3086,9 +3086,9 @@
                     tempunusedid: "$scramjet$tempunused",
                   },
                   files: {
-                    wasm: "/scramjet.wasm.wasm",
-                    all: "/scramjet.all.js",
-                    sync: "/scramjet.sync.js",
+                    wasm: "/runtime/engine.wasm",
+                    all: "/runtime/all.js",
+                    sync: "/runtime/sync.js",
                   },
                   flags: {
                     serviceworkers: !1,

@@ -152,7 +152,7 @@ async function handleSession(request, env, allowed) {
     });
 
     const data = await res.json();
-    if (!res.ok) return corsResponse({ error: data.message || 'Hyperbeam error' }, res.status, allowed);
+    if (!res.ok) return corsResponse({ error: data.message || 'Remote engine error' }, res.status, allowed);
 
     return corsResponse({ session_id: data.session_id, embed_url: data.embed_url }, 200, allowed);
   }
@@ -168,7 +168,7 @@ async function handleSession(request, env, allowed) {
 
     if (!res.ok && res.status !== 404) {
       const data = await res.json().catch(() => ({}));
-      return corsResponse({ error: data.message || 'Hyperbeam error' }, res.status, allowed);
+      return corsResponse({ error: data.message || 'Remote engine error' }, res.status, allowed);
     }
 
     return corsResponse({ deleted: true }, 200, allowed);
@@ -223,14 +223,14 @@ function handleHomepage() {
 <div class="hero">
 <div class="hero__inner">
 <h1 class="hero__title">Plutonium VM Worker</h1>
-<p class="hero__desc">Cloudflare Worker that proxies Hyperbeam VM session creation and deletion — keeping the API key server-side and enforcing per-user rate limits.</p>
+<p class="hero__desc">Cloudflare Worker that routes remote VM session creation and deletion — keeping the API key server-side and enforcing per-user rate limits.</p>
 
 <div class="section">
 <div class="section__heading">Endpoints</div>
 <table>
 <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
 <tbody>
-<tr><td><code>POST</code></td><td><code>/session</code></td><td>Create or delete a Hyperbeam VM session</td></tr>
+<tr><td><code>POST</code></td><td><code>/session</code></td><td>Create or delete a remote VM session</td></tr>
 <tr><td><code>GET</code></td><td><code>/stats</code></td><td>Returns rate limit config and health info</td></tr>
 </tbody>
 </table>

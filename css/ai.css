@@ -82,7 +82,7 @@ html,body{
 }
 .ai-clear-btn:hover{color:#ff6b6b;border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.08)}
 
-/* ── Model dropdown (wisp-style picker) ─────────────────────────────────── */
+/* ── Model dropdown (relay-style picker) ─────────────────────────────────── */
 
 .model-menu{
   position:fixed;top:80px;right:clamp(16px,4vw,52px);z-index:520;

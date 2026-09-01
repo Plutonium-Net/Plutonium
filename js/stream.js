@@ -836,7 +836,7 @@ function buildTags(cats) {
   positionTagSlider();
 }
 
-// Position the ::after wisp pill so it hugs the active tag (mirrors the
+// Position the ::after relay pill so it hugs the active tag (mirrors the
 // genre/tags bars on the cloud-gaming page).
 function positionTagSlider() {
   const active = tagsBar.querySelector('.tag.active');
@@ -857,7 +857,7 @@ function positionTagSlider() {
    Media type tabs
 ───────────────────────────────────────────────────────────────────────── */
 
-// Position the ::after wisp pill on the Movies / TV / Anime tabs so it glides
+// Position the ::after relay pill on the Movies / TV / Anime tabs so it glides
 // to whichever tab is active (mirrors the source-tabs slider on the games page).
 function positionTabSlider() {
   const tabs = document.querySelector('.media-tabs');

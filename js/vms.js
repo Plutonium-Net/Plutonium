@@ -1,6 +1,6 @@
 import Hyperbeam from 'https://unpkg.com/@hyperbeam/web@latest/dist/index.js';
 
-const CONTAINER_ID = 'hyperbeam-container';
+const CONTAINER_ID = 'remote-container';
 const SESSION_DURATION = 900;
 const API_ENDPOINT = 'https://vm.cdn.plutoniumnet.work/session';
 
@@ -79,7 +79,7 @@ async function startSession() {
     try {
         startBtn.disabled = true;
         statusEl.textContent = 'Creating session...';
-        containerMessage.textContent = 'Creating Hyperbeam session...';
+        containerMessage.textContent = 'Creating remote session...';
 
         console.log('Sending request to:', API_ENDPOINT);
 
@@ -118,7 +118,7 @@ async function startSession() {
         statusEl.textContent = 'Loading VM...';
         containerMessage.textContent = 'Loading virtual machine...';
 
-        console.log('Initializing Hyperbeam with URL:', embedUrl);
+        console.log('Initializing remote session with URL:', embedUrl);
         hb = await Hyperbeam(container, embedUrl);
 
         containerMessage.style.display = 'none';

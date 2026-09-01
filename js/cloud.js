@@ -95,7 +95,7 @@
     _renderTagBar(tagsSubRow, Array.from(tagSet).sort(),   'tag');
   }
 
-  // Render one bar of toggle pills and drop the sliding wisp indicator on it.
+  // Render one bar of toggle pills and drop the sliding relay indicator on it.
   function _renderTagBar(bar, tags, kind) {
     bar.innerHTML = '';
     tags.forEach(function (tag) {
@@ -124,7 +124,7 @@
     });
   }
 
-  // Position the ::after wisp pill so it hugs the active pill; fade it out
+  // Position the ::after relay pill so it hugs the active pill; fade it out
   // (opacity 0) when nothing is selected in this bar.
   function _positionTagSlider(bar) {
     const active = bar.querySelector('.cg-tag-pill.active');

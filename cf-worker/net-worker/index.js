@@ -29,7 +29,7 @@ export default {
 
       return corsResponse({ error: 'Not found' }, 404, allowed);
     } catch (err) {
-      console.error('[proxy-worker]', err);
+      console.error('[net-worker]', err);
       return corsResponse({ error: 'Internal error' }, 500, allowed);
     }
   },
@@ -78,7 +78,7 @@ function isValidUrl(raw) {
   }
 }
 
-// ── POST /session — create a kiosk Hyperbeam session ─────────────────────────
+// ── POST /session — create a kiosk remote session ─────────────────────────
 // Body: { url: "https://example.com" }
 // Returns: { session_id, embed_url }
 //
@@ -116,7 +116,7 @@ async function handleSession(request, env, allowed) {
 
   const data = await res.json();
   if (!res.ok) {
-    return corsResponse({ error: data.message || 'Hyperbeam error' }, res.status, allowed);
+    return corsResponse({ error: data.message || 'Remote engine error' }, res.status, allowed);
   }
 
   return corsResponse({ session_id: data.session_id, embed_url: data.embed_url }, 200, allowed);
@@ -142,7 +142,7 @@ async function handleDelete(request, env, allowed) {
 
   if (!res.ok && res.status !== 404) {
     const data = await res.json().catch(() => ({}));
-    return corsResponse({ error: data.message || 'Hyperbeam error' }, res.status, allowed);
+    return corsResponse({ error: data.message || 'Remote engine error' }, res.status, allowed);
   }
 
   return corsResponse({ deleted: true }, 200, allowed);
@@ -193,7 +193,7 @@ function handleHomepage() {
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Plutonium Proxy Worker</title>
+<title>Plutonium Net Worker</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root { --pink: #e8175d; --bg: #000000; --text: #ffffff; --muted: #a0a0a0; }
@@ -217,8 +217,8 @@ function handleHomepage() {
 <body>
 <div class="hero">
 <div class="hero__inner">
-<h1 class="hero__title">Plutonium Proxy Worker</h1>
-<p class="hero__desc">Cloudflare Worker that spins up a borderless Hyperbeam kiosk session for a given URL — no auth required, API key stays server-side.</p>
+<h1 class="hero__title">Plutonium Net Worker</h1>
+<p class="hero__desc">Cloudflare Worker that spins up a borderless remote kiosk session for a given URL — no auth required, API key stays server-side.</p>
 
 <div class="section">
 <div class="section__heading">Endpoints</div>
@@ -229,7 +229,7 @@ function handleHomepage() {
 <tr><td><code>DELETE</code></td><td><code>/session</code></td><td>Destroy a session. Body: <code>{ session_id }</code></td></tr>
 </tbody>
 </table>
-<p class="note">No <code>Authorization</code> header required — open proxy, no rate limiting.<br>
+<p class="note">No <code>Authorization</code> header required — open access, no rate limiting.<br>
 Session flags: <code>hide_toolbar: true</code>, <code>ublock: true</code>.</p>
 </div>
 

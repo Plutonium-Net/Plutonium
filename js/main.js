@@ -300,12 +300,12 @@ const favObserver = new MutationObserver(() => {
 favObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })
 updateAccentFavicon()
 
-document.querySelectorAll('.proxy-engine-btn').forEach(btn => {
+document.querySelectorAll('.engine-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    if (typeof setProxyEngine === 'function') setProxyEngine(btn.dataset.engine)
+    if (typeof setNetEngine === 'function') setNetEngine(btn.dataset.engine)
   })
 })
-if (typeof syncProxyEngineButtons === 'function') syncProxyEngineButtons()
+if (typeof syncEngineButtons === 'function') syncEngineButtons()
 
 ensureTabHistory(getActiveTab())
 showNewTabPage()
@@ -367,8 +367,8 @@ function openAboutDialog() {
       <div class="about-dialog__section">
         <div class="about-dialog__section-label">Technology</div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon purple"><i class="fab fa-font-awesome"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Font Awesome</div><div class="about-dialog__row-sub">Icon library</div></div></div>
-        <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Ultraviolet</div><div class="about-dialog__row-sub">Web proxy technology</div></div></div>
-        <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Scramjet</div><div class="about-dialog__row-sub">Web proxy technology</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Web engine</div><div class="about-dialog__row-sub">Browsing technology</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Runtime</div><div class="about-dialog__row-sub">Browsing technology</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon grey"><i class="fas fa-database"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">GitHub</div><div class="about-dialog__row-sub">File hosting</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon orange"><i class="fas fa-cloud"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Cloudflare</div><div class="about-dialog__row-sub">Site hosting &amp; DDoS protection</div></div></div>
       </div>
@@ -383,16 +383,16 @@ function openAboutDialog() {
         <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-gamepad"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Games CDN</div><div class="about-dialog__row-sub">Cloud-hosted game catalog with save sync</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-cloud"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Cloud Gaming</div><div class="about-dialog__row-sub">On-demand cloud game sessions</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-robot"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Plutonium AI (Stelena)</div><div class="about-dialog__row-sub">Groq-backed chat worker</div></div></div>
-        <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-desktop"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Virtual Machines</div><div class="about-dialog__row-sub">Hyperbeam VM sessions</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-desktop"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Virtual Machines</div><div class="about-dialog__row-sub">Remote cloud sessions</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-user-circle"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Accounts</div><div class="about-dialog__row-sub">OAuth sign-in with cloud sync</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon pink"><i class="fas fa-clapperboard"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Streaming</div><div class="about-dialog__row-sub">Movies, TV &amp; anime</div></div></div>
       </div>
 
       <div class="about-dialog__section">
         <div class="about-dialog__section-label">Special Thanks</div>
-        <div class="about-dialog__row"><div class="about-dialog__row-icon yellow"><i class="fas fa-star"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Titanium Network</div><div class="about-dialog__row-sub">Scramjet and Ultraviolet source code</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon yellow"><i class="fas fa-star"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Titanium Network</div><div class="about-dialog__row-sub">Runtime and Core source code</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon blue"><i class="fas fa-users"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Our Community</div><div class="about-dialog__row-sub">Thank you for feedback and support</div></div></div>
-        <div class="about-dialog__row"><div class="about-dialog__row-icon green"><i class="fas fa-hands-helping"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Render</div><div class="about-dialog__row-sub">Hosting free wisp</div></div></div>
+        <div class="about-dialog__row"><div class="about-dialog__row-icon green"><i class="fas fa-hands-helping"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Render</div><div class="about-dialog__row-sub">Hosting free relay servers</div></div></div>
       </div>
 
       <div class="about-dialog__section">

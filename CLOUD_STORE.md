@@ -34,7 +34,7 @@ Browser (any .html page)
   │       │  never talks to Firebase directly.
   │       │
   │       ▼
-  CF Worker  (cf-worker/firebase-proxy/index.js)
+  CF Worker  (cf-worker/firebase-gateway/index.js)
   │       │  Firebase secrets live here only — never in browser code.
   │       │
   │       ├── GET  /config          → returns Firebase app config
@@ -104,7 +104,7 @@ If `WORKER_URL` is not set when any method is called, it throws synchronously:
 
 ### `PlutoniumStore.WORKER_URL` — `string` (read/write)
 
-The base URL of the Cloudflare Worker proxy. Trailing slashes are stripped automatically.
+The base URL of the Cloudflare Worker gateway. Trailing slashes are stripped automatically.
 
 ```js
 PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
@@ -616,7 +616,7 @@ When adding a new feature, choose a unique `collection`/`path` name. Check the t
 | **No cross-user access** | All paths are scoped to `users/{uid}/`. A user cannot read or write another user's data. |
 | **No collection listing** | There is no `listDocs()` or equivalent. You must know the document path ahead of time. |
 | **No Firestore field delete** | Individual Firestore fields cannot be deleted via this API. Re-write the entire document without the field you want to remove. |
-| **RTDB polling only** | Real-time push (SSE/WebSocket) is not available through the REST proxy. `watchRTDB` polls at an interval. For sub-second latency, the native Firebase SDK would be needed. |
+| **RTDB polling only** | Real-time push (SSE/WebSocket) is not available through the REST gateway. `watchRTDB` polls at an interval. For sub-second latency, the native Firebase SDK would be needed. |
 | **Single Firestore database** | Only the `(default)` Firestore database is used. |
 | **RTDB path must not contain `.json`** | The Worker appends `.json` to RTDB paths automatically. Do not include it in your path argument. |
 | **Token auto-refresh** | The ID token expires after 1 hour. The module refreshes it automatically 5 minutes before expiry. Long-running pages (games, streams) will stay signed in. |

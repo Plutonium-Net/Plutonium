@@ -208,7 +208,7 @@ function showBrowserMenu(x, y) {
 // New-tab page background
 const newTabPageEl = document.getElementById('new-tab-page')
 newTabPageEl.addEventListener('contextmenu', e => {
-  if (e.target.closest('.app-tile, .search-box, .shortcut, .logo, .proxy-engine-switch, .news-ticker, .status-bar, input, textarea, a, button')) return
+  if (e.target.closest('.app-tile, .search-box, .shortcut, .logo, .engine-switch, .news-ticker, .status-bar, input, textarea, a, button')) return
   e.preventDefault()
   showBrowserMenu(e.clientX, e.clientY)
 })
@@ -216,7 +216,7 @@ newTabPageEl.addEventListener('contextmenu', e => {
 // Toolbar empty space
 const toolbarEl = document.querySelector('.toolbar')
 toolbarEl && toolbarEl.addEventListener('contextmenu', e => {
-  if (e.target.closest('input, textarea, a, button, .address-bar-wrap, .wisp-switcher-shell')) return
+  if (e.target.closest('input, textarea, a, button, .address-bar-wrap, .relay-switcher-shell')) return
   e.preventDefault()
   showBrowserMenu(e.clientX, e.clientY)
 })
