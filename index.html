@@ -73,6 +73,9 @@
         <i class="fa-solid fa-circle-info lock-icon" id="lock-icon"></i>
       </button>
       <input type="text" id="url-input" placeholder="Search or enter address" spellcheck="false" autocomplete="off">
+      <button class="net-info-btn" id="addr-net-info-btn" type="button" title="What is this?" aria-label="Networking info" style="display:none">
+        <i class="fa-solid fa-circle-info"></i>
+      </button>
       <button class="bookmark-star-btn" id="btn-bookmark-star" title="Bookmark this page" aria-label="Bookmark this page" style="display:none">
         <i class="fa-regular fa-star"></i>
       </button>
@@ -111,6 +114,9 @@
 <div class="search-box glass">
   <i class="fa-solid fa-magnifying-glass"></i>
   <input type="text" id="newtab-search" placeholder="Search the web">
+  <button class="net-info-btn" id="newtab-net-info-btn" type="button" title="What is this?" aria-label="Networking info" style="display:none">
+    <i class="fa-solid fa-circle-info"></i>
+  </button>
 </div>
 
 <div class="app-flanks" id="app-flanks">
@@ -251,5 +257,14 @@
 <script src="js/loading.js"></script>
 <script src="js/escape.js"></script>
 <script src="js/news-ticker.js"></script>
+<div id="net-info-overlay" hidden>
+  <div class="net-info-box">
+    <div class="net-info-box-title">Initializing Network Systems</div>
+    <div class="net-info-box-desc">The shell is powering up its networking stack: picking the fastest relay server, establishing the connection, and loading the browsing engines (Core, Runtime, Remote). Local pages keep working meanwhile &mdash; once the countdown finishes, websites open as normal. If it gets stuck, try switching the relay or reloading the shell.</div>
+    <div class="net-info-box-actions">
+      <button class="net-info-close-btn" id="net-info-close" type="button">Got it</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

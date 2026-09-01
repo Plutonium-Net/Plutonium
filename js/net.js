@@ -513,7 +513,7 @@ function currentNetAddress() {
     ? currentAddressValue()
     : ((input && input.value) || '').trim() || 'newtab'
 
-  if (!value || value === 'newtab' || value.startsWith('Initializing net') || /^(?:plu|pluto):\/\//i.test(value)) return ''
+  if (!value || value === 'newtab' || value.startsWith('Initializing Network') || /^(?:plu|pluto):\/\//i.test(value)) return ''
   return value
 }
 
@@ -604,9 +604,9 @@ function setNetEngine(engine) {
 }
 
 function syncEngineButtons() {
-  const btns = document.querySelectorAll('.net-engine-btn')
-  const switchEl = document.querySelector('.net-engine-switch')
-  const slider = document.getElementById('net-engine-slider')
+  const btns = document.querySelectorAll('.engine-btn')
+  const switchEl = document.querySelector('.engine-switch')
+  const slider = document.getElementById('engine-slider')
 
   btns.forEach(btn => {
     const isActive = btn.dataset.engine === selectedNet
@@ -614,7 +614,7 @@ function syncEngineButtons() {
   })
 
   if (!slider || !switchEl) return
-  const activeBtn = switchEl.querySelector('.net-engine-btn.active')
+  const activeBtn = switchEl.querySelector('.engine-btn.active')
   if (!activeBtn) { slider.style.opacity = '0'; return }
   const switchRect = switchEl.getBoundingClientRect()
   const btnRect = activeBtn.getBoundingClientRect()
@@ -835,9 +835,43 @@ window.getRelayConnectionSummary = getRelayConnectionSummary
 // ── Deferred net init ───────────────────────────────────────────────────────
 // Net scripts (relay + Core/Runtime/Bridge) load 10s after the DOM is ready
 // so the shell UI paints first. The address bar shows a live countdown while
-// the user waits, then switches to a short "Initializing net…" phase.
+// the user waits, then switches to a short "Initializing Network Systems…" phase.
 const NET_INIT_DELAY_MS = 10000
 let netInitCountdownTimer = null
+// ── Net init info button + popup ────────────────────────────────────────────
+function netInfoButtons() {
+  return ['addr-net-info-btn', 'newtab-net-info-btn'].map(id => document.getElementById(id)).filter(Boolean)
+}
+
+function showNetInfoButtons(visible) {
+  netInfoButtons().forEach(btn => { btn.style.display = visible ? '' : 'none' })
+}
+
+function openNetInfoPopup() {
+  const overlay = document.getElementById('net-info-overlay')
+  if (overlay) overlay.hidden = false
+}
+
+function closeNetInfoPopup() {
+  const overlay = document.getElementById('net-info-overlay')
+  if (overlay) overlay.hidden = true
+}
+
+function wireNetInfoButtons() {
+  if (netInfoButtons._wired) return
+  netInfoButtons._wired = true
+  netInfoButtons().forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); openNetInfoPopup() })
+  })
+  const overlay = document.getElementById('net-info-overlay')
+  if (!overlay) return
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeNetInfoPopup()
+  })
+  const closeBtn = document.getElementById('net-info-close')
+  if (closeBtn) closeBtn.addEventListener('click', closeNetInfoPopup)
+}
+
 
 function netCountdownInputs() {
   return ['url-input', 'newtab-search'].map(id => document.getElementById(id)).filter(Boolean)
@@ -846,14 +880,16 @@ function netCountdownInputs() {
 function scheduleNetInit() {
   const inputs = netCountdownInputs()
   const startedAt = Date.now()
+  wireNetInfoButtons()
+  showNetInfoButtons(true)
 
   const showCountdown = () => {
     const remaining = Math.max(0, Math.ceil((NET_INIT_DELAY_MS - (Date.now() - startedAt)) / 1000))
     inputs.forEach(input => {
       // Only own the field when we set it: skip if the user is typing in it.
       if (document.activeElement === input) return
-      if (input.value && !input.value.startsWith('Initializing net')) return
-      input.value = `Initializing net in ${remaining}s`
+      if (input.value && !input.value.startsWith('Initializing Network')) return
+      input.value = `Initializing Network Systems in ${remaining}s`
     })
   }
 
@@ -870,7 +906,7 @@ function scheduleNetInit() {
 async function runNetInit() {
   const inputs = netCountdownInputs()
   inputs.forEach(input => {
-    if (input.value.startsWith('Initializing net')) input.value = 'Initializing net…'
+    if (input.value.startsWith('Initializing Network')) input.value = 'Initializing Network Systems…'
   })
   try {
     await chooseBestRelayServer()
@@ -879,8 +915,9 @@ async function runNetInit() {
     startBackgroundRelayPingLoop()
   } finally {
     inputs.forEach(input => {
-      if (input.value.startsWith('Initializing net')) input.value = ''
+      if (input.value.startsWith('Initializing Network')) input.value = ''
     })
+    showNetInfoButtons(false)
   }
 }
 

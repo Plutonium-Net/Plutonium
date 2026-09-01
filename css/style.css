@@ -1228,3 +1228,32 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   .news-story-title{font-size:15px;font-weight:500}
   .news-story-desc{font-size:12px}
 }
+
+/* ── Net init info button + popup ─────────────────────────────────────────── */
+.net-info-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:20px;height:20px;border:none;background:transparent;padding:0;
+  color:var(--ui-text-sub);cursor:pointer;flex-shrink:0;font-size:13px;
+  transition:color .15s;
+}
+.net-info-btn:hover{color:var(--ui-text)}
+#net-info-overlay{
+  position:fixed;inset:0;z-index:10000;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+}
+#net-info-overlay[hidden]{display:none}
+.net-info-box{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:14px;
+  box-shadow:0 16px 48px rgba(var(--ui-shadow-rgb),.4),inset 0 1px 0 rgba(var(--ui-accent-rgb),.15);
+  backdrop-filter:blur(32px) saturate(200%);-webkit-backdrop-filter:blur(32px) saturate(200%);
+  padding:24px;width:min(380px,90vw);
+}
+.net-info-box-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:8px}
+.net-info-box-desc{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:20px}
+.net-info-box-actions{display:flex;gap:8px;justify-content:flex-end}
+.net-info-close-btn{
+  border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;
+  background:var(--ui-accent);color:#fff;cursor:pointer;font-family:inherit;
+}
+.net-info-close-btn:hover{filter:brightness(1.1)}

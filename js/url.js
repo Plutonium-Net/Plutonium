@@ -49,7 +49,7 @@ function getDisplayUrl(rawUrl) {
 function currentAddressValue() {
   const value = (urlInput.value || '').trim() || 'newtab'
   // The countdown text in the address bar isn't a real address.
-  if (value.startsWith('Initializing net')) return 'newtab'
+  if (value.startsWith('Initializing Network')) return 'newtab'
   return value
 }
 
