@@ -565,7 +565,7 @@ async function switchRelayServer(serverId) {
 const NET_MODE_KEY = 'plu_net_mode'
 const LEGACY_NET_MODE_KEY = 'plu_proxy_engine'
 const LEGACY_NET_MODE_MAP = { uv: 'core', sj: 'runtime', hb: 'remote' }
-const REMOTE_WORKER_URL    = 'https://proxy.cdn.plutoniumnet.work'
+const REMOTE_WORKER_URL    = 'https://net.cdn.plutoniumnet.work'
 
 function loadNetMode() {
   const stored = localStorage.getItem(NET_MODE_KEY)

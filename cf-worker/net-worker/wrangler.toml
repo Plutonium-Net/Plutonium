@@ -1,9 +1,9 @@
-name               = "plutonium-proxy-worker"
+name               = "plutonium-net-worker"
 main               = "index.js"
 compatibility_date = "2024-01-01"
 
 [[routes]]
-pattern   = "proxy.cdn.plutoniumnet.work/*"
+pattern   = "net.cdn.plutoniumnet.work/*"
 zone_name = "plutoniumnet.work"
 
 [vars]
