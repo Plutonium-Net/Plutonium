@@ -5,11 +5,13 @@
   let kPressed = false;
   let splashHidden = false;
   let cacheComplete = false;
+  let progressShown = false;
 
   /* ── Background images to pre-cache ─────────────────────────────────── */
   const CACHE_KEY = 'plutonium-bg-v2';
   const GAMES_CACHE_KEY = 'plutonium-games-v1';
   const CLOUD_CACHE_KEY = 'plutonium-cloud-v1';
+  const LOGOS_CACHE_KEY = 'plutonium-logos-v1';
   const PGCDN_BASE = 'https://g.cdn.plutoniumnet.work';
   const BG_IMAGES = [
     'img/backgrounds/coast.jpg',
@@ -26,6 +28,16 @@
     'img/backgrounds/refraction-purple.png',
     'img/backgrounds/swirls.png',
   ];
+
+  /* ── Brand logos to pre-cache (all accent colours × variants) ──────── */
+  const LOGO_COLORS = ['plutonium-pink', 'violet', 'blue', 'emerald', 'amber', 'red', 'cyan', 'fuchsia', 'white'];
+  const LOGO_VARIANTS = ['brand-logo', 'logo', 'icon'];
+  const LOGO_IMAGES = ['img/logos/stelena.svg'];
+  LOGO_VARIANTS.forEach(function (variant) {
+    LOGO_COLORS.forEach(function (color) {
+      LOGO_IMAGES.push('img/logos/' + variant + '-' + color + '.png');
+    });
+  });
 
   /* ── accent colour ────────────────────────────────────────────────── */
   let accent = '#e8175d';
@@ -94,19 +106,54 @@
   /* ── progress bar ────────────────────────────────────────────────── */
   const progressWrap = document.createElement('div');
   progressWrap.style.cssText =
-    'width:min(320px,80vw);margin-top:4px;opacity:0;transition:opacity .3s ease;';
+    'width:min(420px,86vw);margin-top:4px;opacity:0;transition:opacity .3s ease;';
 
-  const barTrack = document.createElement('div');
-  barTrack.style.cssText =
-    'width:100%;height:4px;border-radius:2px;overflow:hidden;' +
-    'background:rgba(255,255,255,0.08);';
+  // One segment per caching step (backgrounds, logos, games, cloud games).
+  // The active step renders big; finished steps shrink into the small slots
+  // on the left, pending ones wait small on the right. The big bar "walks"
+  // right as each step completes.
+  // Active bar = triple the completed/queued ones: 1.5× the old 29% width
+  // (43.5) vs the smalls at half of the old 29% width (14.5).
+  const BAR_ACTIVE_W = 43.5;                 // active (big) segment width, %
+  const BAR_SMALL_W  = 14.5;                 // completed/queued: ⅓ of the active bar
+  const BAR_ACTIVE_H = 10;
+  const BAR_SMALL_H  = 4.8;
+  const STEP_MIN_MS  = 5000;                 // hard minimum per segment (4 × 5 s = 20 s)
 
-  const barFill = document.createElement('div');
-  barFill.style.cssText =
-    'width:0%;height:100%;border-radius:2px;background:' + accent + ';' +
-    'transition:width .25s ease;';
-  barTrack.appendChild(barFill);
-  progressWrap.appendChild(barTrack);
+  const barRow = document.createElement('div');
+  barRow.style.cssText =
+    'display:flex;align-items:center;justify-content:space-between;' +
+    'width:100%;height:' + BAR_ACTIVE_H + 'px;';
+
+  const barSegments = [];
+  for (var bi = 0; bi < 4; bi++) {
+    const seg = document.createElement('div');
+    seg.style.cssText =
+      'height:' + BAR_SMALL_H + 'px;border-radius:3px;overflow:hidden;' +
+      'background:rgba(255,255,255,0.08);' +
+      'transition:width .45s ease,height .45s ease;';
+    const fill = document.createElement('div');
+    fill.style.cssText =
+      'width:0%;height:100%;border-radius:3px;background:' + accent + ';' +
+      'transition:width .25s ease;';
+    seg.appendChild(fill);
+    barRow.appendChild(seg);
+    barSegments.push({ el: seg, fill: fill });
+  }
+
+  // Grow the active step, shrink every other step into its slot.
+  function setStepActive(index) {
+    barSegments.forEach(function (seg, i) {
+      const active = i === index;
+      seg.el.style.width  = (active ? BAR_ACTIVE_W : BAR_SMALL_W) + '%';
+      seg.el.style.height = (active ? BAR_ACTIVE_H : BAR_SMALL_H) + 'px';
+    });
+  }
+
+  // Initial state: first step big, the other three small on its right.
+  setStepActive(0);
+
+  progressWrap.appendChild(barRow);
 
   const statusText = document.createElement('div');
   statusText.style.cssText =
@@ -141,16 +188,57 @@
   contentWrap.style.height = spSize + 'px';
 
   /* ── progress helpers ────────────────────────────────────────────── */
+  // Map a cache label back to its step slot (0 = backgrounds, 1 = logos,
+  // 2 = games, 3 = cloud games).
+  function stepIndexFromLabel(label) {
+    const l = String(label || '').toLowerCase();
+    if (l.indexOf('logo') !== -1) return 1;
+    if (l.indexOf('cloud') !== -1) return 3;
+    if (l.indexOf('game') !== -1) return 2;
+    return 0;
+  }
+
+  // Step pacing state: the fill never jumps straight to the real progress —
+  // it is capped by a STEP_MIN_MS linear envelope, so a segment that finishes
+  // early keeps filling (slower but accurate) instead of freezing at its
+  // final percentage for the remaining time.
+  let stepStartTime = 0;
+  let currentStepIdx = -1;
+  let realPct = 0;
+  let fillTicker = null;
+
+  function startFillTicker() {
+    if (fillTicker) return;
+    fillTicker = setInterval(function () {
+      if (currentStepIdx < 0) return;
+      const elapsed = Date.now() - stepStartTime;
+      const envelope = Math.min(100, (elapsed / STEP_MIN_MS) * 100);
+      barSegments[currentStepIdx].fill.style.width = Math.min(realPct, envelope) + '%';
+    }, 100);
+  }
+
+  function stopFillTicker() {
+    if (fillTicker) { clearInterval(fillTicker); fillTicker = null; }
+  }
+
   function updateProgress(cached, total, bytesDone, bytesTotal, label) {
     const pct = total > 0 ? Math.round((cached / total) * 100) : 0;
-    barFill.style.width = pct + '%';
+    const idx = stepIndexFromLabel(label);
+    if (idx !== currentStepIdx) {
+      currentStepIdx = idx;
+      stepStartTime = Date.now();
+    }
+    realPct = pct;
+    setStepActive(idx);
     statusText.textContent =
       (label || 'Caching assets:') + ' ' + cached + '/' + total + ' items  ' +
       formatMB(bytesDone) + ' / ' + formatMB(bytesTotal);
   }
 
   function showProgress() {
+    progressShown = true;
     progressWrap.style.opacity = '1';
+    startFillTicker();
   }
 
   function formatMB(bytes) {
@@ -208,6 +296,7 @@
 
   /* ── hide logic ──────────────────────────────────────────────────── */
   function hideLoader() {
+    stopFillTicker();
     overlay.style.opacity = '0';
     setTimeout(function () {
       overlay.remove();
@@ -250,7 +339,7 @@
       var missing = BG_IMAGES.filter(function (url) {
         return !bgCachedUrls.has(new URL(url, location.href).href);
       });
-      if (!missing.length) return;
+      if (!missing.length) { markStepComplete('Caching backgrounds:'); return; }
 
       showProgress();
       updateProgress(0, missing.length, 0, 0, 'Measuring backgrounds:');
@@ -275,6 +364,41 @@
     } catch (_) {}
   }
 
+  /* ── brand logo caching (runs right after backgrounds) ──────────── */
+  async function cacheLogoImages() {
+    if (!('caches' in window)) return;
+    try {
+      var logoCache = await caches.open(LOGOS_CACHE_KEY);
+      var logoKeys = await logoCache.keys();
+      var logoCachedUrls = new Set(logoKeys.map(function (r) { return r.url; }));
+      var missing = LOGO_IMAGES.filter(function (url) {
+        return !logoCachedUrls.has(new URL(url, location.href).href);
+      });
+      if (!missing.length) { markStepComplete('Caching logos:'); return; }
+
+      showProgress();
+      updateProgress(0, missing.length, 0, 0, 'Measuring logos:');
+
+      var lengths = await contentLengths(missing);
+      var bytesDone = 0;
+      var bytesTotal = sumBytes(lengths);
+      updateProgress(0, missing.length, 0, bytesTotal, 'Caching logos:');
+
+      for (var li = 0; li < missing.length; li++) {
+        try {
+          var lresp = await fetch(missing[li], { cache: 'no-store' });
+          var len = lengths[li] || parseInt(lresp.headers.get('content-length') || '0', 10) || 0;
+          if (lresp.ok) {
+            var cachedResp = lresp.clone();
+            await logoCache.put(missing[li], cachedResp);
+            bytesDone += await responseBytes(lresp, len);
+          }
+        } catch (_) {}
+        updateProgress(li + 1, missing.length, bytesDone, bytesTotal, 'Caching logos:');
+      }
+    } catch (_) {}
+  }
+
   /* ── game image caching (deferred 3s to avoid fighting bandwidth) ─ */
   async function cacheGameImages() {
     if (!('caches' in window)) return;
@@ -291,7 +415,7 @@
       }).filter(function (url) {
         return !alreadyCached.has(url);
       });
-      if (!missing.length) return;
+      if (!missing.length) { markStepComplete('Caching games:'); return; }
 
       showProgress();
       updateProgress(0, missing.length, 0, 0, 'Measuring games:');
@@ -341,7 +465,7 @@
         seen.add(fullUrl);
         return true;
       });
-      if (!missing.length) return;
+      if (!missing.length) { markStepComplete('Caching cloud games:'); return; }
 
       showProgress();
       updateProgress(0, missing.length, 0, 0, 'Measuring cloud games:');
@@ -366,11 +490,44 @@
     } catch (_) {}
   }
 
+  function sleep(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  // Skipped steps (already fully cached) still occupy their segment: once the
+  // bar is visible, mark the segment complete so the walk stays in order. The
+  // ticker then paces its fill over the step's minimum time.
+  function markStepComplete(label) {
+    if (!progressShown) return;
+    const idx = stepIndexFromLabel(label);
+    currentStepIdx = idx;
+    stepStartTime = Date.now();
+    realPct = 100;
+    setStepActive(idx);
+    statusText.textContent = label.replace('Caching ', 'Cached ') + ' up to date';
+  }
+
+  // Hard minimum display time per step: a segment must stay on screen for at
+  // least `ms` before the next one takes over. While it waits, the fill keeps
+  // moving (driven by the ticker's envelope), so the bar never idles at its
+  // final percentage. Only enforced once the bar is actually visible, so
+  // fully-warm loads still pass instantly.
+  async function withMinStepTime(task, ms) {
+    const start = Date.now();
+    try {
+      await task;
+    } finally {
+      const remaining = ms - (Date.now() - start);
+      if (remaining > 0 && progressShown) await sleep(remaining);
+    }
+  }
+
   async function cacheVisibleAssets() {
     try {
-      await cacheBackgroundImages();
-      await cacheGameImages();
-      await cacheCloudImages();
+      await withMinStepTime(cacheBackgroundImages(), STEP_MIN_MS);
+      await withMinStepTime(cacheLogoImages(), STEP_MIN_MS);
+      await withMinStepTime(cacheGameImages(), STEP_MIN_MS);
+      await withMinStepTime(cacheCloudImages(), STEP_MIN_MS);
     } finally {
       cacheComplete = true;
       checkAndHide();
@@ -379,12 +536,13 @@
 
   cacheVisibleAssets();
 
-  /* safety net: force-hide after 30 s */
+  /* safety net: force-hide after 90 s (the 4×5 s minimum floor means cold
+     loads take at least 20 s, so 30 s would cut real caching short) */
   setTimeout(function () {
     if (!splashHidden) {
       cacheComplete = true;
       splashHidden = true;
       hideLoader();
     }
-  }, 30000);
+  }, 90000);
 })();

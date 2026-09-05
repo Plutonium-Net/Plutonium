@@ -319,34 +319,69 @@ body {
   pointer-events: all;
 }
 
+#viewer-bar-hint {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 709;
+  background: var(--panel-bg-dark);
+  border: 1px solid rgba(var(--pink-rgb),0.25);
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+#viewer-bar-hint.hint-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ── Launch gate — "Launch [game]" screen + morph-to-bar animation ─────── */
 #game-launch {
   position: absolute;
   inset: 0;
   z-index: 5;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #000;
   animation: game-launch-in 0.3s ease both;
 }
 
-#game-launch-bg {
-  position: absolute;
-  inset: -40px;
-  background-size: cover;
-  background-position: center;
-  filter: blur(24px) saturate(1.15);
-  opacity: 0.4;
-  transform: scale(1.15);
+.game-launch__logo {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  margin-bottom: 42px;
   pointer-events: none;
 }
 
-#game-launch::after {
-  content: '';
+.game-corner-logo {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.82) 100%);
+  top: 14px;
+  left: 14px;
+  width: 42px;
+  height: 42px;
+  z-index: 5;
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.game-corner-logo.visible {
+  opacity: 1;
 }
 
 #game-launch-btn {
@@ -354,7 +389,7 @@ body {
   z-index: 2;
   background: rgba(10,10,10,0.62);
   border: 1px solid rgba(var(--pink-rgb),0.55);
-  border-radius: 14px;
+  border-radius: 60px;
   color: var(--pink);
   font-family: inherit;
   font-size: 1.15rem;
@@ -421,17 +456,6 @@ body {
   will-change: transform;
 }
 
-#vbtn-fav.is-fav {
-  color: var(--pink);
-}
-
-#vbtn-fav.is-fav i {
-  text-shadow:
-    0 0 6px rgba(var(--pink-rgb),0.9),
-    0 0 12px rgba(var(--pink-rgb),0.6),
-    0 0 24px rgba(var(--pink-rgb),0.3);
-}
-
 .viewer-btn:hover { color: var(--pink); }
 
 .viewer-btn:hover i {
@@ -447,6 +471,15 @@ body {
   background: var(--surface-4);
   margin: 0 4px;
   flex-shrink: 0;
+}
+
+.viewer-bar__logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin-right: 2px;
 }
 
 .viewer-bar__title {
@@ -496,36 +529,6 @@ body {
 .pgcdn-card {
   position: relative;
 }
-
-.pgcdn-fav-btn {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0,0,0,0.55);
-  color: rgba(255,255,255,0.4);
-  font-size: 0.7rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s, background 0.15s;
-  z-index: 2;
-}
-
-.pgcdn-card:hover .pgcdn-fav-btn { opacity: 1; }
-
-.pgcdn-fav-btn.is-fav {
-  opacity: 1;
-  color: var(--pink);
-  background: rgba(var(--pink-rgb),0.18);
-}
-
-.pgcdn-fav-btn:hover { color: var(--pink); background: rgba(var(--pink-rgb),0.25); }
 
 .pgcdn-sync-badge {
   font-size: 0.7rem;
@@ -661,31 +664,11 @@ body {
   margin-top: 2px;
 }
 
-.history-list__fav {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 4px 6px;
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-
-.history-list__fav:hover,
-.history-list__fav.is-fav { color: var(--pink); }
-
 #pgcdn-ctx-menu {
   position: fixed;
   z-index: 500;
-  background: var(--panel-bg-dark);
-  border: 1px solid rgba(var(--pink-rgb),0.2);
-  backdrop-filter: var(--ui-blur);
-  -webkit-backdrop-filter: var(--ui-blur);
-  border-radius: 10px;
   padding: 5px 0;
   min-width: 180px;
-  box-shadow: 0 8px 32px rgba(var(--ui-shadow-rgb),0.6), 0 0 12px rgba(var(--pink-rgb),0.08);
   user-select: none;
 }
 
@@ -1240,8 +1223,28 @@ body {
 }
 
 /* ── Rebuilt Games Catalog ──────────────────────────────────────────────── */
-html {
+/* The games page scrolls inside #workspace-root (not <html>), so style that
+   scrollbar: the app-wide accent-tinted thumb (workspace.css body rule)
+   reads as a light line at the right edge. Use the app's standard dark
+   scrollbar here instead; the stable gutter stops the grid jumping when a
+   search shrinks the results below the fold. */
+#workspace-root:has(.workspace-games:not([hidden])) {
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+  scrollbar-width: thin;
   scrollbar-gutter: stable;
+}
+
+#workspace-root:has(.workspace-games:not([hidden]))::-webkit-scrollbar {
+  width: 6px;
+}
+
+#workspace-root:has(.workspace-games:not([hidden]))::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#workspace-root:has(.workspace-games:not([hidden]))::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 999px;
 }
 
 body.viewer-open {
@@ -1311,6 +1314,7 @@ body.viewer-open {
 
 .pgcdn-shelf__row .pgcdn-card {
   flex: 0 0 148px;
+  contain-intrinsic-size: 148px 83px;
 }
 
 .pgcdn-virtual {
@@ -1353,18 +1357,55 @@ body.viewer-open {
      with the real column width via --card-w) prevents scrollbar jumping. */
   content-visibility: auto;
   contain: layout paint style;
-  contain-intrinsic-size: var(--card-w, 300px) calc(var(--card-w, 300px) * 0.5625 + 44px);
+  contain-intrinsic-size: var(--card-w, 300px) calc(var(--card-w, 300px) * 0.5625);
   transform: none;
 }
 
-/* Bigger 4× tiles: larger title strip and hover buttons on the catalog grid */
+/* Full-bleed tiles: the image fills the card and the name overlays the
+   bottom in white over a dark gradient. */
+.pgcdn-virtual .pgcdn-card,
+.pgcdn-shelf__row .pgcdn-card {
+  aspect-ratio: 16 / 9;
+}
+
+.pgcdn-virtual .pgcdn-card__img,
+.pgcdn-shelf__row .pgcdn-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: cover;
+}
+
+.pgcdn-virtual .pgcdn-card__name,
+.pgcdn-shelf__row .pgcdn-card__name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  padding: 16px 12px 10px;
+  text-align: center;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.58) 55%, rgba(0,0,0,0) 100%);
+}
+
 .pgcdn-virtual .pgcdn-card__name {
-  height: 44px;
-  padding: 10px 12px;
   font-size: 0.92rem;
 }
 
-.pgcdn-virtual .pgcdn-fav-btn,
+.pgcdn-shelf__row .pgcdn-card__name {
+  font-size: 0.72rem;
+}
+
 .pgcdn-virtual .pg-card-more {
   width: 32px;
   height: 32px;
@@ -1395,7 +1436,6 @@ body.viewer-open {
   line-height: 1.2;
 }
 
-.pgcdn-fav-btn,
 .pg-card-more {
   opacity: 1;
   width: 25px;

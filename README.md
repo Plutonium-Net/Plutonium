@@ -12,7 +12,7 @@ cloud-synced saves) added in.
 
 | Route (address bar) | File | What it is |
 | --- | --- | --- |
-| `pluto://games` | `js/workspaces.js` | Games — Local library + **Cloud** (Plutonium GCDN) with favourites, recently played & save sync |
+| `pluto://games` | `js/workspaces.js` | Games — Local library + **Cloud** (Plutonium GCDN) with recently played & save sync |
 | `pluto://media` | `js/workspaces.js` | Media — movies / TV / anime, age gate, Videasy & VidCore players |
 | `pluto://ai` | `js/workspaces.js` | **Stelena** — Plutonium AI (Groq worker, streaming, voice + TTS) |
 | `pluto://vms` | `js/workspaces.js` | Cloud VMs (remote sessions via the Plutonium VM worker) |
@@ -62,7 +62,7 @@ Workspace views are injected into the single `index.html` document by
   email/password + OAuth, bookmarks/pins/tabs cloud sync under
   `bookmarks`, `pins`, `tabs` docs, with one-time migration of the old
   `cg_bookmarks` / `cg_pins` / `cg_tabs` keys.
-- Games favourites/recently played live under `plu_games_data` and sync to
+- Games recently played live under `plu_games_data` and sync to
   `games_data/saved`; per-game saves sync to `game_saves/{id}` via
   `plu_sync_*` postMessage messages.
 - Ported Plutonium pages use `css/plu-tokens.css` (the Plutonium design

@@ -323,9 +323,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .history-list__thumb {
   border-radius: var(--workspace-pill-radius);
 }
-.history-list__fav {
-  border-radius: 999px;
-}
 .pgcdn-card {
   border-radius: var(--workspace-soft-radius);
   background: rgba(255,255,255,.045);
@@ -756,12 +753,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   position: fixed;
   min-width: 190px;
   padding: 6px;
-  border-radius: 1.15rem;
-  background: rgba(22,22,28,.78);
-  border: 1px solid rgba(255,255,255,.2);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  box-shadow: 0 16px 40px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.12);
 }
 #workspace-root .workspace-games #pgcdn-ctx-menu .ctx-item {
   width: 100%;

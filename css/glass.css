@@ -55,3 +55,33 @@
   z-index: -1;
   filter: blur(1px) drop-shadow(10px 4px 6px rgba(var(--ui-shadow-rgb),0.75)) brightness(100%);
 }
+
+/* Custom right-click popups share the same glass surface. The popups are
+   position:fixed menus, so assert that here — .glass's position:relative
+   would otherwise override it at equal specificity. */
+.plu-ctx-menu, #bm-ctx-menu, #pgcdn-ctx-menu, .cg-ctx-menu {
+  position: fixed;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
+  border-radius: 0.85rem;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 12px 36px rgba(var(--ui-shadow-rgb), 0.38),
+              inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.plu-ctx-menu::before, #bm-ctx-menu::before, #pgcdn-ctx-menu::before, .cg-ctx-menu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,.14), transparent 42%, rgba(var(--ui-accent-rgb),.07));
+  opacity: .55;
+}
+
+/* Menus that also carry the .glass class skip its ::after overlay. */
+.plu-ctx-menu::after, #bm-ctx-menu::after, #pgcdn-ctx-menu::after, .cg-ctx-menu::after {
+  content: none;
+}

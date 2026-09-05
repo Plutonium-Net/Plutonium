@@ -34,7 +34,7 @@ const ContextMenu = (() => {
     if (!Array.isArray(items) || !items.length) return
 
     menuEl = document.createElement('div')
-    menuEl.className = 'plu-ctx-menu'
+    menuEl.className = 'plu-ctx-menu glass'
     menuEl.setAttribute('role', 'menu')
 
     items.forEach(item => {
@@ -74,7 +74,7 @@ const ContextMenu = (() => {
     menuEl.style.top = Math.max(4, Math.min(y, window.innerHeight - mh - 6)) + 'px'
 
     const dismiss = e => {
-      if (menuEl && e && e.target && (menuEl === e.target || menuEl.contains(e.target))) return
+      if (menuEl && e && e.target instanceof Node && (menuEl === e.target || menuEl.contains(e.target))) return
       close()
     }
     setTimeout(() => {

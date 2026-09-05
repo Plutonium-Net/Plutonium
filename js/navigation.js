@@ -52,7 +52,13 @@ function workspaceTitle(key) {
 function updateLocalTab(tab, local, display) {
   if (!tab) return
   tab.querySelector('.chrome-tab-title').textContent = workspaceTitle(local.key)
-  tab.querySelector('.chrome-tab-favicon').setAttribute('hidden', '')
+  // System pages (games, cloud, AI, media, VMs) get the accent-tinted
+  // Plutonium favicon in the tab bar instead of a blank spot.
+  const faviconEl = tab.querySelector('.chrome-tab-favicon')
+  if (faviconEl) {
+    faviconEl.style.backgroundImage = `url('${typeof BrowserThemeState !== 'undefined' && BrowserThemeState.getAccentIconPath ? BrowserThemeState.getAccentIconPath() : 'img/favicon.png'}')`
+    faviconEl.removeAttribute('hidden')
+  }
   tab.dataset.url = display
   tab.dataset.title = workspaceTitle(local.key)
   pushTabHistory(tab, display)

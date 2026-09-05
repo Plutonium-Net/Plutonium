@@ -396,6 +396,21 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
+	// Brand logos (every accent colour × logo variant) — serve from Cache API (cache-first)
+	if (url.includes('/img/logos/')) {
+		event.respondWith(
+			caches.open('plutonium-logos-v1').then(function (cache) {
+				return cache.match(event.request).then(function (cached) {
+					return cached || fetch(event.request).then(function (network) {
+						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());
+						return network;
+					});
+				});
+			})
+		);
+		return;
+	}
+
 	// Core engine requests
 	if (url.includes(CORE_PREFIX)) {
 		if (coreSW) {

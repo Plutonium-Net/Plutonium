@@ -286,7 +286,8 @@ function updateAccentFavicon() {
     ntIcon.style.backgroundImage = `url('${path}')`
   }
   const activeTab = typeof getActiveTab === 'function' ? getActiveTab() : null
-  if (activeTab && activeTab.dataset.url === 'newtab') {
+  const tabUrl = activeTab ? (activeTab.dataset.url || '') : ''
+  if (activeTab && (tabUrl === 'newtab' || /^(?:plu|pluto):\/\//i.test(tabUrl))) {
     const fav = activeTab.querySelector('.chrome-tab-favicon')
     if (fav) fav.style.backgroundImage = `url('${path}')`
   }

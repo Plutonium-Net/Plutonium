@@ -139,6 +139,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .chrome-tabs .chrome-tab .chrome-tab-title{
   flex:1;vertical-align:top;overflow:hidden;white-space:nowrap;
   margin-left:4px;color:var(--ui-text-sub);
+  transform:translateY(-1px);
   -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 calc(100% - 24px),transparent);
   mask-image:linear-gradient(90deg,#000 0%,#000 calc(100% - 24px),transparent);
 }
@@ -827,6 +828,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   gap:10px;pointer-events:auto;
 }
 .app-tile-wrap{position:relative;display:inline-flex}
+.app-tile-wrap--wide{grid-column:1 / -1;justify-self:center}
 .app-tile{
   position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;
   width:120px;padding:18px 10px 14px;
@@ -992,9 +994,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 
 #bm-ctx-menu{
   position:fixed;z-index:9998;
-  background:var(--ui-surface-4);
-  border:1px solid rgba(255,255,255,0.1);border-radius:8px;
-  box-shadow:0 8px 24px rgba(var(--ui-shadow-rgb),0.45);
   padding:6px;min-width:180px;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
@@ -1029,10 +1028,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 /* Custom right-click context menu */
 .plu-ctx-menu{
   position:fixed;z-index:9999;
-  background:var(--ui-surface-4);
-  backdrop-filter:blur(2px) saturate(180%);-webkit-backdrop-filter:blur(2px) saturate(180%);
-  border:1px solid rgba(255,255,255,0.1);border-radius:8px;
-  box-shadow:0 8px 24px rgba(var(--ui-shadow-rgb),0.45);
   padding:6px;min-width:190px;max-width:270px;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   animation:plu-ctx-in .12s ease-out;

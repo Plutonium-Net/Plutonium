@@ -11,7 +11,7 @@
 
   let games = [];
   let filteredGames = [];
-  let data = { favourites: [], recent: [] };
+  let data = { recent: [] };
   let knownSaves = null;
   let pendingSaves = null;
   let syncGameId = null;
@@ -34,8 +34,9 @@
       'history-list', 'history-count', 'history-search', 'history-clear',
       'pgcdn-ctx-menu', 'pgcdn-toast', 'pgcdn-toast-msg', 'pgcdn-toast-actions',
       'game-viewer', 'game-iframe', 'game-restore-overlay', 'viewer-bar',
-      'viewer-bar-ghost', 'viewer-title', 'vbtn-fav',
-      'game-launch', 'game-launch-btn', 'game-launch-bg',
+      'viewer-bar-ghost', 'viewer-title',
+      'game-launch', 'game-launch-btn', 'viewer-bar-hint', 'viewer-bar-logo',
+      'game-corner-logo', 'game-launch-logo',
       'games-preload-overlay', 'games-preload-label'
     ].forEach(id => { els[id] = $(id); });
   }
@@ -43,7 +44,7 @@
   function loadLocal() {
     try {
       const raw = localStorage.getItem(LS_KEY);
-      if (raw) data = { favourites: [], recent: [], ...JSON.parse(raw) };
+      if (raw) data = { recent: [], ...JSON.parse(raw) };
     } catch (_) {}
   }
 
@@ -55,7 +56,6 @@
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
     try {
       await PlutoniumStore.setDoc(CLOUD_DOC, {
-        favourites: data.favourites,
         recent: data.recent.map(g => ({ id: g.id, ts: g.ts })),
         savedGames: knownSaves ? Array.from(knownSaves) : undefined
       });
@@ -75,7 +75,6 @@
       }
 
       knownSaves = new Set(doc.savedGames || []);
-      data.favourites = Array.from(new Set(data.favourites.concat(doc.favourites || [])));
 
       const cloudRecent = (doc.recent || [])
         .map(r => {
@@ -110,20 +109,6 @@
     badge.innerHTML = synced
       ? '<i class="fa-solid fa-cloud-arrow-up"></i> Synced to account'
       : '<i class="fa-solid fa-cloud"></i> Sign in to sync across devices';
-  }
-
-  function isFav(id) { return data.favourites.includes(id); }
-
-  function toggleFav(id) {
-    data.favourites = isFav(id)
-      ? data.favourites.filter(f => f !== id)
-      : data.favourites.concat(id);
-    saveLocal();
-    saveCloud();
-    renderShelves();
-    renderHistory();
-    renderGrid();
-    updateViewerFav();
   }
 
   function recordPlay(game) {
@@ -444,13 +429,6 @@
   let barTimer = null;
   let barManualHide = false;
 
-  function updateViewerFav() {
-    if (!currentGame || !els['vbtn-fav']) return;
-    const fav = isFav(currentGame.id);
-    els['vbtn-fav'].classList.toggle('is-fav', fav);
-    els['vbtn-fav'].querySelector('i').className = 'fa-' + (fav ? 'solid' : 'regular') + ' fa-heart';
-  }
-
   function openViewer(url, name, game) {
     const viewer = els['game-viewer'];
     const iframe = els['game-iframe'];
@@ -460,17 +438,15 @@
     els['viewer-title'].textContent = name || '';
     iframe.classList.remove('entering');
     if (els['game-launch']) {
-      const bg = els['game-launch-bg'];
-      const thumb = (game && game.image) ? gameImage(game) : '';
-      if (bg) bg.style.backgroundImage = thumb ? 'url("' + thumb + '")' : 'none';
-      els['game-launch-btn'].textContent = 'Launch ' + (name || 'Game');
+      els['game-launch-btn'].textContent = 'Launch (' + (name || 'Game') + ')';
       els['game-launch-btn'].disabled = false;
       els['game-launch'].classList.remove('done', 'hidden');
     }
     viewer.classList.add('active');
     document.body.classList.add('viewer-open');
+    updateBrandLogos();
+    if (els['game-corner-logo']) els['game-corner-logo'].classList.remove('visible');
     barManualHide = false;
-    updateViewerFav();
     clearTimeout(barTimer);
     hideBar();
   }
@@ -493,9 +469,11 @@
     box.style.height = rect.height + 'px';
     box.style.left = rect.left + 'px';
     box.style.top = rect.top + 'px';
+    // Start as a pill (matching the button) so the morph is seamless.
+    box.style.borderRadius = getComputedStyle(btn).borderRadius;
     document.body.appendChild(box);
 
-    // Keep the blurred thumbnail behind the morph; drop the button.
+    // Keep the black backdrop behind the morph; drop the button.
     if (els['game-launch']) els['game-launch'].classList.add('done');
 
     const startWidth = rect.width;
@@ -585,6 +563,8 @@
     function loadGame() {
       launchAnimating = false;
       if (els['game-launch']) els['game-launch'].classList.add('hidden');
+      // The corner brand mark appears once the game is on screen.
+      if (els['game-corner-logo']) els['game-corner-logo'].classList.add('visible');
       els['game-iframe'].src = pendingGameUrl;
       els['game-iframe'].classList.add('entering');
       showBar();
@@ -600,30 +580,60 @@
     if (els['game-iframe']) { els['game-iframe'].src = ''; els['game-iframe'].classList.remove('entering'); }
     if (els['viewer-title']) els['viewer-title'].textContent = '';
     if (els['game-launch']) els['game-launch'].classList.remove('done', 'hidden');
+    if (els['game-corner-logo']) els['game-corner-logo'].classList.remove('visible');
     currentGame = null;
     pendingGameUrl = null;
     launchAnimating = false;
     document.body.classList.remove('viewer-open');
     clearTimeout(barTimer);
     hideBar();
+    hideBarHint();
     const stray = document.querySelector('.transition-box');
     if (stray) stray.remove();
+  }
+
+  let barHintTimer = null;
+
+  // Small autopopup that appears when the bar minimizes, teaching the
+  // Shift / ghost-pill shortcut to bring it back.
+  function showBarHint() {
+    const hint = els['viewer-bar-hint'];
+    if (!hint) return;
+    hint.classList.add('hint-visible');
+    clearTimeout(barHintTimer);
+    barHintTimer = setTimeout(() => hint.classList.remove('hint-visible'), 3500);
+  }
+
+  function hideBarHint() {
+    const hint = els['viewer-bar-hint'];
+    if (!hint) return;
+    hint.classList.remove('hint-visible');
+    clearTimeout(barHintTimer);
   }
 
   function showBar() {
     els['viewer-bar'].classList.remove('bar-hidden');
     els['viewer-bar-ghost'].classList.remove('ghost-visible');
+    hideBarHint();
   }
 
   function hideBar() {
     els['viewer-bar'].classList.add('bar-hidden');
-    els['viewer-bar-ghost'].classList.add('ghost-visible');
+    // Only the ghost pill marks the hidden state — and never while the
+    // launch screen/morph is up (it would float over the animation).
+    const ghost = els['viewer-bar-ghost'];
+    const viewer = els['game-viewer'];
+    const launchActive = !!(els['game-launch'] && !els['game-launch'].classList.contains('hidden'));
+    if (ghost) ghost.classList.toggle('ghost-visible', !!viewer && viewer.classList.contains('active') && !launchActive);
   }
 
   function scheduleBarHide() {
     clearTimeout(barTimer);
     barTimer = setTimeout(() => {
-      if (!barManualHide) hideBar();
+      if (!barManualHide) {
+        hideBar();
+        showBarHint();
+      }
     }, 2600);
   }
 
@@ -641,9 +651,7 @@
     $('vbtn-hide').addEventListener('click', () => {
       barManualHide = true;
       hideBar();
-    });
-    els['vbtn-fav'].addEventListener('click', () => {
-      if (currentGame) toggleFav(currentGame.id);
+      showBarHint();
     });
     els['game-viewer'].addEventListener('mousemove', () => {
       if (barManualHide) return;
@@ -651,7 +659,7 @@
       showBar();
       scheduleBarHide();
     });
-    els['viewer-bar-ghost'].addEventListener('mouseenter', () => {
+    els['viewer-bar-ghost'].addEventListener('click', () => {
       barManualHide = false;
       if (els['game-launch'] && !els['game-launch'].classList.contains('hidden')) return;
       showBar();
@@ -662,6 +670,20 @@
     }
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && els['game-viewer'].classList.contains('active') && !document.fullscreenElement) closeViewer();
+      // Left Shift toggles the bottom bar: summons it from the minimized
+      // pill, or minimizes it again when visible.
+      if (e.key === 'Shift' && e.location === 1 && els['game-viewer'].classList.contains('active')) {
+        if (els['game-launch'] && !els['game-launch'].classList.contains('hidden')) return;
+        if (els['viewer-bar'].classList.contains('bar-hidden')) {
+          barManualHide = false;
+          showBar();
+          scheduleBarHide();
+        } else {
+          barManualHide = true;
+          hideBar();
+          showBarHint();
+        }
+      }
     });
     document.addEventListener('fullscreenchange', () => {
       const icon = document.querySelector('#vbtn-fullscreen i');
@@ -856,7 +878,9 @@
     }
   }
 
-  function setFavicon() {
+  // Resolve the theme's accent color to a brand asset name (shared by the
+  // favicon and the viewer-bar logo).
+  function accentIconName() {
     const map = {
       '#e8175d': 'plutonium-pink',
       '#7c3aed': 'violet',
@@ -867,16 +891,27 @@
       '#0891b2': 'cyan',
       '#c026d3': 'fuchsia'
     };
-    function iconName() {
-      try {
-        const state = JSON.parse(localStorage.getItem('plu_theme') || '{}');
-        return map[String(state.accentColor || '').trim().toLowerCase()] || 'plutonium-pink';
-      } catch (_) {
-        return 'plutonium-pink';
-      }
+    try {
+      const state = JSON.parse(localStorage.getItem('plu_theme') || '{}');
+      return map[String(state.accentColor || '').trim().toLowerCase()] || 'plutonium-pink';
+    } catch (_) {
+      return 'plutonium-pink';
     }
+  }
+
+  function setFavicon() {
     const link = document.querySelector('link[rel="icon"][type="image/png"]');
-    if (link) link.href = 'img/logos/icon-' + iconName() + '.png';
+    if (link) link.href = 'img/logos/icon-' + accentIconName() + '.png';
+  }
+
+  // Theme-tinted brand logos: the viewer-bar mark, the launch-screen logo
+  // and the in-game corner mark all use the transparent icon variant.
+  function updateBrandLogos() {
+    const name = accentIconName();
+    ['viewer-bar-logo', 'game-corner-logo', 'game-launch-logo'].forEach(id => {
+      const img = els[id];
+      if (img) img.src = 'img/logos/icon-' + name + '.png';
+    });
   }
 
   async function init() {
