@@ -44,7 +44,7 @@
       </div>
       <div id="pgcdn-ctx-menu" class="hidden"></div>
       <div id="pgcdn-toast"><span class="toast-msg" id="pgcdn-toast-msg"></span><div class="toast-actions" id="pgcdn-toast-actions"></div></div>
-      <div id="game-viewer" class="glass"><iframe id="game-iframe" allowfullscreen allow="autoplay; fullscreen"></iframe><div id="game-restore-overlay"><div class="game-restore-spinner"></div><span class="game-restore-label">Restoring saves...</span></div></div>
+      <div id="game-viewer" class="glass"><iframe id="game-iframe" allowfullscreen allow="autoplay; fullscreen"></iframe><div id="game-launch"><div id="game-launch-bg"></div><button id="game-launch-btn" aria-label="Launch game">Launch</button></div><div id="game-restore-overlay"><div class="game-restore-spinner"></div><span class="game-restore-label">Restoring saves...</span></div></div>
       <div id="viewer-bar" class="bar-hidden"><button class="viewer-btn" id="vbtn-back" title="Back to games" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></button><div class="viewer-bar__sep"></div><span class="viewer-bar__title" id="viewer-title"></span><div class="viewer-bar__sep"></div><button class="viewer-btn" id="vbtn-fav" title="Favourite" aria-label="Favourite"><i class="fa-regular fa-heart"></i></button><button class="viewer-btn" id="vbtn-reload" title="Reload game" aria-label="Reload"><i class="fa-solid fa-rotate-right"></i></button><button class="viewer-btn" id="vbtn-fullscreen" title="Fullscreen" aria-label="Fullscreen"><i class="fa-solid fa-expand"></i></button><button class="viewer-btn" id="vbtn-hide" title="Hide bar" aria-label="Hide bar"><i class="fa-solid fa-chevron-down"></i></button></div><div id="viewer-bar-ghost"></div>
     </section>`,
 

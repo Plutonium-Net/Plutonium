@@ -258,6 +258,12 @@ body {
   width: 100%;
   border: none;
   display: block;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+#game-iframe.entering {
+  opacity: 1;
 }
 
 #viewer-bar {
@@ -311,6 +317,90 @@ body {
 #viewer-bar-ghost.ghost-visible {
   opacity: 1;
   pointer-events: all;
+}
+
+/* ── Launch gate — "Launch [game]" screen + morph-to-bar animation ─────── */
+#game-launch {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  animation: game-launch-in 0.3s ease both;
+}
+
+#game-launch-bg {
+  position: absolute;
+  inset: -40px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(24px) saturate(1.15);
+  opacity: 0.4;
+  transform: scale(1.15);
+  pointer-events: none;
+}
+
+#game-launch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.82) 100%);
+}
+
+#game-launch-btn {
+  position: relative;
+  z-index: 2;
+  background: rgba(10,10,10,0.62);
+  border: 1px solid rgba(var(--pink-rgb),0.55);
+  border-radius: 14px;
+  color: var(--pink);
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 15px 36px;
+  cursor: pointer;
+  backdrop-filter: var(--ui-blur);
+  -webkit-backdrop-filter: var(--ui-blur);
+  box-shadow: 0 0 26px rgba(var(--pink-rgb),0.28), 0 10px 36px rgba(0,0,0,0.65);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+  animation: game-launch-btn-in 0.35s 0.08s backwards;
+}
+
+#game-launch-btn:hover:not(:disabled) {
+  background: var(--pink);
+  color: #fff;
+  box-shadow: 0 0 38px rgba(var(--pink-rgb),0.55), 0 10px 36px rgba(0,0,0,0.65);
+  transform: translateY(-2px);
+}
+
+#game-launch-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+#game-launch.done #game-launch-btn { display: none; }
+#game-launch.hidden { display: none; }
+
+@keyframes game-launch-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes game-launch-btn-in {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.transition-box {
+  position: fixed;
+  z-index: 705;
+  background: rgba(10,10,10,0.66);
+  border: 1px solid rgba(var(--pink-rgb),0.4);
+  box-shadow: 0 0 20px rgba(var(--pink-rgb),0.18), 0 8px 32px rgba(0,0,0,0.5);
+  pointer-events: none;
 }
 
 .viewer-btn {

@@ -16,6 +16,8 @@
   let pendingSaves = null;
   let syncGameId = null;
   let currentGame = null;
+  let pendingGameUrl = null;
+  let launchAnimating = false;
   let historySort = 'recent';
   let historyQuery = '';
   let activePanel = 'pgcdn';
@@ -33,6 +35,7 @@
       'pgcdn-ctx-menu', 'pgcdn-toast', 'pgcdn-toast-msg', 'pgcdn-toast-actions',
       'game-viewer', 'game-iframe', 'game-restore-overlay', 'viewer-bar',
       'viewer-bar-ghost', 'viewer-title', 'vbtn-fav',
+      'game-launch', 'game-launch-btn', 'game-launch-bg',
       'games-preload-overlay', 'games-preload-label'
     ].forEach(id => { els[id] = $(id); });
   }
@@ -452,16 +455,141 @@
     const viewer = els['game-viewer'];
     const iframe = els['game-iframe'];
     if (!viewer || !iframe) return;
-    if (window.SoundFX) window.SoundFX.play('launch');
-    iframe.src = url;
+    pendingGameUrl = url;
     currentGame = game || null;
     els['viewer-title'].textContent = name || '';
+    iframe.classList.remove('entering');
+    if (els['game-launch']) {
+      const bg = els['game-launch-bg'];
+      const thumb = (game && game.image) ? gameImage(game) : '';
+      if (bg) bg.style.backgroundImage = thumb ? 'url("' + thumb + '")' : 'none';
+      els['game-launch-btn'].textContent = 'Launch ' + (name || 'Game');
+      els['game-launch-btn'].disabled = false;
+      els['game-launch'].classList.remove('done', 'hidden');
+    }
     viewer.classList.add('active');
     document.body.classList.add('viewer-open');
     barManualHide = false;
     updateViewerFav();
-    showBar();
-    scheduleBarHide();
+    clearTimeout(barTimer);
+    hideBar();
+  }
+
+  // Launch gate (ported from the Crafted Gamz launcher): the Launch button
+  // shrinks into a circle, drifts down to where the control bar rests and
+  // expands into its exact shape, then the game fades in behind the bar.
+  function startLaunch() {
+    if (launchAnimating || !pendingGameUrl) return;
+    const btn = els['game-launch-btn'];
+    if (!btn) return;
+    launchAnimating = true;
+    btn.disabled = true;
+    if (window.SoundFX) window.SoundFX.play('launch');
+
+    const rect = btn.getBoundingClientRect();
+    const box = document.createElement('div');
+    box.className = 'transition-box';
+    box.style.width = rect.width + 'px';
+    box.style.height = rect.height + 'px';
+    box.style.left = rect.left + 'px';
+    box.style.top = rect.top + 'px';
+    document.body.appendChild(box);
+
+    // Keep the blurred thumbnail behind the morph; drop the button.
+    if (els['game-launch']) els['game-launch'].classList.add('done');
+
+    const startWidth = rect.width;
+    const startHeight = rect.height;
+    const targetSize = 60;
+    const centerX = rect.left + startWidth / 2;
+    const centerY = rect.top + startHeight / 2;
+
+    // Phase 1 — shrink the button into a circle.
+    let progress = 0;
+    const shrink = setInterval(() => {
+      progress += 0.025;
+      if (progress >= 1) {
+        clearInterval(shrink);
+        box.style.width = targetSize + 'px';
+        box.style.height = targetSize + 'px';
+        box.style.left = (centerX - targetSize / 2) + 'px';
+        box.style.top = (centerY - targetSize / 2) + 'px';
+        box.style.borderRadius = '50%';
+        setTimeout(() => driftDown(box), 300);
+      } else {
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const w = startWidth - (startWidth - targetSize) * eased;
+        const h = startHeight - (startHeight - targetSize) * eased;
+        box.style.width = w + 'px';
+        box.style.height = h + 'px';
+        box.style.left = (centerX - w / 2) + 'px';
+        box.style.top = (centerY - h / 2) + 'px';
+        box.style.borderRadius = (targetSize / Math.max(w, h)) * 100 + '%';
+      }
+    }, 12);
+
+    // Phase 2 — drift the circle down to where the control bar rests.
+    function driftDown(box) {
+      const bar = els['viewer-bar'];
+      const r = bar.getBoundingClientRect();
+      // bar-hidden nudges the bar 16px down; undo it to hit the resting spot.
+      const barRect = { left: r.left, top: r.top - 16, width: r.width, height: r.height };
+      const targetTop = barRect.top + barRect.height / 2 - targetSize / 2;
+      const currentTop = parseFloat(box.style.top);
+      const totalDistance = targetTop - currentTop;
+      let progress = 0;
+
+      const drift = setInterval(() => {
+        progress += 0.015;
+        if (progress >= 1) {
+          clearInterval(drift);
+          box.style.top = targetTop + 'px';
+          expandIntoBar(box, barRect);
+        } else {
+          const eased = 1 - Math.pow(1 - progress, 3);
+          box.style.top = (currentTop + totalDistance * eased) + 'px';
+        }
+      }, 10);
+    }
+
+    // Phase 3 — expand the circle into the exact shape of the control bar.
+    function expandIntoBar(box, barRect) {
+      const initialLeft = parseFloat(box.style.left);
+      const initialTop = parseFloat(box.style.top);
+      const initialWidth = parseFloat(box.style.width);
+      const initialHeight = parseFloat(box.style.height);
+      const dLeft = initialLeft - barRect.left;
+      const dTop = initialTop - barRect.top;
+      const dWidth = barRect.width - initialWidth;
+      const dHeight = barRect.height - initialHeight;
+      let progress = 0;
+
+      const expand = setInterval(() => {
+        progress += 0.015;
+        if (progress >= 1) {
+          clearInterval(expand);
+          box.remove();
+          loadGame();
+        } else {
+          const eased = 1 - Math.pow(1 - progress, 3);
+          box.style.left = (initialLeft - dLeft * eased) + 'px';
+          box.style.top = (initialTop - dTop * eased) + 'px';
+          box.style.width = (initialWidth + dWidth * eased) + 'px';
+          box.style.height = (initialHeight + dHeight * eased) + 'px';
+          box.style.borderRadius = (12 + (48 * eased)) + 'px';
+        }
+      }, 10);
+    }
+
+    // Phase 4 — load the game, fade it in, reveal the control bar.
+    function loadGame() {
+      launchAnimating = false;
+      if (els['game-launch']) els['game-launch'].classList.add('hidden');
+      els['game-iframe'].src = pendingGameUrl;
+      els['game-iframe'].classList.add('entering');
+      showBar();
+      scheduleBarHide();
+    }
   }
 
   function closeViewer() {
@@ -469,12 +597,17 @@
     requestSaveSnapshot();
     syncGameId = null;
     if (els['game-viewer']) els['game-viewer'].classList.remove('active');
-    if (els['game-iframe']) els['game-iframe'].src = '';
+    if (els['game-iframe']) { els['game-iframe'].src = ''; els['game-iframe'].classList.remove('entering'); }
     if (els['viewer-title']) els['viewer-title'].textContent = '';
+    if (els['game-launch']) els['game-launch'].classList.remove('done', 'hidden');
     currentGame = null;
+    pendingGameUrl = null;
+    launchAnimating = false;
     document.body.classList.remove('viewer-open');
     clearTimeout(barTimer);
     hideBar();
+    const stray = document.querySelector('.transition-box');
+    if (stray) stray.remove();
   }
 
   function showBar() {
@@ -514,14 +647,19 @@
     });
     els['game-viewer'].addEventListener('mousemove', () => {
       if (barManualHide) return;
+      if (els['game-launch'] && !els['game-launch'].classList.contains('hidden')) return;
       showBar();
       scheduleBarHide();
     });
     els['viewer-bar-ghost'].addEventListener('mouseenter', () => {
       barManualHide = false;
+      if (els['game-launch'] && !els['game-launch'].classList.contains('hidden')) return;
       showBar();
       scheduleBarHide();
     });
+    if (els['game-launch-btn']) {
+      els['game-launch-btn'].addEventListener('click', startLaunch);
+    }
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && els['game-viewer'].classList.contains('active') && !document.fullscreenElement) closeViewer();
     });
