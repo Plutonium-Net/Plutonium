@@ -1335,6 +1335,12 @@ body.viewer-open {
   z-index: 710;
 }
 
+/* ── Immersive play — hide the entire browser chrome while a game runs ─── */
+body.viewer-open .chrome,
+body.viewer-open .bookmarks-bar {
+  display: none !important;
+}
+
 #pgcdn-ctx-menu {
   z-index: 800;
 }
