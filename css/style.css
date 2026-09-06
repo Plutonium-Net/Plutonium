@@ -1093,7 +1093,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .acct-sync__dot.syncing{background:var(--ui-warn);animation:acct-dot-pulse 1s ease-in-out infinite}
 .acct-recent{margin-top:6px;display:flex;flex-direction:column;gap:6px}
 .acct-recent[hidden]{display:none}
-.acct-recent__label{font-size:11px;font-weight:200;letter-spacing:.4px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.acct-recent__label{font-size:11px;font-weight:200;letter-spacing:.4px;color:rgba(255,255,255,.35)}
 .acct-recent__row{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;padding:6px 8px;border-radius:8px;cursor:pointer;text-align:left;color:rgba(255,255,255,.85);transition:background .15s}
 .acct-recent__row:hover{background:rgba(255,255,255,.06)}
 .acct-recent__row > i:first-child{font-size:14px;color:var(--ui-accent);flex-shrink:0}
