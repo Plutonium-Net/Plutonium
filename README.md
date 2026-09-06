@@ -17,7 +17,6 @@ cloud-synced saves) added in.
 | `pluto://ai` | `js/workspaces.js` | **Stelena** — Plutonium AI (Groq worker, streaming, voice + TTS) |
 | `pluto://vms` | `js/workspaces.js` | Cloud VMs (remote sessions via the Plutonium VM worker) |
 | `pluto://cloud` | `js/workspaces.js` | Cloud Gaming (cgapi worker: sessions, queue, WebRTC embed) |
-| `pluto://account` | `pages/account.html` | Account — sign in/up, guest mode, bookmark/pin import & export |
 | `pluto://about` | `pages/about.html` | About, credits & the Plutonium services list |
 
 ## Backends (all Plutonium's own)

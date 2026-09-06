@@ -938,6 +938,15 @@ async function initializeFromUrl() {
   searchInput.value = q;
   if (q) { isSearchMode = true; await searchTMDB(q, { preserveSearchState:true }); }
   else   { isSearchMode = false; await loadContent(); }
+
+  // Deep link: resume straight into a continue-watching item (pluto://media?open=<id>)
+  const openId = params.get('open');
+  if (openId && continueWatchingCache[openId]) {
+    const item = continueWatchingCache[openId];
+    const opts = item.type !== 'movie' ? { season: item.season || 1, episode: item.episode || 1 } : {};
+    const full = await fetchItemDetails(item).catch(() => item);
+    await openPlayer(full || item, opts);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -1210,6 +1219,12 @@ async function openPlayer(item, options = {}) {
   currentPlayerItem = item;
   document.getElementById('player-title').textContent = item.name + (item.year ? ' · ' + item.year : '');
   const isTV = item.type === 'tv' || item.type === 'anime';
+  if (typeof accountManager !== 'undefined' && accountManager.recordRecent) {
+    const sub = isTV
+      ? 'S' + (options.season || 1) + ' · E' + (options.episode || 1)
+      : (item.year ? String(item.year) : '');
+    accountManager.recordRecent({ type: 'media', title: item.name, sub, href: 'pluto://media?open=' + encodeURIComponent(item.id) });
+  }
   if (isTV) {
     currentTVShow = item;
     document.getElementById('ep-controls').classList.add('visible');

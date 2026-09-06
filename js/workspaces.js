@@ -44,7 +44,7 @@
       </div>
       <div id="pgcdn-ctx-menu" class="hidden glass"></div>
       <div id="pgcdn-toast"><span class="toast-msg" id="pgcdn-toast-msg"></span><div class="toast-actions" id="pgcdn-toast-actions"></div></div>
-      <div id="game-viewer" class="glass"><iframe id="game-iframe" allowfullscreen allow="autoplay; fullscreen"></iframe><img class="game-corner-logo" id="game-corner-logo" src="img/logos/icon-plutonium-pink.png" alt="" draggable="false"><div id="game-launch"><img class="game-launch__logo" id="game-launch-logo" src="img/logos/icon-plutonium-pink.png" alt="Plutonium" draggable="false"><button id="game-launch-btn" aria-label="Launch game">Launch</button></div><div id="game-restore-overlay"><div class="game-restore-spinner"></div><span class="game-restore-label">Restoring saves...</span></div></div>
+      <div id="game-viewer" class="glass"><iframe id="game-iframe" allowfullscreen allow="autoplay; fullscreen"></iframe><img class="game-corner-logo" id="game-corner-logo" src="img/logos/icon-plutonium-pink.png" alt="" draggable="false"><div id="game-launch"><img class="game-launch__logo" id="game-launch-logo" src="img/logos/icon-plutonium-pink.png" alt="Plutonium" draggable="false"><button id="game-launch-btn" aria-label="Launch game">Launch</button><button id="game-back-btn" aria-label="Back to games"><i class="fa-solid fa-arrow-left"></i>Back to games</button></div><div id="game-restore-overlay"><div class="game-restore-spinner"></div><span class="game-restore-label">Restoring saves...</span></div></div>
       <div id="viewer-bar" class="bar-hidden"><img class="viewer-bar__logo" id="viewer-bar-logo" src="img/logos/icon-plutonium-pink.png" alt="Plutonium" draggable="false"><div class="viewer-bar__sep"></div><span class="viewer-bar__title" id="viewer-title"></span><div class="viewer-bar__sep"></div><button class="viewer-btn" id="vbtn-back" title="Back to games" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></button><button class="viewer-btn" id="vbtn-reload" title="Reload game" aria-label="Reload"><i class="fa-solid fa-rotate-right"></i></button><button class="viewer-btn" id="vbtn-fullscreen" title="Fullscreen" aria-label="Fullscreen"><i class="fa-solid fa-expand"></i></button><button class="viewer-btn" id="vbtn-hide" title="Hide bar" aria-label="Hide bar"><i class="fa-solid fa-chevron-down"></i></button></div><div id="viewer-bar-ghost"></div><div id="viewer-bar-hint" role="status">Press left Shift to bring up the bottom bar</div>
     </section>`,
 
@@ -129,7 +129,7 @@
   };
 
   const bundles = {
-    games: { css: 'css/games.css', scripts: ['https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js', 'js/games.js', 'js/personal-games.js'] },
+    games: { css: 'css/games.css?v=1', scripts: ['https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js', 'js/games.js?v=1', 'js/personal-games.js'] },
     ai: { css: 'css/ai.css', scripts: ['js/orb.js', 'js/ai.js'] },
     cloud: { css: 'css/cloud.css', scripts: ['js/cloud.js'] },
     media: { css: 'css/stream.css', scripts: ['js/stream.js?v=20260825'] },

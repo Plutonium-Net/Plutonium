@@ -78,7 +78,7 @@
       <button class="lock-icon-btn" id="lock-icon-btn" type="button" aria-label="Connection info">
         <i class="fa-solid fa-circle-info lock-icon" id="lock-icon"></i>
       </button>
-      <input type="text" id="url-input" placeholder="Search or enter address" spellcheck="false" autocomplete="off">
+      <input type="text" id="url-input" name="url" placeholder="Search or enter address" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="url">
       <button class="net-info-btn" id="addr-net-info-btn" type="button" title="What is this?" aria-label="Networking info" style="display:none">
         <i class="fa-solid fa-circle-info"></i>
       </button>
@@ -116,6 +116,54 @@
 
   <div class="content-area">
     <div class="new-tab-page" id="new-tab-page">
+
+    <div class="acct-panel" id="acct-panel">
+      <div class="acct-name" id="acct-name-text" hidden></div>
+      <div class="acct-signed" id="acct-signed" hidden>
+        <div class="acct-sync" id="acct-sync">
+          <span class="acct-sync__dot" id="acct-sync-dot"></span>
+          <span class="acct-sync__text" id="acct-sync-text"></span>
+        </div>
+        <div class="acct-recent" id="acct-recent" hidden>
+          <div class="acct-recent__label">Continue From Where You Left Off</div>
+          <button class="acct-recent__row" type="button">
+            <i class="fa-solid fa-gamepad" id="acct-recent-icon"></i>
+            <span class="acct-recent__meta">
+              <span class="acct-recent__title" id="acct-recent-title"></span>
+              <span class="acct-recent__sub" id="acct-recent-sub" hidden></span>
+            </span>
+            <i class="fa-solid fa-arrow-right acct-recent__arrow"></i>
+          </button>
+        </div>
+        <button class="acct-signout" id="acct-signout" type="button"><i class="fa-solid fa-arrow-right-from-bracket"></i>Sign out</button>
+      </div>
+      <button class="acct-signin" id="acct-signin-text" hidden><span>Sign In?</span><i class="fa-solid fa-arrow-right"></i></button>
+      <div class="acct-signin-sub" id="acct-signin-sub" hidden>Sign in to sync your bookmarks, pins, and settings across devices.</div>
+      <div class="acct-signin-fields" id="acct-signin-fields" hidden>
+        <label class="acct-field">
+          <input class="acct-field__input" id="acct-email-input" type="email" name="email" placeholder=" " autocomplete="email">
+          <span class="acct-field__label">Email</span>
+          <span class="acct-field__line"></span>
+        </label>
+        <label class="acct-field">
+          <input class="acct-field__input" id="acct-password-input" type="password" name="password" placeholder=" " autocomplete="current-password">
+          <span class="acct-field__label">Password</span>
+          <span class="acct-field__line"></span>
+        </label>
+        <label class="acct-field acct-field--name">
+          <input class="acct-field__input" id="acct-name-input" type="text" placeholder=" " autocomplete="name">
+          <span class="acct-field__label">Your name</span>
+          <span class="acct-field__line"></span>
+        </label>
+        <div class="acct-auth-toggle" id="acct-toggle">No Account? Make a free one!</div>
+        <div class="acct-auth-or">Or</div>
+        <div class="acct-oauth">
+          <button class="acct-oauth__btn acct-oauth__google" id="acct-google-btn"><img src="img/3rd-party/google.png" alt="Continue with Google"></button>
+          <button class="acct-oauth__btn acct-oauth__github" id="acct-github-btn"><img src="img/3rd-party/github.png" alt="Continue with GitHub"></button>
+        </div>
+        <div class="acct-auth-error" id="acct-error"></div>
+      </div>
+    </div>
 
 <div class="logo" id="logo" role="img" aria-label="Plutonium"></div>
 
@@ -199,10 +247,6 @@
 <div class="about-scrim" id="about-scrim" hidden></div>
 <div class="about-dialog glass" id="about-dialog" hidden></div>
 
-<div class="account-scrim" id="account-scrim" hidden></div>
-<div class="account-dialog glass" id="account-dialog" hidden></div>
-<div id="acct-toast"></div>
-<input type="file" id="import-file-input" accept=".json" style="display:none">
 
 <div class="relay-switcher-menu glass" id="relay-switcher-menu" hidden>
   <div class="relay-switcher-menu-head">
@@ -241,7 +285,7 @@
 <script>
   PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
 </script>
-<script src="js/account.js"></script>
+<script src="js/account.js?v=17"></script>
 <script src="https://unpkg.com/draggabilly@2.2.0/dist/draggabilly.pkgd.min.js"></script>
 <script src="/bridge/index.js"></script>
 <script src="/core/bundle.js"></script>
@@ -252,8 +296,8 @@
 <script src="js/bookmarks-bar.js"></script>
 <script src="js/net.js"></script>
 <script src="js/url.js"></script>
-<script src="js/workspaces.js"></script>
-<script src="js/navigation.js"></script>
+<script src="js/workspaces.js?v=1"></script>
+<script src="js/navigation.js?v=1"></script>
 <script src="js/keyboard.js"></script>
 <script src="js/pins.js"></script>
 <script src="js/theme-state.js"></script>
@@ -263,7 +307,7 @@
 <script src="js/logo.js"></script>
 <script src="js/main.js"></script>
 <script src="js/tabs.js"></script>
-<script src="js/context-menu.js"></script>
+<script src="js/context-menu.js?v=1"></script>
 <script src="js/loading.js"></script>
 <script src="js/escape.js"></script>
 <script src="js/news-ticker.js"></script>

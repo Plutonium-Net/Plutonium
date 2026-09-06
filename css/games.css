@@ -417,6 +417,33 @@ body {
 }
 
 #game-launch.done #game-launch-btn { display: none; }
+#game-back-btn {
+  position: relative;
+  z-index: 2;
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.45);
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 0.2s;
+  animation: game-launch-btn-in 0.35s 0.16s backwards;
+}
+
+#game-back-btn i {
+  font-size: 0.75rem;
+}
+
+#game-back-btn:hover {
+  color: #fff;
+}
+
+#game-launch.done #game-back-btn { display: none; }
 #game-launch.hidden { display: none; }
 
 @keyframes game-launch-in {

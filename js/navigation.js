@@ -351,7 +351,11 @@ btnForward.addEventListener('click', async () => {
 })
 
 btnAbout.addEventListener('click', () => { if (typeof openAboutDialog === 'function') openAboutDialog() })
-btnUserPage.addEventListener('click', () => { if (typeof openAccountDialog === 'function') openAccountDialog() })
+btnUserPage.addEventListener('click', () => {
+  const am = (typeof accountManager !== 'undefined') ? accountManager : null
+  if (am && am.user) showNewTabPage()
+  else if (am) am.showAuthPrompt()
+})
 urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') navigate(urlInput.value) })
 urlInput.addEventListener('focus', () => urlInput.select())
 

@@ -201,7 +201,11 @@ function showBrowserMenu(x, y) {
     { label: 'Apps', icon: 'fa-solid fa-bars', onClick: () => { if (typeof toggleWaffleMenu === 'function') toggleWaffleMenu() } },
     { label: 'Customize', icon: 'fa-solid fa-paintbrush', onClick: () => { if (typeof toggleCustomizeMenu === 'function') toggleCustomizeMenu() } },
     { label: 'About', icon: 'fa-solid fa-circle-info', onClick: () => { if (typeof openAboutDialog === 'function') openAboutDialog() } },
-    { label: 'Account', icon: 'fa-solid fa-user', onClick: () => { if (typeof openAccountDialog === 'function') openAccountDialog() } },
+    { label: 'Account', icon: 'fa-solid fa-user', onClick: () => {
+      const am = (typeof accountManager !== 'undefined') ? accountManager : null
+      if (am && am.user) showNewTabPage()
+      else if (am) am.showAuthPrompt()
+    } },
   ], x, y)
 }
 

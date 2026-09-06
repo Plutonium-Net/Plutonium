@@ -1,0 +1,194 @@
+{
+  "0": [
+    "Midnight, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Still up, {name}?",
+    "Welcome back, {name}.",
+    "Evening, {name}."
+  ],
+  "1": [
+    "Hello, {name}.",
+    "Hey, {name}.",
+    "Still up, {name}?",
+    "Welcome back, {name}.",
+    "Evening, {name}.",
+    "Up late, {name}?"
+  ],
+  "2": [
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Still here, {name}?",
+    "Welcome back, {name}.",
+    "Up late, {name}?",
+    "Good evening, {name}."
+  ],
+  "3": [
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Still awake, {name}?",
+    "Welcome back, {name}.",
+    "Up late, {name}?",
+    "Good morning, {name}."
+  ],
+  "4": [
+    "Early morning, {name}.",
+    "Good morning, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Up early, {name}?",
+    "Welcome, {name}."
+  ],
+  "5": [
+    "Good morning, {name}.",
+    "Morning, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Up early, {name}?",
+    "Welcome back, {name}."
+  ],
+  "6": [
+    "Good morning, {name}.",
+    "Morning, {name}.",
+    "Morning, {name}!",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Rise and shine, {name}."
+  ],
+  "7": [
+    "Good morning, {name}.",
+    "Morning, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Welcome, {name}.",
+    "Ready, {name}?"
+  ],
+  "8": [
+    "Good morning, {name}.",
+    "Morning, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "Howdy, {name}."
+  ],
+  "9": [
+    "Good morning, {name}.",
+    "Morning, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Welcome, {name}.",
+    "How’s it going, {name}?"
+  ],
+  "10": [
+    "Good morning, {name}.",
+    "Morning, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "What’s up, {name}?"
+  ],
+  "11": [
+    "Good morning, {name}.",
+    "Morning, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Welcome, {name}.",
+    "Howdy, {name}."
+  ],
+  "12": [
+    "Good afternoon, {name}.",
+    "Afternoon, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "How’s your day, {name}?"
+  ],
+  "13": [
+    "Good afternoon, {name}.",
+    "Afternoon, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Welcome, {name}.",
+    "What’s up, {name}?"
+  ],
+  "14": [
+    "Good afternoon, {name}.",
+    "Afternoon, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "Howdy, {name}."
+  ],
+  "15": [
+    "Good afternoon, {name}.",
+    "Afternoon, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Welcome, {name}.",
+    "What’s going on, {name}?"
+  ],
+  "16": [
+    "Good afternoon, {name}.",
+    "Afternoon, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "How’s it going, {name}?"
+  ],
+  "17": [
+    "Good evening, {name}.",
+    "Evening, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "Howdy, {name}."
+  ],
+  "18": [
+    "Good evening, {name}.",
+    "Evening, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Welcome, {name}.",
+    "How’s your evening, {name}?"
+  ],
+  "19": [
+    "Good evening, {name}.",
+    "Evening, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "What’s up, {name}?"
+  ],
+  "20": [
+    "Good evening, {name}.",
+    "Evening, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Welcome, {name}.",
+    "Howdy, {name}."
+  ],
+  "21": [
+    "Good evening, {name}.",
+    "Evening, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "Still going, {name}?"
+  ],
+  "22": [
+    "Good evening, {name}.",
+    "Evening, {name}.",
+    "Hey, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "Up late, {name}?"
+  ],
+  "23": [
+    "Good evening, {name}.",
+    "Evening, {name}.",
+    "Hey there, {name}.",
+    "Hello, {name}.",
+    "Welcome back, {name}.",
+    "Still up, {name}?"
+  ]
+}

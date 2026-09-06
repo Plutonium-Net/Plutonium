@@ -422,6 +422,9 @@
   async function launchGame(game) {
     syncGameId = game.id;
     recordPlay(game);
+    if (typeof accountManager !== 'undefined' && accountManager.recordRecent) {
+      accountManager.recordRecent({ type: 'game', title: game.name, href: 'pluto://games#' + encodeURIComponent(game.id) })
+    }
     await prefetchGameSaves(game.id);
     openViewer(PGCDN_BASE + '/' + game.path, game.name, game);
   }
@@ -438,7 +441,7 @@
     els['viewer-title'].textContent = name || '';
     iframe.classList.remove('entering');
     if (els['game-launch']) {
-      els['game-launch-btn'].textContent = 'Launch (' + (name || 'Game') + ')';
+      els['game-launch-btn'].textContent = 'Launch "' + (name || 'Game') + '"';
       els['game-launch-btn'].disabled = false;
       els['game-launch'].classList.remove('done', 'hidden');
     }
@@ -639,6 +642,8 @@
 
   function wireViewer() {
     $('vbtn-back').addEventListener('click', closeViewer);
+    const gameBackBtn = $('game-back-btn');
+    if (gameBackBtn) gameBackBtn.addEventListener('click', closeViewer);
     $('vbtn-reload').addEventListener('click', () => {
       if (els['game-iframe']) els['game-iframe'].src = els['game-iframe'].src;
     });

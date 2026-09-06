@@ -861,6 +861,15 @@ function openChat(id) {
   renderConversation();
   renderChatList();
   persistLocal();
+  if (typeof accountManager !== 'undefined' && accountManager.recordRecent) {
+    const n = (chat.messages || []).length;
+    accountManager.recordRecent({
+      type: 'ai',
+      title: chat.title || 'New chat',
+      sub: n ? n + (n === 1 ? ' message' : ' messages') : '',
+      href: 'pluto://ai',
+    });
+  }
 }
 
 function newChat() {

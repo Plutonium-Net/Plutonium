@@ -115,6 +115,10 @@ async function startSession() {
             throw new Error('No embed_url returned from API');
         }
 
+        if (typeof accountManager !== 'undefined' && accountManager.recordRecent) {
+            accountManager.recordRecent({ type: 'vm', title: 'Virtual Machine', href: 'pluto://vms?autostart=1' });
+        }
+
         statusEl.textContent = 'Loading VM...';
         containerMessage.textContent = 'Loading virtual machine...';
 
