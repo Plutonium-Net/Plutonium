@@ -1301,3 +1301,37 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 
 /* Address-bar info button hugs the input text (left set by JS each tick) */
 .address-bar-wrap .net-info-btn{position:absolute;top:7px;left:auto}
+
+/* ── Unsupported device overlay ──────────────────────────────────────── */
+/* Shown (via the inline check in index.html) when the site is opened on a
+   phone or tablet: a plain black screen with a short message. */
+.device-block-overlay{
+  position:fixed;inset:0;z-index:100000;
+  display:flex;align-items:center;justify-content:center;
+  background:#000;color:#fff;
+  text-align:center;padding:24px;
+  touch-action:none;
+}
+.device-block-overlay[hidden]{display:none}
+.device-block-box{max-width:480px}
+.device-block-icon{
+  font-size:42px;line-height:1;
+  color:var(--ui-accent,#e8175d);
+  margin-bottom:20px;
+  opacity:0;transform:translateY(12px);
+  animation:device-block-in .45s ease forwards;
+}
+.device-block-title{
+  font-size:clamp(19px,4vw,24px);
+  font-weight:700;letter-spacing:.2px;
+  margin-bottom:10px;
+  opacity:0;transform:translateY(12px);
+  animation:device-block-in .45s ease .1s forwards;
+}
+.device-block-sub{
+  font-size:14px;line-height:1.55;
+  color:rgba(255,255,255,0.62);
+  opacity:0;transform:translateY(12px);
+  animation:device-block-in .45s ease .2s forwards;
+}
+@keyframes device-block-in{to{opacity:1;transform:translateY(0)}}
