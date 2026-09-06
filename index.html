@@ -87,8 +87,10 @@
       </button>
       <div class="relay-switcher-shell" id="relay-switcher-btn" role="button" tabindex="0" title="Choose relay" aria-label="Choose relay" aria-haspopup="true" aria-expanded="false">
         <div class="relay-switcher-trigger">
+          <span class="relay-switcher-dot" id="relay-switcher-dot" aria-hidden="true"></span>
           <span class="relay-switcher-icon relay-flag" id="relay-switcher-icon" aria-hidden="true"></span>
           <span class="relay-switcher-current" id="relay-switcher-current">Auto</span>
+          <span class="relay-switcher-latency" id="relay-switcher-latency"></span>
           <i class="fa-solid fa-chevron-down relay-switcher-caret"></i>
         </div>
       </div>
@@ -205,7 +207,9 @@
 <div class="relay-switcher-menu glass" id="relay-switcher-menu" hidden>
   <div class="relay-switcher-menu-head">
     <div class="relay-switcher-menu-title">Relay Regions</div>
+    <button class="relay-switcher-details-btn" id="relay-menu-details-btn" type="button" title="Connection details"><i class="fa-solid fa-chart-line"></i> Details</button>
   </div>
+  <div class="relay-switcher-stability" id="relay-switcher-stability" hidden></div>
   <div class="relay-switcher-menu-list" id="relay-switcher-menu-list"></div>
 </div>
 
@@ -264,11 +268,13 @@
 <script src="js/escape.js"></script>
 <script src="js/news-ticker.js"></script>
 <div id="net-info-overlay" hidden>
-  <div class="net-info-box">
-    <div class="net-info-box-title">Initializing Network Systems</div>
-    <div class="net-info-box-desc">This is to bypass some school bl0ckers, such as GoGuardian, where they scan for trigger words that have to do with web technology on load. somehow though, these idiots dont do it to incoming scripts therefore if we load the script later it works fine. :)</div>
+  <div class="net-info-box conn-hud-box">
+    <div class="net-info-box-title">Connection</div>
+    <div id="conn-hud-current"></div>
+    <div id="conn-hud-regions"></div>
+    <div class="conn-hud-note">This is to bypass some school blockers, such as GoGuardian, where they scan for trigger words that have to do with web technology on load. somehow though, these idiots dont do it to incoming scripts therefore if we load the script later it works fine. :)</div>
     <div class="net-info-box-actions">
-      <button class="net-info-close-btn" id="net-info-close" type="button">Got it</button>
+      <button class="net-info-close-btn" id="net-info-close" type="button">Done</button>
     </div>
   </div>
 </div>

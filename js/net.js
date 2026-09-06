@@ -78,6 +78,7 @@ const relayPingByServerId = new Map()
 function _relayBar() { return document.getElementById('relay-bar') }
 function _relayLabel() { return document.getElementById('relay-bar-label') }
 function _relaySwitcherButton() { return document.getElementById('relay-switcher-btn') }
+function _relaySwitcherLatency() { return document.getElementById('relay-switcher-latency') }
 function _relaySwitcherMenu() { return document.getElementById('relay-switcher-menu') }
 function _relaySwitcherCurrent() { return document.getElementById('relay-switcher-current') }
 function _relaySwitcherIcon() { return document.getElementById('relay-switcher-icon') }
@@ -99,6 +100,57 @@ function formatRelayLatency(latencyMs) {
   return Number.isFinite(latencyMs) ? `${Math.round(latencyMs)} ms` : 'pending'
 }
 
+// ── Relay quality tiers + stability history ─────────────────────────────
+// Latency is binned into four tiers so the UI can show quality at a glance
+// instead of a bare number, and a rolling sample buffer powers the sparkline.
+const RELAY_TIER_THRESHOLDS = [
+  { max: 80,        level: 0, label: 'Excellent', cls: 'tier-0' },
+  { max: 180,       level: 1, label: 'Good',      cls: 'tier-1' },
+  { max: 350,       level: 2, label: 'Fair',      cls: 'tier-2' },
+  { max: Infinity,  level: 3, label: 'Poor',      cls: 'tier-3' },
+]
+const RELAY_HISTORY_MAX = 30
+const relayLatencyHistory = []
+
+function relayLatencyTier(latencyMs) {
+  if (!Number.isFinite(latencyMs)) return { level: -1, label: 'Unknown', cls: '' }
+  return RELAY_TIER_THRESHOLDS.find(t => latencyMs <= t.max) || RELAY_TIER_THRESHOLDS[RELAY_TIER_THRESHOLDS.length - 1]
+}
+
+function recordRelayLatency(latencyMs) {
+  if (!Number.isFinite(latencyMs)) return
+  relayLatencyHistory.push({ ms: latencyMs, t: Date.now() })
+  if (relayLatencyHistory.length > RELAY_HISTORY_MAX) relayLatencyHistory.shift()
+}
+
+// Polyline points for the latency sparkline on a fixed 0..400ms scale so the
+// trend stays comparable over time (a flat 90ms link hugs the top, not mid-canvas).
+function relaySparklinePath(width = 96, height = 22) {
+  if (relayLatencyHistory.length < 2) return ''
+  const SCALE_MAX = 400
+  const pad = 2
+  const usableH = height - pad * 2
+  const step = width / (relayLatencyHistory.length - 1)
+  return relayLatencyHistory.map((s, i) => {
+    const x = i * step
+    const ms = Math.min(s.ms, SCALE_MAX)
+    const y = pad + usableH - (ms / SCALE_MAX) * usableH
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+}
+
+// Small 4-segment signal meter; level -1 renders every segment dimmed.
+function relaySignalBars(level) {
+  const filled = level < 0 ? 0 : Math.max(1, 4 - level)
+  const heights = [0.28, 0.48, 0.72, 1]
+  const cls = level >= 0 ? ['tier-0', 'tier-1', 'tier-2', 'tier-3'][level] : ''
+  let out = `<span class="relay-bars${cls ? ' ' + cls : ''}" aria-hidden="true">`
+  for (let i = 1; i <= 4; i++) {
+    out += `<span class="relay-bar${i <= filled ? ' on' : ''}" style="height:${Math.round(heights[i - 1] * 100)}%"></span>`
+  }
+  return out + '</span>'
+}
+
 function setRelayStatus(state, details = {}) {
   const bar = _relayBar()
   const label = _relayLabel()
@@ -107,6 +159,9 @@ function setRelayStatus(state, details = {}) {
   const latency = details.latency ?? currentRelayLatencyMs
 
   currentRelayStatus = state
+  if (state === 'ok' && Number.isFinite(latency)) recordRelayLatency(latency)
+  updateRelaySwitcherButton()
+  refreshConnectionHud()
   if (!bar) return
 
   bar.classList.remove('relay-ok', 'relay-err', 'relay-connecting', 'relay-disconnecting')
@@ -129,13 +184,39 @@ function updateRelaySwitcherButton() {
   const button = _relaySwitcherButton()
   const currentLabel = _relaySwitcherCurrent()
   const currentIcon = _relaySwitcherIcon()
+  const latencyEl = _relaySwitcherLatency()
   const server = getCurrentRelayServer()
   if (!button || !currentLabel || !currentIcon || !server) return
 
   currentLabel.textContent = server.label
   currentIcon.className = 'relay-switcher-icon relay-flag'
   currentIcon.style.backgroundImage = server.flagSrc ? `url('${server.flagSrc}')` : ''
-  button.setAttribute('aria-label', `Choose relay: ${server.label}`)
+
+  // Live wisp state on the trigger: colored dot + latency, tinted by quality.
+  const stateClass = currentRelayStatus === 'ok' ? 'relay-ok'
+    : currentRelayStatus === 'err' ? 'relay-err'
+    : currentRelayStatus === 'disconnecting' ? 'relay-disconnecting'
+    : 'relay-connecting'
+  button.classList.remove('relay-ok', 'relay-err', 'relay-connecting', 'relay-disconnecting')
+  button.classList.add(stateClass)
+
+  const tier = relayLatencyTier(currentRelayLatencyMs)
+  button.classList.remove('tier-0', 'tier-1', 'tier-2', 'tier-3')
+  if (currentRelayStatus === 'ok' && Number.isFinite(currentRelayLatencyMs)) button.classList.add(tier.cls)
+
+  if (latencyEl) {
+    latencyEl.textContent = currentRelayStatus === 'ok' && Number.isFinite(currentRelayLatencyMs)
+      ? `${Math.round(currentRelayLatencyMs)}ms`
+      : ''
+  }
+
+  const stateWords = currentRelayStatus === 'ok'
+    ? `Connected${Number.isFinite(currentRelayLatencyMs) ? ` (${formatRelayLatency(currentRelayLatencyMs)})` : ''}`
+    : currentRelayStatus === 'err' ? 'Connection error'
+    : currentRelayStatus === 'disconnecting' ? 'Disconnecting'
+    : 'Connecting'
+  button.setAttribute('aria-label', `Choose relay: ${server.label} — ${stateWords}`)
+  button.title = `Relay: ${server.label} — ${stateWords}`
 }
 
 function renderRelaySwitcherMenu() {
@@ -146,6 +227,7 @@ function renderRelaySwitcherMenu() {
   const items = servers.map(server => {
     const ping = relayPingByServerId.get(server.id)
     const pingLabel = ping && ping.ok ? formatRelayLatency(ping.latency) : ping && !ping.ok ? 'offline' : 'measuring'
+    const pingTier = relayLatencyTier(ping && ping.ok ? ping.latency : null)
     const activeClass = server.id === currentRelayServerId ? ' is-active' : ''
     const badge = server.id === bestRelayServerId ? '<span class="relay-switcher-badge">Best</span>' : ''
 
@@ -160,6 +242,7 @@ function renderRelaySwitcherMenu() {
         </span>
         <span class="relay-switcher-item-meta">
           ${badge}
+          ${relaySignalBars(ping && ping.ok ? pingTier.level : -1)}
           <span class="relay-switcher-ping">${pingLabel}</span>
         </span>
       </button>
@@ -175,6 +258,23 @@ function renderRelaySwitcherMenu() {
       await switchRelayServer(serverId)
     })
   })
+
+  // Stability strip: sparkline of the current region's recent latency.
+  const stability = document.getElementById('relay-switcher-stability')
+  if (stability) {
+    if (currentRelayStatus === 'ok' && relayLatencyHistory.length >= 2) {
+      const tier = relayLatencyTier(currentRelayLatencyMs)
+      stability.hidden = false
+      stability.innerHTML = `
+        <span class="relay-stability-label">Stability</span>
+        <svg class="relay-stability-spark" viewBox="0 0 96 22" preserveAspectRatio="none">
+          <polyline fill="none" stroke="currentColor" stroke-width="1.5" points="${relaySparklinePath(96, 22)}"/>
+        </svg>
+        <span class="relay-stability-now ${tier.cls}">${formatRelayLatency(currentRelayLatencyMs)}</span>`
+    } else {
+      stability.hidden = true
+    }
+  }
 }
 
 function positionRelaySwitcherMenu() {
@@ -263,6 +363,12 @@ function initRelayUi() {
   window.addEventListener('scroll', () => {
     if (relayMenuState === 'open') positionRelaySwitcherMenu()
   }, true)
+
+  const detailsBtn = document.getElementById('relay-menu-details-btn')
+  if (detailsBtn) detailsBtn.addEventListener('click', () => {
+    hideRelaySwitcherMenu()
+    openNetInfoPopup()
+  })
 
   updateRelaySwitcherButton()
   renderRelaySwitcherMenu()
@@ -849,7 +955,86 @@ function showNetInfoButtons(visible) {
 
 function openNetInfoPopup() {
   const overlay = document.getElementById('net-info-overlay')
-  if (overlay) overlay.hidden = false
+  if (!overlay) return
+  renderConnectionHud()
+  overlay.hidden = false
+}
+
+function currentEngineLabel() {
+  return selectedNet === 'runtime' ? 'Runtime (SJ)'
+    : selectedNet === 'remote' ? 'Remote (Hyperbeam)'
+    : 'Core (UV)'
+}
+
+// Live Connection HUD — the net-info overlay doubles as a status dashboard:
+// current region, latency tier, engine, a latency sparkline, and per-region
+// pings. Re-rendered on status/ping changes whenever the overlay is open.
+function renderConnectionHud() {
+  const currentEl = document.getElementById('conn-hud-current')
+  const regionsEl = document.getElementById('conn-hud-regions')
+  if (!currentEl || !regionsEl) return
+
+  const server = getCurrentRelayServer()
+  const tier = relayLatencyTier(currentRelayLatencyMs)
+  const stateLabel = currentRelayStatus === 'ok' ? `Connected · ${formatRelayLatency(currentRelayLatencyMs)}`
+    : currentRelayStatus === 'err' ? "Couldn't connect"
+    : currentRelayStatus === 'disconnecting' ? 'Disconnecting'
+    : 'Connecting'
+  const stateCls = currentRelayStatus === 'ok' ? 'hud-ok'
+    : currentRelayStatus === 'err' ? 'hud-err'
+    : 'hud-pending'
+
+  const spark = relayLatencyHistory.length >= 2
+    ? `<svg class="conn-hud-spark" viewBox="0 0 96 22" preserveAspectRatio="none"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="${relaySparklinePath(96, 22)}"/></svg>`
+    : ''
+
+  currentEl.innerHTML = `
+    <div class="conn-hud-card glass">
+      <div class="conn-hud-row">
+        <span class="relay-switcher-icon relay-flag" aria-hidden="true" style="background-image:url('${server ? server.flagSrc || '' : ''}')"></span>
+        <span class="conn-hud-name">${server ? server.label : 'Unknown'}</span>
+        <span class="conn-hud-state ${stateCls}">${stateLabel}</span>
+      </div>
+      <div class="conn-hud-meta">
+        ${server && server.location ? `<span class="conn-hud-loc">${server.location}</span>` : ''}
+        <span class="conn-hud-engine">Engine: ${currentEngineLabel()}</span>
+        <span class="conn-hud-tier ${tier.cls}">${tier.label} ${relaySignalBars(tier.level)}</span>
+      </div>
+      ${spark ? `<div class="conn-hud-spark-wrap ${tier.cls}"><span>Latency trend</span>${spark}</div>` : ''}
+    </div>`
+
+  const servers = getConfiguredRelayServers()
+  regionsEl.innerHTML = servers.map(s => {
+    const ping = relayPingByServerId.get(s.id)
+    const pingOk = ping && ping.ok
+    const pingTier = relayLatencyTier(pingOk ? ping.latency : null)
+    const pingLabel = pingOk ? formatRelayLatency(ping.latency) : ping && !ping.ok ? 'offline' : 'measuring'
+    const active = s.id === currentRelayServerId
+    const badge = s.id === bestRelayServerId ? '<span class="relay-switcher-badge">Best</span>' : ''
+    return `
+      <button class="conn-hud-region${active ? ' is-active' : ''}" type="button" data-conn-region="${s.id}">
+        <span class="relay-switcher-item-icon relay-flag" aria-hidden="true" style="background-image:url('${s.flagSrc || ''}')"></span>
+        <span class="conn-hud-region-copy">
+          <span class="conn-hud-region-name">${s.label}</span>
+          <span class="conn-hud-region-loc">${s.location || ''}</span>
+        </span>
+        <span class="conn-hud-region-meta">${badge}${relaySignalBars(pingOk ? pingTier.level : -1)}<span class="conn-hud-region-ping">${pingLabel}</span></span>
+      </button>`
+  }).join('')
+
+  regionsEl.querySelectorAll('[data-conn-region]').forEach(item => {
+    item.addEventListener('click', async () => {
+      const id = item.getAttribute('data-conn-region')
+      if (!id || id === currentRelayServerId) return
+      await switchRelayServer(id)
+      renderConnectionHud()
+    })
+  })
+}
+
+function refreshConnectionHud() {
+  const overlay = document.getElementById('net-info-overlay')
+  if (overlay && !overlay.hidden) renderConnectionHud()
 }
 
 function closeNetInfoPopup() {
