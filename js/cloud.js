@@ -1,31 +1,26 @@
 (function () {
   'use strict';
 
-  // ── Config ────────────────────────────────────────────────────────────────
   const SERVER  = 'https://cgapi.cdn.plutoniumnet.work';
   const API_KEY = 'b9c3d2c6509c74c0db54d77d9fbd31e26e9b85a86d3dfc0b6a1c5d91c8a7f4e37f2d1e6845bc9a1f0e8d4f63b72ac59f4c1de0a97b5f3d86e2c9a4f7813db6a';
   const AUTH    = 'Bearer ' + API_KEY;
 
-  // ── State ─────────────────────────────────────────────────────────────────
   const grid        = document.getElementById('cg-grid');
   const searchInput = document.getElementById('cg-search');
   const countEl     = document.getElementById('cg-count');
   const tagsRow     = document.getElementById('cg-tags');
   const tagsSubRow  = document.getElementById('cg-tags-sub');
 
-  // Genre/type tags get their own bar; everything else (3A, Challenge,
-  // Multiplayer, ...) goes into a secondary "Tags" bar below it.
   const GENRE_TAGS = new Set([
     'Action', 'Adventure', 'RPG', 'Strategy', 'Shooting', 'Fighting',
     'Sports', 'Racing', 'Simulation', 'Puzzle', 'Indie'
   ]);
 
   let _allGames    = [];
-  let _activeGenre = null;   // selected pill in the genre bar
-  let _activeTag   = null;   // selected pill in the secondary tag bar
+  let _activeGenre = null;
+  let _activeTag   = null;
   let _searchQ     = '';
 
-  // ── Pin helpers (access parent Pins if in iframe) ──────────────────────────
   function _parentPins() {
     try { return window.Pins || (window.parent && window.parent.Pins); } catch (_) { return null; }
   }
@@ -42,13 +37,11 @@
     if (P.find(pinId)) {
       P.remove(pinId);
     } else {
-      // Normalize image path from '../img/cloud/...' to 'img/cloud/...' for root-relative display
       const img = game.image ? game.image.replace(/^\.\.\//, '').replace(/^img\//, 'img/') : undefined;
       P.add({ id: pinId, name: game.name, image: img, type: 'cloud' });
     }
   }
 
-  // ── Context menu ──────────────────────────────────────────────────────────
   function _showCtxMenu(e, items) {
     e.preventDefault();
     const ctxMenu = document.getElementById('cg-ctx-menu');
@@ -81,7 +74,6 @@
     }, 0);
   }
 
-  // ── Build the two tag-filter bars (genre + other tags) ───────────────────
   function _buildTagPills(games) {
     const genreSet = new Set();
     const tagSet   = new Set();
@@ -95,7 +87,6 @@
     _renderTagBar(tagsSubRow, Array.from(tagSet).sort(),   'tag');
   }
 
-  // Render one bar of toggle pills and drop the sliding relay indicator on it.
   function _renderTagBar(bar, tags, kind) {
     bar.innerHTML = '';
     tags.forEach(function (tag) {
@@ -124,8 +115,6 @@
     });
   }
 
-  // Position the ::after relay pill so it hugs the active pill; fade it out
-  // (opacity 0) when nothing is selected in this bar.
   function _positionTagSlider(bar) {
     const active = bar.querySelector('.cg-tag-pill.active');
     if (!active) {
@@ -141,7 +130,6 @@
     bar.style.setProperty('--cg-slider-visible', '1');
   }
 
-  // ── Filter + render cards ─────────────────────────────────────────────────
   function _renderGrid() {
     const q = _searchQ.trim().toLowerCase();
     const filtered = _allGames.filter(function (g) {
@@ -192,7 +180,6 @@
     });
   }
 
-  // ── Load game list ────────────────────────────────────────────────────────
   fetch('data/cloud.json')
     .then(function (r) { return r.json(); })
     .then(function (games) {
@@ -200,7 +187,6 @@
       _buildTagPills(games);
       _renderGrid();
 
-      // Support auto-launch via URL hash (e.g. pluto://cloud#cloud:jy0108)
       var routeSuffix = window.PluWorkspaceRouteSuffix || '';
       var hash = (routeSuffix.match(/#(.*)$/) || [,''])[1];
       if (hash) {
@@ -217,7 +203,6 @@
       grid.innerHTML = '<p class="cg-empty">Failed to load games.</p>';
     });
 
-  // ── Search input ──────────────────────────────────────────────────────────
   if (searchInput) {
     let searchTimer = null;
     searchInput.addEventListener('input', function () {
@@ -228,7 +213,6 @@
       }, 90);
     });
 
-    // '/' focuses the search field (matching the html5 game search)
     document.addEventListener('keydown', function (e) {
       if (e.key !== '/') return;
       const tag = document.activeElement && document.activeElement.tagName;
@@ -239,7 +223,6 @@
     });
   }
 
-  // ── Detail modal ──────────────────────────────────────────────────────────
   let _detailOverlay = null;
 
   function _ensureDetailOverlay() {
@@ -308,7 +291,6 @@
     document.body.style.overflow = '';
   }
 
-  // ── Launch overlay ────────────────────────────────────────────────────────
   let _overlay     = null;
   let _iframe      = null;
   let _statusEl    = null;
@@ -321,7 +303,6 @@
   function _ensureOverlay() {
     if (_overlay) return;
 
-    // ── fullscreen backdrop + loading panel ───────────────────────────────
     _overlay = document.createElement('div');
     _overlay.id = 'cg-launch-overlay';
     _overlay.innerHTML =
@@ -343,7 +324,6 @@
     _iframe   = document.getElementById('cg-launch-frame');
     _statusEl = document.getElementById('cg-launch-status');
 
-    // ── floating control bar ──────────────────────────────────────────────
     _bar = document.createElement('div');
     _bar.id = 'cg-player-bar';
     _bar.className = 'cg-bar-hidden';
@@ -359,12 +339,10 @@
       '</button>';
     document.body.appendChild(_bar);
 
-    // ── ghost pill to peek the bar when hidden ────────────────────────────
     _ghost = document.createElement('div');
     _ghost.id = 'cg-player-ghost';
     document.body.appendChild(_ghost);
 
-    // ── wire controls ─────────────────────────────────────────────────────
     document.getElementById('cg-player-close').addEventListener('click', _close);
 
     document.getElementById('cg-player-fs').addEventListener('click', function () {
@@ -378,11 +356,9 @@
     document.addEventListener('fullscreenchange', _syncFsIcon);
     document.addEventListener('webkitfullscreenchange', _syncFsIcon);
 
-    // show bar on any mouse movement over the overlay
     _overlay.addEventListener('mousemove', _peekBar);
     _overlay.addEventListener('mouseenter', _peekBar);
 
-    // ghost pill hover shows bar
     _ghost.addEventListener('mouseenter', _peekBar);
 
     document.addEventListener('keydown', function (e) {
@@ -409,7 +385,6 @@
     _ghost.classList.remove('cg-ghost-visible');
     clearTimeout(_barTimer);
     _barTimer = setTimeout(function () {
-      // only auto-hide when the stream is live (not during loading)
       if (_iframe.style.display !== 'none') {
         _bar.classList.add('cg-bar-hidden');
         _ghost.classList.add('cg-ghost-visible');
@@ -492,14 +467,12 @@
     _iframe.src = SERVER + '/cloud/v1/embed?id=' + encodeURIComponent(uuid);
     _statusEl.style.display = 'none';
     _iframe.style.display = 'block';
-    // show the bar when streaming starts, then let it auto-hide
     _peekBar();
   }
 
   async function _launch(game) {
     _ensureOverlay();
     _currentGame = game;
-    // set title in both the loading panel and the player bar
     const titleEl = document.getElementById('cg-launch-game-title');
     if (titleEl) titleEl.textContent = game.name;
     const barTitle = document.getElementById('cg-player-title');
@@ -514,7 +487,6 @@
     _setStep('step-account');
 
     try {
-      // ── 1. createSession (NDJSON stream) ──────────────────────────────────
       const res = await fetch(SERVER + '/cloud/v1/createSession', {
         method:  'POST',
         headers: {
@@ -560,7 +532,6 @@
         if (chunk.done) break;
       }
 
-      // If we landed in a queue, poll getQueue until finished_queue
       if (!uuid && queueUuid) {
         while (true) {
           await new Promise(function (r) { setTimeout(r, 3500); });
@@ -577,7 +548,6 @@
 
       if (!uuid) { _setError('Session did not complete.'); return; }
 
-      // ── 2. startGame ──────────────────────────────────────────────────────
       _setStep('step-start');
       const startRes = await fetch(SERVER + '/cloud/v1/startGame', {
         method:  'POST',
@@ -595,7 +565,6 @@
         return;
       }
 
-      // ── 3. Open embed ─────────────────────────────────────────────────────
       _showStream(uuid);
 
     } catch (e) {

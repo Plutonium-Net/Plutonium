@@ -1,10 +1,4 @@
-// ── Plutonium First-Run Onboarding ──────────────────────────────────────────
-// Standalone wizard (onboarding.html) shown once per user: index.html
-// redirects here after the boot loader finishes, keyed off the
-// `plu_onboarded` flag. The flag lives in localStorage and mirrors to the
-// account's settings doc via AccountManager, so it follows the user across
-// devices. Choices apply through the same Theme / SoundFX / Pins modules the
-// app uses, and the embedded bg.html frame previews backgrounds live.
+
 (function () {
   'use strict';
 
@@ -27,9 +21,6 @@
   const pinsCountEl  = document.getElementById('onb-pins-count')
   let remotePoll     = null
 
-  /* ── Navigation ─────────────────────────────────────────────────────── */
-
-  // goHome owns the `leaving` guard — it is the only place that navigates.
   function goHome() {
     if (leaving) return
     leaving = true
@@ -42,9 +33,6 @@
     if (remotePoll) { clearInterval(remotePoll); remotePoll = null }
     const am = window.accountManager
     if (am && am.user && typeof am.pushSettings === 'function') {
-      // Push the flag to the account before leaving so a fresh device signed
-      // in to the same account never sees onboarding again. Give the request
-      // a short budget — never trap the user on a slow network.
       const sync = Promise.resolve(am.pushSettings()).catch(() => {})
       const timeout = new Promise(resolve => setTimeout(resolve, 1500))
       Promise.race([sync, timeout]).then(goHome)
@@ -61,16 +49,10 @@
       segs[i].classList.toggle('active', i === current)
       segs[i].classList.toggle('done', i < current)
     }
-    // Prev/Next are always visible — dimmed (disabled) on the first/last
-    // step so the row stays balanced.
     backBtn.disabled = current === 0
     const last = current === totalSteps - 1
     skipBtn.hidden = last
     nextBtn.disabled = last
-    // The preview box iframes live inside hidden steps, so they initialize
-    // at 0x0. Reload them on entry — bg.html re-inits from localStorage with
-    // the current selection and sizes to the now-visible box; storage events
-    // keep it live while the user browses.
     if (current === 1) refreshPreview()
     if (current === 2) refreshAccentPreview()
   }
@@ -93,47 +75,34 @@
 
   if (backBtn)  backBtn.addEventListener('click', () => showStep(current - 1))
   if (nextBtn)  nextBtn.addEventListener('click', () => showStep(current + 1))
-  // Skip advances past the current step (it's hidden on the last one),
-  // e.g. skip the sign-in form and jump straight to Background.
   if (skipBtn)  skipBtn.addEventListener('click', () => showStep(current + 1))
   if (finishBtn) finishBtn.addEventListener('click', markDone)
 
-  /* ── Welcome / account ──────────────────────────────────────────────── */
-
-  // The welcome step embeds the in-page sign-in form (same ids/classes as
-  // the home account panel) — wiring is shared via accountManager.
   if (window.accountManager && typeof window.accountManager.wireAuthForm === 'function') {
     window.accountManager.wireAuthForm()
   }
   if (guestBtn) guestBtn.addEventListener('click', () => showStep(current + 1))
 
-  // Once signed in there's no "guest" path left — hide the link.
   if (window.PlutoniumStore) {
     window.PlutoniumStore.onAuthChange(u => {
       if (u && guestBtn) guestBtn.hidden = true
     })
   }
 
-  /* ── Shared state helpers ───────────────────────────────────────────── */
 
   function themeState() {
     return window.BrowserThemeState ? BrowserThemeState.loadThemeState() : {}
   }
 
-  // Transparent accent-tinted logo (img/logos/icon-<color>.png), kept in
-  // sync with the accent swatches. The brand-logo-* files are opaque black
-  // squares; the icon-* variants have transparent backgrounds.
   function updateLogo() {
     if (!window.BrowserThemeState || !BrowserThemeState.getAccentIconFile) return
     const file = BrowserThemeState.getAccentIconFile()
     const img = document.getElementById('onb-logo')
     if (img) img.src = 'img/logos/icon-' + file + '.png'
-    // The accent-step preview mockup reuses the same accent-tinted logo.
     const accImg = document.getElementById('onb-accent-logo-img')
     if (accImg) accImg.src = 'img/logos/icon-' + file + '.png'
   }
 
-  /* ── Step 2: background (effects + wallpapers) ──────────────────────── */
 
   const effectsEl = document.getElementById('onb-effects')
   const wallpapersEl = document.getElementById('onb-wallpapers')
@@ -179,7 +148,6 @@
     })
   }
 
-  /* ── Step 4: accent color ───────────────────────────────────────────── */
 
   const swatchesEl = document.getElementById('onb-swatches')
 
@@ -213,7 +181,6 @@
     })
   }
 
-  /* ── Step 5: sound ──────────────────────────────────────────────────── */
 
   if (soundSwitch) {
     soundSwitch.addEventListener('change', e => {
@@ -226,12 +193,6 @@
     })
   }
 
-  /* ── Step 6: pins ───────────────────────────────────────────────────── */
-
-  // `pin` is what gets stored (same shapes as js/pins.js — GCDN pins keep
-  // their bare image filename, cloud pins a root-relative path, so the home
-  // screen renders them correctly). `previewSrc` is the display URL used for
-  // the thumbnail on this page only.
   function buildPinTile(pin, previewSrc) {
     const tile = document.createElement('button')
     tile.type = 'button'
@@ -296,8 +257,6 @@
     renderPins('')
   }
 
-  // Rebuild the grid for a search query. Every pinnable item is shown — no
-  // 8/6 cap — and typing in the search box filters by name.
   function renderPins(query) {
     if (!pinsGrid) return
     const q = (query || '').trim().toLowerCase()
@@ -353,7 +312,6 @@
     }
   }
 
-  /* ── Sync all control states from the current theme ─────────────────── */
 
   function syncState() {
     const state = themeState()
@@ -381,16 +339,11 @@
     updateLogo()
   }
 
-  /* ── Init ───────────────────────────────────────────────────────────── */
-
-  // Already completed (local flag, or account pull applied it) → go home.
   if (localStorage.getItem(FLAG_KEY) === '1') {
     goHome()
     return
   }
 
-  // Progress segments (bottom bar) — one per step; the active one grows big
-  // and shows the section name, mirroring the boot cache bar.
   if (progressEl) {
     const names = stepEls.map(el => el.getAttribute('aria-label') || 'Step')
     for (let i = 0; i < totalSteps; i++) {
@@ -412,8 +365,6 @@
   syncState()
   showStep(0)
 
-  // If the account settings pull ever reports onboarded (e.g. a returning
-  // signed-in user on a fresh device), finish automatically and go home.
   remotePoll = setInterval(() => {
     if (localStorage.getItem(FLAG_KEY) === '1') {
       clearInterval(remotePoll)

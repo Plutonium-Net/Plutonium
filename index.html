@@ -10,7 +10,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Plutonium">
 <link rel="manifest" href="/manifest.json">
-<!-- Discord / social embed (Open Graph) -->
 <meta property="og:title" content="Plutonium Network">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://plutoniumnet.work/">
@@ -20,7 +19,6 @@
 <meta property="og:image:height" content="1024">
 <meta property="og:image:alt" content="Plutonium Network logo">
 <meta property="og:site_name" content="Plutonium Network">
-<!-- Twitter card (Discord falls back to OG; this covers X/Twitter) -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Plutonium Network">
 <meta name="twitter:description" content="A full browser-style web platform: built-in secure browsing, games, cloud gaming, streaming, VMs and Stelena AI, all in one place.">
@@ -40,7 +38,6 @@
 <script src="js/pwa.js" defer></script>
 </head>
 <body>
-<!-- Unsupported-device overlay: covers the whole app when opened on a phone or tablet -->
 <div id="device-block-overlay" class="device-block-overlay" hidden>
   <div class="device-block-box">
     <div class="device-block-icon"><i class="fa-solid fa-desktop"></i></div>
@@ -49,8 +46,6 @@
   </div>
 </div>
 <script>
-  /* Runs before the rest of the app initializes so nothing flashes on
-     unsupported devices. Blocks anything that isn't a desktop/laptop. */
   (function () {
     'use strict';
     var ua = (navigator.userAgent || '').toLowerCase();
@@ -60,9 +55,6 @@
     if (!isMobile) {
       isMobile = /android|iphone|ipod|ipad|windows phone|iemobile|blackberry|kindle|silk|opera mini|fennec|mobi|playbook|tablet|smart-?tv|googletv|roku/i.test(ua);
     }
-
-    // iPadOS 13+ hides behind a desktop "Macintosh" user agent; catch real
-    // iPads via multi-touch (no Mac laptop has a touchscreen).
     if (!isMobile && /macintosh/.test(ua) && navigator.maxTouchPoints > 1) {
       isMobile = true;
     }
@@ -352,11 +344,6 @@
 <script src="js/context-menu.js?v=1"></script>
 <script src="js/loading.js"></script>
 <script>
-  /* First-run onboarding: after the boot loader (loading.js) finishes, send
-     users without the plu_onboarded flag to the standalone onboarding page.
-     The flag lives in localStorage and mirrors to the account settings doc,
-     so this only redirects once per user. location.replace() keeps Back from
-     ever looping back into the loader. */
   (function () {
     'use strict';
     if (localStorage.getItem('plu_onboarded') === '1') return;

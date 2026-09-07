@@ -105,8 +105,6 @@
   }
 
   if ('serviceWorker' in navigator) {
-    // Personal games are served by the root sw.js (which also handles the
-    // engine prefixes and the /pg-game/ route from IndexedDB).
     navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(err => {
       console.warn('[personal-games] SW registration failed:', err);
     });
@@ -203,9 +201,6 @@
     closeModal('edit');
   });
 
-  /* ============================================================
-     LOCAL HTML FILE IMPORT
-     ============================================================ */
 
   let _pendingFileUpload = null;
 
@@ -329,9 +324,6 @@
     }
   });
 
-  /* ============================================================
-     EDIT GAME
-     ============================================================ */
 
   let _editingId = null;
 
@@ -394,9 +386,6 @@
     }
   });
 
-  /* ============================================================
-     DELETE GAME
-     ============================================================ */
 
   async function _deleteGame(meta) {
     try {
@@ -433,9 +422,6 @@
     }
   }
 
-  /* ============================================================
-     LAUNCH PERSONAL GAME
-     ============================================================ */
 
   async function _launchPersonalGame(meta) {
     const fileKey =
@@ -520,9 +506,6 @@
     }
   }
 
-  /* ============================================================
-     PERSONAL GAME CARD
-     ============================================================ */
 
   function _buildPersonalCard(meta) {
     const card =
@@ -599,9 +582,6 @@
       .replace(/'/g, '&#039;');
   }
 
-  /* ============================================================
-     CONTEXT MENU
-     ============================================================ */
 
   function _showCtxMenu(e, items) {
     const ctxMenu =
@@ -708,9 +688,6 @@
     );
   }
 
-  /* ============================================================
-     CLOUD SYNC
-     ============================================================ */
 
   const _cloudBadge =
     document.getElementById('pg-cloud-badge');
@@ -939,9 +916,6 @@
     });
   }
 
-  /* ============================================================
-     RENDER PERSONAL GAMES
-     ============================================================ */
 
   async function _renderMyGames() {
     const grid =
@@ -995,9 +969,6 @@
     }
   }
 
-  /* ============================================================
-     TOAST
-     ============================================================ */
 
   const _pgToast =
     document.getElementById(
@@ -1101,9 +1072,6 @@
 
   _renderMyGames();
 
-  /* ============================================================
-     GITHUB IMPORT
-     ============================================================ */
 
   function parseGitHubUrl(input) {
     try {
@@ -1356,10 +1324,6 @@
     return stack.join('/');
   }
 
-  /*
-   * Finds every directory in the repository containing
-   * an index.html.
-   */
   async function findGitHubGames(
     owner,
     repo,
@@ -1758,13 +1722,8 @@
 
     const indexHtml = fetchedIndex.data;
 
-    // Include every file beneath the selected game folder so nested assets
-    // (for example js/lib/* or assets/images/*) are available offline.
     const treeFiles = await getGitHubFiles(owner, repo, branch, game.path);
 
-    /*
-     * Find local assets referenced by index.html.
-     */
     const assetPaths = new Set(
       treeFiles
         .filter(path => path !== game.indexPath)
@@ -1812,9 +1771,6 @@
       }
     }
 
-    /*
-     * Store index.html locally.
-     */
     await dbPut(
       FILE_STORE,
       {
@@ -1827,9 +1783,6 @@
       `${id}/index.html`
     );
 
-    /*
-     * Download referenced assets.
-     */
     let fetchedCount = 0;
 
     for (
@@ -1885,19 +1838,10 @@
         fetchedCount++;
 
       } catch (_) {
-        /*
-         * If an asset cannot be downloaded now,
-         * the service worker can try GitHub later.
-         */
       }
     }
 
-    /*
-     * Store GitHub information with the game.
-     *
-     * This is important because pg-sw.js can use this
-     * information to download assets that weren't cached.
-     */
+
     const meta = {
       id,
       name: game.name,
@@ -1916,9 +1860,7 @@
       meta
     );
 
-    /*
-     * Save index.html to cloud.
-     */
+
     await _saveCloud(
       id,
       indexHtml
@@ -1929,10 +1871,6 @@
     );
   }
 
-  /*
-   * Clicking the main GitHub button now scans the repository
-   * instead of immediately importing the first index.html.
-   */
   document
     .getElementById(
       'pg-github-import'

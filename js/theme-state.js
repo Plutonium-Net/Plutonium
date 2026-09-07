@@ -9,7 +9,6 @@ const BrowserThemeState = (() => {
     bgImage: '',
   }
 
-  // Animated background effects (Plutonium Vanta + particles engine).
   const BG_EFFECTS = {
     particles: { label: 'Particles', icon: 'fa-circle-nodes' },
     birds:     { label: 'Birds',     icon: 'fa-dove' },
@@ -26,7 +25,6 @@ const BrowserThemeState = (() => {
     none:      { label: 'None',      icon: 'fa-ban' },
   }
 
-  // Built-in wallpaper images shipped with the app.
   const BACKGROUND_IMAGES = [
     { id: 'none',              label: 'None',              file: '',                                tint: '#000000', tintOpacity: 0.15 },
     { id: 'coast',             label: 'Coast',             file: 'img/backgrounds/coast.jpg',            tint: '#0a1a28', tintOpacity: 0.14 },
@@ -47,8 +45,6 @@ const BrowserThemeState = (() => {
   function normalizeBgImage(value) {
     if (typeof value !== 'string') return ''
     if (value === '') return ''
-    // Normalize to the built-in id so getBackgroundImageURL can look it up.
-    // Also accept a full file path (from legacy state) and map back to id.
     const match = BACKGROUND_IMAGES.find(img => img.id === value || img.file === value)
     return match ? match.id : ''
   }
@@ -141,9 +137,6 @@ const BrowserThemeState = (() => {
     const next = raw && typeof raw === 'object' ? raw : {}
     const effect = normalizeBgEffect(next.bgEffect)
     const image  = normalizeBgImage(next.bgImage)
-    // Wallpaper and animated effects are mutually exclusive.
-    // A wallpaper wins: if one is set the effect is forced to 'none';
-    // if an effect is set the wallpaper is cleared.
     return {
       mode: normalizeMode(next.mode),
       accentColor: normalizeAccentColor(next.accentColor),
@@ -153,8 +146,6 @@ const BrowserThemeState = (() => {
     }
   }
 
-  // Legacy migration: users who had the crafted-gamz theme keys (cg_theme /
-  // cg_settings) get their old look carried over on first load.
   const LEGACY_THEME_KEY = 'cg_theme'
   const LEGACY_SETTINGS_KEY = 'cg_settings'
 
@@ -273,7 +264,6 @@ const BrowserThemeState = (() => {
       bgImage: next.bgImage || '',
     }))
 
-    // Push the theme to the cloud when signed in
     if (window.accountManager && typeof window.accountManager.scheduleSettingsSync === 'function') {
       window.accountManager.scheduleSettingsSync()
     }
@@ -286,7 +276,6 @@ const BrowserThemeState = (() => {
     return { key: presetKey, ...BACKGROUND_PRESETS[presetKey] }
   }
 
-  // Accent-coloured icon / logo variants (img/logos/icon-<color>.png)
   const ACCENT_ICON_MAP = {
     '#e8175d': 'plutonium-pink',
     '#7c3aed': 'violet',

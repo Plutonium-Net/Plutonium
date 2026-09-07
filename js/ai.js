@@ -2,7 +2,6 @@ const GROQ_WORKER = 'https://ai.cdn.plutoniumnet.work';
 
 const STELENA_LOGO = 'img/logos/stelena.svg';
 
-// Groq TTS (Orpheus) — generated server-side by the worker, played as WAV.
 const TTS_MODEL = 'canopylabs/orpheus-v1-english';
 const TTS_VOICES = [
   { id: 'hannah', label: 'Hannah', desc: 'Female · balanced' },
@@ -12,7 +11,6 @@ const TTS_VOICES = [
   { id: 'daniel', label: 'Daniel', desc: 'Male · deep' },
   { id: 'troy',   label: 'Troy',   desc: 'Male · upbeat' },
 ];
-// Selected voice — persisted locally and synced to the account (ai_chats doc).
 let ttsVoice = (() => {
   try { return localStorage.getItem('plu_ai_voice') || 'hannah'; } catch (_) { return 'hannah'; }
 })();
@@ -126,8 +124,6 @@ You are Stelena.
 The intelligence behind Plutonium Network.`
 };
 
-// Spoken (Talk-mode) system prompt — standalone and minimal, so the brevity
-// rules don't compete with the long written-assistant base prompt.
 const TALK_SYSTEM_PROMPT = `You are Stelena (pronounced like the word "tell"), the voice assistant of Plutonium Network. You are speaking aloud to the user.
 
 STRICT RULES — follow them always:
@@ -136,8 +132,6 @@ STRICT RULES — follow them always:
 3. Sound natural and conversational, like a quick spoken chat. No robotic filler.
 4. When a topic could get long, give the short spoken answer and offer to go deeper.`;
 
-// Supported GroqCloud text models. Whisper (audio) and Safety GPT-OSS
-// (a safeguard model) are intentionally omitted.
 const MODELS = [
   { id: 'openai/gpt-oss-120b',       name: 'GPT OSS 120B',    label: 'ChatGPT OSS 120B',          desc: '~500 tps · flagship open-weight model' },
   { id: 'openai/gpt-oss-20b',        name: 'GPT OSS 20B',     label: 'ChatGPT OSS 20B',           desc: '~1000 tps · fast everyday model' },
@@ -148,17 +142,15 @@ let currentModel = 'openai/gpt-oss-120b';
 let messages = [];
 let recognition = null;
 let isListening = false;
-let ttsAudio = null;   // Audio element for Groq TTS playback
+let ttsAudio = null;
 let authed = false;
 let streaming = false;
-let controller = null;   // AbortController for the in-flight request
+let controller = null;
 let welcomeTemplate = null;
 
-// Multi-chat state. Each chat: { id, title, messages:[{role,content}], createdAt, updatedAt }
 let chats = [];
 let activeChatId = null;
 
-// ── Element + auth helpers ─────────────────────────────────────────────────
 
 function chatContainer() { return document.getElementById('chatContainer'); }
 function inputEl() { return document.getElementById('userInput'); }
@@ -252,16 +244,11 @@ function setAuthed(state) {
   if (sendBtn()) sendBtn().disabled = !state;
   if (state) {
     removeGate();
-    // Keep the welcome screen visible until the user actually starts chatting
-    // (addMessage / addSystem hide it). Signed-out users get the sign-in gate,
-    // and signing in brings the welcome back if the conversation is empty.
     if (!messages.length) restoreWelcome();
   } else {
     renderGate();
   }
 }
-
-// ── Speech ─────────────────────────────────────────────────────────────────
 
 function initSpeech() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -298,8 +285,6 @@ function stopVoice() {
   const btn = voiceBtn();
   if (btn) { btn.classList.remove('listening'); btn.innerHTML = '<i class="fas fa-microphone"></i>'; }
 }
-
-// ── Model selector (relay-style dropdown) ───────────────────────────────────
 
 function initModelSelect() {
   const pill = document.getElementById('modelPill');
@@ -343,8 +328,6 @@ function initModelSelect() {
   syncActive();
 }
 
-// ── Voice selector (Orpheus TTS voices, synced to account) ────────────────
-
 function initVoiceSelect() {
   const pill = document.getElementById('voicePill');
   const menu = document.getElementById('voiceMenu');
@@ -374,7 +357,7 @@ function initVoiceSelect() {
     try { localStorage.setItem('plu_ai_voice', id); } catch (_) {}
     syncActive();
     closeMenu();
-    scheduleSync();   // voice preference syncs to the account
+    scheduleSync();
   }
   window._aiSelectVoice = selectVoice;
 
@@ -390,8 +373,6 @@ function initVoiceSelect() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
   syncActive();
 }
-
-// Apply a voice choice pulled from the cloud (sign-in merge).
 function applyVoice(id) {
   if (!TTS_VOICES.some(v => v.id === id)) return;
   ttsVoice = id;
@@ -403,8 +384,6 @@ function applyVoice(id) {
   if (list) list.querySelectorAll('.ai-model-option').forEach(o => o.classList.toggle('active', o.dataset.value === id));
 }
 
-// ── Chat UI helpers ────────────────────────────────────────────────────────
-
 function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px'; }
 function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
 function useSuggestion(text) { const input = inputEl(); input.value = text; sendMessage(); }
@@ -414,7 +393,7 @@ function scrollBottom() { const c = chatContainer(); c.scrollTop = c.scrollHeigh
 function restoreWelcome() {
   const c = chatContainer();
   if (!c || document.getElementById('welcomeScreen')) return;
-  if (document.getElementById('ai-gate')) return;  // signed out — the gate shows instead
+  if (document.getElementById('ai-gate')) return;
   if (!welcomeTemplate) return;
   const w = welcomeTemplate.cloneNode(true);
   w.id = 'welcomeScreen';
@@ -443,9 +422,6 @@ function makeAvatar(type) {
   }
   return avatar;
 }
-
-// Add a finished message. `idx` is its index in `messages` (used by the
-// regenerated / edit actions); pass null to render an AI bubble with no actions.
 function addMessage(content, type, idx) {
   hideWelcome();
   const row = document.createElement('div');
@@ -531,7 +507,6 @@ function showTyping() {
 
 function hideTyping() { const el = document.getElementById('typingRow'); if (el) el.remove(); }
 
-// Rebuild the message list from `messages` (drops welcome if there is content).
 function renderConversation() {
   const c = chatContainer();
   if (!c) return;
@@ -540,8 +515,6 @@ function renderConversation() {
   if (!messages.length) restoreWelcome();
   scrollBottom();
 }
-
-// ── Send / stream from the Plutonium Groq worker ──────────────────────────
 
 function sendMessage() {
   const input = inputEl();
@@ -569,7 +542,7 @@ async function requestReply(userContent, opts = {}) {
   setStreaming(true);
   showTyping();
   controller = new AbortController();
-  const chatId = activeChatId;  // the chat this reply belongs to
+  const chatId = activeChatId;
 
   let system;
   if (talkMode) {
@@ -620,7 +593,6 @@ async function requestReply(userContent, opts = {}) {
       noteChange();
       if (talkMode && reply) speakReply(reply);
     } else {
-      // SSE streaming into an empty bubble, then attach actions when done.
       streamBubble = addMessage('', 'ai');
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -645,7 +617,6 @@ async function requestReply(userContent, opts = {}) {
           reply += token;
           streamBubble.innerHTML = marked.parse(reply);
           scrollBottom();
-          // Stream the reply into the mini chat (throttled) during Talk mode.
           if (talkMode && Date.now() - lastTalkMirror > 80) {
             setTalkAiText(reply);
             lastTalkMirror = Date.now();
@@ -676,8 +647,6 @@ async function requestReply(userContent, opts = {}) {
         const partial = streamBubble.textContent.trim();
         if (partial) {
           if (talkMode) { setTalkAiText(partial); finishTalkAiTurn(); }
-          // Route the partial reply to the chat that was streaming, even if
-          // the user switched chats mid-stream (openChat aborts the request).
           const target = chats.find(c => c.id === chatId);
           if (target && chatId === activeChatId) {
             messages.push({ role: 'assistant', content: partial });
@@ -712,23 +681,19 @@ async function requestReply(userContent, opts = {}) {
   }
 }
 
-// ── Regenerate / edit / clear ──────────────────────────────────────────────
-
 function regenerateMessage(idx) {
   if (streaming || idx == null || idx < 1) return;
   const prev = messages[idx - 1];
   if (!prev || prev.role !== 'user') return;
-  messages = messages.slice(0, idx);  // drop the assistant message and anything after
+  messages = messages.slice(0, idx);
   renderConversation();
   noteChange();
   requestReply(prev.content);
 }
 
-// Ask the model to extend its latest reply. The continuation streams in as a
-// new assistant message (no user turn is added).
 function continueReply(idx) {
   if (streaming || idx == null) return;
-  if (idx !== messages.length - 1) return;   // only the most recent AI reply
+  if (idx !== messages.length - 1) return;
   const last = messages[idx];
   if (!last || last.role !== 'assistant') return;
   requestReply('', { continue: true });
@@ -737,7 +702,7 @@ function continueReply(idx) {
 function editMessage(idx) {
   if (streaming || idx == null || idx < 0) return;
   const text = messages[idx] ? messages[idx].content : '';
-  messages = messages.slice(0, idx);  // drop this user message and everything after
+  messages = messages.slice(0, idx);
   renderConversation();
   noteChange();
   const input = inputEl();
@@ -754,14 +719,11 @@ function clearConversation() {
   noteChange();
 }
 
-// ── Multi-chat storage & cloud sync ───────────────────────────────────────
 
 const AI_CHATS_LS = 'plu_ai_chats';
 const AI_CHATS_DOC = 'ai_chats';
 let _syncT = null;
 
-// Local: everything is persisted to localStorage so chats survive reloads
-// even when signed out.
 function persistLocal() {
   try { localStorage.setItem(AI_CHATS_LS, JSON.stringify({ chats, activeChatId })); } catch (_) {}
 }
@@ -779,7 +741,6 @@ function loadLocalChats() {
   if (!chats.some(c => c.id === activeChatId)) activeChatId = chats[0].id;
 }
 
-// Cloud: debounced Firestore push (users/{uid}/ai_chats).
 function scheduleSync() {
   if (!currentUser()) return;
   clearTimeout(_syncT);
@@ -812,9 +773,6 @@ async function pullChats() {
   } catch (e) { console.warn('[ai] chat sync pull failed:', e); }
 }
 
-// Union by chat id; same-id chats merge their messages (newest message count
-// wins when one list is a prefix of the other, otherwise unique messages are
-// appended). Mirrors the continue-watching merge in stream.js.
 function mergeChats(local, remote) {
   const out = new Map();
   local.forEach(c => out.set(c.id, Object.assign({}, c, { messages: (c.messages || []).slice() })));
@@ -833,8 +791,8 @@ function mergeChats(local, remote) {
 function mergeMessages(a, b) {
   const key = m => m.role + '\u0000' + m.content;
   const aK = a.map(key), bK = b.map(key);
-  if (bK.every((k, i) => aK[i] === k)) return b.slice();   // a is a prefix of b
-  if (aK.every((k, i) => bK[i] === k)) return a.slice();   // b is a prefix of a
+  if (bK.every((k, i) => aK[i] === k)) return b.slice();
+  if (aK.every((k, i) => bK[i] === k)) return a.slice();
   const [base, other] = a.length >= b.length ? [a, b] : [b, a];
   const seen = new Set(base.map(key));
   const merged = base.slice();
@@ -842,8 +800,6 @@ function mergeMessages(a, b) {
   return merged;
 }
 
-// Call after any change to `messages` or chat metadata: sync the working
-// array back into the chat object, persist locally, and schedule a cloud push.
 function noteChange() {
   const chat = activeChat();
   if (chat) { chat.messages = messages; chat.updatedAt = Date.now(); }
@@ -915,8 +871,6 @@ function renderChatList() {
       `<span class="ai-chat-item__tools"><button class="ai-chat-del" type="button" title="Delete chat" data-id="${chat.id}"><i class="fa-solid fa-trash"></i></button></span>`;
     item.addEventListener('click', () => openChat(chat.id));
     item.addEventListener('dblclick', e => { e.stopPropagation(); startRename(item, chat); });
-    // Direct handler (not delegated) so the click never bubbles to the item's
-    // openChat handler — otherwise the list re-renders and the armed state is lost.
     const del = item.querySelector('.ai-chat-del');
     if (del) del.addEventListener('click', e => {
       e.stopPropagation();
@@ -967,8 +921,6 @@ function initChatList() {
   if (nc) nc.addEventListener('click', newChat);
 }
 
-// ── Text to speech (Groq Orpheus) ─────────────────────────────────────────
-
 function stripMarkdown(text) {
   return String(text || '')
     .replace(/#{1,6}\s/g, '')
@@ -980,8 +932,6 @@ function stripMarkdown(text) {
     .trim();
 }
 
-// TTS pronunciation fixes — Stelena is spoken "sss-tell-n-a". Hyphenated
-// spellings make Orpheus read the word as written.
 function ttsFixPronunciations(text) {
   return String(text || '').replace(/\bStelena\b/gi, 'Sss-tell-n-a');
 }
@@ -993,9 +943,8 @@ function resetTtsBtns() {
   });
 }
 
-// Speak an AI reply with Groq's Orpheus TTS (proxied by the worker).
 function speakText(text, btn) {
-  if (ttsAudio && !ttsAudio.paused) {   // toggle off while playing
+  if (ttsAudio && !ttsAudio.paused) {
     ttsAudio.pause();
     ttsAudio = null;
     resetTtsBtns();
@@ -1049,7 +998,6 @@ function speakText(text, btn) {
     });
 }
 
-// ── Talk mode (Jarvis orb, voice-to-voice loop) ───────────────────────────
 
 let talkMode = false;
 let talkAbort = false;
@@ -1061,12 +1009,12 @@ let talkSilenceTimer = null;
 let talkLiveTimer = null;
 let talkLiveBusy = false;
 let talkChunks = [];
-let talkMini = [];          // mini chat under the orb: [{role, text, final}]
+let talkMini = [];
 let talkAiStreaming = false;
-let talkPlaySrc = null;     // active TTS AudioBufferSource (so Stop can halt speech)
-let talkStopReq = false;    // stop requested while TTS audio was still being generated
-let talkGenId = 0;          // bumps on stop — invalidates pending speak continuations
-let talkOutAnalyser = null; // taps spoken audio so the shader orb throbs with the voice
+let talkPlaySrc = null;
+let talkStopReq = false;
+let talkGenId = 0;
+let talkOutAnalyser = null;
 let talkPulseRAF = null;
 let talkCurPulse = 0;
 let _talkLevelBuf = null;
@@ -1107,7 +1055,6 @@ function renderTalkMini() {
   box.scrollTop = box.scrollHeight;
 }
 
-// Live/interim user text — creates a user bubble on first audio, updates it.
 function setTalkUserText(text, final) {
   if (!text) return;
   const last = talkMini[talkMini.length - 1];
@@ -1154,15 +1101,11 @@ async function startTalkMode() {
   if (!currentUser() || !authed) { addSystem('Please sign in to use Talk mode.'); return; }
   if (!window.MediaRecorder) { addSystem('Voice recording is not supported in this browser.'); return; }
   talkMode = true;
-
-  // Give the voice conversation its own chat — unless the current one is
-  // still empty, in which case reuse it instead of stacking empty chats.
   const curChat = activeChat();
   if (curChat && curChat.messages.length) newChat();
 
   openOverlay();
 
-  // WebGL shader orb (falls back to the CSS core if WebGL is unavailable).
   const orbCanvas = document.getElementById('talkOrbCanvas');
   if (orbCanvas && window.PlutoniumOrb) {
     const accent = (getComputedStyle(document.documentElement).getPropertyValue('--workspace-accent-rgb') || '232,23,93').trim();
@@ -1187,8 +1130,6 @@ function getTalkLevel(analyser) {
   return Math.min(1, Math.sqrt(sum / _talkLevelBuf.length) * 5);
 }
 
-// Feed the live voice level into the shader: mic while listening, spoken
-// audio while speaking. Smoothed so the orb swells rather than jitters.
 function talkPulseLoop() {
   if (!talkMode) { talkPulseRAF = null; return; }
   const orbEl = document.getElementById('talkOrb');
@@ -1218,13 +1159,11 @@ async function beginListen() {
     return;
   }
 
-  // Analyser for silence detection (auto-stop when the user pauses).
   talkCtx = new (window.AudioContext || window.webkitAudioContext)();
   const src = talkCtx.createMediaStreamSource(talkStream);
   talkAnalyser = talkCtx.createAnalyser();
   talkAnalyser.fftSize = 1024;
   src.connect(talkAnalyser);
-  // Tap for spoken audio — lets the orb throb with Stelena's voice.
   talkOutAnalyser = talkCtx.createAnalyser();
   talkOutAnalyser.fftSize = 1024;
 
@@ -1237,13 +1176,9 @@ async function beginListen() {
     const blob = new Blob(talkChunks, { type: mime || 'audio/webm' });
     transcribeAndReply(blob);
   };
-  talkRecorder.start(1000);   // timeslice → chunks arrive every second for live captions
+  talkRecorder.start(1000);
 
-  // Live captioning: re-transcribe the audio so far every ~2.5s.
   talkLiveTimer = setInterval(runLiveTranscribe, 2500);
-
-  // No auto-stop: the user taps Send when they're done talking. The analyser
-  // stays wired so the shader orb can still pulse with the mic level.
 }
 
 function stopTalkRecording() {
@@ -1252,7 +1187,6 @@ function stopTalkRecording() {
   if (talkRecorder && talkRecorder.state !== 'inactive') talkRecorder.stop();
 }
 
-// Best-effort live transcription of the audio captured so far.
 async function runLiveTranscribe() {
   if (talkLiveBusy || !talkMode || !talkChunks.length) return;
   talkLiveBusy = true;
@@ -1270,7 +1204,7 @@ async function runLiveTranscribe() {
     if (res.ok && talkMode && (data.text || '').trim()) {
       setTalkUserText(data.text.trim());
     }
-  } catch (e) { /* live captions are best-effort */ }
+  } catch (e) {}
   finally { talkLiveBusy = false; }
 }
 
@@ -1296,7 +1230,7 @@ async function transcribeAndReply(blob) {
     setTalkUserText(text, true);
     const input = inputEl();
     input.value = text;
-    sendMessage();   // pushes the user message + streams the reply
+    sendMessage();
   } catch (e) {
     console.error('[ai] transcribe failed:', e);
     addSystem('Voice error — try again.');
@@ -1308,15 +1242,11 @@ function speakReply(text) {
   const clean = ttsFixPronunciations(stripMarkdown(text));
   if (!clean) { resumeListening(); return; }
   const genId = talkGenId;
-  setOrbState('voicing');   // reply done — generating the audio
+  setOrbState('voicing');
   playTts(clean, () => { if (genId === talkGenId) setOrbState('speaking'); })
     .then(() => { if (genId === talkGenId) resumeListening(); })
     .catch(() => { if (genId === talkGenId) { addSystem('Voice playback failed.'); resumeListening(); } });
 }
-
-// Play Groq TTS without a button (used by Talk mode). Plays through the mic
-// AudioContext (created under the user's click gesture) so autoplay policy
-// doesn't block the spoken reply. `onStart` fires when playback begins.
 async function playTts(text, onStart) {
   const res = await fetch(`${GROQ_WORKER}/tts`, {
     method: 'POST',
@@ -1331,7 +1261,7 @@ async function playTts(text, onStart) {
   if (talkCtx && talkCtx.state === 'suspended') { try { await talkCtx.resume(); } catch (_) {} }
   const ctx = talkCtx || new (window.AudioContext || window.webkitAudioContext)();
   const audioBuf = await ctx.decodeAudioData(buf);
-  if (talkStopReq) { talkStopReq = false; return; }   // stopped while audio was generating
+  if (talkStopReq) { talkStopReq = false; return; }
   await new Promise((resolve, reject) => {
     const src = ctx.createBufferSource();
     src.buffer = audioBuf;
@@ -1346,7 +1276,6 @@ async function playTts(text, onStart) {
   });
 }
 
-// Stop the mic/analyser and listen again (conversation loop).
 function resumeListening() {
   if (!talkMode) return;
   cleanupTalkAudio();
@@ -1366,7 +1295,6 @@ function cleanupTalkAudio() {
   talkOutAnalyser = null;
 }
 
-// Manual send — stops the recorder, which fires onstop → transcribeAndReply.
 function sendTalkNow() {
   if (!talkMode) return;
   stopTalkRecording();
@@ -1375,7 +1303,7 @@ function sendTalkNow() {
 function stopTalkMode() {
   talkMode = false;
   talkAbort = true;
-  if (controller) controller.abort();   // stop any in-flight reply
+  if (controller) controller.abort();
   if (talkPlaySrc) { try { talkPlaySrc.stop(); } catch (_) {} talkPlaySrc = null; }
   stopTalkRecording();
   cleanupTalkAudio();
@@ -1390,7 +1318,6 @@ function stopTalkMode() {
   if (btn) btn.classList.remove('active');
 }
 
-// Stop the current response (streaming or spoken) and return to listening.
 function stopTalkResponse() {
   if (!talkMode) return;
   talkGenId++;
@@ -1416,19 +1343,15 @@ function initTalkMode() {
   });
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
-
 let _inited = false;
 
 function init() {
   if (_inited) return;
   _inited = true;
 
-  // Keep a pristine copy of the welcome screen so "clear" can restore it.
   const welcome = document.getElementById('welcomeScreen');
   if (welcome) welcomeTemplate = welcome.cloneNode(true);
 
-  // Restore saved chats (or seed a fresh one) and open the active chat.
   loadLocalChats();
   initChatList();
   renderChatList();
@@ -1452,7 +1375,6 @@ function init() {
     });
   }
 
-  // If auth state is already resolved, apply it now
   setTimeout(() => {
     setAuthed(!!currentUser());
   }, 300);

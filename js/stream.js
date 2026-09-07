@@ -1,24 +1,14 @@
-/**
- * js/stream.js
- * Streaming feature for Plutonium Network.
- * Uses: TMDB (images + metadata), Videasy (player), PlutoniumStore (auth + cloud).
- */
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Constants
-───────────────────────────────────────────────────────────────────────── */
 const TMDB_API_KEY    = 'f53c43c1f2028398bcebdf4a5d1e28bd';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 const TMDB_BASE       = 'https://api.themoviedb.org/3';
 
-// Firestore doc names (users/{uid}/<name>)
 const FS_FAVORITES = 'stream_favorites';
 const FS_CONTINUE  = 'stream_continue';
 
-// TMDB genre maps
 const MOVIE_GENRE_MAP = { action:28, comedy:35, drama:18, horror:27, scifi:878, thriller:53, animation:16 };
 const TV_GENRE_MAP    = { action:10759, comedy:35, drama:18, scifi:10765, animation:16 };
-const ANIME_GENRE_ID  = 16; // Animation genre on TV
+const ANIME_GENRE_ID  = 16;
 
 const GENRE_ID_TO_CAT = {
   28:'action', 35:'comedy', 18:'drama', 27:'horror', 878:'scifi', 53:'thriller', 16:'animation',
@@ -41,9 +31,6 @@ const ANIME_CATS = [
 
 const ADULT_CERTS = new Set(['NC-17','TV-MA','R18+','X','XXX','18','18A','MA','MA 15+','MA 18+','18+']);
 
-/* ─────────────────────────────────────────────────────────────────────────
-   State
-───────────────────────────────────────────────────────────────────────── */
 let favoritesCache        = {};
 let continueWatchingCache = {};
 
@@ -53,11 +40,11 @@ let isLoading       = false;
 let currentPage     = 1;
 let hasMore         = true;
 let isSearchMode    = false;
-let mediaType       = 'movie';  // 'movie' | 'tv' | 'anime'
+let mediaType       = 'movie';
 
 let showAdultContent = false;
 let ageRatingFilter  = 'all';
-let currentSpecialView = null;  // 'favorites' | 'continue' | null
+let currentSpecialView = null;
 
 let currentDetailItem     = null;
 let pendingAdultItem      = null;
@@ -66,7 +53,7 @@ let currentPlayerItem     = null;
 let detailDropdownState   = { seasonOptions:[], episodeOptions:[], season:null, episode:null };
 let playerState           = { season:1, episode:1 };
 
-let tvSeasonData  = {};   // { [showId]: { seasons, episodesBySeason } }
+let tvSeasonData  = {};
 let detailCache   = {};
 const cacheKeys   = [];
 const MAX_CACHE   = 200;
@@ -76,7 +63,6 @@ let searchTimeout = null;
 let toastTimeout  = null;
 let fbToastTimeout = null;
 
-// Progress tracking
 let _progressTimer    = null;
 let _progressElapsed  = 0;
 let _progressRuntime  = 0;
@@ -84,24 +70,16 @@ let _progressLastSave = 0;
 let _progressSaveTimer = null;
 let _progressPending   = null;
 
-/* ─────────────────────────────────────────────────────────────────────────
-   DOM refs
-───────────────────────────────────────────────────────────────────────── */
 const tagsBar         = document.getElementById('tags-bar');
 const searchInput     = document.getElementById('game-search');
 const adultToggle     = document.getElementById('adult-toggle');
 const adultToggleText = document.getElementById('adult-toggle-text');
 const sentinel        = document.getElementById('scroll-sentinel');
 
-/* ─────────────────────────────────────────────────────────────────────────
-   PlutoniumStore helpers — favorites & continue watching
-───────────────────────────────────────────────────────────────────────── */
-
 async function loadFavorites() {
   try {
     const doc = await PlutoniumStore.getDoc(FS_FAVORITES).catch(() => null);
     if (doc && doc.items) {
-      // Union: cloud wins, keep local-only favourites
       favoritesCache = { ...favoritesCache, ...doc.items };
     }
   } catch(e) { console.warn('loadFavorites', e); }
@@ -118,7 +96,6 @@ async function loadContinueWatching() {
   try {
     const doc = await PlutoniumStore.getDoc(FS_CONTINUE).catch(() => null);
     if (doc && doc.items) {
-      // Merge by id, newest progress wins; keep local-only entries
       const merged = { ...continueWatchingCache };
       for (const [id, entry] of Object.entries(doc.items)) {
         const local = merged[id];
@@ -204,10 +181,6 @@ async function toggleFavorite(item) {
   await saveFavorites();
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Toasts
-───────────────────────────────────────────────────────────────────────── */
-
 function showFirebaseToast(msg, type) {
   const el   = document.getElementById('fb-toast');
   const icon = document.getElementById('fb-toast-icon');
@@ -241,10 +214,6 @@ function showSectionToast(query, suggestedType) {
   t.classList.add('visible');
   toastTimeout = setTimeout(dismissToast, 7000);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────
-   TMDB helpers
-───────────────────────────────────────────────────────────────────────── */
 
 function tmdb(path) {
   const sep = path.includes('?') ? '&' : '?';
@@ -394,10 +363,6 @@ async function fetchEpisodes(showId, seasonNumber) {
   return eps;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Content loading
-───────────────────────────────────────────────────────────────────────── */
-
 function getVisibleItems(items) {
   let out = showAdultContent ? items : items.filter(i => !i.adult);
   if (ageRatingFilter && ageRatingFilter !== 'all') {
@@ -426,7 +391,6 @@ async function loadContent(append = false) {
     let pages;
 
     if (mediaType === 'anime') {
-      // Anime: TV discover with genre=animation + origin_country=JP
       const pageNums = Array.from({ length: end - start + 1 }, (_, i) => start + i);
       pages = await Promise.all(pageNums.map(p =>
         tmdb(`/discover/tv?with_genres=${ANIME_GENRE_ID}&with_original_language=ja&sort_by=popularity.desc&page=${p}`)
@@ -448,7 +412,6 @@ async function loadContent(append = false) {
         );
       }
     } else {
-      // movie
       const gmap = MOVIE_GENRE_MAP;
       if (currentCategory === 'all') {
         pages = await Promise.all(
@@ -467,7 +430,6 @@ async function loadContent(append = false) {
     }
 
     let type = mediaType === 'anime' ? 'anime' : mediaType;
-    // For anime items, set type='anime' but use TV tmdb id
     let items = pages.flatMap(d => (d.results || [])).map(m => formatItem(m, type));
     items = await tagItemRatings(items);
 
@@ -516,7 +478,6 @@ async function searchTMDB(query, options = {}) {
     ]);
     let items = (r.results || []).map(m => formatItem(m, mediaType));
     if (mediaType === 'anime') {
-      // Filter to Japanese animation
       items = items.filter(i => (i.genre_ids || []).includes(ANIME_GENRE_ID));
     }
     items = await tagItemRatings(items);
@@ -551,10 +512,6 @@ async function refreshCurrentView() {
   isSearchMode = false;
   await loadContent();
 }
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Rendering
-───────────────────────────────────────────────────────────────────────── */
 
 function showSkeletons(n = 20) {
   const c  = document.getElementById('games-container');
@@ -655,10 +612,6 @@ function rerenderCardOverlays() {
   });
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Shelves
-───────────────────────────────────────────────────────────────────────── */
-
 function sortByTs(items) {
   return items.sort((a, b) => (b.ts || 0) - (a.ts || 0));
 }
@@ -706,7 +659,6 @@ function renderContinueWatchingRow() {
   items.forEach((item, idx) => {
     const existing = row.querySelector(`.shelf-card[data-id="${item.id}"]`);
     if (existing) {
-      // Update progress bar
       const fill = existing.querySelector('.shelf-progress-fill');
       if (fill && item.progressPct) fill.style.width = item.progressPct + '%';
       const cards = [...row.children];
@@ -751,10 +703,6 @@ function renderFavoritesRow() {
     row.appendChild(card);
   });
 }
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Special views (see all)
-───────────────────────────────────────────────────────────────────────── */
 
 function enterSpecialView(type) {
   currentSpecialView = type;
@@ -809,10 +757,6 @@ function renderContinueGrid() {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Tags / genre bar
-───────────────────────────────────────────────────────────────────────── */
-
 function buildTags(cats) {
   tagsBar.innerHTML = '';
   cats.forEach(c => {
@@ -836,8 +780,6 @@ function buildTags(cats) {
   positionTagSlider();
 }
 
-// Position the ::after relay pill so it hugs the active tag (mirrors the
-// genre/tags bars on the cloud-gaming page).
 function positionTagSlider() {
   const active = tagsBar.querySelector('.tag.active');
   if (!active) {
@@ -853,12 +795,6 @@ function positionTagSlider() {
   tagsBar.style.setProperty('--media-slider-visible', '1');
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Media type tabs
-───────────────────────────────────────────────────────────────────────── */
-
-// Position the ::after relay pill on the Movies / TV / Anime tabs so it glides
-// to whichever tab is active (mirrors the source-tabs slider on the games page).
 function positionTabSlider() {
   const tabs = document.querySelector('.media-tabs');
   if (!tabs) return;
@@ -912,10 +848,6 @@ document.querySelectorAll('.media-tab').forEach(tab => {
   });
 });
 
-/* ─────────────────────────────────────────────────────────────────────────
-   URL state
-───────────────────────────────────────────────────────────────────────── */
-
 function syncUrlState() {
   const params = new URLSearchParams(window.PluWorkspaceRouteSuffix || window.location.search);
   const typeMap = { movie:'m', tv:'t', anime:'a' };
@@ -939,7 +871,6 @@ async function initializeFromUrl() {
   if (q) { isSearchMode = true; await searchTMDB(q, { preserveSearchState:true }); }
   else   { isSearchMode = false; await loadContent(); }
 
-  // Deep link: resume straight into a continue-watching item (pluto://media?open=<id>)
   const openId = params.get('open');
   if (openId && continueWatchingCache[openId]) {
     const item = continueWatchingCache[openId];
@@ -948,10 +879,6 @@ async function initializeFromUrl() {
     await openPlayer(full || item, opts);
   }
 }
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Details modal
-───────────────────────────────────────────────────────────────────────── */
 
 function updateBodyScrollLock() {
   const locked =
@@ -1055,10 +982,6 @@ async function openDetails(item) {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Detail dropdowns (season/episode)
-───────────────────────────────────────────────────────────────────────── */
-
 function closeDetailDropdowns() {
   document.querySelectorAll('.detail-dropdown').forEach(d => d.classList.remove('open'));
 }
@@ -1123,10 +1046,6 @@ function selectDetailEpisode(episodeNumber) {
 
 document.addEventListener('click', e => { if (!e.target.closest('.detail-dropdown')) closeDetailDropdowns(); });
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Player
-───────────────────────────────────────────────────────────────────────── */
-
 async function watchSelectedTitle() {
   if (!currentDetailItem) return;
   const item    = currentDetailItem;
@@ -1147,7 +1066,6 @@ function setPlayerSource(source) {
   document.querySelectorAll('.source-toggle__btn').forEach(b =>
     b.classList.toggle('active', b.dataset.source === source)
   );
-  // Reload the iframe with the new source, preserving current position
   if (!currentPlayerItem) return;
   const isTV = currentPlayerItem.type === 'tv' || currentPlayerItem.type === 'anime';
   const season  = isTV ? playerState.season  : null;
@@ -1167,7 +1085,6 @@ function buildPlayerSrc(item, season, episode, resumeTs) {
     const base = `https://vidcore.xyz/movie/${item.id}`;
     return resumeTs ? `${base}?progress=${resumeTs}` : base;
   }
-  // videasy (default)
   if (isTV) {
     const base = `https://player.videasy.net/tv/${item.id}/${season}/${episode}?nextEpisode=true&episodeSelector=false`;
     return resumeTs ? `${base}&progress=${resumeTs}` : base;
@@ -1176,9 +1093,6 @@ function buildPlayerSrc(item, season, episode, resumeTs) {
   return resumeTs ? `${base}?progress=${resumeTs}` : base;
 }
 
-/* Floating control-bar behaviour (mirrors the game viewer bar): show it on
-   pointer movement over the player, auto-hide after a pause, and expose a
-   glowing ghost pill that brings it back. */
 const playerEl    = document.getElementById('player');
 const playerBar   = document.querySelector('.player__bar');
 const playerGhost = document.getElementById('player-bar-ghost');
@@ -1302,8 +1216,6 @@ document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) document.getElementById('fs-icon').className = 'fa-solid fa-expand';
 });
 
-/* Season / episode selects in player bar */
-
 function populateSeasonSelect(selectId, seasons, selectedSeason = 1) {
   const sel = document.getElementById(selectId);
   sel.innerHTML = '';
@@ -1350,10 +1262,6 @@ function onEpisodeChange() {
   saveContinueWatching(currentTVShow, season, episode);
 }
 window.onEpisodeChange = onEpisodeChange;
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Progress tracking (movie)
-───────────────────────────────────────────────────────────────────────── */
 
 function startProgressTimer(item, resumeSeconds = 0) {
   stopProgressTimer();
@@ -1410,17 +1318,12 @@ window.addEventListener('message', event => {
   scheduleProgressSave(currentPlayerItem, playerState.season, playerState.episode, pct, ts);
 });
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Controls / event listeners
-───────────────────────────────────────────────────────────────────────── */
-
 searchInput.addEventListener('input', e => {
   if (currentSpecialView) exitSpecialView();
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => searchTMDB(e.target.value), 450);
 });
 
-// '/' focuses the search field (matching the html5 game / cloud search)
 document.addEventListener('keydown', e => {
   if (e.key !== '/') return;
   const tag = document.activeElement && document.activeElement.tagName;
@@ -1460,7 +1363,6 @@ window.confirmAgeVerify = confirmAgeVerify;
 
 function denyAgeVerify() {
   closeAgeVerify();
-  // ensure toggle stays off
   adultToggle.classList.remove('active');
   adultToggle.setAttribute('aria-pressed', 'false');
   adultToggleText.textContent = 'Off';
@@ -1469,15 +1371,12 @@ window.denyAgeVerify = denyAgeVerify;
 
 adultToggle.addEventListener('click', async () => {
   if (!showAdultContent) {
-    // turning on — require age verification first
     openAgeVerify();
   } else {
-    // turning off — no prompt needed
     await applyAdultToggle(false);
   }
 });
 
-// Custom age-rating dropdown
 const ageWrap   = document.getElementById('age-sort-wrap');
 const ageBtn    = document.getElementById('age-sort-btn');
 const ageMenu   = document.getElementById('age-sort-menu');
@@ -1504,7 +1403,6 @@ if (ageBtn && ageMenu && ageWrap) {
   ageMenu.querySelectorAll('.stream-dropdown__item').forEach(item => {
     item.addEventListener('click', () => setAgeFilter(item.dataset.value));
   });
-  // close on outside click or Escape
   document.addEventListener('click', () => {
     if (ageWrap.classList.contains('open')) {
       ageWrap.classList.remove('open');
@@ -1531,10 +1429,6 @@ document.addEventListener('keydown', e => {
   if (document.getElementById('player').classList.contains('open')) { closePlayer(); return; }
 });
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Infinite scroll
-───────────────────────────────────────────────────────────────────────── */
-
 const scrollObserver = new IntersectionObserver(entries => {
   if (entries[0].isIntersecting && !isLoading && hasMore && !isSearchMode && !currentSpecialView) {
     loadContent(true);
@@ -1542,15 +1436,10 @@ const scrollObserver = new IntersectionObserver(entries => {
 }, { rootMargin: '200px' });
 scrollObserver.observe(sentinel);
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Auth state (PlutoniumStore)
-───────────────────────────────────────────────────────────────────────── */
-
 let _streamInitialized = false;
 
 PlutoniumStore.onAuthChange(async user => {
   if (user) {
-    // Load user prefs
     try {
       const prefs = await PlutoniumStore.getDoc('stream_prefs').catch(() => null);
       if (prefs?.adultContent !== undefined) {
@@ -1573,7 +1462,6 @@ PlutoniumStore.onAuthChange(async user => {
     rerenderCardOverlays();
   }
 
-  // Initialize content on first auth state fire
   if (!_streamInitialized) {
     _streamInitialized = true;
     await initializeFromUrl();

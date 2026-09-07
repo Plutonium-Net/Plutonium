@@ -1,6 +1,4 @@
-// PlutoniumOrb — WebGL shader orb for Talk mode (Jarvis-style energy sphere).
-// Renders a fbm-noise energy orb that swells and brightens with the voice
-// level (uPulse) and shifts behavior per state (uState).
+
 window.PlutoniumOrb = (function () {
   const VERT = `
 attribute vec2 aPos;
@@ -41,13 +39,11 @@ void main() {
   float d = length(uv);
   float pulse = clamp(uPulse, 0.0, 1.0);
 
-  // state: 0 listening, 1 thinking, 2 voicing, 3 speaking
-  float spd = 0.22 + 0.24 * uState;          // faster shimmer when active
+  float spd = 0.22 + 0.24 * uState;
   float baseBoost = 0.85 + 0.35 * uState;
 
-  float rad = 0.40 + 0.05 * pulse;           // voice swells the orb
+  float rad = 0.40 + 0.05 * pulse;
 
-  // energy noise
   float n1 = fbm(uv * 3.4 + uTime * spd);
   float n2 = fbm(uv * 6.5 - uTime * spd * 0.8 + 4.7);
   float energy = 0.6 + 0.5 * n1 - 0.15 * n2;
@@ -55,21 +51,17 @@ void main() {
   float t = d / rad;
   float body = 1.0 - smoothstep(0.96, 1.05, t);
 
-  // color ramp: white-hot core -> accent -> deep shadow
   vec3 col = mix(vec3(1.0), uAccent, smoothstep(0.06, 0.5, t));
   col = mix(col, uAccent * 0.22, smoothstep(0.4, 0.98, t));
 
-  // rim light
   float rim = smoothstep(0.5, 0.96, t) * (0.4 + 0.7 * pulse);
 
-  // hot center
   float core = exp(-t * 9.0) * (1.0 + 1.2 * pulse);
 
   vec3 orb = col * body * (0.25 + 0.9 * energy) * baseBoost;
   orb += uAccent * rim * body;
   orb += vec3(1.0) * core * body;
 
-  // outer glow swells with the voice
   float glow = exp(-d * 3.4) * (0.28 + 0.6 * pulse);
   orb += uAccent * glow;
 

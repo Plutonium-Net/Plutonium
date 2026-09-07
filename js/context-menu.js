@@ -1,10 +1,3 @@
-// ── Custom right-click context menus ────────────────────────────────────────
-// Generic engine (ContextMenu) + wiring for the browser chrome:
-//   • Tab strip / tabs    — new tab, reload, duplicate, copy link, close…
-//   • New-tab page, toolbar & bookmarks bar empty space — browser menu
-//   • App tiles           — open / open in new tab
-//   • Home pins           — open / open in new tab / unpin
-
 const ContextMenu = (() => {
   let menuEl = null
   let cleanup = null
@@ -97,8 +90,6 @@ const ContextMenu = (() => {
 })()
 window.ContextMenu = ContextMenu
 
-/* ── Helpers ─────────────────────────────────────────────────────────────── */
-
 function copyToClipboard(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).catch(() => {})
@@ -139,8 +130,6 @@ function closeTabsToTheRight(tabEl) {
   tabs.slice(idx + 1).forEach(t => chromeTabs.removeTab(t))
 }
 
-/* ── Tab strip / tab context menu ───────────────────────────────────────── */
-
 const chromeTabsEl = document.getElementById('tabs-el')
 
 chromeTabsEl.addEventListener('contextmenu', e => {
@@ -179,14 +168,11 @@ chromeTabsEl.addEventListener('contextmenu', e => {
     return
   }
 
-  // Empty tab-strip space → browser menu
   if (!e.target.closest('button')) {
     e.preventDefault()
     showBrowserMenu(e.clientX, e.clientY)
   }
 })
-
-/* ── Browser menu (new tab, nav, apps, customize, about, account) ────────── */
 
 function showBrowserMenu(x, y) {
   const btnBackEl = document.getElementById('btn-back')
@@ -209,7 +195,6 @@ function showBrowserMenu(x, y) {
   ], x, y)
 }
 
-// New-tab page background
 const newTabPageEl = document.getElementById('new-tab-page')
 newTabPageEl.addEventListener('contextmenu', e => {
   if (e.target.closest('.app-tile, .search-box, .shortcut, .logo, .engine-switch, .news-ticker, .status-bar, input, textarea, a, button')) return
@@ -217,7 +202,6 @@ newTabPageEl.addEventListener('contextmenu', e => {
   showBrowserMenu(e.clientX, e.clientY)
 })
 
-// Toolbar empty space
 const toolbarEl = document.querySelector('.toolbar')
 toolbarEl && toolbarEl.addEventListener('contextmenu', e => {
   if (e.target.closest('input, textarea, a, button, .address-bar-wrap, .relay-switcher-shell')) return
@@ -225,15 +209,12 @@ toolbarEl && toolbarEl.addEventListener('contextmenu', e => {
   showBrowserMenu(e.clientX, e.clientY)
 })
 
-// Bookmarks bar empty space (bookmark items keep their own menu)
 const bookmarksBarEl = document.getElementById('bookmarks-bar')
 bookmarksBarEl && bookmarksBarEl.addEventListener('contextmenu', e => {
   if (e.target.closest('.bm-item')) return
   e.preventDefault()
   showBrowserMenu(e.clientX, e.clientY)
 })
-
-/* ── App tiles on the new tab page ───────────────────────────────────────── */
 
 document.querySelectorAll('.app-tile').forEach(btn => {
   btn.addEventListener('contextmenu', e => {
@@ -246,8 +227,6 @@ document.querySelectorAll('.app-tile').forEach(btn => {
     ], e.clientX, e.clientY)
   })
 })
-
-/* ── Home pins (shortcuts) ───────────────────────────────────────────────── */
 
 document.addEventListener('contextmenu', e => {
   const shortcut = e.target.closest('.shortcut')

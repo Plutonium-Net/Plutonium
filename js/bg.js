@@ -5,7 +5,6 @@ function applyBackground() {
   const preset = BrowserThemeState.getBackgroundPreset(state.bgPreset)
   const imageUrl = BrowserThemeState.getBackgroundImageURL(state.bgImage)
 
-  // CSS gradient fallback (also the backdrop when the effect is "none")
   bgFallback.style.background = ''
   bgFallback.style.backgroundImage = ''
   if (imageUrl) {
@@ -13,7 +12,6 @@ function applyBackground() {
     bgFallback.style.backgroundSize = 'cover'
     bgFallback.style.backgroundPosition = 'center'
     bgFallback.style.backgroundRepeat = 'no-repeat'
-    // Per-image tint for readability
     var tint = BrowserThemeState.getBackgroundImageTint(state.bgImage)
     var tc = tint.color.replace('#', '')
     var tr = parseInt(tc.substring(0, 2), 16)
@@ -30,7 +28,6 @@ function applyBackground() {
   document.documentElement.dataset.bgEffect = state.bgEffect
   document.documentElement.dataset.bgImage = imageUrl ? state.bgImage : ''
 
-  // Re-launch the animated effect (PluBG.init destroys any previous instance)
   if (typeof PluBG !== 'undefined') {
     try {
       PluBG.init()

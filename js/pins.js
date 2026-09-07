@@ -1,11 +1,3 @@
-// ── Plutonium Home Pins ──────────────────────────────────────────────────────
-// Pins are games (launched from the Games page), cloud-streamed games, and a
-// VM quick-launch.
-//   game:  { id, name, image? }   — image only for GCDN games
-//   cloud: { id: 'cloud:<game_key>', name, image?, type: 'cloud' }
-//   vm:    { id: 'vm', name, type: 'vm' }
-// Legacy URL pins (Google/Reddit/etc.) from the old pin model are dropped.
-
 const Pins = (() => {
   const LS_KEY   = 'plu_pins'
   const MAX_PINS = 12
@@ -26,9 +18,6 @@ const Pins = (() => {
       window.accountManager.schedulePinSync()
     }
   }
-
-  // Keep only pins this model understands (game pins / vm pin), dropping
-  // legacy URL-only entries on first load.
   function sanitize(list) {
     if (!Array.isArray(list)) return []
     return list.filter(p => p && typeof p.id === 'string')
@@ -64,10 +53,8 @@ const Pins = (() => {
   return { getAll, add, remove, find, save, load, LS_KEY, DEFAULTS, MAX_PINS }
 })()
 
-// Expose on window so local pages (games/vms iframes) can pin via window.parent.Pins
 window.Pins = Pins
 
-/* ── Pin picker (shown when no pins exist) ────────────────────────────── */
 let _pgcdnCache = null
 let _pgcdnFetching = null
 
@@ -95,12 +82,8 @@ async function _fetchCloudGames() {
     .finally(() => { _cloudGamesFetching = null })
   return _cloudGamesFetching
 }
-
-// Normalize a cloud game image path (e.g. '../img/cloud/x.jpg') to
-// a root-relative path that works from index.html.
 function _cloudImgRoot(img) {
   if (!img) return ''
-  // Strip leading '../' from legacy catalog data paths
   return img.replace(/^\.\.\//, '')
 }
 
@@ -140,7 +123,6 @@ async function _openPinPicker(anchorEl) {
   picker.innerHTML = '<div class="pin-picker__loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>'
   document.body.appendChild(picker)
 
-  // Fetch games
   const games = await _fetchPgcdnGames()
   const pinned = new Set(Pins.getAll().map(p => p.id))
   picker.innerHTML = ''
@@ -150,7 +132,6 @@ async function _openPinPicker(anchorEl) {
   header.textContent = 'Pin to Home'
   picker.appendChild(header)
 
-  // ── Search input ─────────────────────────────────────────────────────────
   const searchWrap = document.createElement('div')
   searchWrap.className = 'pin-picker__search'
   searchWrap.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>'
@@ -165,9 +146,8 @@ async function _openPinPicker(anchorEl) {
   const list = document.createElement('div')
   list.className = 'pin-picker__list'
 
-  // Track all filterable items and section markers for search
-  const filterItems = []  // { el, name }
-  const sections = []     // { sep?, label?, items: [] }
+  const filterItems = []
+  const sections = []
   let currentSection = null
 
   function startSection(sep, label) {
@@ -177,7 +157,6 @@ async function _openPinPicker(anchorEl) {
     if (label) list.appendChild(label)
   }
 
-  // ── VM option ───────────────────────────────────────────────────────────
   startSection(null, null)
   const vmItem = document.createElement('div')
   vmItem.className = 'pin-picker__item' + (pinned.has('vm') ? ' pin-picker__item--pinned' : '')
@@ -198,7 +177,6 @@ async function _openPinPicker(anchorEl) {
   filterItems.push({ el: vmItem, name: 'virtual machines' })
   if (currentSection) currentSection.items.push(vmItem)
 
-  // ── Local GCDN games ────────────────────────────────────────────────────
   if (games.length) {
     const sep = document.createElement('div')
     sep.className = 'pin-picker__sep'
@@ -229,7 +207,6 @@ async function _openPinPicker(anchorEl) {
     if (currentSection) currentSection.items.push(item)
   })
 
-  // ── Cloud games ─────────────────────────────────────────────────────────
   const cloudGames = await _fetchCloudGames()
 
   if (cloudGames.length) {
@@ -270,14 +247,12 @@ async function _openPinPicker(anchorEl) {
 
   picker.appendChild(list)
 
-  // ── No-results message ───────────────────────────────────────────────────
   const noResults = document.createElement('div')
   noResults.className = 'pin-picker__no-results'
   noResults.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> No games found'
   noResults.style.display = 'none'
   list.appendChild(noResults)
 
-  // ── Search filtering ─────────────────────────────────────────────────────
   function _filterPicker() {
     const q = searchInput.value.trim().toLowerCase()
     let totalVisible = 0
@@ -288,7 +263,6 @@ async function _openPinPicker(anchorEl) {
       if (match) totalVisible++
     })
 
-    // Hide section headers/separators when their section has no visible items
     sections.forEach(sec => {
       const hasVisible = sec.items.some(el => el.style.display !== 'none')
       if (sec.sep) sec.sep.style.display = hasVisible ? '' : 'none'
@@ -300,7 +274,6 @@ async function _openPinPicker(anchorEl) {
 
   searchInput.addEventListener('input', _filterPicker)
 
-  // Escape in search clears text first, then dismisses on second press
   searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && searchInput.value) {
       e.stopPropagation()
@@ -309,7 +282,6 @@ async function _openPinPicker(anchorEl) {
     }
   })
 
-  // Focus search on / key (matches the rest of the app)
   function _pickerSlash(e) {
     if (e.key === '/' && document.activeElement !== searchInput) {
       e.preventDefault()
@@ -320,12 +292,10 @@ async function _openPinPicker(anchorEl) {
   }
   document.addEventListener('keydown', _pickerSlash, true)
 
-  // Focus search automatically when picker opens
   setTimeout(() => { searchInput.focus() }, 50)
 
   _pickerSlashHandler = _pickerSlash
 
-  // Dismiss on outside click
   setTimeout(() => {
     _pickerDismiss = (e) => { if (!picker.contains(e.target)) _dismissPicker() }
     document.addEventListener('click', _pickerDismiss, true)
@@ -334,7 +304,7 @@ async function _openPinPicker(anchorEl) {
 }
 
 function renderPins() {
-  _dismissPicker() // close picker if open when re-rendering
+  _dismissPicker()
   const container = document.querySelector('.shortcuts')
   if (!container) return
 
@@ -373,7 +343,6 @@ function renderPins() {
       thumb.innerHTML = '<i class="fa-solid fa-desktop"></i>'
       item.classList.add('vm-tile')
     } else if (pin.type === 'cloud' && pin.image) {
-      // Cloud gaming (data/cloud.json) game — root-relative thumbnail
       const img = document.createElement('img')
       img.src = pin.image
       img.alt = ''
@@ -384,7 +353,6 @@ function renderPins() {
       }
       thumb.appendChild(img)
     } else if (pin.image) {
-      // Cloud (GCDN) game — full URL thumbnail
       const img = document.createElement('img')
       img.src = `https://g.cdn.plutoniumnet.work/${pin.image}`
       img.alt = ''
@@ -395,7 +363,6 @@ function renderPins() {
       }
       thumb.appendChild(img)
     } else {
-      // Local game — bundled thumbnail
       const img = document.createElement('img')
       img.src = `img/games/${pin.id}.png`
       img.alt = ''

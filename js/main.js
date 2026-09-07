@@ -8,7 +8,6 @@ document.getElementById('newtab-search').addEventListener('keydown', e => {
   if (e.key === 'Enter') navigate(e.target.value)
 })
 
-// Waffle app launcher — dropdown of feature pages
 const waffleWrap = document.getElementById('waffle-wrap')
 const waffleBtn = document.getElementById('btn-waffle')
 const waffleMenu = document.getElementById('waffle-menu')
@@ -72,7 +71,6 @@ document.querySelectorAll('.waffle-item, .app-tile').forEach(btn => {
   })
 })
 
-// Hover popup for app grid
 const gridPopup = document.getElementById('app-grid-popup')
 const gridPopupName = document.getElementById('app-grid-popup-name')
 const gridPopupDesc = document.getElementById('app-grid-popup-desc')
@@ -90,7 +88,6 @@ if (gridPopup) {
 }
 
 
-// Customize (paintbrush) dropdown — background effects, accent color
 const customizeWrap = document.getElementById('customize-wrap')
 const customizeBtn = document.getElementById('btn-customize')
 const customizeMenu = document.getElementById('customize-menu')
@@ -275,7 +272,6 @@ window.addEventListener('storage', e => {
 })
 syncCustomizeMenu()
 
-// Swap the tab-bar favicon + browser favicon when the accent color changes
 function updateAccentFavicon() {
   if (typeof BrowserThemeState === 'undefined' || !BrowserThemeState.getAccentIconPath) return
   const path = BrowserThemeState.getAccentIconPath()
@@ -293,7 +289,6 @@ function updateAccentFavicon() {
   }
 }
 
-// Re-render the favicon when the theme changes within this page
 const favObserver = new MutationObserver(() => {
   clearTimeout(favObserver._t)
   favObserver._t = setTimeout(updateAccentFavicon, 150)
@@ -313,7 +308,6 @@ showNewTabPage()
 
 renderPins()
 
-// Reset inline top on resize so the CSS value takes effect
 function alignAppFlanks() {
   const flanks = document.getElementById('app-flanks')
   if (!flanks) return
@@ -322,9 +316,6 @@ function alignAppFlanks() {
 window.addEventListener('resize', alignAppFlanks)
 alignAppFlanks()
 
-// ── Shared maintenance helpers ────────────────────────────────────────────
-// Used by the About dialog's "Clear Cache & Reload" button and the home
-// screen help menu.
 window.clearCacheAndReload = async function () {
   if ('caches' in window) {
     const names = await caches.keys();
@@ -337,9 +328,6 @@ window.clearCacheAndReload = async function () {
   location.reload();
 }
 
-// Re-run the first-run wizard: clears the local flag and, when signed in,
-// the account's copy too — otherwise the onboarding page's account pull
-// would immediately bounce the user back home.
 window.redoOnboarding = async function () {
   localStorage.removeItem('plu_onboarded')
   const am = typeof accountManager !== 'undefined' ? accountManager : null
@@ -351,7 +339,6 @@ window.redoOnboarding = async function () {
   location.replace('onboarding.html')
 }
 
-// ── Home help menu (bottom-right) ─────────────────────────────────────────
 const helpWrap = document.getElementById('help-wrap')
 const helpBtn = document.getElementById('help-btn')
 const helpMenu = document.getElementById('help-menu')
@@ -391,7 +378,6 @@ if (helpBtn && helpWrap && helpMenu) {
   if (clearBtn) clearBtn.addEventListener('click', () => { if (window.clearCacheAndReload) window.clearCacheAndReload() })
 }
 
-// ── About dialog ──────────────────────────────────────────────────────────
 function openAboutDialog() {
   const scrim = document.getElementById('about-scrim')
   const dlg = document.getElementById('about-dialog')
@@ -489,10 +475,8 @@ function openAboutDialog() {
     </div>
   `
 
-  // cache-clear button (shared helper, also used by the home help menu)
   document.getElementById('about-clear-cache').addEventListener('click', window.clearCacheAndReload);
 
-  // show
   dlg.hidden = false
   scrim.hidden = false
   dlg.offsetHeight
@@ -500,7 +484,6 @@ function openAboutDialog() {
   dlg.style.transform = 'translate(-50%,-50%) scale(1)'
   scrim.style.opacity = '1'
 
-  // close handlers
   document.getElementById('about-dialog-close').addEventListener('click', closeAboutDialog)
   scrim.addEventListener('click', closeAboutDialog)
   document.addEventListener('keydown', function _esc(e) {

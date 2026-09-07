@@ -1,6 +1,3 @@
-/* Register the root service worker so the browser treats the site as
-   installable (Chrome requires a registered service worker before it
-   shows the install prompt; Safari uses the manifest + apple-touch-icon). */
 (function () {
   'use strict';
 

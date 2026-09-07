@@ -1,4 +1,4 @@
-/* ── Page ───────────────────────────────────────────────────── */
+
 .cg-page {
   position: relative;
   z-index: 1;
@@ -14,7 +14,6 @@
   margin: 0 0 24px;
 }
 
-/* ── Toolbar (search + count) ───────────────────────────────── */
 .cg-toolbar {
   display: flex;
   align-items: center;
@@ -43,7 +42,6 @@
   color: var(--muted, #a0a0a0);
 }
 
-/* remove native clear button in WebKit — we don't need it */
 .cg-search::-webkit-search-cancel-button { display: none; }
 
 .cg-count {
@@ -52,7 +50,6 @@
   white-space: nowrap;
 }
 
-/* ── Tag filter bars ───────────────────────────────────────── */
 .cg-tags {
   margin-bottom: 22px;
   display: flex;
@@ -84,9 +81,6 @@
   justify-content: center;
 }
 
-/* Sliding "relay pill" — a single outline that glides to whichever pill is
-   selected (mirrors the source-tabs / history-sort sliders on the html5
-   games page). When nothing is selected it fades out. */
 .cg-tags__row::after {
   content: "";
   position: absolute;
@@ -127,14 +121,12 @@
   color: #fff;
 }
 
-/* ── Grid ───────────────────────────────────────────────────── */
 .cg-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
   gap: 22px;
 }
 
-/* ── Card ───────────────────────────────────────────────────── */
 .cg-card {
   position: relative;
   border-radius: 12px;
@@ -157,7 +149,6 @@
   display: block;
 }
 
-/* gradient scrim so text is readable */
 .cg-card::after {
   content: '';
   position: absolute;
@@ -216,7 +207,6 @@
   overflow: hidden;
 }
 
-/* ── Empty state ────────────────────────────────────────────── */
 .cg-empty {
   grid-column: 1 / -1;
   color: var(--muted, #a0a0a0);
@@ -225,13 +215,11 @@
   font-size: 0.9rem;
 }
 
-/* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .cg-page  { padding: 24px 14px 60px; }
   .cg-grid  { grid-template-columns: 1fr; gap: 16px; }
 }
 
-/* ── Detail modal ───────────────────────────────────────────── */
 #cg-detail-overlay {
   display: none;
   position: fixed;
@@ -354,7 +342,6 @@
   font-size: 0.8rem;
 }
 
-/* ── Fullscreen player ──────────────────────────────────────── */
 #cg-launch-overlay {
   display: none;
   position: fixed;
@@ -367,7 +354,6 @@
   display: block;
 }
 
-/* Loading status panel — centred over the black bg */
 .cg-launch-status {
   position: absolute;
   inset: 0;
@@ -458,7 +444,6 @@
   text-align: center;
 }
 
-/* The game iframe — fills entire overlay */
 .cg-launch-frame {
   position: absolute;
   inset: 0;
@@ -468,7 +453,6 @@
   display: none;
 }
 
-/* ── Floating player control bar ────────────────────────────── */
 #cg-player-bar {
   position: fixed;
   bottom: 24px;
@@ -495,7 +479,6 @@
   transform: translateX(-50%) translateY(16px);
 }
 
-/* ghost pill — glows at the bottom edge when bar is hidden */
 #cg-player-ghost {
   position: fixed;
   bottom: 18px;
@@ -563,7 +546,6 @@
   text-overflow: ellipsis;
 }
 
-/* ── Context menu ───────────────────────────────────────────── */
 .cg-ctx-menu {
   position: fixed;
   z-index: 300;

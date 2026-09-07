@@ -5,9 +5,8 @@
   const LS_KEY = 'plu_games_data';
   const CLOUD_DOC = 'games_data/saved';
   const SHELF_LIMIT = 10;
-  // Grid tiles are 4× the original size (2 by 2 of the old tile).
-  const GRID_MIN = 300; // min card width (matches the CSS grid)
-  const GRID_GAP = 18;  // gap (matches the CSS grid)
+  const GRID_MIN = 300;
+  const GRID_GAP = 18;
 
   let games = [];
   let filteredGames = [];
@@ -308,9 +307,6 @@
     return card;
   }
 
-  // The catalog is small (~100 games), so every tile is rendered once and the
-  // browser handles visibility via `content-visibility: auto`. Scrolling then
-  // requires zero JS, which keeps the page smooth.
   let gridContainer = null;
 
   function renderGrid() {
@@ -332,12 +328,10 @@
     measureGridWidth();
   }
 
-  // Keep the offscreen-size hint (`--card-w`) in sync with the real column
-  // width so the scrollbar never jumps while content-visibility skips layout.
   function measureGridWidth() {
     if (!gridContainer) return;
     const width = gridContainer.clientWidth;
-    if (!width) return; // panel hidden — keep last good value
+    if (!width) return;
     const columns = Math.max(1, Math.floor((width + GRID_GAP) / (GRID_MIN + GRID_GAP)));
     const cardWidth = Math.floor((width - GRID_GAP * (columns - 1)) / columns);
     gridContainer.style.setProperty('--card-w', cardWidth + 'px');
@@ -454,9 +448,6 @@
     hideBar();
   }
 
-  // Launch gate (ported from the Crafted Gamz launcher): the Launch button
-  // shrinks into a circle, drifts down to where the control bar rests and
-  // expands into its exact shape, then the game fades in behind the bar.
   function startLaunch() {
     if (launchAnimating || !pendingGameUrl) return;
     const btn = els['game-launch-btn'];
@@ -472,11 +463,9 @@
     box.style.height = rect.height + 'px';
     box.style.left = rect.left + 'px';
     box.style.top = rect.top + 'px';
-    // Start as a pill (matching the button) so the morph is seamless.
     box.style.borderRadius = getComputedStyle(btn).borderRadius;
     document.body.appendChild(box);
 
-    // Keep the black backdrop behind the morph; drop the button.
     if (els['game-launch']) els['game-launch'].classList.add('done');
 
     const startWidth = rect.width;
@@ -485,7 +474,6 @@
     const centerX = rect.left + startWidth / 2;
     const centerY = rect.top + startHeight / 2;
 
-    // Phase 1 — shrink the button into a circle.
     let progress = 0;
     const shrink = setInterval(() => {
       progress += 0.025;
@@ -509,11 +497,9 @@
       }
     }, 12);
 
-    // Phase 2 — drift the circle down to where the control bar rests.
     function driftDown(box) {
       const bar = els['viewer-bar'];
       const r = bar.getBoundingClientRect();
-      // bar-hidden nudges the bar 16px down; undo it to hit the resting spot.
       const barRect = { left: r.left, top: r.top - 16, width: r.width, height: r.height };
       const targetTop = barRect.top + barRect.height / 2 - targetSize / 2;
       const currentTop = parseFloat(box.style.top);
@@ -533,7 +519,6 @@
       }, 10);
     }
 
-    // Phase 3 — expand the circle into the exact shape of the control bar.
     function expandIntoBar(box, barRect) {
       const initialLeft = parseFloat(box.style.left);
       const initialTop = parseFloat(box.style.top);
@@ -562,11 +547,9 @@
       }, 10);
     }
 
-    // Phase 4 — load the game, fade it in, reveal the control bar.
     function loadGame() {
       launchAnimating = false;
       if (els['game-launch']) els['game-launch'].classList.add('hidden');
-      // The corner brand mark appears once the game is on screen.
       if (els['game-corner-logo']) els['game-corner-logo'].classList.add('visible');
       els['game-iframe'].src = pendingGameUrl;
       els['game-iframe'].classList.add('entering');
@@ -597,8 +580,6 @@
 
   let barHintTimer = null;
 
-  // Small autopopup that appears when the bar minimizes, teaching the
-  // Shift / ghost-pill shortcut to bring it back.
   function showBarHint() {
     const hint = els['viewer-bar-hint'];
     if (!hint) return;
@@ -622,8 +603,6 @@
 
   function hideBar() {
     els['viewer-bar'].classList.add('bar-hidden');
-    // Only the ghost pill marks the hidden state — and never while the
-    // launch screen/morph is up (it would float over the animation).
     const ghost = els['viewer-bar-ghost'];
     const viewer = els['game-viewer'];
     const launchActive = !!(els['game-launch'] && !els['game-launch'].classList.contains('hidden'));
@@ -675,8 +654,6 @@
     }
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && els['game-viewer'].classList.contains('active') && !document.fullscreenElement) closeViewer();
-      // Left Shift toggles the bottom bar: summons it from the minimized
-      // pill, or minimizes it again when visible.
       if (e.key === 'Shift' && e.location === 1 && els['game-viewer'].classList.contains('active')) {
         if (els['game-launch'] && !els['game-launch'].classList.contains('hidden')) return;
         if (els['viewer-bar'].classList.contains('bar-hidden')) {
@@ -719,13 +696,9 @@
           luminStarted = true;
           Lumin.init({ container: '#lumin-container', theme: 'dark', columns: 6, rows: 4 });
         }
-        // Grid may have been resized while hidden — refresh the size hint.
         if (activePanel === 'pgcdn') measureGridWidth();
       });
     });
-    // The workspace can still be transitioning into view when tabs are wired,
-    // so the first measurement may use stale/hidden geometry. Re-measure once
-    // the browser has committed the initial layout and again after the first paint.
     positionSourceSlider();
     requestAnimationFrame(() => {
       positionSourceSlider();
@@ -811,8 +784,6 @@
     window.addEventListener('resize', measureGridWidth);
   }
 
-  // Preload every game thumbnail (e.g. `https://g.cdn.../img/...`) so the
-  // catalog is fully warm by the time the preload overlay is lifted.
   function preloadImages(list, onProgress) {
     return new Promise(resolve => {
       const items = (list || []).filter(g => g && g.image);
@@ -837,7 +808,6 @@
         img.onerror = tick;
         img.src = gameImage(g);
       });
-      // Backstop: never leave the page blocked if a request hangs.
       setTimeout(settle, 15000);
     });
   }
@@ -864,13 +834,11 @@
       const routeSuffix = window.PluWorkspaceRouteSuffix || '';
       const launchId = decodeURIComponent((routeSuffix.match(/#(.*)$/) || [,''])[1]);
       if (launchId) {
-        // Deep-linked straight into a game — don't block on thumbnail preload.
         const game = games.find(g => g.id === launchId);
         if (game) launchGame(game);
         window.PluWorkspaceRouteSuffix = '';
         history.replaceState(null, '', location.pathname);
       } else {
-        // Preload all images before letting the user in.
         await preloadImages(games, (done, total) => {
           const label = els['games-preload-label'];
           if (label) label.textContent = 'Preloading Images… (' + done + '/' + total + ')';
@@ -883,8 +851,6 @@
     }
   }
 
-  // Resolve the theme's accent color to a brand asset name (shared by the
-  // favicon and the viewer-bar logo).
   function accentIconName() {
     const map = {
       '#e8175d': 'plutonium-pink',
@@ -909,8 +875,6 @@
     if (link) link.href = 'img/logos/icon-' + accentIconName() + '.png';
   }
 
-  // Theme-tinted brand logos: the viewer-bar mark, the launch-screen logo
-  // and the in-game corner mark all use the transparent icon variant.
   function updateBrandLogos() {
     const name = accentIconName();
     ['viewer-bar-logo', 'game-corner-logo', 'game-launch-logo'].forEach(id => {

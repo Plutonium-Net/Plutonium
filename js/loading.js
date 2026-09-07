@@ -1,9 +1,6 @@
 (function () {
   'use strict';
 
-  // Set + event fired when the boot loader is done hiding. index.html waits
-  // for this before redirecting first-time users to the onboarding page, so
-  // onboarding only starts after all background/game art is warm-cached.
   window.__pluBootDone = false;
 
   let pageLoaded = false;
@@ -12,7 +9,6 @@
   let cacheComplete = false;
   let progressShown = false;
 
-  /* ── Background images to pre-cache ─────────────────────────────────── */
   const CACHE_KEY = 'plutonium-bg-v2';
   const GAMES_CACHE_KEY = 'plutonium-games-v1';
   const CLOUD_CACHE_KEY = 'plutonium-cloud-v1';
@@ -34,7 +30,6 @@
     'img/backgrounds/swirls.png',
   ];
 
-  /* ── Brand logos to pre-cache (all accent colours × variants) ──────── */
   const LOGO_COLORS = ['plutonium-pink', 'violet', 'blue', 'emerald', 'amber', 'red', 'cyan', 'fuchsia', 'white'];
   const LOGO_VARIANTS = ['brand-logo', 'logo', 'icon'];
   const LOGO_IMAGES = ['img/logos/stelena.svg'];
@@ -44,7 +39,6 @@
     });
   });
 
-  /* ── accent colour ────────────────────────────────────────────────── */
   let accent = '#e8175d';
   try {
     const state = window.BrowserThemeState
@@ -61,20 +55,17 @@
   }
   const accentRgb = hexToRgbTriple(accent);
 
-  /* ── build the overlay ────────────────────────────────────────────── */
   const overlay = document.createElement('div');
   overlay.id = 'page-loader';
   overlay.style.cssText =
     'position:fixed;inset:0;background:#000;display:flex;flex-direction:column;' +
     'justify-content:center;align-items:center;z-index:9999;transition:opacity .6s ease;';
 
-  /* ── content wrapper (spinner rings the logo) ───────────────────── */
   const contentWrap = document.createElement('div');
   contentWrap.style.cssText =
     'position:relative;display:inline-flex;align-items:center;justify-content:center;' +
     'margin-bottom:28px;';
 
-  /* ── spinner (ring around logo) ──────────────────────────────────── */
   const spinner = document.createElement('div');
   spinner.className = 'boot-spinner';
   spinner.style.cssText =
@@ -91,7 +82,6 @@
     'animation:boot-spin 1s linear infinite;';
   spinner.appendChild(spinnerInner);
 
-  /* ── "Plutonium" title ───────────────────────────────────────────── */
   const title = document.createElement('div');
   title.style.cssText =
     'display:flex;color:' + accent + ";font-family:'Curly',cursive;" +
@@ -108,22 +98,14 @@
   contentWrap.appendChild(spinner);
   contentWrap.appendChild(title);
 
-  /* ── progress bar ────────────────────────────────────────────────── */
   const progressWrap = document.createElement('div');
   progressWrap.style.cssText =
     'width:min(420px,86vw);margin-top:4px;opacity:0;transition:opacity .3s ease;';
-
-  // One segment per caching step (backgrounds, logos, games, cloud games).
-  // The active step renders big; finished steps shrink into the small slots
-  // on the left, pending ones wait small on the right. The big bar "walks"
-  // right as each step completes.
-  // Active bar = triple the completed/queued ones: 1.5× the old 29% width
-  // (43.5) vs the smalls at half of the old 29% width (14.5).
-  const BAR_ACTIVE_W = 43.5;                 // active (big) segment width, %
-  const BAR_SMALL_W  = 14.5;                 // completed/queued: ⅓ of the active bar
+  const BAR_ACTIVE_W = 43.5;
+  const BAR_SMALL_W  = 14.5;
   const BAR_ACTIVE_H = 10;
   const BAR_SMALL_H  = 4.8;
-  const STEP_MIN_MS  = 5000;                 // hard minimum per segment (4 × 5 s = 20 s)
+  const STEP_MIN_MS  = 5000;
 
   const barRow = document.createElement('div');
   barRow.style.cssText =
@@ -146,7 +128,6 @@
     barSegments.push({ el: seg, fill: fill });
   }
 
-  // Grow the active step, shrink every other step into its slot.
   function setStepActive(index) {
     barSegments.forEach(function (seg, i) {
       const active = i === index;
@@ -155,7 +136,6 @@
     });
   }
 
-  // Initial state: first step big, the other three small on its right.
   setStepActive(0);
 
   progressWrap.appendChild(barRow);
@@ -166,7 +146,6 @@
     'color:rgba(255,255,255,0.45);margin-top:10px;letter-spacing:.3px;min-height:16px;';
   progressWrap.appendChild(statusText);
 
-  /* ── injected keyframes ──────────────────────────────────────────── */
   const style = document.createElement('style');
   style.textContent =
     '@keyframes boot-morph{to{border-radius:50%}}' +
@@ -179,22 +158,17 @@
     '}';
   document.head.appendChild(style);
 
-  /* ── assemble ────────────────────────────────────────────────────── */
   overlay.appendChild(contentWrap);
   overlay.appendChild(progressWrap);
   document.body.insertBefore(overlay, document.body.firstChild);
   document.body.style.overflow = 'hidden';
 
-  /* ── size spinner to half the viewport ───────────────────────────── */
   var spSize = Math.round(Math.min(window.innerHeight * 0.5, window.innerWidth * 0.9));
   spinner.style.width  = spSize + 'px';
   spinner.style.height = spSize + 'px';
   contentWrap.style.width  = spSize + 'px';
   contentWrap.style.height = spSize + 'px';
 
-  /* ── progress helpers ────────────────────────────────────────────── */
-  // Map a cache label back to its step slot (0 = backgrounds, 1 = logos,
-  // 2 = games, 3 = cloud games).
   function stepIndexFromLabel(label) {
     const l = String(label || '').toLowerCase();
     if (l.indexOf('logo') !== -1) return 1;
@@ -203,10 +177,6 @@
     return 0;
   }
 
-  // Step pacing state: the fill never jumps straight to the real progress —
-  // it is capped by a STEP_MIN_MS linear envelope, so a segment that finishes
-  // early keeps filling (slower but accurate) instead of freezing at its
-  // final percentage for the remaining time.
   let stepStartTime = 0;
   let currentStepIdx = -1;
   let realPct = 0;
@@ -299,7 +269,6 @@
     return path.replace(/^\.\.\//, '').replace(/^\.\//, '');
   }
 
-  /* ── hide logic ──────────────────────────────────────────────────── */
   function hideLoader() {
     stopFillTicker();
     window.__pluBootDone = true;
@@ -319,7 +288,6 @@
     }
   }
 
-  /* ── window load ─────────────────────────────────────────────────── */
   window.addEventListener('load', function () {
     pageLoaded = true;
     checkAndHide();
@@ -328,7 +296,6 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'k' || e.key === 'K') {
       kPressed = true;
-      // Show progress bar if K is held before splash hides
       if (!splashHidden) showProgress();
     }
   });
@@ -336,7 +303,6 @@
     if (e.key === 'k' || e.key === 'K') { kPressed = false; checkAndHide(); }
   });
 
-  /* ── background image caching (runs immediately, silently) ─────── */
   async function cacheBackgroundImages() {
     if (!('caches' in window)) return;
     try {
@@ -371,7 +337,6 @@
     } catch (_) {}
   }
 
-  /* ── brand logo caching (runs right after backgrounds) ──────────── */
   async function cacheLogoImages() {
     if (!('caches' in window)) return;
     try {
@@ -406,7 +371,6 @@
     } catch (_) {}
   }
 
-  /* ── game image caching (deferred 3s to avoid fighting bandwidth) ─ */
   async function cacheGameImages() {
     if (!('caches' in window)) return;
     try {
@@ -447,7 +411,6 @@
     } catch (_) {}
   }
 
-  /* ── cloud gaming image caching ─────────────────────────────────── */
   async function cacheCloudImages() {
     if (!('caches' in window)) return;
     try {
@@ -501,9 +464,6 @@
     return new Promise(function (resolve) { setTimeout(resolve, ms); });
   }
 
-  // Skipped steps (already fully cached) still occupy their segment: once the
-  // bar is visible, mark the segment complete so the walk stays in order. The
-  // ticker then paces its fill over the step's minimum time.
   function markStepComplete(label) {
     if (!progressShown) return;
     const idx = stepIndexFromLabel(label);
@@ -514,11 +474,6 @@
     statusText.textContent = label.replace('Caching ', 'Cached ') + ' up to date';
   }
 
-  // Hard minimum display time per step: a segment must stay on screen for at
-  // least `ms` before the next one takes over. While it waits, the fill keeps
-  // moving (driven by the ticker's envelope), so the bar never idles at its
-  // final percentage. Only enforced once the bar is actually visible, so
-  // fully-warm loads still pass instantly.
   async function withMinStepTime(task, ms) {
     const start = Date.now();
     try {
@@ -543,8 +498,6 @@
 
   cacheVisibleAssets();
 
-  /* safety net: force-hide after 90 s (the 4×5 s minimum floor means cold
-     loads take at least 20 s, so 30 s would cut real caching short) */
   setTimeout(function () {
     if (!splashHidden) {
       cacheComplete = true;

@@ -100,9 +100,6 @@ function formatRelayLatency(latencyMs) {
   return Number.isFinite(latencyMs) ? `${Math.round(latencyMs)} ms` : 'pending'
 }
 
-// ── Relay quality tiers + stability history ─────────────────────────────
-// Latency is binned into four tiers so the UI can show quality at a glance
-// instead of a bare number, and a rolling sample buffer powers the sparkline.
 const RELAY_TIER_THRESHOLDS = [
   { max: 80,        level: 0, label: 'Excellent', cls: 'tier-0' },
   { max: 180,       level: 1, label: 'Good',      cls: 'tier-1' },
@@ -123,8 +120,6 @@ function recordRelayLatency(latencyMs) {
   if (relayLatencyHistory.length > RELAY_HISTORY_MAX) relayLatencyHistory.shift()
 }
 
-// Polyline points for the latency sparkline on a fixed 0..400ms scale so the
-// trend stays comparable over time (a flat 90ms link hugs the top, not mid-canvas).
 function relaySparklinePath(width = 96, height = 22) {
   if (relayLatencyHistory.length < 2) return ''
   const SCALE_MAX = 400
@@ -139,7 +134,6 @@ function relaySparklinePath(width = 96, height = 22) {
   }).join(' ')
 }
 
-// Small 4-segment signal meter; level -1 renders every segment dimmed.
 function relaySignalBars(level) {
   const filled = level < 0 ? 0 : Math.max(1, 4 - level)
   const heights = [0.28, 0.48, 0.72, 1]
@@ -192,7 +186,6 @@ function updateRelaySwitcherButton() {
   currentIcon.className = 'relay-switcher-icon relay-flag'
   currentIcon.style.backgroundImage = server.flagSrc ? `url('${server.flagSrc}')` : ''
 
-  // Live wisp state on the trigger: colored dot + latency, tinted by quality.
   const stateClass = currentRelayStatus === 'ok' ? 'relay-ok'
     : currentRelayStatus === 'err' ? 'relay-err'
     : currentRelayStatus === 'disconnecting' ? 'relay-disconnecting'
@@ -259,7 +252,6 @@ function renderRelaySwitcherMenu() {
     })
   })
 
-  // Stability strip: sparkline of the current region's recent latency.
   const stability = document.getElementById('relay-switcher-stability')
   if (stability) {
     if (currentRelayStatus === 'ok' && relayLatencyHistory.length >= 2) {
@@ -307,7 +299,6 @@ function setRelayMenuOpen(open) {
     menu.classList.add('is-open')
   } else {
     menu.classList.remove('is-open')
-    // keep it in the DOM during the fade-out, then detach
     relayMenuTimer = window.setTimeout(() => {
       menu.hidden = true
     }, 260)
@@ -578,7 +569,6 @@ function startBackgroundRelayPingLoop() {
 }
 
 async function chooseBestRelayServer() {
-  // Respect a manually saved relay server choice
   const savedServer = localStorage.getItem('plu_relay_server') || localStorage.getItem('plu_wisp_server')
   if (savedServer && getRelayServerById(savedServer)) {
     currentRelayServerId = savedServer
@@ -661,13 +651,10 @@ async function switchRelayServer(serverId) {
   if (!connected) return false
 
   const ready = await initBridge()
-  // Remote sessions don't use the relay transport — never re-route one
-  // through Core/Runtime just because the relay server changed.
   if (ready && pageUrl && getNetEngine() !== 'remote') reconnectActivePage(pageUrl)
   return ready
 }
 
-// ── Net engine (Core / Runtime / Remote) ────────────────────
 const NET_MODE_KEY = 'plu_net_mode'
 const LEGACY_NET_MODE_KEY = 'plu_proxy_engine'
 const LEGACY_NET_MODE_MAP = { uv: 'core', sj: 'runtime', hb: 'remote' }
@@ -676,13 +663,12 @@ const REMOTE_WORKER_URL    = 'https://net.cdn.plutoniumnet.work'
 function loadNetMode() {
   const stored = localStorage.getItem(NET_MODE_KEY)
   if (stored) return stored
-  // Migrate the pre-rename storage key/value if present.
   const legacy = localStorage.getItem(LEGACY_NET_MODE_KEY)
   if (legacy) return LEGACY_NET_MODE_MAP[legacy] || legacy
   return 'core'
 }
 
-let selectedNet  = loadNetMode()   // 'core' | 'runtime' | 'remote'
+let selectedNet  = loadNetMode()
 let runtimeReady        = false
 let runtimeController   = null
 let currentRemoteSessionId = null
@@ -700,10 +686,8 @@ function setNetEngine(engine) {
     window.accountManager.scheduleSettingsSync()
   }
   if (engine === 'remote') {
-    // Remote sessions are launched on demand from navigate(); nothing to re-init.
     return
   }
-  // Leaving Remote — tear down any running cloud session.
   if (previous === 'remote' && typeof endRemoteSession === 'function') endRemoteSession()
   const pageUrl = currentNetAddress()
   if (pageUrl) reconnectActivePage(pageUrl)
@@ -749,7 +733,6 @@ async function initCore() {
   }
 }
 
-// Runtime — served by the root sw.js (which handles /core/service/ + /runtime/service/)
 async function initRuntime() {
   if (runtimeReady) return true
   if (typeof $scramjetLoadController === 'undefined') return false
@@ -758,7 +741,6 @@ async function initRuntime() {
   try {
     await navigator.serviceWorker.register('/sw.js', { scope: '/' })
 
-    // Repair the Runtime IDB if its stores are missing/broken
     await new Promise(resolve => {
       const req = indexedDB.open('$scramjet')
       req.onupgradeneeded = () => { try { req.transaction.abort() } catch (_) {} }
@@ -826,7 +808,6 @@ async function initNetStack() {
   await initBridge()
 }
 
-// ── Remote (worker-hosted browser session) ─────────────────────────────
 async function launchRemoteSession(raw) {
   if (!raw) return false
 
@@ -891,20 +872,16 @@ window.launchRemoteSession = launchRemoteSession
 window.endRemoteSession = endRemoteSession
 
 function getNetUrl(url) {
-  // Remote pages live in a remote VM embed, not a rewritten URL — never
-  // hand one to Core/Runtime.
   if (selectedNet === 'remote') return url
   if (selectedNet === 'runtime') {
     if (runtimeReady && runtimeController) return runtimeController.encodeUrl(url)
     return url
   }
-  // Core (default)
   if (!coreReady || typeof __uv$config === 'undefined') return url
   return __uv$config.prefix + __uv$config.encodeUrl(url)
 }
 
 function getRealUrlFromNet(maybeNetUrl) {
-  // Active Remote session — surface the real target URL
   if (currentRemoteTargetUrl) return currentRemoteTargetUrl
 
   if (selectedNet === 'runtime' && runtimeReady && runtimeController) {
@@ -938,13 +915,8 @@ function getRelayConnectionSummary() {
 
 window.getRelayConnectionSummary = getRelayConnectionSummary
 
-// ── Deferred net init ───────────────────────────────────────────────────────
-// Net scripts (relay + Core/Runtime/Bridge) load 10s after the DOM is ready
-// so the shell UI paints first. The address bar shows a live countdown while
-// the user waits, then switches to a short "Initializing Network Systems…" phase.
 const NET_INIT_DELAY_MS = 10000
 let netInitCountdownTimer = null
-// ── Net init info button + popup ────────────────────────────────────────────
 function netInfoButtons() {
   return ['addr-net-info-btn', 'newtab-net-info-btn'].map(id => document.getElementById(id)).filter(Boolean)
 }
@@ -966,9 +938,6 @@ function currentEngineLabel() {
     : 'Core (UV)'
 }
 
-// Live Connection HUD — the net-info overlay doubles as a status dashboard:
-// current region, latency tier, engine, a latency sparkline, and per-region
-// pings. Re-rendered on status/ping changes whenever the overlay is open.
 function renderConnectionHud() {
   const currentEl = document.getElementById('conn-hud-current')
   const regionsEl = document.getElementById('conn-hud-regions')
@@ -1079,7 +1048,7 @@ function repositionAddrNetButton() {
     const lockWidth = lockBtn ? lockBtn.offsetWidth : 0
     const gap = 6
     btn.style.left = `${Math.round(padLeft + lockWidth + gap + textWidth + gap)}px`
-  } catch (_) { /* keep CSS fallback position */ }
+  } catch (_) {}
 }
 
 function scheduleNetInit() {
@@ -1091,7 +1060,6 @@ function scheduleNetInit() {
   const showCountdown = () => {
     const remaining = Math.max(0, Math.ceil((NET_INIT_DELAY_MS - (Date.now() - startedAt)) / 1000))
     inputs.forEach(input => {
-      // Only own the field when we set it: skip if the user is typing in it.
       if (document.activeElement === input) return
       if (input.value && !input.value.startsWith('Initializing Network')) return
       input.value = `Initializing Network Systems in ${remaining}s`

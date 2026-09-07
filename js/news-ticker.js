@@ -1,4 +1,4 @@
-/* ── News Ticker (macOS-style) ──────────────────────────────────────── */
+
 (function () {
   'use strict';
 
@@ -13,12 +13,11 @@
 
   if (!clockEl || !storyEl) return;
 
-  var sectionData = [];   // array of arrays of {title, desc}
+  var sectionData = [];
   var sectionIdx  = 0;
   var articleIdx  = 0;
   var rotateTimer = null;
 
-  /* ── Clock ──────────────────────────────────────────────────────── */
   function updateClock () {
     var now = new Date();
     var h = now.getHours();
@@ -34,7 +33,6 @@
   updateClock();
   setInterval(updateClock, 10000);
 
-  /* ── Load news from JSON ──────────────────────────────────────────── */
   function loadNews () {
     return fetch('data/news.json')
       .then(function (r) { return r.json(); })
@@ -49,7 +47,6 @@
       .catch(function () { return []; });
   }
 
-  /* ── Show story with switch effect ──────────────────────────────── */
   function showStory (secIdx, artIdx) {
     var articles = sectionData[secIdx];
     if (!articles || !articles.length) return;
@@ -74,7 +71,6 @@
     showStory(0, articleIdx);
   }
 
-  /* ── Dots ───────────────────────────────────────────────────────── */
   function buildDots (count) {
     dotsEl.innerHTML = '';
     for (var i = 0; i < count; i++) {
@@ -85,7 +81,6 @@
     return dotsEl.querySelectorAll('.news-dot');
   }
 
-  /* ── Init ───────────────────────────────────────────────────────── */
   loadNews().then(function (sections) {
     if (!sections.length || !sections[0].length) return;
     sectionData = sections;

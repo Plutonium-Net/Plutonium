@@ -1,10 +1,4 @@
-/**
- * Plutonium account manager.
- * Auth + cloud sync via PlutoniumStore (accounting.cdn.plutoniumnet.work).
- * Bookmarks / pins / tabs are synced to Firestore docs under users/{uid}.
- * Keeps the window.accountManager API surface used by bookmarks.js,
- * pins.js and tabs.js.
- */
+
 class AccountManager {
   constructor() {
     this.BM_KEY      = 'plu_bookmarks'
@@ -27,7 +21,6 @@ class AccountManager {
     this._init()
   }
 
-  // ── One-time migration from the old crafted-gamz keys ─────────────────────
   _migrateLegacyKeys() {
     try {
       if (!localStorage.getItem(this.BM_KEY)   && localStorage.getItem('cg_bookmarks')) localStorage.setItem(this.BM_KEY, localStorage.getItem('cg_bookmarks'))
@@ -63,7 +56,6 @@ class AccountManager {
     })
   }
 
-  // ── Profile ────────────────────────────────────────────────────────────────
 
   async getUserProfile() {
     if (!this.user) return null
@@ -74,7 +66,6 @@ class AccountManager {
     }
   }
 
-  // ── Bookmarks ──────────────────────────────────────────────────────────────
 
   _renderAccountPanel() {
     const greetingEl = document.getElementById('acct-name-text')
@@ -125,14 +116,11 @@ class AccountManager {
   _bindSignInButton() {
     if (this._signInBound) return
     this._signInBound = true
-    // The home panel renders the sign-in form in-page; wiring is shared with
-    // the onboarding welcome step via wireAuthForm().
     this.wireAuthForm()
   }
 
   _authErrorMessage(e) {
     const msgs = {
-      // Firebase SDK codes
       'auth/invalid-email':          'Invalid email address.',
       'auth/user-not-found':         'No account found with that email.',
       'auth/wrong-password':         'Incorrect password.',
@@ -144,7 +132,6 @@ class AccountManager {
       'auth/operation-not-allowed':  'Email/password sign-in is not available.',
       'auth/network-request-failed': 'Network error — check your connection.',
       'auth/popup-closed-by-user':   'Sign-in popup was closed.',
-      // Firebase REST codes (returned by the gateway worker)
       'INVALID_LOGIN_CREDENTIALS':   'Wrong email or password.',
       'EMAIL_NOT_FOUND':             'No account found with that email.',
       'INVALID_PASSWORD':            'Incorrect password.',
@@ -200,7 +187,6 @@ class AccountManager {
       const doc = await PlutoniumStore.getDoc('bookmarks')
       const remote = doc && Array.isArray(doc.list) ? doc.list : null
       if (!remote) return
-      // Union by url: cloud ordering wins, keep local-only bookmarks
       const local = this._getBookmarks()
       const localMap = Object.fromEntries(local.map(b => [b.url, b]))
       const remoteIds = new Set(remote.map(b => b.url))
@@ -217,8 +203,6 @@ class AccountManager {
       console.warn('[Account] Pull failed:', e)
     }
   }
-
-  // ── Pins ───────────────────────────────────────────────────────────────────
 
   _getPins() {
     try { return JSON.parse(localStorage.getItem(this.PINS_KEY)) || null } catch { return null }
@@ -253,7 +237,6 @@ class AccountManager {
       const doc = await PlutoniumStore.getDoc('pins')
       const remote = doc && Array.isArray(doc.list) ? doc.list : null
       if (!remote) return
-      // Union by id: cloud ordering wins, keep local-only pins
       const remoteIds = new Set(remote.map(p => p.id))
       const localOnly = (this._getPins() || []).filter(p => !remoteIds.has(p.id))
       this._setPins([...remote, ...localOnly])
@@ -261,8 +244,6 @@ class AccountManager {
       console.warn('[Account] Pin pull failed:', e)
     }
   }
-
-  // ── Settings (theme / browsing engine / relay) ────────────────────────
 
   _getSettings() {
     const out = {}
@@ -272,13 +253,8 @@ class AccountManager {
       const mode = localStorage.getItem('plu_net_mode') || localStorage.getItem('plu_proxy_engine')
       if (mode) out.proxyEngine = mode
       const relay = localStorage.getItem('plu_relay_server') || localStorage.getItem('plu_wisp_server')
-      if (relay) out.wispServer = relay
-      // First-run onboarding completion flag — rides the settings sync so it
-      // follows the user across devices.
+      if (relay) out.wispServer = relayMenuState
       if (localStorage.getItem('plu_onboarded')) out.onboarded = true
-      // bgImage is embedded in the plu_theme JSON but also stored as a
-      // top-level field so the pull side can merge it even when the
-      // remote plu_theme predates the bgImage feature.
       try {
         const parsed = JSON.parse(theme || '{}')
         if (parsed.bgImage) out.bgImage = parsed.bgImage
@@ -309,7 +285,6 @@ class AccountManager {
     try {
       const doc = await PlutoniumStore.getDoc('settings')
       if (!doc) return
-      // account.js may load before theme-state.js / net.js — retry once
       const ready = window.BrowserThemeState && window.setNetEngine && window.switchRelayServer
       if (!ready) {
         setTimeout(() => this.pullSettings(), 2500)
@@ -318,24 +293,18 @@ class AccountManager {
       if (doc.theme && window.BrowserThemeState.saveThemeState) {
         try {
           const parsed = JSON.parse(doc.theme)
-          // Explicitly pull bgImage so it syncs across devices
           if (doc.bgImage !== undefined) parsed.bgImage = doc.bgImage
           window.BrowserThemeState.saveThemeState(parsed)
         } catch (_) {}
       }
-      // Migrate pre-rename engine values stored on the remote doc.
       const legacyMode = { uv: 'core', sj: 'runtime', hb: 'remote' }
       if (doc.proxyEngine) window.setNetEngine(legacyMode[doc.proxyEngine] || doc.proxyEngine)
       if (doc.wispServer) window.switchRelayServer(doc.wispServer)
-      // Onboarding flag: once the account says it's done it is never cleared
-      // locally, so an older remote doc can't re-trigger onboarding.
       if (doc.onboarded) localStorage.setItem('plu_onboarded', '1')
     } catch (e) {
       console.warn('[Account] Settings pull failed:', e)
     }
   }
-
-  // ── Tabs ───────────────────────────────────────────────────────────────────
 
   _getTabsSnapshot() {
     if (typeof chromeTabs === 'undefined') return null
@@ -381,8 +350,6 @@ class AccountManager {
     clearTimeout(this._tabSyncTimer)
     this._tabSyncTimer = setTimeout(() => this.pushTabs(), 1500)
   }
-
-  // ── Sync loop ──────────────────────────────────────────────────────────────
 
   _startSync() {
     if (this.syncIntervalId) return
@@ -436,8 +403,6 @@ class AccountManager {
       }
     }
   }
-
-  // ── Recent activity (Continue From Where You Left Off) ────────────────────
 
   recordRecent(entry) {
     if (!entry || !entry.type) return
@@ -507,8 +472,6 @@ class AccountManager {
     }
   }
 
-  // ── Auth actions ───────────────────────────────────────────────────────────
-
   _bindSignOut() {
     if (this._signOutBound) return
     this._signOutBound = true
@@ -540,9 +503,6 @@ class AccountManager {
     }
   }
 
-  // In-page sign-in lives in the account panel on the home screen (and the
-  // onboarding welcome step). No popup — just land on the panel and focus
-  // the email field.
   showAuthPrompt() {
     this.isGuest = false
     if (typeof showNewTabPage === 'function') showNewTabPage()
@@ -550,10 +510,6 @@ class AccountManager {
     if (email) setTimeout(() => email.focus(), 60)
   }
 
-  // Wires the in-page sign-in form (email / password / name, OAuth buttons,
-  // submit, sign-up toggle). Shared by the home account panel and the
-  // onboarding welcome step — both pages include account.js and use the same
-  // element ids/classes. Idempotent per document.
   wireAuthForm() {
     if (this._authFormBound) return
     this._authFormBound = true

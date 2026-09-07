@@ -25,7 +25,6 @@
   --bg: #0d0b0d;
 }
 
-/* ── Base (was provided by the site-wide style.css) ────────────────────── */
 *,
 *::before,
 *::after { box-sizing: border-box; }
@@ -38,7 +37,6 @@ body {
   line-height: 1.6;
 }
 
-/* Shared page layout (previously .plu-page in style.css) */
 .games-page {
   position: relative;
   z-index: 1;
@@ -346,7 +344,6 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ── Launch gate — "Launch [game]" screen + morph-to-bar animation ─────── */
 #game-launch {
   position: absolute;
   inset: 0;
@@ -1059,8 +1056,6 @@ body {
 
 .pg-btn--ghost:hover:not(:disabled) { background: var(--surface-4); color: var(--text); }
 
-
-/* ── Personal Games — Cloud sync badge ───────────────────────────────────── */
 .pg-cloud-badge {
   font-size: 0.72rem;
   font-weight: 600;
@@ -1093,7 +1088,6 @@ body {
   background: rgba(232,124,78,0.08);
 }
 
-/* ── GitHub game picker ──────────────────────────────────────────────────── */
 .pg-github-picker {
   margin-top: 12px;
   border: 1px solid var(--border-subtle);
@@ -1248,13 +1242,6 @@ body {
   color: var(--muted);
   opacity: 0.7;
 }
-
-/* ── Rebuilt Games Catalog ──────────────────────────────────────────────── */
-/* The games page scrolls inside #workspace-root (not <html>), so style that
-   scrollbar: the app-wide accent-tinted thumb (workspace.css body rule)
-   reads as a light line at the right edge. Use the app's standard dark
-   scrollbar here instead; the stable gutter stops the grid jumping when a
-   search shrinks the results below the fold. */
 #workspace-root:has(.workspace-games:not([hidden])) {
   scrollbar-color: rgba(255,255,255,0.15) transparent;
   scrollbar-width: thin;
@@ -1295,7 +1282,6 @@ body.viewer-open {
   gap: 2px;
   padding-top: 8px;
   background: rgba(13,11,13,0.92);
-  /* Nearly opaque — backdrop-filter removed for scroll performance */
 }
 
 .source-tab {
@@ -1316,7 +1302,6 @@ body.viewer-open {
   padding: 10px 0;
   margin-bottom: 12px;
   background: rgba(13,11,13,0.88);
-  /* Nearly opaque — backdrop-filter removed for scroll performance */
 }
 
 .pgcdn-search,
@@ -1380,16 +1365,12 @@ body.viewer-open {
 }
 
 .pgcdn-card--virtual {
-  /* Offscreen tiles skip layout/paint; the intrinsic-size hint (kept in sync
-     with the real column width via --card-w) prevents scrollbar jumping. */
   content-visibility: auto;
   contain: layout paint style;
   contain-intrinsic-size: var(--card-w, 300px) calc(var(--card-w, 300px) * 0.5625);
   transform: none;
 }
 
-/* Full-bleed tiles: the image fills the card and the name overlays the
-   bottom in white over a dark gradient. */
 .pgcdn-virtual .pgcdn-card,
 .pgcdn-shelf__row .pgcdn-card {
   aspect-ratio: 16 / 9;
@@ -1492,7 +1473,6 @@ body.viewer-open {
   z-index: 710;
 }
 
-/* ── Immersive play — hide the entire browser chrome while a game runs ─── */
 body.viewer-open .chrome,
 body.viewer-open .bookmarks-bar {
   display: none !important;
@@ -1502,7 +1482,6 @@ body.viewer-open .bookmarks-bar {
   z-index: 800;
 }
 
-/* ── Preload overlay ─────────────────────────────────────────────────────── */
 body.preload-open {
   overflow: hidden;
 }

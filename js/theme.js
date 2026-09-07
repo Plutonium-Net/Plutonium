@@ -103,9 +103,6 @@ const Theme = (() => {
     return rgbToHex(r, g, b)
   }
 
-  // Semantic status colors: canonical hues (red / green / amber) that inherit
-  // the accent's saturation and adapt lightness to the mode, so they always
-  // read correctly while staying part of the theme's palette.
   function semanticColors(accent, isLight) {
     const { s: accentSat } = hexToHsl(accent)
     const sat = Math.max(0.55, Math.min(0.85, accentSat))
@@ -181,8 +178,6 @@ const Theme = (() => {
           '--ui-warn-rgb': `${hexToRgb(sem.warn).r},${hexToRgb(sem.warn).g},${hexToRgb(sem.warn).b}`,
         }
       })(),
-      // Decorative rainbow — 8 hues 45° apart starting at the accent hue,
-      // so the about-dialog icon palette follows the chosen accent.
       ...(() => {
         const { h } = hexToHsl(accent)
         const rowVars = {}
@@ -261,17 +256,11 @@ const Theme = (() => {
 
   async function setBackgroundEffect(bgEffect) {
     const state = loadState()
-    // Animated effects and wallpapers are mutually exclusive. Picking an
-    // effect explicitly clears any active wallpaper so normalizeThemeState's
-    // "wallpaper wins" branch can't also drop the effect (which would clear
-    // both). Picking the 'none' effect keeps the current wallpaper.
     return applyState({ ...state, bgEffect, bgImage: bgEffect === 'none' ? state.bgImage : '' })
   }
 
   async function setBackgroundImage(bgImage) {
     const state = loadState()
-    // Picking a wallpaper forces the animated effect off (mirror of the
-    // effect branch above); picking 'none' wallpaper keeps the effect.
     return applyState({ ...state, bgImage: bgImage || '', bgEffect: bgImage ? 'none' : state.bgEffect })
   }
 

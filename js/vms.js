@@ -23,8 +23,6 @@ function currentUser() {
   return (typeof PlutoniumStore !== 'undefined') ? PlutoniumStore.currentUser : null;
 }
 
-// ── Pin to Home (quick launch from the new-tab page) ─────────────────────────
-
 const VM_PIN = { id: 'vm', name: 'Virtual Machine', type: 'vm' };
 const pinBtn = document.getElementById('vm-pin-btn');
 

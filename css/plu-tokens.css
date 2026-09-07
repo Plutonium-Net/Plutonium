@@ -1,5 +1,4 @@
-/* Plutonium design tokens — standalone layer for ported Plutonium pages.
-   Mirrors the :root token block from the root site's css/style.css. */
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -18,54 +17,46 @@
   --scrollbar-thumb-hover: rgba(var(--pink-rgb),0.85);
   --scrollbar-track: rgba(255,255,255,0.04);
 
-  /* ── Blur tiers ──────────────────────────────────────────────────── */
-  --ui-blur:         blur(20px); /* panels, cards, sidebars, inputs     */
-  --ui-blur-heavy:   blur(28px); /* dropdowns, popups                   */
-  --ui-blur-overlay: blur(6px);  /* modal backdrops, scrims             */
+  --ui-blur:         blur(20px);
+  --ui-blur-heavy:   blur(28px);
+  --ui-blur-overlay: blur(6px);
 
-  /* ── Surface opacity tiers ───────────────────────────────────────── */
-  --panel-bg:      rgba(10,10,10,0.82);   /* floating panels, cards, sidebars  */
-  --panel-bg-dark: rgba(10,10,10,0.92);   /* modals, toasts, elevated panels   */
-  --overlay-bg:    rgba(0,0,0,0.75);      /* modal backdrops                   */
-  --surface-1:     rgba(255,255,255,0.02);/* lowest fill: app shells, gates    */
-  --surface-2:     rgba(255,255,255,0.04);/* inputs, button resting state      */
-  --surface-3:     rgba(255,255,255,0.07);/* hover / slightly raised           */
-  --surface-4:     rgba(255,255,255,0.1); /* active / focused border context   */
-  --border-subtle: rgba(255,255,255,0.07);/* standard divider / card border    */
-  --border-light:  rgba(255,255,255,0.11);/* input borders, secondary dividers */
+  --panel-bg:      rgba(10,10,10,0.82);
+  --panel-bg-dark: rgba(10,10,10,0.92);
+  --overlay-bg:    rgba(0,0,0,0.75);
+  --surface-1:     rgba(255,255,255,0.02);
+  --surface-2:     rgba(255,255,255,0.04);
+  --surface-3:     rgba(255,255,255,0.07);
+  --surface-4:     rgba(255,255,255,0.1);
+  --border-subtle: rgba(255,255,255,0.07);
+  --border-light:  rgba(255,255,255,0.11);
 
-  /* ── Accent-driven palette (overridden at runtime by js/page-theme.js) ── */
-  --ui-danger:      #f28b82; /* error / destructive        */
+  --ui-danger:      #f28b82;
   --ui-danger-rgb:  242,139,130;
-  --ui-success:     #7ec986; /* success / online           */
+  --ui-success:     #7ec986;
   --ui-success-rgb: 126,201,134;
-  --ui-warn:        #f5c542; /* warning / star ratings     */
+  --ui-warn:        #f5c542;
   --ui-warn-rgb:    245,197,66;
   --ui-star:        #f5c542;
 
-  /* Decorative rainbow (hue-rotates with the accent) */
-  --row-0:      #c49de8; --row-0-rgb:     196,157,232; /* purple */
-  --row-1:      #fba865; --row-1-rgb:     251,168,101; /* orange */
-  --row-2:      #f28b82; --row-2-rgb:     242,139,130; /* red    */
-  --row-3:      #fcd96b; --row-3-rgb:     252,217,107; /* yellow */
-  --row-4:      #5ed3d7; --row-4-rgb:     94,211,215;  /* teal   */
-  --row-5:      #f472b6; --row-5-rgb:     244,114,182; /* pink   */
-  --row-6:      #7ab3f8; --row-6-rgb:     122,179,248; /* blue   */
-  --row-7:      #7ec986; --row-7-rgb:     126,201,134; /* green  */
+  --row-0:      #c49de8; --row-0-rgb:     196,157,232;
+  --row-1:      #fba865; --row-1-rgb:     251,168,101;
+  --row-2:      #f28b82; --row-2-rgb:     242,139,130;
+  --row-3:      #fcd96b; --row-3-rgb:     252,217,107;
+  --row-4:      #5ed3d7; --row-4-rgb:     94,211,215;
+  --row-5:      #f472b6; --row-5-rgb:     244,114,182;
+  --row-6:      #7ab3f8; --row-6-rgb:     122,179,248;
+  --row-7:      #7ec986; --row-7-rgb:     126,201,134;
 
-  --ui-accent-rgb: 232,23,93;   /* glows follow the accent */
-  --ui-shadow-rgb:  12,12,14;   /* shadows get an accent cast */
+  --ui-accent-rgb: 232,23,93;
+  --ui-shadow-rgb:  12,12,14;
 }
 
-/* ── Global scrollbars ───────────────────────────────────────────────────── */
-
-/* Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-/* Webkit (Chrome, Edge, Safari) */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

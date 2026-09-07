@@ -52,8 +52,6 @@ function workspaceTitle(key) {
 function updateLocalTab(tab, local, display) {
   if (!tab) return
   tab.querySelector('.chrome-tab-title').textContent = workspaceTitle(local.key)
-  // System pages (games, cloud, AI, media, VMs) get the accent-tinted
-  // Plutonium favicon in the tab bar instead of a blank spot.
   const faviconEl = tab.querySelector('.chrome-tab-favicon')
   if (faviconEl) {
     faviconEl.style.backgroundImage = `url('${typeof BrowserThemeState !== 'undefined' && BrowserThemeState.getAccentIconPath ? BrowserThemeState.getAccentIconPath() : 'img/favicon.png'}')`
@@ -213,8 +211,6 @@ async function navigate(url) {
   if (!full) return
   if (window.SoundFX) window.SoundFX.play('launch')
 
-  // Built-in (pluto://) pages are local — always load them directly, never
-  // through the net engine, regardless of which engine is selected.
   const local = resolvePluUrl(full)
   if (local) {
     if (typeof endRemoteSession === 'function') endRemoteSession()
@@ -311,8 +307,6 @@ btnRefresh.addEventListener('click', async () => {
     const current = urlInput.value
     const local = resolvePluUrl(current)
     if (local && window.Workspaces && typeof window.Workspaces.reload === 'function') {
-      // Reload only the active tab *inside* the shell (the workspace view), not the
-      // shell's own browser tab — so the other open tabs and shell state survive.
       await window.Workspaces.reload(local.key, local.suffix)
       return
     }

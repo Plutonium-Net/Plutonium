@@ -1,5 +1,4 @@
-/* Shared in-shell workspace treatment. Feature styles remain responsible for behavior-specific details. */
-/* Workspace controls use the homepage's soft pill language; shared glass visuals live in glass.css. */
+
 :root {
   --workspace-accent: var(--pink, var(--ui-accent, #e8175d));
   --workspace-accent-rgb: var(--pink-rgb, var(--ui-accent-rgb, 232,23,93));
@@ -60,7 +59,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   outline-offset: 2px;
 }
 
-/* Games */
 .games-page {
   max-width: 1360px;
   padding: 28px clamp(18px, 4vw, 52px) 72px;
@@ -334,7 +332,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   box-shadow: 0 12px 30px rgba(var(--workspace-shadow), .32);
 }
 
-/* My Games list view */
 #workspace-root .workspace-games #pg-personal-grid {
   display: flex;
   flex-direction: column;
@@ -415,7 +412,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   background: rgba(255,255,255,.16);
 }
 
-/* Add HTML Game dialog */
 #workspace-root .workspace-games #pg-modal-overlay {
   background: rgba(5, 5, 10, .72);
 }
@@ -478,7 +474,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   color: var(--ui-text);
 }
 
-/* AI */
 #workspace-root #main-content {
   padding: clamp(18px, 3vw, 34px) clamp(16px, 4vw, 52px) 22px;
   gap: 18px;
@@ -522,7 +517,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   background: rgba(var(--workspace-accent-rgb), .1);
 }
 
-/* Cloud gaming */
 .cg-page {
   max-width: 1360px;
   padding: 30px clamp(18px, 4vw, 52px) 72px;
@@ -582,7 +576,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-card:hover { border-color: rgba(var(--workspace-accent-rgb), .58); }
 .cg-tag-pill.active { background: transparent; border-color: transparent; color: var(--ui-text, #fff); }
 
-/* Media */
 .stream-hero {
   height: 25vh;
   min-height: 175px;
@@ -686,7 +679,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   background: rgba(var(--workspace-accent-rgb), .12);
 }
 
-/* Relay pill slider for the genre/type tags bar */
 .tags-bar {
   position: relative;
   display: flex;
@@ -718,7 +710,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .tag:hover { background: transparent; border-color: transparent; }
 .tag.active { color: #fff; background: transparent; border-color: transparent; }
 
-/* Mature-content dialogs use the same shared glass surface as the rest of Media. */
 #workspace-root .workspace-media .age-verify__box,
 #workspace-root .workspace-media .adult-gate__box {
   border-radius: 2.6rem;
@@ -732,7 +723,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   border-radius: 999px;
 }
 
-/* Details modal (movie / TV / anime info popup) — rounder surfaces */
 #workspace-root .workspace-media .details-modal__inner {
   border-radius: 2.2rem;
   border-color: rgba(var(--workspace-accent-rgb), .3);
@@ -748,7 +738,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 #workspace-root .workspace-media .detail-dropdown__menu { border-radius: 1rem; }
 #workspace-root .workspace-media .detail-option { border-radius: 999px; padding-left: 14px; }
 
-/* Games context menu */
 #workspace-root .workspace-games #pgcdn-ctx-menu {
   position: fixed;
   min-width: 190px;
@@ -771,7 +760,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   background: rgba(255,255,255,.12);
 }
 
-/* Virtual machines */
 #workspace-root #main-content .vm-layout { gap: 14px; }
 .vm-panel, .vm-frame-shell {
   border-radius: var(--workspace-pill-radius);

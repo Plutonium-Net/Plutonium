@@ -1,9 +1,3 @@
-/**
- * bg-init.js — Plutonium background manager
- * Handles particles.js and all Vanta.js effects.
- * Loads only the scripts needed for the current effect (lazy).
- * Exposes window.PluBG.init() and window.PluBG.destroy().
- */
 (function () {
   'use strict';
 
@@ -24,7 +18,6 @@
   var _instance = null;
   var _loadedScripts = {};
 
-  /* ── Script loader ─────────────────────────────────────────────── */
   function loadScript(url) {
     if (_loadedScripts[url]) return Promise.resolve();
     return new Promise(function (resolve) {
@@ -42,7 +35,6 @@
     }, Promise.resolve());
   }
 
-  /* ── Helpers ───────────────────────────────────────────────────── */
   function hexToInt(hex) {
     return parseInt((hex || '#000000').replace('#', ''), 16);
   }
@@ -78,7 +70,6 @@
     }
   }
 
-  /* ── Particles ─────────────────────────────────────────────────── */
   function _launchParticles(s, color) {
     if (typeof particlesJS === 'undefined') return;
     try {
@@ -102,7 +93,6 @@
     } catch (e) {}
   }
 
-  /* ── Vanta effect launcher ─────────────────────────────────────── */
   function _launchVanta(style, color, vantaEl) {
     var key = VANTA_KEY[style];
     if (!key || !window.VANTA || !window.VANTA[key]) return;
@@ -170,8 +160,6 @@
         opts.speed            = 0.8;
         break;
       case 'rings':
-        // VANTA.RINGS ignores color option — uses a hardcoded prototype.colors array.
-        // Reach the underlying class via a temp instance, patch, then destroy it.
         (function () {
           var tmp = document.createElement('div');
           tmp.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
@@ -206,19 +194,16 @@
     } catch (e) {}
   }
 
-  /* ── Build script URL list for a given effect ──────────────────── */
   function _scriptsForEffect(style) {
     var base = 'bg/js/';
     if (style === 'particles') return [base + 'particles.min.js'];
     if (!VANTA_KEY[style]) return [];
-    // three.js is needed by all Vanta effects; p5.js is needed by some
     var scripts = [base + 'three.min.js'];
     if (style === 'clouds' || style === 'fog' || style === 'topology' || style === 'trunk') scripts.push(base + 'p5.min.js');
     scripts.push(base + 'vanta.' + style + '.min.js');
     return scripts;
   }
 
-  /* ── init ──────────────────────────────────────────────────────── */
   function init() {
     var s       = (window.BrowserThemeState && BrowserThemeState.loadThemeState()) || {};
     var style   = s.bgEffect   || 'particles';

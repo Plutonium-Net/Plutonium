@@ -56,7 +56,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   border-radius:2rem;overflow:hidden;
   margin:8px 8px 0;
   flex-shrink:0;
-  position:relative;z-index:10; /* keep chrome dropdowns above the content area */
+  position:relative;z-index:10;
 }
 .titlebar{
   display:flex;align-items:flex-end;
@@ -342,7 +342,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .relay-switcher-caret{font-size:10px;opacity:.7;transition:transform .18s ease,opacity .15s ease}
 
-/* Live wisp state on the toolbar relay trigger */
 .relay-switcher-dot{
   width:7px;height:7px;border-radius:50%;flex-shrink:0;
   background:var(--ui-text-dim);
@@ -370,13 +369,11 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .relay-switcher-shell.tier-2 .relay-switcher-latency{color:var(--ui-warn)}
 .relay-switcher-shell.tier-3 .relay-switcher-latency{color:var(--ui-danger)}
 
-/* Latency quality tier colors (shared by bars, HUD, stability strip) */
 .tier-0{color:var(--ui-success)}
 .tier-1{color:var(--ui-success);opacity:.85}
 .tier-2{color:var(--ui-warn)}
 .tier-3{color:var(--ui-danger)}
 
-/* 4-segment signal meter */
 .relay-bars{display:inline-flex;align-items:flex-end;gap:2px;height:12px;flex-shrink:0}
 .relay-bar{width:3px;border-radius:1px;background:rgba(255,255,255,0.18);transition:background .2s ease}
 .relay-bar.on{background:currentColor}
@@ -478,7 +475,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 
 .toolbar-right{display:flex;align-items:center;gap:2px}
 
-/* Waffle app launcher — fixed dropdown anchored under the button */
 .waffle-wrap{position:relative;display:flex;align-items:center}
 #btn-waffle{font-size:15px}
 .waffle-wrap.is-open #btn-waffle{background:var(--ui-hover);color:var(--ui-text)}
@@ -507,7 +503,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .waffle-item:hover i{color:var(--ui-text)}
 .waffle-item:active{transform:scale(0.99)}
 
-/* Customize (paintbrush) popup — centered modal */
 .customize-wrap{position:relative;display:flex;align-items:center}
 #btn-customize{font-size:15px}
 .customize-wrap.is-open #btn-customize{background:var(--ui-hover);color:var(--ui-text)}
@@ -572,7 +567,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .customize-wallpaper.active{border-color:var(--ui-accent);box-shadow:0 0 0 1px var(--ui-accent)}
 .customize-wallpaper.active .customize-wallpaper-label{color:var(--ui-accent)}
 
-/* Sound toggle — Customize menu */
 .customize-sound{display:flex;flex-direction:column;gap:8px;padding:0 8px 8px}
 .customize-sound-row{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -618,10 +612,10 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .new-tab-page .logo{
   position:relative;z-index:2;pointer-events:none;
-  width:520px;max-width:90vw;aspect-ratio:26/9; /* 1330×460 canvas */
+  width:520px;max-width:90vw;aspect-ratio:26/9;
   background-repeat:no-repeat;background-position:center;background-size:contain;
   opacity:0;transition:opacity .35s ease;
-  margin-bottom:-24px; /* let the glow spill onto the search bar */
+  margin-bottom:-24px;
 }
 .new-tab-page .logo.rendered{opacity:1;animation:neon-flicker 6s linear infinite}
 .new-tab-page .search-box{position:relative;z-index:1;margin-top:0}
@@ -667,7 +661,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .shortcut.empty-pin-hint:hover{opacity:1;background:var(--ui-hover)}
 .shortcut.empty-pin-hint .icon i{color:var(--ui-text-sub)}
 
-/* Pin picker dropdown */
 .pin-picker{
   position:fixed !important;z-index:9999;
   left:50%;top:50%;transform:translate(-50%,-50%);
@@ -685,7 +678,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 @keyframes pin-picker-in{from{opacity:0;transform:translate(-50%,-50%) scale(0.95)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 .pin-picker__loading{padding:20px;text-align:center;color:var(--ui-text-muted);font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px}
 
-/* About dialog */
 .about-scrim{position:fixed !important;inset:0;z-index:9998;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .about-dialog{position:fixed !important;z-index:9999;left:50%;top:50%;transform:translate(-50%,-50%) scale(0.96);opacity:0;width:min(520px,calc(100vw - 32px));max-height:min(80vh,700px);overflow:hidden;display:flex;flex-direction:column;border-radius:16px;transition:opacity .2s ease,transform .2s cubic-bezier(0.22,1,0.36,1)}
 .about-dialog:not([hidden]){opacity:1;transform:translate(-50%,-50%) scale(1)}
@@ -746,8 +738,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .pin-picker__search input::placeholder{color:var(--ui-text-muted)}
 .pin-picker__no-results{padding:16px 10px;text-align:center;color:var(--ui-text-muted);font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px}
 
-
-/* App launcher — tiles as a separate layer flanking the search bar */
 .app-flanks{
   position:absolute;top:25%;right:4%;height:0;
   display:flex;flex-direction:column;align-items:center;gap:10px;
@@ -789,7 +779,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .app-tile > span:nth-child(2){font-size:12px;font-weight:600;line-height:1;white-space:nowrap;letter-spacing:.2px}
 
-/* ── Global grid popup ───────────────────────────────────────────── */
 .app-grid-popup{
   display:flex;flex-direction:column;align-items:center;gap:0;
   padding:0 16px 4px;
@@ -816,7 +805,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .app-grid-popup.visible .app-grid-popup-line{width:100%}
 .app-grid-popup.visible .app-grid-popup-desc{opacity:1;transform:translateY(0)}
 
-/* Narrow windows: grid becomes smaller */
 @media (max-width: 980px){
   .app-flanks{position:static;height:auto;align-items:center}
   .app-tile{width:100px;padding:14px 10px 12px;gap:8px}
@@ -870,9 +858,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .status-bar #status-text:empty{display:none}
 .relay-bar-label{display:flex;align-items:center;gap:5px}
 
-/* Relay status pill — embedded in the new-tab page only (not over pages).
-   Live wisp state now lives in the toolbar relay trigger, so on the home
-   screen the pill only surfaces transient messages (e.g. server switches). */
 .new-tab-page .status-bar.newtab-relay{
   position:static;transform:none;margin:0;
   min-width:0;min-height:auto;width:max-content;
@@ -959,7 +944,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .bm-ctx-rename-ok:hover{background:rgba(255,255,255,0.22)}
 
-/* Custom right-click context menu */
 .plu-ctx-menu{
   position:fixed;z-index:9999;
   padding:6px;min-width:190px;max-width:270px;
@@ -1017,9 +1001,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 
 @font-face{font-family:'Curly';src:url('../fonts/curly.otf') format('opentype')}
 
-/* Neon sign logo — rendered to a static bitmap by js/logo.js (no live SVG filter) */
-/* Real tubes stutter on startup and dip randomly while running — a fixed
-   periodic dim never reads as neon. Linear keeps the dropouts sharp. */
 @keyframes neon-flicker{
   0%{opacity:1}
   0.6%{opacity:.35}
@@ -1083,7 +1064,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.2px;
 }
 
-/* ── Home-screen account section (top-left, under the toolbar) ─────── */
 .acct-panel{
   position:absolute;top:20px;left:20px;z-index:6;
   width:min(280px,calc(100vw - 40px));
@@ -1196,7 +1176,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   border: none !important;
   box-shadow: none !important;
 }
-/* ── News ticker (macOS-style, bottom-left) ───────────────────────── */
 .news-ticker{
   position:absolute;bottom:40px;left:20px;
   pointer-events:auto;z-index:5;
@@ -1253,7 +1232,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   .news-story-desc{font-size:12px}
 }
 
-/* ── Home help button + menu (bottom-right) ─────────────────────────── */
 .help-wrap{position:absolute;bottom:40px;right:20px;z-index:6}
 .help-btn{
   width:38px;height:38px;border-radius:50%;
@@ -1266,7 +1244,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .help-btn:hover{background:rgba(255,255,255,.12);color:#fff;transform:scale(1.06)}
 .help-wrap.is-open .help-btn{background:rgba(255,255,255,.14);color:#fff}
 #help-menu{
-  position:absolute !important; /* .glass sets position:relative — assert absolute */
+  position:absolute !important;
   bottom:48px;right:0;width:230px;padding:6px;
   border-radius:.85rem;overflow:hidden;
   background:rgba(20,20,22,.9);
@@ -1293,7 +1271,6 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .help-item:hover{background:var(--ui-hover);color:var(--ui-text)}
 .help-item:hover i{color:var(--ui-text)}
 
-/* ── Net init info button + popup ─────────────────────────────────────────── */
 .net-info-btn{
   display:flex;align-items:center;justify-content:center;
   width:20px;height:20px;border:none;background:transparent;padding:0;
@@ -1354,12 +1331,8 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .net-info-close-btn:hover{filter:brightness(0.92)}
 
-/* Address-bar info button hugs the input text (left set by JS each tick) */
 .address-bar-wrap .net-info-btn{position:absolute;top:7px;left:auto}
 
-/* ── Unsupported device overlay ──────────────────────────────────────── */
-/* Shown (via the inline check in index.html) when the site is opened on a
-   phone or tablet: a plain black screen with a short message. */
 .device-block-overlay{
   position:fixed;inset:0;z-index:100000;
   display:flex;align-items:center;justify-content:center;

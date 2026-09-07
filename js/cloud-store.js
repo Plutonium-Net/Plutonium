@@ -239,9 +239,6 @@
     assertWorkerUrl();
     const uid = _requireUser();
     const auth = await _authHeader();
-    // Firestore REST API requires a document path (collection/docId).
-    // If the caller passes a bare collection name (no '/'), append a
-    // default document ID so the path resolves to a single document.
     const docPath = collection.includes('/') ? collection : `${collection}/_default`;
     const path = `/users/${uid}/${docPath}`;
     const fields = toFirestoreFields(data);
@@ -429,9 +426,6 @@
     return _currentUser.uid;
   }
 
-  // Cross-frame session propagation: the shell writes `plu_user` on
-  // sign-in/out; same-origin iframes (games/stream/personal pages) get a
-  // storage event and re-sync their session so their cloud data pulls.
   window.addEventListener('storage', (e) => {
     if (e.key !== 'plu_user') return;
     try {

@@ -1,16 +1,4 @@
-/* Plutonium Page Theme — shared for ported pages (games, cloud, stream, vms,
-   account, ai, about). Reads plu_theme from localStorage and re-points every
-   accent/brand color at the theme so all pages follow the chosen accent.
 
-   Color model:
-   - Brand tints (--pink, --pink-muted, --pink-soft) hue-rotate with the accent.
-   - Decorative palette (--row-0..7) = 8 hues, 45deg apart, starting at the
-     accent hue — the whole rainbow follows the theme.
-   - Semantic status colors (--ui-danger/success/warn) keep their canonical
-     hues (red / green / amber) but inherit the accent's saturation and adapt
-     lightness to dark/light mode, so they always read correctly while still
-     feeling part of the palette.
-*/
 (() => {
   const THEME_KEY = 'plu_theme'
   const DEFAULT_ACCENT = '#e8175d'
@@ -91,7 +79,6 @@
     ].join(',')
   }
 
-  // Mix accent into black so drop shadows get a subtle theme-colored cast.
   function mixInto(hex, amount) {
     const r = parseInt(hex.slice(1, 3), 16)
     const g = parseInt(hex.slice(3, 5), 16)
@@ -141,7 +128,6 @@
 
   apply()
 
-  // Live-update when the theme changes in the shell (shared localStorage).
   window.addEventListener('storage', event => {
     if (event.key === THEME_KEY) apply()
   })

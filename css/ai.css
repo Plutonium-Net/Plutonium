@@ -13,8 +13,6 @@ html,body{
   color:var(--text-primary);
 }
 
-/* ── Header / brand ─────────────────────────────────────────────────────── */
-
 .ai-header{
   display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
   flex-shrink:0;padding:4px 0 14px;
@@ -82,8 +80,6 @@ html,body{
 }
 .ai-clear-btn:hover{color:#ff6b6b;border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.08)}
 
-/* ── Model dropdown (relay-style picker) ─────────────────────────────────── */
-
 .model-menu{
   position:fixed;top:80px;right:clamp(16px,4vw,52px);z-index:520;
   width:min(320px,calc(100vw - 32px));
@@ -114,8 +110,6 @@ html,body{
 .ai-model-option__name{font-size:14px;font-weight:600}
 .ai-model-option__desc{font-size:12px;color:rgba(255,255,255,0.45)}
 
-/* ── Layout: sidebar + chat column ──────────────────────────────────────── */
-
 #workspace-root .workspace-view.workspace-ai{
   display:flex;align-items:stretch;height:100%;
   --ai-sidebar-w:264px;
@@ -124,8 +118,6 @@ html,body{
   flex:1;min-width:0;height:100%;min-height:0;
   display:flex;flex-direction:column;
 }
-
-/* ── Sidebar (chat list) ────────────────────────────────────────────────── */
 
 .ai-sidebar{
   flex:0 0 var(--ai-sidebar-w);min-width:0;height:100%;
@@ -204,8 +196,6 @@ html,body{
 #chatContainer::-webkit-scrollbar-track{background:transparent}
 #chatContainer::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:4px}
 
-/* ── Welcome screen ─────────────────────────────────────────────────────── */
-
 .welcome-screen{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   flex:1;padding:2rem 1rem;text-align:center;animation:fadeIn .5s ease;
@@ -237,8 +227,6 @@ html,body{
   color:var(--workspace-accent);margin-bottom:5px;
 }
 .suggestion-card-text{display:block;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.45}
-
-/* ── Messages ───────────────────────────────────────────────────────────── */
 
 .msg-row{display:flex;gap:10px;align-items:flex-start;animation:slideUp .25s ease}
 .msg-row.user{flex-direction:row-reverse}
@@ -291,8 +279,6 @@ html,body{
 .msg-bubble.ai table{border-collapse:collapse;margin:.4em 0}
 .msg-bubble.ai th,.msg-bubble.ai td{border:1px solid rgba(255,255,255,0.14);padding:4px 8px;font-size:12.5px}
 .msg-bubble.ai th{background:rgba(255,255,255,0.05)}
-
-/* Message action pills (listen / copy / regenerate) + edit on user msgs */
 .msg-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .msg-act{
   display:inline-flex;align-items:center;gap:5px;
@@ -320,8 +306,6 @@ html,body{
 .typing-dots span:nth-child(2){animation-delay:.2s}
 .typing-dots span:nth-child(3){animation-delay:.4s}
 @keyframes dot{0%,80%,100%{transform:scale(.8);opacity:.4}40%{transform:scale(1.1);opacity:1}}
-
-/* ── Floating composer (bottom, centered pill) ──────────────────────────── */
 
 .composer{
   position:fixed;bottom:20px;left:calc(50% + var(--ai-sidebar-w,0px)/2);transform:translateX(-50%);z-index:420;
@@ -362,8 +346,6 @@ html,body{
 .composer__btn--talk:hover{background:rgba(var(--workspace-accent-rgb),.22);color:var(--workspace-accent)}
 .composer__btn--talk.active{color:#fff;background:var(--workspace-accent);border-color:var(--workspace-accent);box-shadow:0 0 20px rgba(var(--workspace-accent-rgb),.55);animation:pulse 1.6s infinite}
 #stopBtn{color:#fff;background:rgba(220,38,38,.85);border-color:transparent}
-
-/* ── Talk mode (Jarvis orb) ──────────────────────────────────────────────── */
 
 .talk-overlay{
   position:fixed;inset:0;z-index:1000;
@@ -492,8 +474,6 @@ html,body{
 }
 .talk-close:hover{background:rgba(255,255,255,.16);transform:rotate(90deg)}
 
-/* ── Auth gate ──────────────────────────────────────────────────────────── */
-
 .ai-gate{display:flex;align-items:center;justify-content:center;flex:1}
 .ai-gate__card{
   max-width:400px;padding:34px 28px;text-align:center;
@@ -509,8 +489,6 @@ html,body{
   display:inline-flex;align-items:center;gap:8px;transition:opacity .15s,transform .15s;
 }
 .ai-gate__btn:hover{opacity:.88;transform:translateY(-1px)}
-
-/* ── Animations ─────────────────────────────────────────────────────────── */
 
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}

@@ -255,7 +255,6 @@ function handleRuntimeRequest(e) {
 	e.response.finalURL = e.url.toString();
 }
 
-// ── Personal Games Service Worker ────────────────────────────────────────────
 const PG_DB_NAME    = 'plutonium_personal_games';
 const PG_DB_VERSION = 1;
 const PG_FILE_STORE = 'pg_files';
@@ -334,7 +333,6 @@ function handlePersonalGameFetch(event) {
 	return true;
 }
 
-// ── Service Worker Lifecycle ──────────────────────────────────────────────────
 self.addEventListener("install", () => self.skipWaiting());
 
 self.addEventListener("activate", (event) => {
@@ -347,11 +345,9 @@ const RUNTIME_PREFIX = "/runtime/service/";
 self.addEventListener("fetch", (event) => {
 	const url = event.request.url;
 
-	// Personal games — serve from IndexedDB
 	const pgResult = handlePersonalGameFetch(event);
 	if (pgResult) return;
 
-	// Background image cache — serve from Cache API
 	if (url.includes('/img/backgrounds/')) {
 		event.respondWith(
 			caches.open('plutonium-bg-v2').then(function (cache) {
@@ -366,7 +362,6 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// Game images — serve from Cache API (cache-first)
 	if (url.includes('g.cdn.plutoniumnet.work/') && (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.webp') || url.endsWith('.gif') || url.endsWith('.svg'))) {
 		event.respondWith(
 			caches.open('plutonium-games-v1').then(function (cache) {
@@ -381,7 +376,6 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// Cloud gaming images — serve from Cache API (cache-first)
 	if (url.includes('/img/cloud/')) {
 		event.respondWith(
 			caches.open('plutonium-cloud-v1').then(function (cache) {
@@ -396,7 +390,6 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// Brand logos (every accent colour × logo variant) — serve from Cache API (cache-first)
 	if (url.includes('/img/logos/')) {
 		event.respondWith(
 			caches.open('plutonium-logos-v1').then(function (cache) {
@@ -411,7 +404,6 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// Core engine requests
 	if (url.includes(CORE_PREFIX)) {
 		if (coreSW) {
 			event.respondWith(coreSW.fetch(event));
@@ -420,7 +412,6 @@ self.addEventListener("fetch", (event) => {
 		}
 		return;
 	}
-	// Runtime engine requests
 	if (url.includes(RUNTIME_PREFIX)) {
 		if (ScramjetServiceWorker) {
 			event.respondWith(handleRequest(event));
