@@ -5,7 +5,10 @@ chromeTabs.init(tabsEl)
 document.getElementById('newtab-btn').addEventListener('click', () => openNewTab())
 
 document.getElementById('newtab-search').addEventListener('keydown', e => {
-  if (e.key === 'Enter') navigate(e.target.value)
+  if (e.key === 'Enter') {
+    navigate(e.target.value)
+    e.target.value = ''
+  }
 })
 
 const waffleWrap = document.getElementById('waffle-wrap')

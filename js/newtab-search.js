@@ -113,6 +113,7 @@
 
   function go(url) {
     if (typeof navigate === 'function' && url) navigate(url);
+    input.value = '';
   }
 
   function urlHost(u) {

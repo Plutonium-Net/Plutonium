@@ -196,6 +196,8 @@ function showNewTabPage() {
   unloadPageFrame()
   newTabPage.style.display = 'flex'
   hideLoadingScreen()
+  const ntSearch = document.getElementById('newtab-search')
+  if (ntSearch) ntSearch.value = ''
   urlInput.value = ''
   setAddressIndicator('newtab')
   hideConnectionPopup()

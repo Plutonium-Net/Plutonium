@@ -45,27 +45,7 @@
     <p class="device-block-sub">Please open Plutonium on a desktop or laptop to continue.</p>
   </div>
 </div>
-<script>
-  (function () {
-    'use strict';
-    var ua = (navigator.userAgent || '').toLowerCase();
-    var uaData = navigator.userAgentData;
-    var isMobile = uaData && typeof uaData.mobile === 'boolean' ? uaData.mobile : false;
-
-    if (!isMobile) {
-      isMobile = /android|iphone|ipod|ipad|windows phone|iemobile|blackberry|kindle|silk|opera mini|fennec|mobi|playbook|tablet|smart-?tv|googletv|roku/i.test(ua);
-    }
-    if (!isMobile && /macintosh/.test(ua) && navigator.maxTouchPoints > 1) {
-      isMobile = true;
-    }
-
-    if (isMobile) {
-      document.documentElement.classList.add('device-blocked');
-      var overlay = document.getElementById('device-block-overlay');
-      if (overlay) overlay.hidden = false;
-    }
-  })();
-</script>
+<script src="js/device-detect.js"></script>
 <div class="bg-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;z-index:-1;">
   <iframe id="browser-bg-frame" src="bg.html" style="width:100%;height:100%;border:none;"></iframe>
 </div>
@@ -309,9 +289,7 @@
 </div>
 
 <script src="js/cloud-store.js"></script>
-<script>
-  PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
-</script>
+<script src="js/cloud-store-config.js"></script>
 <script src="js/account.js?v=17"></script>
 <script src="https://unpkg.com/draggabilly@2.2.0/dist/draggabilly.pkgd.min.js"></script>
 <script src="/bridge/index.js"></script>
@@ -337,16 +315,7 @@
 <script src="js/tabs.js"></script>
 <script src="js/context-menu.js?v=1"></script>
 <script src="js/loading.js"></script>
-<script>
-  (function () {
-    'use strict';
-    if (localStorage.getItem('plu_onboarded') === '1') return;
-    if (document.documentElement.classList.contains('device-blocked')) return;
-    function go() { location.replace('onboarding.html'); }
-    if (window.__pluBootDone) go();
-    else window.addEventListener('plu-boot-done', go);
-  })();
-</script>
+<script src="js/onboarding-redirect.js"></script>
 <script src="js/escape.js"></script>
 <script src="js/news-ticker.js"></script>
 <div id="net-info-overlay" hidden>
