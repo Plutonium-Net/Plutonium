@@ -322,6 +322,75 @@ function alignAppFlanks() {
 window.addEventListener('resize', alignAppFlanks)
 alignAppFlanks()
 
+// ── Shared maintenance helpers ────────────────────────────────────────────
+// Used by the About dialog's "Clear Cache & Reload" button and the home
+// screen help menu.
+window.clearCacheAndReload = async function () {
+  if ('caches' in window) {
+    const names = await caches.keys();
+    for (const name of names) await caches.delete(name);
+  }
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regs) await reg.unregister();
+  }
+  location.reload();
+}
+
+// Re-run the first-run wizard: clears the local flag and, when signed in,
+// the account's copy too — otherwise the onboarding page's account pull
+// would immediately bounce the user back home.
+window.redoOnboarding = async function () {
+  localStorage.removeItem('plu_onboarded')
+  const am = typeof accountManager !== 'undefined' ? accountManager : null
+  if (am && am.user && typeof PlutoniumStore !== 'undefined') {
+    try {
+      await PlutoniumStore.setDoc('settings', { onboarded: false, lastSync: new Date() })
+    } catch (_) {}
+  }
+  location.replace('onboarding.html')
+}
+
+// ── Home help menu (bottom-right) ─────────────────────────────────────────
+const helpWrap = document.getElementById('help-wrap')
+const helpBtn = document.getElementById('help-btn')
+const helpMenu = document.getElementById('help-menu')
+
+function closeHelpMenu() {
+  if (!helpWrap) return
+  helpWrap.classList.remove('is-open')
+  if (helpBtn) helpBtn.setAttribute('aria-expanded', 'false')
+  if (helpMenu) { helpMenu.hidden = true; helpMenu.classList.remove('is-open') }
+}
+
+function toggleHelpMenu() {
+  if (!helpWrap || !helpBtn || !helpMenu) return
+  if (helpWrap.classList.contains('is-open')) { closeHelpMenu(); return }
+  helpWrap.classList.add('is-open')
+  helpBtn.setAttribute('aria-expanded', 'true')
+  helpMenu.hidden = false
+  requestAnimationFrame(() => helpMenu.classList.add('is-open'))
+}
+
+if (helpBtn && helpWrap && helpMenu) {
+  helpBtn.addEventListener('click', e => {
+    e.stopPropagation()
+    toggleHelpMenu()
+  })
+  document.addEventListener('click', e => {
+    if (!helpWrap.classList.contains('is-open')) return
+    if (helpWrap.contains(e.target)) return
+    closeHelpMenu()
+  })
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeHelpMenu()
+  })
+  const redoBtn = document.getElementById('help-redo')
+  const clearBtn = document.getElementById('help-clear-cache')
+  if (redoBtn) redoBtn.addEventListener('click', () => { if (window.redoOnboarding) window.redoOnboarding() })
+  if (clearBtn) clearBtn.addEventListener('click', () => { if (window.clearCacheAndReload) window.clearCacheAndReload() })
+}
+
 // ── About dialog ──────────────────────────────────────────────────────────
 function openAboutDialog() {
   const scrim = document.getElementById('about-scrim')
@@ -420,18 +489,8 @@ function openAboutDialog() {
     </div>
   `
 
-  // cache-clear button
-  document.getElementById('about-clear-cache').addEventListener('click', async function () {
-    if ('caches' in window) {
-      const names = await caches.keys();
-      for (const name of names) await caches.delete(name);
-    }
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      for (const reg of regs) await reg.unregister();
-    }
-    location.reload();
-  });
+  // cache-clear button (shared helper, also used by the home help menu)
+  document.getElementById('about-clear-cache').addEventListener('click', window.clearCacheAndReload);
 
   // show
   dlg.hidden = false

@@ -84,12 +84,12 @@
     try {
       particlesJS('particles-js', {
         particles: {
-          number: { value: s.particleDensity || 80, density: { enable: true, value_area: 800 } },
+          number: { value: s.particleDensity || 110, density: { enable: true, value_area: 800 } },
           color: { value: color },
           shape: { type: 'circle' },
-          opacity: { value: s.particleOpacity || 0.4, random: true, anim: { enable: true, speed: 0.6, opacity_min: 0.1, sync: false } },
-          size: { value: 2.5, random: true, anim: { enable: false } },
-          line_linked: { enable: true, distance: 150, color: color, opacity: 0.12, width: 1 },
+          opacity: { value: s.particleOpacity || 0.6, random: true, anim: { enable: true, speed: 0.5, opacity_min: 0.25, sync: false } },
+          size: { value: 3.2, random: true, anim: { enable: false } },
+          line_linked: { enable: true, distance: 150, color: color, opacity: 0.22, width: 1.2 },
           move: { enable: true, speed: s.particleSpeed || 1.2, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
         },
         interactivity: {

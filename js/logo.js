@@ -30,11 +30,12 @@
 
     const accent = accentColor()
 
-    // 2x resolution for crisp rendering on retina displays. H is tall enough
-    // for Curly's full glyph box at 200px (ascent+descent ≈ 307px) plus glow,
-    // so the big text never clips.
-    const W = 1040
-    const H = 360
+    // 2x resolution for crisp rendering on retina displays. The canvas is
+    // sized (same 26:9 aspect as the CSS box) with the glyph centered so the
+    // wide halo has room to fall off above and below instead of being cut off
+    // at the canvas edge like the old bottom-anchored layout.
+    const W = 1330
+    const H = 460
     const canvas = document.createElement('canvas')
     canvas.width = W
     canvas.height = H
@@ -52,30 +53,52 @@
     ctx.font = fontPx + 'px "Curly", sans-serif'
 
     const x = W / 2
-    // Anchor the text near the bottom of the canvas so it spills toward the
-    // search bar (glow room below), while the top margin keeps ascenders safe.
     const metrics = ctx.measureText(TEXT)
     const ascent = metrics.actualBoundingBoxAscent || (fontPx * 0.7)
     const descent = metrics.actualBoundingBoxDescent || (fontPx * 0.3)
-    const y = H - descent - 12
+    // Vertically center the glyph so the halo falls off evenly on both sides.
+    const y = H / 2 + (ascent - descent) / 2
 
-    // Halo + tight glow (two passes ≈ the old feGaussianBlur merge)
+    // Three glow passes: wide ambient halo, mid glow, then a hot ring that
+    // hugs the tube edge — the layered falloff is what sells "neon" over a
+    // flat blur.
     ctx.save()
     ctx.shadowColor = accent
-    ctx.shadowBlur = 38
+    ctx.globalAlpha = 0.55
+    ctx.shadowBlur = 60
     ctx.fillStyle = accent
     ctx.fillText(TEXT, x, y)
-    ctx.shadowBlur = 13
+    ctx.globalAlpha = 0.85
+    ctx.shadowBlur = 26
+    ctx.fillText(TEXT, x, y)
+    ctx.globalAlpha = 1
+    ctx.shadowBlur = 10
     ctx.fillText(TEXT, x, y)
     ctx.restore()
 
-    // Bright tube: accent stroke + light fill
-    ctx.lineJoin = 'round'
-    ctx.strokeStyle = accent
-    ctx.lineWidth = 2.5
-    ctx.strokeText(TEXT, x, y)
-    ctx.fillStyle = mixHex(accent, '#ffffff', 0.3)
+    // Hot gas core — the middle of a real tube reads almost white
+    ctx.fillStyle = mixHex(accent, '#ffffff', 0.85)
     ctx.fillText(TEXT, x, y)
+
+    // Glass tube walls: saturated accent stroke with its own tight glow,
+    // so the brightest edge sits right on the tube like real glass.
+    ctx.save()
+    ctx.lineJoin = 'round'
+    ctx.lineCap = 'round'
+    ctx.strokeStyle = accent
+    ctx.lineWidth = 9
+    ctx.shadowColor = accent
+    ctx.shadowBlur = 8
+    ctx.strokeText(TEXT, x, y)
+    ctx.restore()
+
+    // Light caught on the inside wall of the glass — a thinner, whiter seam
+    // running down the tube.
+    ctx.lineJoin = 'round'
+    ctx.lineCap = 'round'
+    ctx.strokeStyle = mixHex(accent, '#ffffff', 0.45)
+    ctx.lineWidth = 3
+    ctx.strokeText(TEXT, x, y)
 
     logo.style.backgroundImage = 'url(' + canvas.toDataURL('image/png') + ')'
     logo.classList.add('rendered')

@@ -1,6 +1,11 @@
 (function () {
   'use strict';
 
+  // Set + event fired when the boot loader is done hiding. index.html waits
+  // for this before redirecting first-time users to the onboarding page, so
+  // onboarding only starts after all background/game art is warm-cached.
+  window.__pluBootDone = false;
+
   let pageLoaded = false;
   let kPressed = false;
   let splashHidden = false;
@@ -297,6 +302,8 @@
   /* ── hide logic ──────────────────────────────────────────────────── */
   function hideLoader() {
     stopFillTicker();
+    window.__pluBootDone = true;
+    window.dispatchEvent(new CustomEvent('plu-boot-done'));
     overlay.style.opacity = '0';
     setTimeout(function () {
       overlay.remove();

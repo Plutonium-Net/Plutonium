@@ -261,12 +261,18 @@ const Theme = (() => {
 
   async function setBackgroundEffect(bgEffect) {
     const state = loadState()
-    return applyState({ ...state, bgEffect })
+    // Animated effects and wallpapers are mutually exclusive. Picking an
+    // effect explicitly clears any active wallpaper so normalizeThemeState's
+    // "wallpaper wins" branch can't also drop the effect (which would clear
+    // both). Picking the 'none' effect keeps the current wallpaper.
+    return applyState({ ...state, bgEffect, bgImage: bgEffect === 'none' ? state.bgImage : '' })
   }
 
   async function setBackgroundImage(bgImage) {
     const state = loadState()
-    return applyState({ ...state, bgImage: bgImage || '' })
+    // Picking a wallpaper forces the animated effect off (mirror of the
+    // effect branch above); picking 'none' wallpaper keeps the effect.
+    return applyState({ ...state, bgImage: bgImage || '', bgEffect: bgImage ? 'none' : state.bgEffect })
   }
 
   async function refresh() {

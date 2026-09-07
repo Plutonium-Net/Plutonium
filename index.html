@@ -171,9 +171,14 @@
         </div>
         <button class="acct-signout" id="acct-signout" type="button"><i class="fa-solid fa-arrow-right-from-bracket"></i>Sign out</button>
       </div>
-      <button class="acct-signin" id="acct-signin-text" hidden><span>Sign In?</span><i class="fa-solid fa-arrow-right"></i></button>
-      <div class="acct-signin-sub" id="acct-signin-sub" hidden>Sign in to sync your bookmarks, pins, and settings across devices.</div>
+      <h2 class="acct-signin-title" id="acct-signin-text" hidden>Welcome to<br>Plutonium Network</h2>
+      <div class="acct-signin-sub" id="acct-signin-sub" hidden>Sign in to sync your bookmarks, pins and settings across devices.</div>
       <div class="acct-signin-fields" id="acct-signin-fields" hidden>
+        <div class="acct-oauth">
+          <button class="acct-oauth__btn acct-oauth__google" id="acct-google-btn"><img src="img/3rd-party/google.png" alt="Continue with Google"></button>
+          <button class="acct-oauth__btn acct-oauth__github" id="acct-github-btn"><img src="img/3rd-party/github.png" alt="Continue with GitHub"></button>
+        </div>
+        <div class="acct-auth-or">or sign in with email</div>
         <label class="acct-field">
           <input class="acct-field__input" id="acct-email-input" type="email" name="email" placeholder=" " autocomplete="email">
           <span class="acct-field__label">Email</span>
@@ -189,13 +194,9 @@
           <span class="acct-field__label">Your name</span>
           <span class="acct-field__line"></span>
         </label>
-        <div class="acct-auth-toggle" id="acct-toggle">No Account? Make a free one!</div>
-        <div class="acct-auth-or">Or</div>
-        <div class="acct-oauth">
-          <button class="acct-oauth__btn acct-oauth__google" id="acct-google-btn"><img src="img/3rd-party/google.png" alt="Continue with Google"></button>
-          <button class="acct-oauth__btn acct-oauth__github" id="acct-github-btn"><img src="img/3rd-party/github.png" alt="Continue with GitHub"></button>
-        </div>
         <div class="acct-auth-error" id="acct-error"></div>
+        <button class="acct-auth-submit" id="acct-auth-submit" type="button">Sign In</button>
+        <div class="acct-auth-toggle" id="acct-toggle">No Account? Make a free one!</div>
       </div>
     </div>
 
@@ -242,17 +243,24 @@
   <span class="relay-bar-label" id="relay-bar-label"><i class="fa-solid fa-circle-notch fa-spin"></i> Connecting...</span>
 </div>
 
-<div class="shortcuts"></div>
-
-<div class="news-ticker" id="news-ticker">
-  <div class="news-clock" id="news-clock"></div>
-  <div class="news-date" id="news-date"></div>
-  <div class="news-story" id="news-story">
-    <div class="news-story-title" id="news-story-title"></div>
-    <div class="news-story-desc" id="news-story-desc"></div>
+<div class="shortcuts"></div>  <div class="news-ticker" id="news-ticker">
+    <div class="news-clock" id="news-clock"></div>
+    <div class="news-date" id="news-date"></div>
+    <div class="news-story" id="news-story">
+      <div class="news-story-title" id="news-story-title"></div>
+      <div class="news-story-desc" id="news-story-desc"></div>
+    </div>
+    <div class="news-dots" id="news-dots"></div>
   </div>
-  <div class="news-dots" id="news-dots"></div>
-</div>
+
+  <div class="help-wrap" id="help-wrap">
+    <button class="help-btn" id="help-btn" type="button" title="Help" aria-label="Help" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-circle-question"></i></button>
+    <div class="help-menu glass" id="help-menu" hidden>
+      <div class="help-menu-title">Help</div>
+      <button class="help-item" id="help-redo" type="button"><i class="fa-solid fa-rotate-right"></i><span>Redo onboarding</span></button>
+      <button class="help-item" id="help-clear-cache" type="button"><i class="fa-solid fa-trash-can"></i><span>Clear cache &amp; reload</span></button>
+    </div>
+  </div>
 
     </div>
     <div id="workspace-root" hidden></div>
@@ -339,10 +347,25 @@
 <script src="js/page-theme.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/logo.js"></script>
-<script src="js/main.js"></script>
+<script src="js/main.js?v=2"></script>
 <script src="js/tabs.js"></script>
 <script src="js/context-menu.js?v=1"></script>
 <script src="js/loading.js"></script>
+<script>
+  /* First-run onboarding: after the boot loader (loading.js) finishes, send
+     users without the plu_onboarded flag to the standalone onboarding page.
+     The flag lives in localStorage and mirrors to the account settings doc,
+     so this only redirects once per user. location.replace() keeps Back from
+     ever looping back into the loader. */
+  (function () {
+    'use strict';
+    if (localStorage.getItem('plu_onboarded') === '1') return;
+    if (document.documentElement.classList.contains('device-blocked')) return;
+    function go() { location.replace('onboarding.html'); }
+    if (window.__pluBootDone) go();
+    else window.addEventListener('plu-boot-done', go);
+  })();
+</script>
 <script src="js/escape.js"></script>
 <script src="js/news-ticker.js"></script>
 <div id="net-info-overlay" hidden>

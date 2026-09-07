@@ -618,12 +618,12 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .new-tab-page .logo{
   position:relative;z-index:2;pointer-events:none;
-  width:520px;max-width:90vw;aspect-ratio:26/9; /* 1040×360 canvas */
+  width:520px;max-width:90vw;aspect-ratio:26/9; /* 1330×460 canvas */
   background-repeat:no-repeat;background-position:center;background-size:contain;
   opacity:0;transition:opacity .35s ease;
   margin-bottom:-24px; /* let the glow spill onto the search bar */
 }
-.new-tab-page .logo.rendered{opacity:1;animation:neon-flicker 5s ease-in-out infinite}
+.new-tab-page .logo.rendered{opacity:1;animation:neon-flicker 6s linear infinite}
 .new-tab-page .search-box{position:relative;z-index:1;margin-top:0}
 .new-tab-page .search-box{
   display:flex;align-items:center;
@@ -1018,13 +1018,24 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 @font-face{font-family:'Curly';src:url('../fonts/curly.otf') format('opentype')}
 
 /* Neon sign logo — rendered to a static bitmap by js/logo.js (no live SVG filter) */
+/* Real tubes stutter on startup and dip randomly while running — a fixed
+   periodic dim never reads as neon. Linear keeps the dropouts sharp. */
 @keyframes neon-flicker{
-  0%, 100%{opacity:1}
-  91%{opacity:1}
-  92%{opacity:.85}
-  93.5%{opacity:1}
-  96%{opacity:.92}
+  0%{opacity:1}
+  0.6%{opacity:.35}
+  1.2%{opacity:.9}
+  1.8%{opacity:.5}
+  2.4%{opacity:1}
+  84%{opacity:1}
+  85%{opacity:.78}
+  86%{opacity:1}
+  90.5%{opacity:.93}
+  91.5%{opacity:1}
+  95%{opacity:.4}
+  96%{opacity:.95}
   97%{opacity:1}
+  98.5%{opacity:.85}
+  100%{opacity:1}
 }
 
 .page-loading-screen{
@@ -1107,21 +1118,17 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .acct-signout:hover{color:#fff}
 .acct-signout[hidden]{display:none}
 @keyframes acct-dot-pulse{0%,100%{opacity:.4}50%{opacity:1}}
-.acct-signin{
-  border:none;background:transparent;padding:0;font-family:inherit;
-  font-size:28px;font-weight:200;color:#fff;line-height:1;
-  letter-spacing:-0.39px;cursor:pointer;
-  display:flex;align-items:center;gap:8px;
+.acct-signin-title{
+  font-size:30px;font-weight:300;color:#fff;line-height:1.15;
+  letter-spacing:-0.4px;
 }
-.acct-signin i{font-size:12px;opacity:0;transform:translateX(-6px);transition:opacity .15s,transform .15s}
-.acct-signin:hover i{opacity:.75;transform:translateX(0)}
-.acct-signin[hidden]{display:none}
+.acct-signin-title[hidden]{display:none}
 .acct-signin-sub{
   font-size:14px;font-weight:200;color:rgba(255,255,255,.5);
   line-height:1.45;margin-top:8px;max-width:240px;
 }
 .acct-signin-sub[hidden]{display:none}
-.acct-signin-fields{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.acct-signin-fields{display:flex;flex-direction:column;gap:12px;margin-top:14px}
 .acct-signin-fields[hidden]{display:none}
 .acct-field{position:relative;display:block}
 .acct-field[hidden]{display:none}
@@ -1161,20 +1168,28 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .acct-auth-or{
   display:flex;align-items:center;gap:10px;
   font-size:10.5px;color:var(--ui-text-muted);text-transform:uppercase;letter-spacing:.5px;
-  margin:4px 0;
+  margin:14px 0 16px;
 }
 .acct-auth-or::before,.acct-auth-or::after{content:'';flex:1;border-bottom:1px solid rgba(255,255,255,.1)}
-.acct-oauth{display:flex;gap:8px;margin-top:-12px}
+.acct-oauth{display:flex;gap:8px}
 .acct-oauth__btn{
   flex:1;
   display:flex;align-items:center;justify-content:center;
-  padding:4px 0;border:none;background:transparent;cursor:pointer;
+  padding:6px 0;border:none;background:transparent;cursor:pointer;
   opacity:.85;transition:opacity .15s ease,transform .22s cubic-bezier(0.34,1.56,0.64,1);
 }
 .acct-oauth__btn:hover{opacity:1;transform:scale(1.12)}
 .acct-oauth__btn img{height:20px;width:auto;pointer-events:none}
 .acct-oauth__google img{height:26px}
 .acct-oauth__github img{filter:invert(1)}
+.acct-auth-submit{
+  width:100%;padding:10px 14px;border:none;border-radius:10px;cursor:pointer;
+  background:var(--ui-accent);color:#fff;
+  font-family:inherit;font-size:14px;font-weight:600;
+  transition:filter .15s,transform .15s;
+}
+.acct-auth-submit:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.acct-auth-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
 .acct-field__input:focus {
   outline: none !important;
@@ -1237,6 +1252,46 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   .news-story-title{font-size:15px;font-weight:500}
   .news-story-desc{font-size:12px}
 }
+
+/* ── Home help button + menu (bottom-right) ─────────────────────────── */
+.help-wrap{position:absolute;bottom:40px;right:20px;z-index:6}
+.help-btn{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.45);
+  color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;
+  transition:background .15s,color .15s,transform .15s;
+}
+.help-btn:hover{background:rgba(255,255,255,.12);color:#fff;transform:scale(1.06)}
+.help-wrap.is-open .help-btn{background:rgba(255,255,255,.14);color:#fff}
+#help-menu{
+  position:absolute !important; /* .glass sets position:relative — assert absolute */
+  bottom:48px;right:0;width:230px;padding:6px;
+  border-radius:.85rem;overflow:hidden;
+  background:rgba(20,20,22,.9);
+  backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);
+  box-shadow:0 12px 36px rgba(var(--ui-shadow-rgb),.38),inset 0 1px 0 rgba(255,255,255,.1);
+  opacity:0;transform:translateY(6px) scale(.98);pointer-events:none;
+  transition:opacity .15s ease,transform .2s cubic-bezier(0.16,1,0.3,1);
+}
+#help-menu[hidden]{display:none !important}
+#help-menu::after{content:none}
+#help-menu.is-open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.help-menu-title{
+  color:var(--ui-text-muted);font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.6px;padding:6px 10px 4px;
+}
+.help-item{
+  display:flex;align-items:center;gap:10px;width:100%;
+  border:none;border-radius:8px;background:transparent;cursor:pointer;
+  color:var(--ui-text-sub);font-size:13px;font-family:inherit;font-weight:500;
+  padding:9px 10px;text-align:left;
+  transition:background .12s,color .12s;
+}
+.help-item i{width:16px;text-align:center;font-size:13px;flex-shrink:0;color:var(--ui-text-muted);transition:color .12s}
+.help-item:hover{background:var(--ui-hover);color:var(--ui-text)}
+.help-item:hover i{color:var(--ui-text)}
 
 /* ── Net init info button + popup ─────────────────────────────────────────── */
 .net-info-btn{

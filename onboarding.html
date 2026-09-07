@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Welcome to Plutonium Network</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plutonium">
+<meta name="description" content="Welcome to Plutonium Network. Set up your themes, backgrounds, sounds and pinned favorites in under a minute.">
+<link rel="shortcut icon" href="img/favicon.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/plu-tokens.css">
+<link rel="stylesheet" href="css/onboarding.css">
+<link rel="stylesheet" href="css/glass.css">
+</head>
+<body class="onboarding-body">
+<!-- Unsupported-device overlay: same check as index.html -->
+<div id="device-block-overlay" class="device-block-overlay" hidden>
+  <div class="device-block-box">
+    <div class="device-block-icon"><i class="fa-solid fa-desktop"></i></div>
+    <h1 class="device-block-title">Plutonium doesn't support mobile or tablet</h1>
+    <p class="device-block-sub">Please open Plutonium on a desktop or laptop to continue.</p>
+  </div>
+</div>
+<script>
+  (function () {
+    'use strict';
+    var ua = (navigator.userAgent || '').toLowerCase();
+    var uaData = navigator.userAgentData;
+    var isMobile = uaData && typeof uaData.mobile === 'boolean' ? uaData.mobile : false;
+
+    if (!isMobile) {
+      isMobile = /android|iphone|ipod|ipad|windows phone|iemobile|blackberry|kindle|silk|opera mini|fennec|mobi|playbook|tablet|smart-?tv|googletv|roku/i.test(ua);
+    }
+
+    if (!isMobile && /macintosh/.test(ua) && navigator.maxTouchPoints > 1) {
+      isMobile = true;
+    }
+
+    if (isMobile) {
+      document.documentElement.classList.add('device-blocked');
+      var overlay = document.getElementById('device-block-overlay');
+      if (overlay) overlay.hidden = false;
+    }
+  })();
+</script>
+
+<main class="onb-card" id="onb-card">
+  <div class="onb-steps" id="onb-steps">
+
+    <!-- 1 ── Welcome -->
+    <section class="onb-step" data-step="1" aria-label="Welcome">
+      <img class="onb-logo" id="onb-logo" alt="Plutonium" src="img/logos/icon-plutonium-pink.png">
+      <div class="onb-auth">
+        <h2 class="acct-signin-title">Welcome to<br>Plutonium Network</h2>
+        <p class="acct-signin-sub">Sign in to sync your bookmarks, pins and settings across devices.</p>
+        <div class="onb-auth-cols">
+          <div class="onb-auth-form">
+            <label class="acct-field">
+              <input class="acct-field__input" id="acct-email-input" type="email" name="email" placeholder=" " autocomplete="email">
+              <span class="acct-field__label">Email</span>
+              <span class="acct-field__line"></span>
+            </label>
+            <label class="acct-field">
+              <input class="acct-field__input" id="acct-password-input" type="password" name="password" placeholder=" " autocomplete="current-password">
+              <span class="acct-field__label">Password</span>
+              <span class="acct-field__line"></span>
+            </label>
+            <label class="acct-field acct-field--name" hidden>
+              <input class="acct-field__input" id="acct-name-input" type="text" placeholder=" " autocomplete="name">
+              <span class="acct-field__label">Your name</span>
+              <span class="acct-field__line"></span>
+            </label>
+            <div class="acct-auth-error" id="acct-error"></div>
+            <button class="glass acct-auth-submit" id="acct-auth-submit" type="button">Sign In</button>
+            <div class="acct-auth-toggle" id="acct-toggle">No Account? Make a free one!</div>
+          </div>
+          <div class="onb-auth-divider" aria-hidden="true">or</div>
+          <div class="onb-auth-social">
+            <div class="acct-oauth">
+              <button class="acct-oauth__btn acct-oauth__google" id="acct-google-btn"><img src="img/3rd-party/google.png" alt="Continue with Google"></button>
+              <button class="acct-oauth__btn acct-oauth__github" id="acct-github-btn"><img src="img/3rd-party/github.png" alt="Continue with GitHub"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="glass onb-btn onb-btn-ghost" id="onb-guest" type="button">Continue as guest <i class="fa-solid fa-arrow-right"></i></button>
+      <p class="onb-hint">Everything you set here can be changed later from the paintbrush menu.</p>
+    </section>
+
+    <!-- 2 ── Background -->
+    <section class="onb-step" data-step="2" aria-label="Background">
+      <h2 class="onb-step-title">Background</h2>
+      <p class="onb-step-sub">Animated effects or a wallpaper: pick one on the left and watch the live preview.</p>
+      <div class="onb-bg-layout">
+        <div class="onb-bg-options">
+          <div class="onb-section-label">Effects</div>
+          <div class="onb-effects" id="onb-effects"></div>
+          <div class="onb-section-label">Wallpapers</div>
+          <div class="onb-wallpapers" id="onb-wallpapers"></div>
+        </div>
+        <div class="onb-bg-preview">
+          <div class="onb-bg-preview-label"><i class="fa-solid fa-eye"></i> Live preview</div>
+          <div class="onb-bg-preview-frame">
+            <iframe id="onb-bg-frame" src="bg.html" title="Background preview" tabindex="-1" aria-hidden="true"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 ── Accent color -->
+    <section class="onb-step" data-step="3" aria-label="Accent color">
+      <h2 class="onb-step-title">Accent color</h2>
+      <p class="onb-step-sub">Your highlight color: buttons, glows, logos and status dots.</p>
+      <div class="onb-swatches" id="onb-swatches"></div>
+      <div class="onb-accent-preview">
+        <div class="onb-bg-preview-label"><i class="fa-solid fa-eye"></i> Live preview</div>
+        <div class="onb-bg-preview-frame onb-accent-frame">
+          <iframe id="onb-accent-frame" src="bg.html" title="Accent preview" tabindex="-1" aria-hidden="true"></iframe>
+          <div class="onb-accent-ui" aria-hidden="true">
+            <div class="onb-accent-panel">
+              <img class="onb-accent-logo-img" id="onb-accent-logo-img" alt="" src="img/logos/icon-plutonium-pink.png">
+              <div class="onb-accent-btn">Get started</div>
+              <div class="onb-accent-dots"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 ── Sound -->
+    <section class="onb-step" data-step="4" aria-label="Sound">
+      <h2 class="onb-step-title">Sound</h2>
+      <p class="onb-step-sub">Soft synthesized blips for navigation, or total silence.</p>
+      <div class="onb-sound-row">
+        <span class="onb-sound-label"><i class="fa-solid fa-volume-high"></i> Sound effects</span>
+        <label class="plu-switch">
+          <input type="checkbox" id="onb-sound-switch">
+          <span class="plu-switch-track"></span>
+        </label>
+      </div>
+      <button class="glass onb-btn onb-btn-ghost" id="onb-sound-test" type="button"><i class="fa-solid fa-play"></i> Play test</button>
+    </section>
+
+    <!-- 5 ── Pins -->
+    <section class="onb-step" data-step="5" aria-label="Pin favorites">
+      <h2 class="onb-step-title">Pin your favorites</h2>
+      <p class="onb-step-sub">Tap a few games; they'll sit on your home screen. You can change these anytime.</p>
+      <input type="search" class="onb-pins-search" id="onb-pins-search" placeholder="Search games…" autocomplete="off" aria-label="Search games">
+      <div class="onb-pins" id="onb-pins"><div class="onb-pins-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading games…</div></div>
+      <p class="onb-hint" id="onb-pins-count"></p>
+    </section>
+
+    <!-- 6 ── Done -->
+    <section class="onb-step" data-step="6" aria-label="Done">
+      <div class="onb-done-icon"><i class="fa-solid fa-check"></i></div>
+      <h2 class="onb-step-title">You're all set!</h2>
+      <p class="onb-step-sub">Your Plutonium is ready. Everything you picked is saved and synced to your account when you're signed in.</p>
+      <button class="glass onb-btn onb-btn-primary onb-btn-big" id="onb-finish" type="button"><i class="fa-solid fa-rocket"></i> Let's go</button>
+    </section>
+
+  </div>
+
+  <footer class="onb-footer">
+    <div class="onb-progress" id="onb-progress" aria-hidden="true"></div>
+    <button class="glass onb-btn onb-skip-top" id="onb-skip" type="button">Skip</button>
+    <div class="onb-footer-row">
+      <button class="glass onb-btn onb-btn-ghost" id="onb-back" type="button"><i class="fa-solid fa-arrow-left"></i> Back</button>
+      <span class="onb-footer-spacer"></span>
+      <button class="glass onb-btn onb-btn-primary" id="onb-next" type="button">Next <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+  </footer>
+</main>
+
+<script src="js/theme-state.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/cloud-store.js"></script>
+<script>
+  PlutoniumStore.WORKER_URL = 'https://accounting.cdn.plutoniumnet.work';
+</script>
+<script src="js/account.js"></script>
+<script src="js/pins.js"></script>
+<script src="js/onboarding.js"></script>
+</body>
+</html>
