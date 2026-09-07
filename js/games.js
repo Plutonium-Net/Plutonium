@@ -833,11 +833,22 @@
 
       const routeSuffix = window.PluWorkspaceRouteSuffix || '';
       const launchId = decodeURIComponent((routeSuffix.match(/#(.*)$/) || [,''])[1]);
+      const routeQuery = new URLSearchParams((routeSuffix.match(/\?(.*)$/) || [,''])[1]).get('q') || '';
+      const searchQuery = routeQuery.trim();
       if (launchId) {
         const game = games.find(g => g.id === launchId);
         if (game) launchGame(game);
         window.PluWorkspaceRouteSuffix = '';
         history.replaceState(null, '', location.pathname);
+      } else if (searchQuery) {
+        els['pgcdn-search'].value = searchQuery;
+        applySearch(searchQuery);
+        window.PluWorkspaceRouteSuffix = '';
+        history.replaceState(null, '', location.pathname);
+        await preloadImages(filteredGames, (done, total) => {
+          const label = els['games-preload-label'];
+          if (label) label.textContent = 'Preloading Images… (' + done + '/' + total + ')';
+        });
       } else {
         await preloadImages(games, (done, total) => {
           const label = els['games-preload-label'];
@@ -900,6 +911,21 @@
         else setBadge(false);
       });
     }
+    window.addEventListener('plu-workspace-route', () => {
+      const suffix = window.PluWorkspaceRouteSuffix || '';
+      window.PluWorkspaceRouteSuffix = '';
+      const launchId = decodeURIComponent((suffix.match(/#(.*)$/) || [,''])[1]);
+      const searchQuery = (new URLSearchParams((suffix.match(/\?(.*)$/) || [,''])[1]).get('q') || '').trim();
+      if (launchId) {
+        const game = games.find(g => g.id === launchId);
+        if (game) launchGame(game);
+        history.replaceState(null, '', location.pathname);
+      } else if (searchQuery) {
+        els['pgcdn-search'].value = searchQuery;
+        applySearch(searchQuery);
+        history.replaceState(null, '', location.pathname);
+      }
+    });
   }
 
   window.PGViewer = { open: openViewer, close: closeViewer };

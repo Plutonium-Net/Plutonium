@@ -5,6 +5,7 @@ class AccountManager {
     this.PINS_KEY    = 'plu_pins'
     this.TABS_KEY    = 'plu_tabs'
     this.RECENT_KEY  = 'plu_recent'
+    this.RECENT_MAX  = 10
     this.SYNC_MS     = 8000
 
     this.user          = null
@@ -405,48 +406,71 @@ class AccountManager {
   }
 
   recordRecent(entry) {
-    if (!entry || !entry.type) return
-    const recent = {
+    if (!entry || !entry.type || !entry.href) return
+    const item = {
       type:  String(entry.type),
       title: String(entry.title || ''),
       sub:   entry.sub ? String(entry.sub) : '',
-      href:  String(entry.href || ''),
+      href:  String(entry.href),
       ts:    Date.now(),
     }
-    try { localStorage.setItem(this.RECENT_KEY, JSON.stringify(recent)) } catch (_) {}
+    let list = this.getRecentList().filter(i => i.href !== item.href)
+    list.unshift(item)
+    if (list.length > this.RECENT_MAX) list = list.slice(0, this.RECENT_MAX)
+    try { localStorage.setItem(this.RECENT_KEY, JSON.stringify(list)) } catch (_) {}
     this._renderRecentPanel()
     this.pushRecent()
   }
 
+  getRecentList() {
+    try {
+      const raw = localStorage.getItem(this.RECENT_KEY)
+      if (!raw) return []
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) return parsed.filter(i => i && typeof i.href === 'string' && i.href)
+      if (parsed && parsed.href) return [parsed]
+      return []
+    } catch (_) { return [] }
+  }
+
   getRecent() {
-    try { return JSON.parse(localStorage.getItem(this.RECENT_KEY)) || null } catch (_) { return null }
+    const list = this.getRecentList()
+    return list.length ? list[0] : null
   }
 
   _renderRecentPanel() {
-    const row = document.getElementById('acct-recent')
-    if (!row) return
-    const recent = this.getRecent()
-    if (!recent || !recent.href) { row.hidden = true; return }
-    row.hidden = false
-    const icon  = document.getElementById('acct-recent-icon')
-    const title = document.getElementById('acct-recent-title')
-    const sub   = document.getElementById('acct-recent-sub')
+    const panel = document.getElementById('acct-recent')
+    if (!panel) return
+    panel.querySelectorAll('.acct-recent__row').forEach(el => el.remove())
+    const list = this.getRecentList()
+    if (!list.length) { panel.hidden = true; return }
+    panel.hidden = false
     const icons = { game: 'fa-gamepad', vm: 'fa-display', media: 'fa-clapperboard', ai: 'fa-robot' }
-    if (icon)  icon.className = 'fa-solid ' + (icons[recent.type] || 'fa-clock-rotate-left')
-    if (title) title.textContent = recent.title
-    if (sub)   { sub.textContent = recent.sub; sub.hidden = !recent.sub }
-    if (!this._recentBound) {
-      this._recentBound = true
+    list.slice(0, 5).forEach(recent => {
+      const row = document.createElement('button')
+      row.type = 'button'
+      row.className = 'acct-recent__row'
+      row.innerHTML =
+        '<i class="fa-solid ' + (icons[recent.type] || 'fa-clock-rotate-left') + '"></i>' +
+        '<span class="acct-recent__meta">' +
+          '<span class="acct-recent__title"></span>' +
+          '<span class="acct-recent__sub"></span>' +
+        '</span>' +
+        '<i class="fa-solid fa-arrow-right acct-recent__arrow"></i>'
+      row.querySelector('.acct-recent__title').textContent = recent.title || ''
+      const sub = row.querySelector('.acct-recent__sub')
+      sub.textContent = recent.sub || ''
+      sub.hidden = !recent.sub
       row.addEventListener('click', () => {
-        const r = this.getRecent()
-        if (r && r.href && typeof navigate === 'function') navigate(r.href)
+        if (recent.href && typeof navigate === 'function') navigate(recent.href)
       })
-    }
+      panel.appendChild(row)
+    })
   }
 
   async pushRecent() {
     if (!this.user) return
-    const recent = this.getRecent()
+    const recent = this.getRecentList()
     const hash = JSON.stringify(recent)
     if (hash === this._lastRecentHash) return
     try {
@@ -463,9 +487,14 @@ class AccountManager {
     if (!this.user) return
     try {
       const doc = await PlutoniumStore.getDoc('recent')
-      const remote = doc && doc.recent && doc.recent.href ? doc.recent : null
+      const remote = doc && doc.recent
       if (!remote) return
-      localStorage.setItem(this.RECENT_KEY, JSON.stringify(remote))
+      let list
+      if (Array.isArray(remote)) list = remote.filter(i => i && typeof i.href === 'string' && i.href)
+      else if (remote && remote.href) list = [remote]
+      else return
+      if (!list.length) return
+      localStorage.setItem(this.RECENT_KEY, JSON.stringify(list))
       this._renderRecentPanel()
     } catch (e) {
       console.warn('[Account] Recent pull failed:', e)

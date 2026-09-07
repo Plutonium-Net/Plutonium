@@ -170,9 +170,15 @@
 
   async function loadBundle(key) {
     const bundle = bundles[key];
-    if (!bundle) return;
+    if (!bundle) return false;
     setStyle(key);
-    for (const src of bundle.scripts) await loadScript(src, bundle.module && src === bundle.scripts[bundle.scripts.length - 1]);
+    let loaded = false;
+    for (const src of bundle.scripts) {
+      if (loadedScripts.has(src)) continue;
+      loaded = true;
+      await loadScript(src, bundle.module && src === bundle.scripts[bundle.scripts.length - 1]);
+    }
+    return loaded;
   }
 
   async function activate(key, suffix = '') {
@@ -183,7 +189,7 @@
     activeKey = key;
     root.dataset.activeWorkspace = key;
     window.PluWorkspaceRouteSuffix = suffix || '';
-    await loadBundle(key);
+    const fresh = await loadBundle(key);
     if (activeWorkspaceStyle) activeWorkspaceStyle.remove();
     activeWorkspaceStyle = document.createElement('link');
     activeWorkspaceStyle.rel = 'stylesheet';
@@ -196,6 +202,9 @@
       sharedGlassStyle.href = 'css/glass.css';
       sharedGlassStyle.dataset.workspaceGlass = 'true';
       document.head.appendChild(sharedGlassStyle);
+    }
+    if (suffix && !fresh && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('plu-workspace-route', { detail: { key } }));
     }
     return true;
   }

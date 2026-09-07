@@ -1380,8 +1380,36 @@ function init() {
   }, 300);
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
+function consumeAiDeepLink() {
+  const params = new URLSearchParams(window.PluWorkspaceRouteSuffix || location.search);
+  const q = (params.get('q') || '').trim();
+  if (!q) return;
+  window.PluWorkspaceRouteSuffix = '';
+  if (location.search) history.replaceState(null, '', location.pathname);
+
+  const chat = makeChat(q.slice(0, 48));
+  chats.unshift(chat);
+  openChat(chat.id);
+  const input = inputEl();
+  if (input) input.value = q;
+
+  setTimeout(() => {
+    const root = document.getElementById('workspace-root');
+    if (root && root.dataset.activeWorkspace !== 'ai') return;
+    if (currentUser() && authed) sendMessage();
+    else if (input) input.focus();
+  }, 350);
+}
+
+window.addEventListener('plu-workspace-route', consumeAiDeepLink);
+
+function runAiInit() {
   init();
+  consumeAiDeepLink();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', runAiInit);
+} else {
+  runAiInit();
 }

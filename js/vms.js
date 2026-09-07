@@ -277,7 +277,13 @@ console.log('VM.js loaded, API endpoint:', API_ENDPOINT);
 
 updatePinBtn();
 
-// Quick launch from a home pin: pluto://vms?autostart=1
 if (new URLSearchParams(window.PluWorkspaceRouteSuffix || location.search).get('autostart') === '1') {
   setTimeout(() => startSession(), 400);
 }
+
+window.addEventListener('plu-workspace-route', () => {
+  if (new URLSearchParams(window.PluWorkspaceRouteSuffix || location.search).get('autostart') === '1') {
+    window.PluWorkspaceRouteSuffix = '';
+    setTimeout(() => startSession(), 400);
+  }
+});

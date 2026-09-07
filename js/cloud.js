@@ -180,24 +180,36 @@
     });
   }
 
+  function _consumeRoute() {
+    const routeSuffix = window.PluWorkspaceRouteSuffix || '';
+    const hash = (routeSuffix.match(/#(.*)$/) || [,''])[1];
+    const q = new URLSearchParams((routeSuffix.match(/\?(.*)$/) || [,''])[1]).get('q') || '';
+    if (hash) {
+      const targetKey = hash.startsWith('cloud:') ? hash.slice(6) : hash;
+      const launchGame = _allGames.find(function (g) { return g.game_key === targetKey; });
+      if (launchGame) {
+        window.PluWorkspaceRouteSuffix = '';
+        history.replaceState(null, '', location.pathname);
+        _launch(launchGame);
+      }
+    } else if (q) {
+      window.PluWorkspaceRouteSuffix = '';
+      if (location.search) history.replaceState(null, '', location.pathname);
+      if (searchInput) {
+        searchInput.value = q;
+        _searchQ = q;
+        _renderGrid();
+      }
+    }
+  }
+
   fetch('data/cloud.json')
     .then(function (r) { return r.json(); })
     .then(function (games) {
       _allGames = games;
       _buildTagPills(games);
       _renderGrid();
-
-      var routeSuffix = window.PluWorkspaceRouteSuffix || '';
-      var hash = (routeSuffix.match(/#(.*)$/) || [,''])[1];
-      if (hash) {
-        var targetKey = hash.startsWith('cloud:') ? hash.slice(6) : hash;
-        var launchGame = _allGames.find(function (g) { return g.game_key === targetKey; });
-        if (launchGame) {
-          window.PluWorkspaceRouteSuffix = '';
-          history.replaceState(null, '', location.pathname);
-          _launch(launchGame);
-        }
-      }
+      _consumeRoute();
     })
     .catch(function () {
       grid.innerHTML = '<p class="cg-empty">Failed to load games.</p>';
@@ -222,6 +234,11 @@
       searchInput.select();
     });
   }
+
+  window.addEventListener('plu-workspace-route', function () {
+    if (!window.PluWorkspaceRouteSuffix) return;
+    _consumeRoute();
+  });
 
   let _detailOverlay = null;
 

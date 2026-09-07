@@ -152,14 +152,6 @@
         </div>
         <div class="acct-recent" id="acct-recent" hidden>
           <div class="acct-recent__label">Continue From Where You Left Off</div>
-          <button class="acct-recent__row" type="button">
-            <i class="fa-solid fa-gamepad" id="acct-recent-icon"></i>
-            <span class="acct-recent__meta">
-              <span class="acct-recent__title" id="acct-recent-title"></span>
-              <span class="acct-recent__sub" id="acct-recent-sub" hidden></span>
-            </span>
-            <i class="fa-solid fa-arrow-right acct-recent__arrow"></i>
-          </button>
         </div>
         <button class="acct-signout" id="acct-signout" type="button"><i class="fa-solid fa-arrow-right-from-bracket"></i>Sign out</button>
       </div>
@@ -196,10 +188,11 @@
 
 <div class="search-box glass">
   <i class="fa-solid fa-magnifying-glass"></i>
-  <input type="text" id="newtab-search" placeholder="Search the web">
+  <input type="text" id="newtab-search" placeholder="Search the web or use / commands." autocomplete="off" spellcheck="false">
   <button class="net-info-btn" id="newtab-net-info-btn" type="button" title="What is this?" aria-label="Networking info" style="display:none">
     <i class="fa-solid fa-circle-info"></i>
   </button>
+  <div class="search-suggest glass" id="search-suggest" hidden></div>
 </div>
 
 <div class="app-flanks" id="app-flanks">
@@ -339,6 +332,7 @@
 <script src="js/page-theme.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/logo.js"></script>
+<script src="js/newtab-search.js"></script>
 <script src="js/main.js?v=2"></script>
 <script src="js/tabs.js"></script>
 <script src="js/context-menu.js?v=1"></script>

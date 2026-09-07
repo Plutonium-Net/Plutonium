@@ -1467,3 +1467,9 @@ PlutoniumStore.onAuthChange(async user => {
     await initializeFromUrl();
   }
 });
+
+window.addEventListener('plu-workspace-route', () => {
+  if (!window.PluWorkspaceRouteSuffix) return;
+  initializeFromUrl();
+  window.PluWorkspaceRouteSuffix = '';
+});
