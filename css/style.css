@@ -843,6 +843,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   transition:left .28s cubic-bezier(0.22,1,0.36,1),width .28s cubic-bezier(0.22,1,0.36,1);
 }
 .engine-switch.dragging .engine-slider{transition:none}
+.engine-switch.dragging{transition:none}
 
 .status-bar{
   position:fixed;left:50%;bottom:12px;transform:translateX(-50%);
@@ -1399,6 +1400,10 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .engine-switch,
 .shortcuts{
   transition:opacity .18s ease, visibility 0s linear 0s;
+}
+.engine-switch{
+  transition:opacity .18s ease, visibility 0s linear 0s,
+    width .28s cubic-bezier(.22,1,.36,1), transform .28s cubic-bezier(.22,1,.36,1);
 }
 .new-tab-page.search-suggest-open .engine-switch,
 .new-tab-page.search-suggest-open .shortcuts{

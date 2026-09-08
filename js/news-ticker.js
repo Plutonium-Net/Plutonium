@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var ROTATE_MS = 5000;
+  var ROTATE_MS = 15000;
 
   var clockEl    = document.getElementById('news-clock');
   var dateEl     = document.getElementById('news-date');

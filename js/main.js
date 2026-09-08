@@ -315,6 +315,15 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
   let dragging = false
   let lastEngine = null
   let suppressClickUntil = 0
+  // Natural (un-stretched) geometry of the bar, captured when a drag starts
+  // so the elastic overscroll is measured against a stable reference.
+  let naturalRect = null
+  let baseWidth = 0
+
+  // How far the pill can stretch past either horizontal edge before it
+  // resists (the asymptote). The curve tracks the pointer almost 1:1 right
+  // at the edge, then tightens up like a rubber band being pulled.
+  const MAX_STRETCH = 56
 
   function enginesInOrder() {
     return Array.from(switchEl.querySelectorAll('.engine-btn'))
@@ -344,7 +353,36 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
     setNetEngine(engine)
   }
 
+  function stretchFor(pull) {
+    // Classic elastic overscroll curve: ~1:1 right after the edge, then it
+    // eases off as it approaches MAX_STRETCH.
+    return MAX_STRETCH * (1 - Math.exp(-pull / MAX_STRETCH))
+  }
+
   function positionSliderTo(clientX) {
+    // Pulling past an edge stretches the whole switch (the bar) out on
+    // that side while the far edge stays pinned. The pill follows along:
+    // its pulled edge rides out to the bar's new edge, its other edge
+    // stays glued to the buttons.
+    const overLeft = naturalRect.left - clientX
+    const overRight = clientX - naturalRect.right
+    let ext = 0
+    if (overLeft > 0) {
+      ext = stretchFor(overLeft)
+      switchEl.style.width = (baseWidth + ext) + 'px'
+      // The switch sits centered in the new-tab column, so widening
+      // pushes both edges out equally; shift left by half to pin the
+      // right edge in place while the left edge follows the pointer.
+      switchEl.style.transform = 'translateX(' + (-ext / 2) + 'px)'
+    } else if (overRight > 0) {
+      ext = stretchFor(overRight)
+      switchEl.style.width = (baseWidth + ext) + 'px'
+      switchEl.style.transform = 'translateX(' + (ext / 2) + 'px)'
+    } else {
+      switchEl.style.width = ''
+      switchEl.style.transform = ''
+    }
+
     const switchRect = switchEl.getBoundingClientRect()
     const engines = enginesInOrder()
     if (!engines.length) return
@@ -362,8 +400,23 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
     const f = scaled - idx
     const a = pts[idx]
     const b = pts[idx + 1]
-    slider.style.left = (a.left + (b.left - a.left) * f) + 'px'
-    slider.style.width = (a.width + (b.width - a.width) * f) + 'px'
+    const natLeft = a.left + (b.left - a.left) * f
+    const natRight = natLeft + (a.width + (b.width - a.width) * f)
+
+    if (overLeft > 0) {
+      // Left edge pulled out: the pill's left edge rides to the bar's
+      // edge, its right edge stays glued to the last button.
+      slider.style.left = '0px'
+      slider.style.width = natRight + 'px'
+    } else if (overRight > 0) {
+      // Right edge pulled out: the pill's left edge stays glued to the
+      // first button, its right edge rides out to the bar's edge.
+      slider.style.left = natLeft + 'px'
+      slider.style.width = (baseWidth + ext - natLeft) + 'px'
+    } else {
+      slider.style.left = natLeft + 'px'
+      slider.style.width = (natRight - natLeft) + 'px'
+    }
   }
 
   switchEl.addEventListener('pointerdown', function (e) {
@@ -372,6 +425,8 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
     startX = e.clientX
     dragging = false
     lastEngine = null
+    naturalRect = switchEl.getBoundingClientRect()
+    baseWidth = naturalRect.width
     try { switchEl.setPointerCapture(e.pointerId) } catch (_) {}
   })
 
@@ -392,7 +447,16 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
     pointerId = null
     dragging = false
     switchEl.classList.remove('dragging')
+    // Let the bar spring back to its natural size (its CSS transition
+    // runs now that .dragging is gone), then re-home the pill.
+    switchEl.style.width = ''
+    switchEl.style.transform = ''
     try { switchEl.releasePointerCapture(e.pointerId) } catch (_) {}
+    // Re-home the pill over the selected engine on the next frame so the CSS
+    // transition has a chance to run and the pill visibly springs back.
+    requestAnimationFrame(function () {
+      if (typeof syncEngineButtons === 'function') syncEngineButtons()
+    })
   }
 
   switchEl.addEventListener('pointerup', endDrag)
@@ -405,7 +469,6 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
     }
   }, true)
 })()
-
 
 if (typeof syncEngineButtons === 'function') syncEngineButtons()
 
