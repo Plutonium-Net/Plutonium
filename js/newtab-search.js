@@ -249,7 +249,7 @@
     if (cmd === '/g') {
       addHeader('Games');
       if (!rest) {
-        addHint('/g <query>: search games · e.g. /g mario');
+        addRow('/g <query>', 'fa-gamepad', function () { completeCommand('/g'); }, 'e.g. /g mario');
         show();
         return;
       }
@@ -274,7 +274,7 @@
     if (cmd === '/cg') {
       addHeader('Cloud Games');
       if (!rest) {
-        addHint('/cg <query>: search cloud games · e.g. /cg gta');
+        addRow('/cg <query>', 'fa-cloud', function () { completeCommand('/cg'); }, 'e.g. /cg gta');
         show();
         return;
       }
@@ -299,7 +299,7 @@
     if (cmd === '/ai') {
       addHeader('AI');
       if (!rest) {
-        addHint('/ai <query>: start an AI chat · e.g. /ai explain quantum computing');
+        addRow('/ai <query>', 'fa-robot', function () { completeCommand('/ai'); }, 'e.g. /ai explain quantum computing');
         show();
         return;
       }
@@ -315,8 +315,11 @@
       var known = ['movies', 'anime', 'tv'];
       addHeader('Watch');
       if (!rest) {
-        addHint('/watch movies|anime|tv <query>: find something to watch · e.g. /watch movies dune');
+        addRow('/watch movies', 'fa-film', function () { completeCommand('/watch movies'); }, 'Find movies');
+        addRow('/watch anime', 'fa-tv', function () { completeCommand('/watch anime'); }, 'Find anime');
+        addRow('/watch tv', 'fa-tv', function () { completeCommand('/watch tv'); }, 'Find TV shows');
         show();
+        setActive(0);
         return;
       }
       if (known.indexOf(wtype) === -1) {
@@ -362,14 +365,18 @@
     }
 
     addHeader('Commands');
-    COMMANDS.forEach(function (c) { addHint(c.usage); });
+    COMMANDS.forEach(function (c) {
+      addRow(c.cmd + (c.cmd === '/vm' ? '' : ' <query>'), c.icon, function () { completeCommand(c.cmd); }, c.desc);
+    });
     show();
   }
 
   function renderCommands() {
     resetList();
     addHeader('Commands');
-    COMMANDS.forEach(function (c) { addHint(c.usage); });
+    COMMANDS.forEach(function (c) {
+      addRow(c.cmd + (c.cmd === '/vm' ? '' : ' <query>'), c.icon, function () { completeCommand(c.cmd); }, c.desc);
+    });
     show();
   }
 

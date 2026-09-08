@@ -821,6 +821,7 @@ function openChat(id) {
     const n = (chat.messages || []).length;
     accountManager.recordRecent({
       type: 'ai',
+      id: chat.id,
       title: chat.title || 'New chat',
       sub: n ? n + (n === 1 ? ' message' : ' messages') : '',
       href: 'pluto://ai',
@@ -845,6 +846,7 @@ function deleteChat(id) {
   chats.splice(idx, 1);
   persistLocal();
   scheduleSync();
+  if (typeof accountManager !== 'undefined' && accountManager.removeRecent) accountManager.removeRecent('ai', id);
   if (activeChatId === id) {
     activeChatId = null;
     const next = chats[Math.min(idx, chats.length - 1)];

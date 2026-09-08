@@ -609,7 +609,7 @@ function currentNetAddress() {
     ? currentAddressValue()
     : ((input && input.value) || '').trim() || 'newtab'
 
-  if (!value || value === 'newtab' || value.startsWith('Initializing Network') || /^(?:plu|pluto):\/\//i.test(value)) return ''
+  if (!value || value === 'newtab' || /^(?:plu|pluto):\/\//i.test(value)) return ''
   return value
 }
 
@@ -915,16 +915,6 @@ function getRelayConnectionSummary() {
 
 window.getRelayConnectionSummary = getRelayConnectionSummary
 
-const NET_INIT_DELAY_MS = 10000
-let netInitCountdownTimer = null
-function netInfoButtons() {
-  return ['addr-net-info-btn', 'newtab-net-info-btn'].map(id => document.getElementById(id)).filter(Boolean)
-}
-
-function showNetInfoButtons(visible) {
-  netInfoButtons().forEach(btn => { btn.style.display = visible ? '' : 'none' })
-}
-
 function openNetInfoPopup() {
   const overlay = document.getElementById('net-info-overlay')
   if (!overlay) return
@@ -1011,92 +1001,16 @@ function closeNetInfoPopup() {
   if (overlay) overlay.hidden = true
 }
 
-function wireNetInfoButtons() {
-  if (netInfoButtons._wired) return
-  netInfoButtons._wired = true
-  netInfoButtons().forEach(btn => {
-    btn.addEventListener('click', (e) => { e.stopPropagation(); openNetInfoPopup() })
-  })
-  const overlay = document.getElementById('net-info-overlay')
-  if (!overlay) return
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) closeNetInfoPopup()
-  })
-  const closeBtn = document.getElementById('net-info-close')
-  if (closeBtn) closeBtn.addEventListener('click', closeNetInfoPopup)
-}
-
-
-function netCountdownInputs() {
-  return ['url-input', 'newtab-search'].map(id => document.getElementById(id)).filter(Boolean)
-}
-
-function repositionAddrNetButton() {
-  const input = document.getElementById('url-input')
-  const btn = document.getElementById('addr-net-info-btn')
-  if (!input || !btn || btn.style.display === 'none') return
-  try {
-    const cs = getComputedStyle(input)
-    const canvas = repositionAddrNetButton._canvas || (repositionAddrNetButton._canvas = document.createElement('canvas'))
-    const ctx = canvas.getContext('2d')
-    ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
-    const textWidth = ctx.measureText(input.value).width
-    const bar = input.parentElement
-    const barCS = getComputedStyle(bar)
-    const lockBtn = document.getElementById('lock-icon-btn')
-    const padLeft = parseFloat(barCS.paddingLeft) || 0
-    const lockWidth = lockBtn ? lockBtn.offsetWidth : 0
-    const gap = 6
-    btn.style.left = `${Math.round(padLeft + lockWidth + gap + textWidth + gap)}px`
-  } catch (_) {}
-}
-
-function scheduleNetInit() {
-  const inputs = netCountdownInputs()
-  const startedAt = Date.now()
-  wireNetInfoButtons()
-  showNetInfoButtons(true)
-
-  const showCountdown = () => {
-    const remaining = Math.max(0, Math.ceil((NET_INIT_DELAY_MS - (Date.now() - startedAt)) / 1000))
-    inputs.forEach(input => {
-      if (document.activeElement === input) return
-      if (input.value && !input.value.startsWith('Initializing Network')) return
-      input.value = `Initializing Network Systems in ${remaining}s`
-      repositionAddrNetButton()
-    })
-  }
-
-  showCountdown()
-  netInitCountdownTimer = window.setInterval(showCountdown, 1000)
-
-  window.setTimeout(() => {
-    window.clearInterval(netInitCountdownTimer)
-    netInitCountdownTimer = null
-    runNetInit()
-  }, NET_INIT_DELAY_MS)
-}
-
 async function runNetInit() {
-  const inputs = netCountdownInputs()
-  inputs.forEach(input => {
-    if (input.value.startsWith('Initializing Network')) input.value = 'Initializing Network Systems…'
-      repositionAddrNetButton()
-  })
   try {
     await chooseBestRelayServer()
     await preloadRelayConnection()
     await initNetStack()
     startBackgroundRelayPingLoop()
-  } finally {
-    inputs.forEach(input => {
-      if (input.value.startsWith('Initializing Network')) input.value = ''
-    })
-    showNetInfoButtons(false)
-  }
+  } catch (_) {}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   initRelayUi()
-  scheduleNetInit()
+  runNetInit()
 })

@@ -48,7 +48,6 @@ function getDisplayUrl(rawUrl) {
 
 function currentAddressValue() {
   const value = (urlInput.value || '').trim() || 'newtab'
-  if (value.startsWith('Initializing Network')) return 'newtab'
   return value
 }
 

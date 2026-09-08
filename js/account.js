@@ -409,6 +409,7 @@ class AccountManager {
     if (!entry || !entry.type || !entry.href) return
     const item = {
       type:  String(entry.type),
+      id:    entry.id ? String(entry.id) : '',
       title: String(entry.title || ''),
       sub:   entry.sub ? String(entry.sub) : '',
       href:  String(entry.href),
@@ -417,6 +418,14 @@ class AccountManager {
     let list = this.getRecentList().filter(i => i.href !== item.href)
     list.unshift(item)
     if (list.length > this.RECENT_MAX) list = list.slice(0, this.RECENT_MAX)
+    try { localStorage.setItem(this.RECENT_KEY, JSON.stringify(list)) } catch (_) {}
+    this._renderRecentPanel()
+    this.pushRecent()
+  }
+
+  removeRecent(type, id) {
+    if (!type) return
+    const list = this.getRecentList().filter(i => !(i.type === type && id && i.id === id))
     try { localStorage.setItem(this.RECENT_KEY, JSON.stringify(list)) } catch (_) {}
     this._renderRecentPanel()
     this.pushRecent()
