@@ -1,3 +1,5 @@
+const BUILD_VERSION = 8;
+
 if (navigator.userAgent.includes("Firefox")) {
 	Object.defineProperty(globalThis, "crossOriginIsolated", {
 		value: true,
@@ -422,8 +424,12 @@ self.addEventListener("fetch", (event) => {
 	}
 });
 
-self.addEventListener("message", ({ data }) => {
+self.addEventListener("message", (event) => {
+	const data = event.data || {};
 	if (data.type === "playgroundData") {
 		playgroundData = data;
+	}
+	if (data.type === "plu-get-build-version") {
+		event.source.postMessage({ type: "plu-build-version", version: BUILD_VERSION });
 	}
 });

@@ -706,11 +706,25 @@ function syncEngineButtons() {
   if (!slider || !switchEl) return
   const activeBtn = switchEl.querySelector('.engine-btn.active')
   if (!activeBtn) { slider.style.opacity = '0'; return }
+  positionSlider(slider, switchEl, activeBtn)
+}
+
+function positionSlider(slider, switchEl, activeBtn) {
   const switchRect = switchEl.getBoundingClientRect()
   const btnRect = activeBtn.getBoundingClientRect()
   slider.style.opacity = '1'
   slider.style.left = (btnRect.left - switchRect.left) + 'px'
   slider.style.width = btnRect.width + 'px'
+}
+
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('resize', () => {
+    if (!document.getElementById('engine-slider')) return
+    const slider = document.getElementById('engine-slider')
+    const switchEl = document.querySelector('.engine-switch')
+    const activeBtn = switchEl && switchEl.querySelector('.engine-btn.active')
+    if (activeBtn && slider && switchEl) positionSlider(slider, switchEl, activeBtn)
+  })
 }
 
 

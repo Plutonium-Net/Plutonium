@@ -299,11 +299,114 @@ const favObserver = new MutationObserver(() => {
 favObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })
 updateAccentFavicon()
 
-document.querySelectorAll('.engine-btn').forEach(btn => {
+Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
   btn.addEventListener('click', () => {
     if (typeof setNetEngine === 'function') setNetEngine(btn.dataset.engine)
   })
-})
+});
+
+(function initEngineSliderDrag() {
+  const switchEl = document.querySelector('.engine-switch')
+  const slider = document.getElementById('engine-slider')
+  if (!switchEl || !slider) return
+
+  let pointerId = null
+  let startX = 0
+  let dragging = false
+  let lastEngine = null
+  let suppressClickUntil = 0
+
+  function enginesInOrder() {
+    return Array.from(switchEl.querySelectorAll('.engine-btn'))
+      .sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left)
+  }
+
+  function nearestEngine(clientX) {
+    const engines = enginesInOrder()
+    if (!engines.length) return null
+    let best = engines[0]
+    let bestDist = Math.abs(best.getBoundingClientRect().left + best.offsetWidth / 2 - clientX)
+    for (let i = 1; i < engines.length; i++) {
+      const rect = engines[i].getBoundingClientRect()
+      const cx = rect.left + rect.width / 2
+      const dist = Math.abs(cx - clientX)
+      if (dist < bestDist) { bestDist = dist; best = engines[i] }
+    }
+    return best
+  }
+
+  function applyToEngine(engineBtn) {
+    if (!engineBtn) return
+    const engine = engineBtn.dataset.engine
+    if (!engine || typeof setNetEngine !== 'function') return
+    if (engine === lastEngine) return
+    lastEngine = engine
+    setNetEngine(engine)
+  }
+
+  function positionSliderTo(clientX) {
+    const switchRect = switchEl.getBoundingClientRect()
+    const engines = enginesInOrder()
+    if (!engines.length) return
+    const pts = engines.map(function (e) {
+      const r = e.getBoundingClientRect()
+      return { left: r.left - switchRect.left, width: r.width, center: r.left + r.width / 2 - switchRect.left }
+    })
+    const first = pts[0].center
+    const last = pts[pts.length - 1].center
+    if (last === first) return
+    let t = (clientX - switchRect.left - first) / (last - first)
+    t = Math.max(0, Math.min(1, t))
+    const scaled = t * (pts.length - 1)
+    const idx = Math.min(pts.length - 2, Math.floor(scaled))
+    const f = scaled - idx
+    const a = pts[idx]
+    const b = pts[idx + 1]
+    slider.style.left = (a.left + (b.left - a.left) * f) + 'px'
+    slider.style.width = (a.width + (b.width - a.width) * f) + 'px'
+  }
+
+  switchEl.addEventListener('pointerdown', function (e) {
+    if (pointerId !== null) return
+    pointerId = e.pointerId
+    startX = e.clientX
+    dragging = false
+    lastEngine = null
+    try { switchEl.setPointerCapture(e.pointerId) } catch (_) {}
+  })
+
+  switchEl.addEventListener('pointermove', function (e) {
+    if (e.pointerId !== pointerId) return
+    if (!dragging && Math.abs(e.clientX - startX) > 5) {
+      dragging = true
+      switchEl.classList.add('dragging')
+    }
+    if (!dragging) return
+    applyToEngine(nearestEngine(e.clientX))
+    positionSliderTo(e.clientX)
+  })
+
+  function endDrag(e) {
+    if (e.pointerId !== pointerId) return
+    if (dragging) suppressClickUntil = Date.now() + 150
+    pointerId = null
+    dragging = false
+    switchEl.classList.remove('dragging')
+    try { switchEl.releasePointerCapture(e.pointerId) } catch (_) {}
+  }
+
+  switchEl.addEventListener('pointerup', endDrag)
+  switchEl.addEventListener('pointercancel', endDrag)
+
+  switchEl.addEventListener('click', function (e) {
+    if (Date.now() < suppressClickUntil) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+    }
+  }, true)
+})()
+
+
 if (typeof syncEngineButtons === 'function') syncEngineButtons()
 
 ensureTabHistory(getActiveTab())

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="plu-build" content="8">
 <meta charset="utf-8">
 <title>Plutonium Network</title>
 <meta name="description" content="Plutonium Network: a full browser-style web platform with a built-in secure browsing, games, cloud gaming, streaming, VMs and the Stelena AI assistant.">
@@ -30,12 +31,13 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="shortcut icon" id="app-favicon" href="img/favicon.png" type="image/x-icon">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=3">
 <link rel="stylesheet" href="css/glass.css">
 <link rel="stylesheet" href="css/plu-tokens.css">
 <link rel="stylesheet" href="css/workspace.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="js/pwa.js" defer></script>
+<script src="js/version.js?v=8" defer></script>
 </head>
 <body>
 <div id="device-block-overlay" class="device-block-overlay" hidden>
@@ -311,7 +313,7 @@
 <script src="js/theme.js"></script>
 <script src="js/logo.js"></script>
 <script src="js/newtab-search.js"></script>
-<script src="js/main.js?v=2"></script>
+<script src="js/main.js?v=6"></script>
 <script src="js/tabs.js"></script>
 <script src="js/context-menu.js?v=1"></script>
 <script src="js/loading.js"></script>
@@ -323,7 +325,6 @@
     <div class="net-info-box-title">Connection</div>
     <div id="conn-hud-current"></div>
     <div id="conn-hud-regions"></div>
-    <div class="conn-hud-note">This is to bypass some school blockers, such as GoGuardian, where they scan for trigger words that have to do with web technology on load. somehow though, these idiots dont do it to incoming scripts therefore if we load the script later it works fine. :)</div>
     <div class="net-info-box-actions">
       <button class="net-info-close-btn" id="net-info-close" type="button">Done</button>
     </div>
