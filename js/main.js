@@ -315,8 +315,6 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
   let dragging = false
   let lastEngine = null
   let suppressClickUntil = 0
-  // Natural (un-stretched) geometry of the bar, captured when a drag starts
-  // so the elastic overscroll is measured against a stable reference.
   let naturalRect = null
   let baseWidth = 0
   let stretchSide = 0
@@ -326,9 +324,6 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
   let handlingPointer = false
   let handlingPointerTimer = null
 
-  // How far the pill can stretch past either horizontal edge before it
-  // resists (the asymptote). The curve tracks the pointer almost 1:1 right
-  // at the edge, then tightens up like a rubber band being pulled.
   const MAX_STRETCH = 56
 
   function enginesInOrder() {
@@ -360,25 +355,16 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
   }
 
   function stretchFor(pull) {
-    // Classic elastic overscroll curve: ~1:1 right after the edge, then it
-    // eases off as it approaches MAX_STRETCH.
     return MAX_STRETCH * (1 - Math.exp(-pull / MAX_STRETCH))
   }
 
   function positionSliderTo(clientX) {
-    // Pulling past an edge stretches the whole switch (the bar) out on
-    // that side while the far edge stays pinned. The pill follows along:
-    // its pulled edge rides out to the bar's new edge, its other edge
-    // stays glued to the buttons.
     const overLeft = naturalRect.left - clientX
     const overRight = clientX - naturalRect.right
     let ext = 0
     if (overLeft > 0) {
       ext = stretchFor(overLeft)
       switchEl.style.width = (baseWidth + ext) + 'px'
-      // The switch sits centered in the new-tab column, so widening
-      // pushes both edges out equally; shift left by half to pin the
-      // right edge in place while the left edge follows the pointer.
       switchEl.style.transform = 'translateX(' + (-ext / 2) + 'px)'
     } else if (overRight > 0) {
       ext = stretchFor(overRight)
@@ -412,13 +398,9 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
     const natRight = natLeft + (a.width + (b.width - a.width) * f)
 
     if (overLeft > 0) {
-      // Left edge pulled out: the pill's left edge rides to the bar's
-      // edge, its right edge stays glued to the last button.
       slider.style.left = '0px'
       slider.style.width = natRight + 'px'
     } else if (overRight > 0) {
-      // Right edge pulled out: the pill's left edge stays glued to the
-      // first button, its right edge rides out to the bar's edge.
       slider.style.left = natLeft + 'px'
       slider.style.width = (baseWidth + ext - natLeft) + 'px'
     } else {
