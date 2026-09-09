@@ -7,6 +7,10 @@ class AccountManager {
     this.RECENT_KEY  = 'plu_recent'
     this.RECENT_MAX  = 10
     this.SYNC_MS     = 8000
+    this.AVATAR_KEY  = 'plu_avatar_'
+
+    this.photoDataUrl   = null
+    this._gravatarTried = false
 
     this.user          = null
     this.isGuest       = false
@@ -91,6 +95,7 @@ class AccountManager {
     this._bindDeleteAccount()
     if (this._deleteReset) this._deleteReset()
     this._renderProfile()
+    this._pullAvatar()
     this._renderRecentPanel()
     this._updatePanelLive()
     this._renderProviders()
@@ -565,7 +570,7 @@ class AccountManager {
     nameEl.textContent = name
     emailEl.textContent = this.user.email || ''
     if (avatar) {
-      const photo = this.user.photoURL
+      const photo = this.photoDataUrl || this.user.photoURL
       if (photo) {
         avatar.style.backgroundImage = `url('${photo}')`
         avatar.classList.add('has-photo')
@@ -575,9 +580,104 @@ class AccountManager {
         avatar.classList.remove('has-photo')
         const initials = name.split(/\s+/).map(w => w[0] || '').slice(0, 2).join('').toUpperCase()
         avatar.innerHTML = `<span>${initials || 'U'}</span>`
+        this._applyGravatar(avatar)
       }
     }
     this._bindNameEdit()
+    this._bindAvatarUpload()
+  }
+
+  async _pullAvatar() {
+    if (!this.user || !this.user.uid) return
+    const cached = localStorage.getItem(this.AVATAR_KEY + this.user.uid)
+    if (cached) {
+      this.photoDataUrl = cached
+      this._renderProfile()
+    }
+    try {
+      if (typeof PlutoniumStore !== 'undefined') {
+        const doc = await PlutoniumStore.getDoc('profile_photo')
+        if (doc && doc.dataUrl) {
+          this.photoDataUrl = doc.dataUrl
+          try { localStorage.setItem(this.AVATAR_KEY + this.user.uid, doc.dataUrl) } catch (_) {}
+          this._renderProfile()
+        }
+      }
+    } catch (_) {}
+  }
+
+  _applyGravatar(avatar) {
+    if (this._gravatarTried) return
+    this._gravatarTried = true
+    if (!avatar || !this.user) return
+    const email = (this.user.email || '').trim().toLowerCase()
+    const uid = this.user.uid
+    if (!email || !uid) return
+    const flag = localStorage.getItem('plu_gravatar_' + uid)
+    if (flag === '0') return
+    const apply = src => {
+      if (this.photoDataUrl || this.user.photoURL) return
+      avatar.style.backgroundImage = `url('${src}')`
+      avatar.classList.add('has-photo')
+      avatar.innerHTML = ''
+    }
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(email))
+      .then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''))
+      .then(hash => {
+        const img = new Image()
+        img.onload = () => {
+          try { localStorage.setItem('plu_gravatar_' + uid, '1') } catch (_) {}
+          apply(`https://www.gravatar.com/avatar/${hash}?d=404&s=256`)
+        }
+        img.onerror = () => {
+          try { localStorage.setItem('plu_gravatar_' + uid, '0') } catch (_) {}
+        }
+        img.src = `https://www.gravatar.com/avatar/${hash}?d=404&s=256`
+      })
+      .catch(() => {})
+  }
+
+  _bindAvatarUpload() {
+    const btn = document.getElementById('acct-change-photo')
+    const input = document.getElementById('acct-photo-input')
+    if (!btn || !input || this._avatarBound) return
+    this._avatarBound = true
+    btn.addEventListener('click', () => input.click())
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0]
+      input.value = ''
+      if (!file || !file.type.startsWith('image/')) return
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        try {
+          const size = 256
+          const canvas = document.createElement('canvas')
+          canvas.width = size
+          canvas.height = size
+          const ctx = canvas.getContext('2d')
+          if (!ctx) return
+          const min = Math.min(img.width, img.height)
+          const sx = (img.width - min) / 2
+          const sy = (img.height - min) / 2
+          ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size)
+          let dataUrl
+          try { dataUrl = canvas.toDataURL('image/webp', 0.82) } catch (_) {}
+          if (!dataUrl || dataUrl.length > 90000) dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+          this.photoDataUrl = dataUrl
+          if (this.user && this.user.uid) {
+            try { localStorage.setItem(this.AVATAR_KEY + this.user.uid, dataUrl) } catch (_) {}
+          }
+          this._renderProfile()
+          if (typeof PlutoniumStore !== 'undefined' && this.user) {
+            PlutoniumStore.setDoc('profile_photo', { dataUrl, lastSync: new Date() }).catch(() => {})
+          }
+        } catch (_) {}
+      }
+      img.onerror = () => URL.revokeObjectURL(url)
+      img.src = url
+    })
   }
 
   _bindNameEdit() {
@@ -826,6 +926,8 @@ class AccountManager {
       await PlutoniumStore.signOut().catch(() => {})
     }
     this.user = null
+    this.photoDataUrl = null
+    this._gravatarTried = false
   }
 
   async deleteAccount() {

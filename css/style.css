@@ -1085,6 +1085,15 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .acct-signed{display:flex;flex-direction:column;gap:10px;max-width:340px}
 .acct-signed[hidden]{display:none}
 .acct-profile{display:flex;align-items:center;gap:12px}
+.acct-avatar-wrap{position:relative;flex-shrink:0}
+.acct-avatar-edit{
+  position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;border:2px solid var(--surface-1, #121214);
+  background:var(--ui-hover);color:var(--ui-text);cursor:pointer;
+  font-size:8px;padding:0;transition:background .12s,color .12s;
+}
+.acct-avatar-edit:hover{background:var(--ui-active);color:var(--ui-text)}
 .acct-avatar{
   width:46px;height:46px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;

@@ -375,6 +375,7 @@ async function deleteUserFirestoreData(env, uid) {
     `/users/${uid}/stream_prefs/_default`,
     `/users/${uid}/games_data/saved`,
     `/users/${uid}/personal_games/meta`,
+    `/users/${uid}/profile_photo/_default`,
   ];
   for (const p of fixed) await deleteFirestoreDoc(env, p);
   for (const col of ['game_saves', 'personal_games', 'games_data']) {
