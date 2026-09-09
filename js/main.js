@@ -322,6 +322,9 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
   let stretchSide = 0
   let springExt = 0
   let springAnim = null
+  let downEngine = null
+  let handlingPointer = false
+  let handlingPointerTimer = null
 
   // How far the pill can stretch past either horizontal edge before it
   // resists (the asymptote). The curve tracks the pointer almost 1:1 right
@@ -482,6 +485,12 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
     startX = e.clientX
     dragging = false
     lastEngine = null
+    downEngine = nearestEngine(e.clientX)
+    if (e.button === 0) {
+      handlingPointer = true
+      clearTimeout(handlingPointerTimer)
+      handlingPointerTimer = setTimeout(function () { handlingPointer = false }, 600)
+    }
     naturalRect = switchEl.getBoundingClientRect()
     baseWidth = naturalRect.width
     try { switchEl.setPointerCapture(e.pointerId) } catch (_) {}
@@ -501,10 +510,15 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
   function endDrag(e) {
     if (e.pointerId !== pointerId) return
     if (dragging) suppressClickUntil = Date.now() + 150
+    const wasClick = !dragging && e.button === 0 && downEngine
     pointerId = null
     dragging = false
     switchEl.classList.remove('dragging')
     try { switchEl.releasePointerCapture(e.pointerId) } catch (_) {}
+    if (wasClick) {
+      const r = downEngine.getBoundingClientRect()
+      if (startX >= r.left && startX <= r.right) applyToEngine(downEngine)
+    }
     if (springExt > 0 && Math.abs(stretchSide) === 1) {
       springBack(springExt, stretchSide)
     } else {
@@ -520,7 +534,9 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
   switchEl.addEventListener('pointercancel', endDrag)
 
   switchEl.addEventListener('click', function (e) {
-    if (Date.now() < suppressClickUntil) {
+    const swallow = handlingPointer || Date.now() < suppressClickUntil
+    handlingPointer = false
+    if (swallow) {
       e.preventDefault()
       e.stopImmediatePropagation()
     }
