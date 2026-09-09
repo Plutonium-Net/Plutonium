@@ -31,7 +31,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="shortcut icon" id="app-favicon" href="img/favicon.png" type="image/x-icon">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=9">
 <link rel="stylesheet" href="css/glass.css">
 <link rel="stylesheet" href="css/plu-tokens.css">
 <link rel="stylesheet" href="css/workspace.css">
@@ -125,47 +125,6 @@
   <div class="content-area">
     <div class="new-tab-page" id="new-tab-page">
 
-    <div class="acct-panel" id="acct-panel">
-      <div class="acct-name" id="acct-name-text" hidden></div>
-      <div class="acct-signed" id="acct-signed" hidden>
-        <div class="acct-sync" id="acct-sync">
-          <span class="acct-sync__dot" id="acct-sync-dot"></span>
-          <span class="acct-sync__text" id="acct-sync-text"></span>
-        </div>
-        <div class="acct-recent" id="acct-recent" hidden>
-          <div class="acct-recent__label">Continue From Where You Left Off</div>
-        </div>
-        <button class="acct-signout" id="acct-signout" type="button"><i class="fa-solid fa-arrow-right-from-bracket"></i>Sign out</button>
-      </div>
-      <h2 class="acct-signin-title" id="acct-signin-text" hidden>Welcome to<br>Plutonium Network</h2>
-      <div class="acct-signin-sub" id="acct-signin-sub" hidden>Sign in to sync your bookmarks, pins and settings across devices.</div>
-      <div class="acct-signin-fields" id="acct-signin-fields" hidden>
-        <div class="acct-oauth">
-          <button class="acct-oauth__btn acct-oauth__google" id="acct-google-btn"><img src="img/3rd-party/google.png" alt="Continue with Google"></button>
-          <button class="acct-oauth__btn acct-oauth__github" id="acct-github-btn"><img src="img/3rd-party/github.png" alt="Continue with GitHub"></button>
-        </div>
-        <div class="acct-auth-or">or sign in with email</div>
-        <label class="acct-field">
-          <input class="acct-field__input" id="acct-email-input" type="email" name="email" placeholder=" " autocomplete="email">
-          <span class="acct-field__label">Email</span>
-          <span class="acct-field__line"></span>
-        </label>
-        <label class="acct-field">
-          <input class="acct-field__input" id="acct-password-input" type="password" name="password" placeholder=" " autocomplete="current-password">
-          <span class="acct-field__label">Password</span>
-          <span class="acct-field__line"></span>
-        </label>
-        <label class="acct-field acct-field--name">
-          <input class="acct-field__input" id="acct-name-input" type="text" placeholder=" " autocomplete="name">
-          <span class="acct-field__label">Your name</span>
-          <span class="acct-field__line"></span>
-        </label>
-        <div class="acct-auth-error" id="acct-error"></div>
-        <button class="acct-auth-submit" id="acct-auth-submit" type="button">Sign In</button>
-        <div class="acct-auth-toggle" id="acct-toggle">No Account? Make a free one!</div>
-      </div>
-    </div>
-
 <div class="logo" id="logo" role="img" aria-label="Plutonium"></div>
 
 <div class="search-box glass">
@@ -253,6 +212,84 @@
 
 </div>
 
+<div class="account-scrim" id="account-scrim" hidden></div>
+<div class="account-dialog glass" id="account-dialog" hidden>
+  <div class="account-dialog__head">
+    <span class="account-dialog__title"><i class="fas fa-user-circle" style="margin-right:6px;opacity:.5"></i>Account</span>
+    <button class="account-dialog__close" id="account-dialog-close"><i class="fas fa-xmark"></i></button>
+  </div>
+  <div class="account-dialog__body">
+    <div class="acct-panel" id="acct-panel">
+      <div class="acct-signed" id="acct-signed" hidden>
+        <div class="acct-profile">
+          <div class="acct-avatar" id="acct-avatar"><i class="fa-solid fa-user"></i></div>
+          <div class="acct-profile-meta">
+            <div class="acct-profile-name">
+              <span class="acct-profile-name__text" id="acct-display-name"></span>
+              <button class="acct-edit-btn" id="acct-edit-name" type="button" title="Edit name" aria-label="Edit name"><i class="fa-solid fa-pen"></i></button>
+            </div>
+            <div class="acct-profile-email" id="acct-profile-email"></div>
+          </div>
+        </div>
+        <div class="acct-sync" id="acct-sync">
+          <span class="acct-sync__dot" id="acct-sync-dot"></span>
+          <span class="acct-sync__text" id="acct-sync-text"></span>
+        </div>
+        <button class="acct-signout" id="acct-signout" type="button"><i class="fa-solid fa-arrow-right-from-bracket"></i>Sign out</button>
+        <div class="acct-section">
+          <div class="acct-section-label">Sign-in methods</div>
+          <div class="acct-providers" id="acct-providers"></div>
+        </div>
+        <div class="acct-section" id="acct-password-section" hidden>
+          <div class="acct-section-label">Change password</div>
+          <input class="acct-field__input" id="acct-new-pass" type="password" placeholder="New password" autocomplete="new-password">
+          <div class="acct-auth-error" id="acct-pass-error"></div>
+          <button class="acct-secondary-btn" id="acct-pass-save" type="button">Update password</button>
+        </div>
+        <div class="acct-section">
+          <div class="acct-section-label">Data</div>
+          <button class="acct-secondary-btn" id="acct-export" type="button"><i class="fa-solid fa-download"></i>Export my data</button>
+        </div>
+        <div class="acct-section">
+          <div class="acct-section-label">AI usage</div>
+          <div class="acct-quota" id="acct-quota"></div>
+        </div>
+        <div class="acct-recent" id="acct-recent" hidden>
+          <div class="acct-recent__label">Continue From Where You Left Off</div>
+        </div>
+        <button class="acct-delete" id="acct-delete" type="button"><i class="fa-solid fa-trash-can"></i><span class="acct-delete__label">Delete account</span></button>
+      </div>
+      <h2 class="acct-signin-title" id="acct-signin-text" hidden>Welcome to<br>Plutonium Network</h2>
+      <div class="acct-signin-sub" id="acct-signin-sub" hidden>Sign in to sync your bookmarks, pins and settings across devices.</div>
+      <div class="acct-signin-fields" id="acct-signin-fields" hidden>
+        <div class="acct-oauth">
+          <button class="acct-oauth__btn acct-oauth__google" id="acct-google-btn"><img src="img/3rd-party/google.png" alt="Continue with Google"></button>
+          <button class="acct-oauth__btn acct-oauth__github" id="acct-github-btn"><img src="img/3rd-party/github.png" alt="Continue with GitHub"></button>
+        </div>
+        <div class="acct-auth-or">or sign in with email</div>
+        <label class="acct-field">
+          <input class="acct-field__input" id="acct-email-input" type="email" name="email" placeholder=" " autocomplete="email">
+          <span class="acct-field__label">Email</span>
+          <span class="acct-field__line"></span>
+        </label>
+        <label class="acct-field">
+          <input class="acct-field__input" id="acct-password-input" type="password" name="password" placeholder=" " autocomplete="current-password">
+          <span class="acct-field__label">Password</span>
+          <span class="acct-field__line"></span>
+        </label>
+        <label class="acct-field acct-field--name">
+          <input class="acct-field__input" id="acct-name-input" type="text" placeholder=" " autocomplete="name">
+          <span class="acct-field__label">Your name</span>
+          <span class="acct-field__line"></span>
+        </label>
+        <div class="acct-auth-error" id="acct-error"></div>
+        <button class="acct-auth-submit" id="acct-auth-submit" type="button">Sign In</button>
+        <div class="acct-auth-toggle" id="acct-toggle">No Account? Make a free one!</div>
+        <button class="acct-forgot" id="acct-forgot" type="button">Forgot password?</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="about-scrim" id="about-scrim" hidden></div>
 <div class="about-dialog glass" id="about-dialog" hidden></div>
 
@@ -290,9 +327,9 @@
   </div>
 </div>
 
-<script src="js/cloud-store.js"></script>
+<script src="js/cloud-store.js?v=2"></script>
 <script src="js/cloud-store-config.js"></script>
-<script src="js/account.js?v=17"></script>
+<script src="js/account.js?v=21"></script>
 <script src="https://unpkg.com/draggabilly@2.2.0/dist/draggabilly.pkgd.min.js"></script>
 <script src="/bridge/index.js"></script>
 <script src="/core/bundle.js"></script>
@@ -304,7 +341,7 @@
 <script src="js/net.js"></script>
 <script src="js/url.js"></script>
 <script src="js/workspaces.js?v=1"></script>
-<script src="js/navigation.js?v=2"></script>
+<script src="js/navigation.js?v=3"></script>
 <script src="js/keyboard.js"></script>
 <script src="js/pins.js"></script>
 <script src="js/theme-state.js"></script>
@@ -313,7 +350,7 @@
 <script src="js/theme.js"></script>
 <script src="js/logo.js"></script>
 <script src="js/newtab-search.js"></script>
-<script src="js/main.js?v=8"></script>
+<script src="js/main.js?v=9"></script>
 <script src="js/tabs.js"></script>
 <script src="js/context-menu.js?v=1"></script>
 <script src="js/loading.js"></script>

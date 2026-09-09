@@ -42,19 +42,18 @@ export default {
   },
 };
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
-
 function resolveAllowedOrigin(origin, setting) {
-  if (!setting || setting === '*') return '*';
-  const entries = setting.split(',').map(s => s.trim());
+  if (!setting || setting === '*') return '*'
+  const entries = setting.split(',').map(s => s.trim())
   for (const entry of entries) {
-    if (entry === origin) return origin;
+    if (entry === origin) return origin
     if (entry.startsWith('*.')) {
-      const base = entry.slice(2);
-      if (origin === `https://${base}` || origin.endsWith(`.${base}`)) return origin;
+      const base = entry.slice(2)
+      if (origin === `https://${base}` || origin.endsWith(`.${base}`)) return origin
     }
   }
-  return entries[0];
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin)) return origin
+  return entries[0]
 }
 
 function corsHeaders(allowed, extra = {}) {
@@ -74,8 +73,6 @@ function corsResponse(body, status, allowed) {
   });
 }
 
-// ── Models ────────────────────────────────────────────────────────────────────
-
 const MODELS = [
   { id: 'openai/gpt-oss-120b',      label: 'GPT OSS 120B',       speed: '500 t/s',  ctx: '131K' },
   { id: 'openai/gpt-oss-20b',       label: 'GPT OSS 20B',        speed: '1000 t/s', ctx: '131K' },
@@ -85,11 +82,6 @@ const MODELS = [
 function handleModels(allowed) {
   return corsResponse({ models: MODELS }, 200, allowed);
 }
-
-// ── Rate limiting (KV-based) ──────────────────────────────────────────────────
-// 100 requests per 12-hour window, keyed per Firebase token prefix (per account).
-
-// ── Text to speech (Orpheus) ─────────────────────────────────────────────────
 
 const TTS_MODELS      = ['canopylabs/orpheus-v1-english', 'canopylabs/orpheus-arabic-saudi'];
 const TTS_VOICES_EN   = ['autumn', 'diana', 'hannah', 'austin', 'daniel', 'troy'];
@@ -148,8 +140,6 @@ async function handleTts(request, env, allowed) {
   });
 }
 
-// ── Speech to text (Whisper) ─────────────────────────────────────────────────
-
 const STT_MODELS = ['whisper-large-v3', 'whisper-large-v3-turbo'];
 
 async function handleTranscribe(request, env, allowed) {
@@ -193,15 +183,11 @@ async function handleTranscribe(request, env, allowed) {
 }
 
 const RL_MAX    = 100;
-const RL_WINDOW = 60 * 60 * 12; // 12 hours in seconds
+const RL_WINDOW = 60 * 60 * 12;
 
 function getRateLimitKey(request) {
   const auth = request.headers.get('Authorization') || '';
   if (auth.startsWith('Bearer ')) {
-    // Firebase JWTs are header.payload.signature — the header is identical for
-    // all tokens from the same project, so we must key on the payload segment
-    // which is unique per user.  We take 64 chars of it (well within one user's
-    // unique payload prefix) rather than trying to base64-decode inside a Worker.
     const token = auth.slice(7);
     const dot1  = token.indexOf('.');
     const dot2  = dot1 >= 0 ? token.indexOf('.', dot1 + 1) : -1;
@@ -235,8 +221,6 @@ async function checkRateLimit(env, key) {
   return { limited: false, remaining: RL_MAX - bucket.count };
 }
 
-// ── Rate limit status (read-only) ────────────────────────────────────────────
-
 async function handleRateLimit(request, env, allowed) {
   const auth = request.headers.get('Authorization') || '';
   if (!auth.startsWith('Bearer ')) {
@@ -261,9 +245,7 @@ async function handleRateLimit(request, env, allowed) {
   }, 200, allowed);
 }
 
-// ── Chat ──────────────────────────────────────────────────────────────────────
-
-const MAX_MESSAGES = 100; // max messages accepted per request
+const MAX_MESSAGES = 100;
 
 async function handleChat(request, env, allowed) {
   const auth = request.headers.get('Authorization') || '';
@@ -271,7 +253,6 @@ async function handleChat(request, env, allowed) {
     return corsResponse({ error: 'Unauthorized' }, 401, allowed);
   }
 
-  // BYOK: client supplied their own Groq key - skip rate limiting entirely
   const byokKey = request.headers.get('X-Groq-Key') || '';
   const groqKey = byokKey.startsWith('gsk_') ? byokKey : env.GROQ_API_KEY;
 
@@ -279,7 +260,6 @@ async function handleChat(request, env, allowed) {
     return corsResponse({ error: 'GROQ_API_KEY not configured' }, 500, allowed);
   }
 
-  // Rate limit check - skipped for BYOK requests
   let remaining = null;
   if (!byokKey.startsWith('gsk_')) {
     const rlKey = getRateLimitKey(request);
@@ -313,7 +293,6 @@ async function handleChat(request, env, allowed) {
     return corsResponse({ error: 'messages array required' }, 400, allowed);
   }
 
-  // Build upstream messages array
   const upstream = [];
   if (system) upstream.push({ role: 'system', content: String(system).slice(0, 2000) });
 
@@ -347,7 +326,6 @@ async function handleChat(request, env, allowed) {
   }
 
   if (wantStream) {
-    // Pass the SSE stream straight through, injecting remaining as a final event
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
     const encoder = new TextEncoder();
@@ -361,7 +339,6 @@ async function handleChat(request, env, allowed) {
           if (done) break;
           await writer.write(value);
         }
-        // Send remaining count as a custom final event
         await writer.write(encoder.encode(`event: rl\ndata: ${JSON.stringify({ remaining: remaining ?? null })}\n\n`));
       } finally {
         writer.close();
@@ -386,8 +363,6 @@ async function handleChat(request, env, allowed) {
     remaining: remaining ?? null,
   }, 200, allowed);
 }
-
-// ── Homepage ──────────────────────────────────────────────────────────────────
 
 function handleHomepage() {
   const html = `<!DOCTYPE html>

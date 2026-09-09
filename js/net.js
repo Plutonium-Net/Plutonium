@@ -208,8 +208,8 @@ function updateRelaySwitcherButton() {
     : currentRelayStatus === 'err' ? 'Connection error'
     : currentRelayStatus === 'disconnecting' ? 'Disconnecting'
     : 'Connecting'
-  button.setAttribute('aria-label', `Choose relay: ${server.label} — ${stateWords}`)
-  button.title = `Relay: ${server.label} — ${stateWords}`
+  button.setAttribute('aria-label', `Choose relay: ${server.label}, ${stateWords}`)
+  button.title = `Relay: ${server.label}, ${stateWords}`
 }
 
 function renderRelaySwitcherMenu() {

@@ -35,8 +35,6 @@ export default {
   },
 };
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
-
 function resolveAllowedOrigin(origin, setting) {
   if (!setting || setting === '*') return '*';
   const entries = setting.split(',').map(s => s.trim());
@@ -67,8 +65,6 @@ function corsResponse(body, status, allowed) {
   });
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function isValidUrl(raw) {
   try {
     const u = new URL(raw);
@@ -77,15 +73,6 @@ function isValidUrl(raw) {
     return false;
   }
 }
-
-// ── POST /session — create a kiosk remote session ─────────────────────────
-// Body: { url: "https://example.com" }
-// Returns: { session_id, embed_url }
-//
-// Uses test mode (no API key billing) with:
-//   - start_url set to the caller-supplied URL
-//   - hide_toolbar: true  — hides browser chrome (borderless / kiosk)
-//   - ublock: true        — built-in ad/tracker blocking
 
 async function handleSession(request, env, allowed) {
   if (!env.HYPERBEAM_API_KEY) {
@@ -122,9 +109,6 @@ async function handleSession(request, env, allowed) {
   return corsResponse({ session_id: data.session_id, embed_url: data.embed_url }, 200, allowed);
 }
 
-// ── DELETE /session — destroy a session ──────────────────────────────────────
-// Body: { session_id: "…" }
-
 async function handleDelete(request, env, allowed) {
   if (!env.HYPERBEAM_API_KEY) {
     return corsResponse({ error: 'HYPERBEAM_API_KEY not configured' }, 500, allowed);
@@ -148,14 +132,11 @@ async function handleDelete(request, env, allowed) {
   return corsResponse({ deleted: true }, 200, allowed);
 }
 
-// ── DELETE /sessions — destroy ALL active sessions ────────────────────────────
-
 async function handleDeleteAll(env, allowed) {
   if (!env.HYPERBEAM_API_KEY) {
     return corsResponse({ error: 'HYPERBEAM_API_KEY not configured' }, 500, allowed);
   }
 
-  // Collect all session IDs across pages
   const ids = [];
   let cursor = null;
   do {
@@ -170,7 +151,6 @@ async function handleDeleteAll(env, allowed) {
     const body = await listRes.json().catch(() => ({}));
     const page = Array.isArray(body) ? body : (body.results || []);
     page.forEach(vm => ids.push(vm.id || vm.session_id));
-    // paginate if there's a next cursor and it moved forward
     cursor = body.next && body.next !== cursor ? body.next : null;
   } while (cursor);
 
@@ -184,8 +164,6 @@ async function handleDeleteAll(env, allowed) {
 
   return corsResponse({ deleted: results.length, sessions: results }, 200, allowed);
 }
-
-// ── Homepage ──────────────────────────────────────────────────────────────────
 
 function handleHomepage() {
   const html = `<!DOCTYPE html>
@@ -218,7 +196,7 @@ function handleHomepage() {
 <div class="hero">
 <div class="hero__inner">
 <h1 class="hero__title">Plutonium Net Worker</h1>
-<p class="hero__desc">Cloudflare Worker that spins up a borderless remote kiosk session for a given URL — no auth required, API key stays server-side.</p>
+<p class="hero__desc">Cloudflare Worker that spins up a borderless remote kiosk session for a given URL; no auth required, API key stays server-side.</p>
 
 <div class="section">
 <div class="section__heading">Endpoints</div>
@@ -229,7 +207,7 @@ function handleHomepage() {
 <tr><td><code>DELETE</code></td><td><code>/session</code></td><td>Destroy a session. Body: <code>{ session_id }</code></td></tr>
 </tbody>
 </table>
-<p class="note">No <code>Authorization</code> header required — open access, no rate limiting.<br>
+<p class="note">No <code>Authorization</code> header required; open access, no rate limiting.<br>
 Session flags: <code>hide_toolbar: true</code>, <code>ublock: true</code>.</p>
 </div>
 

@@ -740,7 +740,7 @@ function renderFavoritesGrid() {
     const nr = document.getElementById('no-results');
     nr.style.display = 'block';
     nr.querySelector('i').className = 'fas fa-heart';
-    nr.querySelector('p').textContent = 'No favourites yet — heart a title to save it here';
+    nr.querySelector('p').textContent = 'No favourites yet, heart a title to save it here';
   }
 }
 
@@ -753,7 +753,7 @@ function renderContinueGrid() {
     const nr = document.getElementById('no-results');
     nr.style.display = 'block';
     nr.querySelector('i').className = 'fas fa-play-circle';
-    nr.querySelector('p').textContent = 'Nothing to continue yet — start watching something!';
+    nr.querySelector('p').textContent = 'Nothing to continue yet, start watching something!';
   }
 }
 

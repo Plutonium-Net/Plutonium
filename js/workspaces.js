@@ -71,7 +71,7 @@
         <div class="chat-panel"><div class="chat-panel-inner"><div id="chatContainer"><div class="welcome-screen" id="welcomeScreen">
           <div class="welcome-icon"><img id="welcome-logo" src="img/logos/stelena.svg" alt="Stelena" /></div>
           <div class="welcome-title">How can I help you?</div>
-          <div class="welcome-sub">Ask Stelena anything — coding, research, writing, or just brainstorm ideas.</div>
+          <div class="welcome-sub">Ask Stelena anything: coding, research, writing, or just brainstorm ideas.</div>
           <div class="suggestion-grid">
             <button class="suggestion-card" onclick="useSuggestion('Write a Python script to analyze CSV data')"><span class="suggestion-card-label">Code</span><span class="suggestion-card-text">Write a Python script to analyze CSV data</span></button>
             <button class="suggestion-card" onclick="useSuggestion('Explain quantum computing in simple terms')"><span class="suggestion-card-label">Learn</span><span class="suggestion-card-text">Explain quantum computing in simple terms</span></button>

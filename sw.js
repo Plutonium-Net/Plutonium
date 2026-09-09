@@ -16,14 +16,14 @@ try {
 	importScripts("/core/sw-handler.js");
 	coreSW = new UVServiceWorker();
 } catch (e) {
-	console.warn("[sw] UV scripts failed to load — Core engine disabled:", e);
+	console.warn("[sw] UV scripts failed to load: Core engine disabled:", e);
 }
 
 try {
 	importScripts("/runtime/all.js");
 	({ ScramjetServiceWorker } = $scramjetLoadWorker());
 } catch (e) {
-	console.warn("[sw] Scramjet scripts failed to load — Runtime engine disabled:", e);
+	console.warn("[sw] Scramjet scripts failed to load: Runtime engine disabled:", e);
 }
 
 const CONFIG = {

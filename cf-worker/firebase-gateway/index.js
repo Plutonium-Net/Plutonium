@@ -39,6 +39,22 @@ export default {
         return handleAccountDelete(request, env, allowed);
       }
 
+      if (path === '/auth/password' && request.method === 'POST') {
+        return handlePasswordChange(request, env, allowed);
+      }
+
+      if (path === '/auth/providers' && request.method === 'POST') {
+        return handleListProviders(request, env, allowed);
+      }
+
+      if (path === '/auth/unlink' && request.method === 'POST') {
+        return handleUnlinkProvider(request, env, allowed);
+      }
+
+      if (path === '/auth/link' && request.method === 'POST') {
+        return handleLinkProvider(request, env, allowed);
+      }
+
       if (path === '/auth/oauth/start' && request.method === 'GET') {
         return handleOAuthStart(request, env, url);
       }
@@ -81,12 +97,10 @@ function resolveAllowedOrigin(origin, setting) {
     }
   }
 
-  // Allow loopback origins so local development and previews can sign in.
   if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin)) {
     return origin;
   }
 
-  // Not allowed — return null so the ACAO header is omitted and the browser blocks.
   return null;
 }
 
@@ -208,6 +222,20 @@ async function handleAccountDelete(request, env, allowed) {
   const { idToken } = await request.json();
   if (!idToken) return corsResponse({ error: 'idToken required' }, 400, allowed);
 
+  let uid = null;
+  try {
+    const lookupRes = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${env.FIREBASE_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      }
+    );
+    const lookup = await lookupRes.json();
+    uid = (lookup.users && lookup.users[0] && lookup.users[0].localId) || null;
+  } catch (_) {}
+
   const upstream = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${env.FIREBASE_API_KEY}`,
     {
@@ -219,16 +247,149 @@ async function handleAccountDelete(request, env, allowed) {
 
   const data = await upstream.json();
   if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+
+  if (uid) await deleteUserFirestoreData(env, uid);
   return corsResponse({ deleted: true }, 200, allowed);
+}
+
+async function handlePasswordChange(request, env, allowed) {
+  const { idToken, newPassword } = await request.json();
+  if (!idToken) return corsResponse({ error: 'idToken required' }, 400, allowed);
+  if (!newPassword || String(newPassword).length < 6) {
+    return corsResponse({ error: 'Password must be at least 6 characters' }, 400, allowed);
+  }
+
+  const upstream = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, password: String(newPassword) }),
+    }
+  );
+
+  const data = await upstream.json();
+  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+  return corsResponse({ ok: true }, 200, allowed);
+}
+
+async function handleListProviders(request, env, allowed) {
+  const { idToken } = await request.json();
+  if (!idToken) return corsResponse({ error: 'idToken required' }, 400, allowed);
+
+  const upstream = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    }
+  );
+
+  const data = await upstream.json();
+  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+
+  const user = (data.users && data.users[0]) || {};
+  const providers = (user.providerUserInfo || []).map(p => ({
+    providerId: p.providerId || '',
+    email:      p.email || '',
+    photoUrl:   p.photoUrl || '',
+  }));
+  return corsResponse({
+    providers,
+    displayName: user.displayName || '',
+    email:       user.email || '',
+  }, 200, allowed);
+}
+
+async function handleUnlinkProvider(request, env, allowed) {
+  const { idToken, providerId } = await request.json();
+  if (!idToken) return corsResponse({ error: 'idToken required' }, 400, allowed);
+  if (!providerId) return corsResponse({ error: 'providerId required' }, 400, allowed);
+
+  const upstream = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, deleteProvider: [providerId] }),
+    }
+  );
+
+  const data = await upstream.json();
+  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+  return corsResponse({ ok: true }, 200, allowed);
+}
+
+async function handleLinkProvider(request, env, allowed) {
+  const { idToken, providerId, oauthAccessToken } = await request.json();
+  if (!idToken) return corsResponse({ error: 'idToken required' }, 400, allowed);
+  if (!providerId || !oauthAccessToken) {
+    return corsResponse({ error: 'providerId and oauthAccessToken required' }, 400, allowed);
+  }
+
+  const upstream = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, provider: [providerId], oauthAccessToken }),
+    }
+  );
+
+  const data = await upstream.json();
+  if (!upstream.ok) return corsResponse(data, upstream.status, allowed);
+  return corsResponse({ ok: true }, 200, allowed);
+}
+
+const FIRESTORE_BASE = env => `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+
+async function deleteFirestoreDoc(env, docPath) {
+  try {
+    await fetch(`${FIRESTORE_BASE(env)}${docPath}`, { method: 'DELETE' });
+  } catch (_) {}
+}
+
+async function deleteFirestoreCollection(env, collectionPath) {
+  try {
+    const res = await fetch(`${FIRESTORE_BASE(env)}/${collectionPath}?pageSize=300`);
+    if (!res.ok) return;
+    const data = await res.json();
+    for (const doc of (data.documents || [])) {
+      try { await fetch(doc.name, { method: 'DELETE' }); } catch (_) {}
+    }
+  } catch (_) {}
+}
+
+async function deleteUserFirestoreData(env, uid) {
+  const fixed = [
+    `/users/${uid}`,
+    `/users/${uid}/bookmarks/_default`,
+    `/users/${uid}/pins/_default`,
+    `/users/${uid}/settings/_default`,
+    `/users/${uid}/tabs/_default`,
+    `/users/${uid}/recent/_default`,
+    `/users/${uid}/ai_chats/_default`,
+    `/users/${uid}/stream_favorites/_default`,
+    `/users/${uid}/stream_continue/_default`,
+    `/users/${uid}/stream_prefs/_default`,
+    `/users/${uid}/games_data/saved`,
+    `/users/${uid}/personal_games/meta`,
+  ];
+  for (const p of fixed) await deleteFirestoreDoc(env, p);
+  for (const col of ['game_saves', 'personal_games', 'games_data']) {
+    await deleteFirestoreCollection(env, `users/${uid}/${col}`);
+  }
 }
 
 async function handleOAuthStart(request, env, url) {
   const provider    = url.searchParams.get('provider');
+  const mode        = url.searchParams.get('mode') || 'signin';
   const workerUrl   = new URL(request.url).origin;
   const callbackUri = `${workerUrl}/auth/oauth/callback`;
 
   const state = crypto.randomUUID();
-  const encodedState = `${provider}:${state}`;
+  const encodedState = `${provider}:${state}:${mode}`;
 
   if (provider === 'github') {
     if (!env.GITHUB_CLIENT_ID) return new Response('GITHUB_CLIENT_ID not configured', { status: 500 });
@@ -259,15 +420,17 @@ async function handleOAuthCallback(request, env, url) {
   const workerUrl   = new URL(request.url).origin;
   const callbackUri = `${workerUrl}/auth/oauth/callback`;
 
-  const code     = url.searchParams.get('code');
-  const error    = url.searchParams.get('error');
-  const provider = (url.searchParams.get('state') || '').split(':')[0];
+  const stateParts = (url.searchParams.get('state') || '').split(':');
+  const provider = stateParts[0];
+  const mode     = stateParts[2] || 'signin';
 
   if (error || !code) {
     return oauthPopupPage(siteUrl, null, error || 'No code returned from provider');
   }
 
-  let postBody = null;
+  let accessToken = null;
+  let idToken     = null;
+  let postBody    = null;
 
   if (provider === 'github') {
     const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
@@ -282,7 +445,8 @@ async function handleOAuthCallback(request, env, url) {
     });
     const tokenData = await tokenRes.json();
     if (tokenData.access_token) {
-      postBody = `access_token=${encodeURIComponent(tokenData.access_token)}&providerId=github.com`;
+      accessToken = tokenData.access_token;
+      postBody = `access_token=${encodeURIComponent(accessToken)}&providerId=github.com`;
     }
   }
 
@@ -300,12 +464,22 @@ async function handleOAuthCallback(request, env, url) {
     });
     const tokenData = await tokenRes.json();
     if (tokenData.id_token) {
-      postBody = `id_token=${encodeURIComponent(tokenData.id_token)}&providerId=google.com`;
+      idToken = tokenData.id_token;
+      postBody = `id_token=${encodeURIComponent(idToken)}&providerId=google.com`;
     }
+    accessToken = tokenData.access_token || null;
   }
 
   if (!postBody) {
     return oauthPopupPage(siteUrl, null, 'Could not exchange code for token');
+  }
+
+  if (mode === 'link') {
+    const providerId = provider === 'github' ? 'github.com' : 'google.com';
+    if (!accessToken) {
+      return oauthPopupPage(siteUrl, null, 'Could not obtain access token', 'plu_oauth_link');
+    }
+    return oauthPopupPage(siteUrl, { link: { providerId, accessToken } }, null, 'plu_oauth_link');
   }
 
   const idpRes = await fetch(
@@ -341,14 +515,14 @@ async function handleOAuthCallback(request, env, url) {
   return oauthPopupPage(siteUrl, user, null);
 }
 
-function oauthPopupPage(siteUrl, user, error) {
+function oauthPopupPage(siteUrl, user, error, messageType = 'plu_oauth') {
   const payload = error
     ? JSON.stringify({ error })
     : JSON.stringify({ user });
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><script>
     try {
-      window.opener.postMessage({ type: 'plu_oauth', payload: ${JSON.stringify(payload)} }, '*');
+      window.opener.postMessage({ type: '${messageType}', payload: ${JSON.stringify(payload)} }, '*');
     } catch(e) {}
     setTimeout(() => window.close(), 200);
   <\/script></body></html>`;
@@ -403,8 +577,6 @@ async function handleVMSession(request, env, allowed) {
     return corsResponse({ error: 'HYPERBEAM_API_KEY not configured' }, 500, allowed);
   }
 
-  // Verify Firebase ID token via the Worker's own /auth flow isn't needed —
-  // we just check it's a valid bearer token by inspecting the Authorization header.
   const auth = request.headers.get('Authorization') || '';
   if (!auth.startsWith('Bearer ')) {
     return corsResponse({ error: 'Unauthorized' }, 401, allowed);
@@ -432,9 +604,6 @@ async function handleVMSession(request, env, allowed) {
   }
 
   if (action === 'delete') {
-    // Best-effort: delete by looking up the session from the request body
-    // The client sends no session_id — Hyperbeam auto-cleans after offline_timeout
-    // so this is a no-op placeholder for future session tracking.
     return corsResponse({ deleted: true }, 200, allowed);
   }
 
@@ -470,7 +639,7 @@ function handleHomepage() {
 <div class="hero">
 <div class="hero__inner">
 <h1 class="hero__title">Plutonium Firebase Gateway</h1>
-<p class="hero__desc">A Cloudflare Worker that proxies Firebase Auth, Firestore, and Realtime Database — keeping API keys server-side and adding CORS handling for browser clients.</p>
+<p class="hero__desc">A Cloudflare Worker that proxies Firebase Auth, Firestore, and Realtime Database: keeping API keys server-side and adding CORS handling for browser clients.</p>
 <div class="section">
 <div class="section__heading">Endpoints</div>
 <table>
@@ -483,7 +652,7 @@ function handleHomepage() {
 <tr><td><code>POST</code></td><td><code>/auth/update</code></td><td>Update display name</td></tr>
 <tr><td><code>POST</code></td><td><code>/auth/delete</code></td><td>Delete the authenticated account</td></tr>
 <tr><td><code>GET</code></td><td><code>/auth/oauth/start</code></td><td>Redirect to GitHub or Google OAuth</td></tr>
-<tr><td><code>GET</code></td><td><code>/auth/oauth/callback</code></td><td>OAuth callback — exchanges code for Firebase token</td></tr>
+<tr><td><code>GET</code></td><td><code>/auth/oauth/callback</code></td><td>OAuth callback exchanges code for Firebase token</td></tr>
 <tr><td><code>*</code></td><td><code>/firestore/…</code></td><td>Gateway to Firestore REST API</td></tr>
 <tr><td><code>*</code></td><td><code>/rtdb/…</code></td><td>Gateway to Realtime Database REST API</td></tr>
 </tbody>

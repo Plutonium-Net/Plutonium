@@ -126,9 +126,9 @@ The intelligence behind Plutonium Network.`
 
 const TALK_SYSTEM_PROMPT = `You are Stelena (pronounced like the word "tell"), the voice assistant of Plutonium Network. You are speaking aloud to the user.
 
-STRICT RULES — follow them always:
-1. Keep every response under 5 sentences. 1–2 sentences is ideal.
-2. Never use markdown, tables, charts, lists, headings, or bullets — plain spoken words only.
+STRICT RULES: follow them always:
+1. Keep every response under 5 sentences. 1-2 sentences is ideal.
+2. Never use markdown, tables, charts, lists, headings, or bullets; plain spoken words only.
 3. Sound natural and conversational, like a quick spoken chat. No robotic filler.
 4. When a topic could get long, give the short spoken answer and offer to go deeper.`;
 
@@ -551,7 +551,7 @@ async function requestReply(userContent, opts = {}) {
     system = SYSTEM_PROMPT.content +
       '\n\n## Continuation instruction\n' +
       'The user has asked you to CONTINUE your previous response from exactly where it stopped. ' +
-      'Do not repeat anything already written — begin directly with the continuation. ' +
+      'Do not repeat anything already written, begin directly with the continuation. ' +
       'If the previous response is already complete, say so briefly.';
   } else {
     system = SYSTEM_PROMPT.content;
@@ -1156,7 +1156,7 @@ async function beginListen() {
     talkStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch (e) {
     console.error('[ai] mic denied:', e);
-    addSystem('Microphone unavailable — allow mic access to use Talk mode.');
+    addSystem('Microphone unavailable; allow mic access to use Talk mode.');
     stopTalkMode();
     return;
   }
@@ -1225,7 +1225,7 @@ async function transcribeAndReply(blob) {
     const data = await res.json().catch(() => ({}));
     const text = (data.text || '').trim();
     if (!res.ok || !text) {
-      addSystem('Could not hear you — please try again.');
+      addSystem('Could not hear you; please try again.');
       resumeListening();
       return;
     }
@@ -1235,7 +1235,7 @@ async function transcribeAndReply(blob) {
     sendMessage();
   } catch (e) {
     console.error('[ai] transcribe failed:', e);
-    addSystem('Voice error — try again.');
+    addSystem('Voice error; try again.');
     resumeListening();
   }
 }

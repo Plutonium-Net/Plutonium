@@ -26,7 +26,7 @@
     );
     const data = await res.json();
     if (!res.ok) {
-      console.warn('[PlutoniumStore] Token refresh failed — signing out');
+      console.warn('[PlutoniumStore] Token refresh failed; signing out');
       await signOut();
       return;
     }
@@ -160,6 +160,108 @@
     const data = await res.json();
     if (!res.ok) throw new Error(`[PlutoniumStore] deleteAccount failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
     await signOut();
+  }
+
+  async function changePassword(newPassword) {
+    assertWorkerUrl();
+    if (!_currentUser?.idToken) throw new Error('[PlutoniumStore] Not signed in');
+    if (Date.now() >= _currentUser.expiresAt - 30_000) await refreshIdToken();
+    const res = await fetch(`${_workerUrl}/auth/password`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ idToken: _currentUser.idToken, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(`[PlutoniumStore] changePassword failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
+    return data;
+  }
+
+  async function getProviders() {
+    if (!_currentUser?.idToken) return [];
+    assertWorkerUrl();
+    if (Date.now() >= _currentUser.expiresAt - 30_000) await refreshIdToken();
+    const res = await fetch(`${_workerUrl}/auth/providers`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ idToken: _currentUser.idToken }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(`[PlutoniumStore] getProviders failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
+    return data.providers || [];
+  }
+
+  async function unlinkProvider(providerId) {
+    assertWorkerUrl();
+    if (!_currentUser?.idToken) throw new Error('[PlutoniumStore] Not signed in');
+    if (Date.now() >= _currentUser.expiresAt - 30_000) await refreshIdToken();
+    const res = await fetch(`${_workerUrl}/auth/unlink`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ idToken: _currentUser.idToken, providerId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(`[PlutoniumStore] unlinkProvider failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
+    return data;
+  }
+
+  function linkWithOAuth(provider) {
+    assertWorkerUrl();
+    if (!_currentUser?.idToken) return Promise.reject(new Error('[PlutoniumStore] Not signed in'));
+    return new Promise((resolve, reject) => {
+      const popup = window.open(
+        `${_workerUrl}/auth/oauth/start?provider=${provider}&mode=link`,
+        'plu_oauth_link',
+        'width=520,height=620,left=200,top=100,toolbar=0,menubar=0,location=0'
+      );
+
+      if (!popup) {
+        reject(new Error('[PlutoniumStore] Popup blocked'));
+        return;
+      }
+
+      function onMessage(e) {
+        if (!e.data || e.data.type !== 'plu_oauth_link') return;
+        window.removeEventListener('message', onMessage);
+        clearInterval(pollTimer);
+
+        let parsed;
+        try { parsed = JSON.parse(e.data.payload); } catch (_) {
+          return reject(new Error('[PlutoniumStore] Invalid OAuth payload'));
+        }
+
+        if (parsed.error) return reject(new Error(`[PlutoniumStore] OAuth link failed: ${parsed.error}`));
+
+        const link = (parsed.link) || {};
+        if (!link.providerId || !link.accessToken) {
+          return reject(new Error('[PlutoniumStore] OAuth link failed: missing credential'));
+        }
+
+        (async () => {
+          try {
+            if (Date.now() >= _currentUser.expiresAt - 30_000) await refreshIdToken();
+            const res = await fetch(`${_workerUrl}/auth/link`, {
+              method:  'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body:    JSON.stringify({ idToken: _currentUser.idToken, providerId: link.providerId, oauthAccessToken: link.accessToken }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(`[PlutoniumStore] linkWithOAuth failed: ${data.error?.message || data.error || JSON.stringify(data)}`);
+            resolve(data);
+          } catch (err) {
+            reject(err);
+          }
+        })();
+      }
+
+      window.addEventListener('message', onMessage);
+      const pollTimer = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(pollTimer);
+          window.removeEventListener('message', onMessage);
+          reject(new Error('[PlutoniumStore] OAuth popup closed'));
+        }
+      }, 500);
+    });
   }
 
   function signInWithOAuth(provider) {
@@ -463,6 +565,10 @@
     resetPassword,
     updateProfile,
     deleteAccount,
+    changePassword,
+    getProviders,
+    unlinkProvider,
+    linkWithOAuth,
     signInWithOAuth,
     signOut,
     onAuthChange,

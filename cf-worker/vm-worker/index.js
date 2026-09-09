@@ -31,8 +31,6 @@ export default {
   },
 };
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
-
 function resolveAllowedOrigin(origin, setting) {
   if (!setting || setting === '*') return '*';
   const entries = setting.split(',').map(s => s.trim());
@@ -63,17 +61,10 @@ function corsResponse(body, status, allowed) {
   });
 }
 
-// ── Rate limiting (KV-based) ──────────────────────────────────────────────────
-// Stores a counter + expiry timestamp in KV under a per-user key.
-// Limit: MAX_CREATES creates per WINDOW_SECS window.
-// Gracefully no-ops if the KV binding is absent (e.g. wrangler dev without KV).
-
 const MAX_CREATES  = 2;
-const WINDOW_SECS  = 900; // 15 minutes
+const WINDOW_SECS  = 900;
 
 function getRateLimitKey(request) {
-  // Key on the first 32 chars of the bearer token — unique per user,
-  // and a forged token can only affect the forger's own bucket.
   const auth = request.headers.get('Authorization') || '';
   if (auth.startsWith('Bearer ')) return 'rl:' + auth.slice(7, 39);
   return 'rl:ip:' + (request.headers.get('CF-Connecting-IP') || 'unknown');
@@ -86,7 +77,6 @@ async function checkRateLimit(env, key) {
   const raw     = await env.VM_RATE_LIMIT.get(key);
   const bucket  = raw ? JSON.parse(raw) : { count: 0, reset: now + WINDOW_SECS };
 
-  // Window expired — start fresh
   if (now >= bucket.reset) {
     bucket.count = 0;
     bucket.reset = now + WINDOW_SECS;
@@ -97,15 +87,12 @@ async function checkRateLimit(env, key) {
   }
 
   bucket.count++;
-  // TTL: keep the key alive until the window ends (+ 10s buffer)
   await env.VM_RATE_LIMIT.put(key, JSON.stringify(bucket), {
     expirationTtl: bucket.reset - now + 10,
   });
 
   return { limited: false };
 }
-
-// ── Session handler ───────────────────────────────────────────────────────────
 
 async function handleSession(request, env, allowed) {
   if (!env.HYPERBEAM_API_KEY) {
@@ -120,9 +107,7 @@ async function handleSession(request, env, allowed) {
   const body = await request.json().catch(() => ({}));
   const { action, session_id } = body;
 
-  // ── Create ──────────────────────────────────────────────────────────────────
   if (action === 'create') {
-    // Rate-limit only creates — deletes are always allowed
     const key = getRateLimitKey(request);
     const { limited, reset } = await checkRateLimit(env, key);
     if (limited) {
@@ -157,7 +142,6 @@ async function handleSession(request, env, allowed) {
     return corsResponse({ session_id: data.session_id, embed_url: data.embed_url }, 200, allowed);
   }
 
-  // ── Delete ──────────────────────────────────────────────────────────────────
   if (action === 'delete') {
     if (!session_id) return corsResponse({ error: 'session_id required' }, 400, allowed);
 
@@ -177,8 +161,6 @@ async function handleSession(request, env, allowed) {
   return corsResponse({ error: 'Unknown action' }, 400, allowed);
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
-
 function handleStats(env, allowed) {
   return corsResponse({
     rate_limit: {
@@ -189,8 +171,6 @@ function handleStats(env, allowed) {
     hyperbeam_configured: !!env.HYPERBEAM_API_KEY,
   }, 200, allowed);
 }
-
-// ── Homepage ──────────────────────────────────────────────────────────────────
 
 function handleHomepage() {
   const html = `<!DOCTYPE html>
@@ -223,7 +203,7 @@ function handleHomepage() {
 <div class="hero">
 <div class="hero__inner">
 <h1 class="hero__title">Plutonium VM Worker</h1>
-<p class="hero__desc">Cloudflare Worker that routes remote VM session creation and deletion — keeping the API key server-side and enforcing per-user rate limits.</p>
+<p class="hero__desc">Cloudflare Worker that routes remote VM session creation and deletion; keeping the API key server-side and enforcing per-user rate limits.</p>
 
 <div class="section">
 <div class="section__heading">Endpoints</div>

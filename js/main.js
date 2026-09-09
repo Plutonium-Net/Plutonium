@@ -743,3 +743,33 @@ function closeAboutDialog() {
   setTimeout(() => { dlg.hidden = true; scrim.hidden = true }, 200)
 }
 
+function openAccountDialog() {
+  const scrim = document.getElementById('account-scrim')
+  const dlg = document.getElementById('account-dialog')
+  if (!scrim || !dlg) return
+  if (typeof accountManager !== 'undefined' && typeof accountManager._renderAccountPanel === 'function') accountManager._renderAccountPanel()
+  dlg.hidden = false
+  scrim.hidden = false
+  dlg.offsetHeight
+  dlg.style.opacity = '1'
+  dlg.style.transform = 'translate(-50%,-50%) scale(1)'
+  scrim.style.opacity = '1'
+  document.getElementById('account-dialog-close').addEventListener('click', closeAccountDialog)
+  scrim.addEventListener('click', closeAccountDialog)
+  document.addEventListener('keydown', function _esc(e) {
+    if (e.key === 'Escape') { closeAccountDialog(); document.removeEventListener('keydown', _esc) }
+  })
+  const email = document.getElementById('acct-email-input')
+  if (email && !email.hidden) setTimeout(() => email.focus(), 150)
+}
+
+function closeAccountDialog() {
+  const scrim = document.getElementById('account-scrim')
+  const dlg = document.getElementById('account-dialog')
+  if (!dlg || !scrim) return
+  dlg.style.opacity = '0'
+  dlg.style.transform = 'translate(-50%,-50%) scale(0.96)'
+  scrim.style.opacity = '0'
+  setTimeout(() => { dlg.hidden = true; scrim.hidden = true }, 200)
+}
+

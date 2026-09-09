@@ -69,19 +69,18 @@ class AccountManager {
 
 
   _renderAccountPanel() {
-    const greetingEl = document.getElementById('acct-name-text')
     const signinEl = document.getElementById('acct-signin-text')
     const subEl = document.getElementById('acct-signin-sub')
     const fieldsEl = document.getElementById('acct-signin-fields')
     const signedEl = document.getElementById('acct-signed')
-    if (!greetingEl || !signinEl || !subEl || !fieldsEl || !signedEl) return
+    if (!signinEl || !subEl || !fieldsEl || !signedEl) return
     if (!this.user) {
-      greetingEl.hidden = true
       signinEl.hidden = false
       subEl.hidden = false
       fieldsEl.hidden = false
       signedEl.hidden = true
       this._bindSignInButton()
+      this._bindForgotPassword()
       return
     }
     signinEl.hidden = true
@@ -89,29 +88,15 @@ class AccountManager {
     fieldsEl.hidden = true
     signedEl.hidden = false
     this._bindSignOut()
+    this._bindDeleteAccount()
+    if (this._deleteReset) this._deleteReset()
+    this._renderProfile()
     this._renderRecentPanel()
     this._updatePanelLive()
-    const name = this.user.displayName || (this.user.email || '').split('@')[0] || ''
-    if (this._greetings) {
-      greetingEl.textContent = this._greetingFor(name)
-      greetingEl.hidden = false
-    } else if (!this._greetingsLoading) {
-      this._greetingsLoading = true
-      fetch('data/greetings.json')
-        .then(r => { if (!r.ok) throw new Error('greetings fetch failed'); return r.json() })
-        .then(g => {
-          this._greetings = g
-          if (this.user) { greetingEl.textContent = this._greetingFor(name); greetingEl.hidden = false }
-        })
-        .catch(() => { greetingEl.textContent = name; greetingEl.hidden = false })
-    }
-  }
-
-  _greetingFor(name) {
-    const hour = String(new Date().getHours())
-    const pool = (this._greetings && this._greetings[hour]) || []
-    const line = pool[Math.floor(Math.random() * pool.length)] || ''
-    return line.replace(/\{name\}/g, name)
+    this._renderProviders()
+    this._renderQuota()
+    this._bindPasswordForm()
+    this._bindExport()
   }
 
   _bindSignInButton() {
@@ -131,7 +116,7 @@ class AccountManager {
       'auth/too-many-requests':      'Too many attempts. Try again later.',
       'auth/user-disabled':          'This account has been disabled.',
       'auth/operation-not-allowed':  'Email/password sign-in is not available.',
-      'auth/network-request-failed': 'Network error — check your connection.',
+      'auth/network-request-failed': 'Network error; check your connection.',
       'auth/popup-closed-by-user':   'Sign-in popup was closed.',
       'INVALID_LOGIN_CREDENTIALS':   'Wrong email or password.',
       'EMAIL_NOT_FOUND':             'No account found with that email.',
@@ -393,7 +378,7 @@ class AccountManager {
     if (dot && text) {
       if (s.lastErr) {
         dot.className = 'acct-sync__dot err'
-        text.textContent = 'Sync failed — will retry'
+        text.textContent = 'Sync failed, will retry'
       } else if (s.lastOk) {
         dot.className = 'acct-sync__dot ok'
         const mins = Math.max(0, Math.round((Date.now() - s.lastOk) / 60000))
@@ -517,6 +502,320 @@ class AccountManager {
     if (el) el.addEventListener('click', () => { this.signOut() })
   }
 
+  _bindDeleteAccount() {
+    if (this._deleteBound) return
+    this._deleteBound = true
+    const el = document.getElementById('acct-delete')
+    const label = el ? el.querySelector('.acct-delete__label') : null
+    if (!el || !label) return
+    let armed = false
+    let timer = null
+    const reset = () => {
+      armed = false
+      clearTimeout(timer)
+      el.classList.remove('armed')
+      el.disabled = false
+      label.textContent = 'Delete account'
+    }
+    this._deleteReset = reset
+    el.addEventListener('click', async () => {
+      if (!armed) {
+        armed = true
+        el.classList.add('armed')
+        label.textContent = 'Click again to permanently delete'
+        timer = setTimeout(reset, 4000)
+        return
+      }
+      reset()
+      el.disabled = true
+      label.textContent = 'Deleting…'
+      try {
+        await this.deleteAccount()
+        reset()
+      } catch (e) {
+        label.textContent = 'Delete failed, try again'
+        setTimeout(reset, 2500)
+      }
+    })
+  }
+
+  async changePassword(newPassword) {
+    if (typeof PlutoniumStore !== 'undefined') await PlutoniumStore.changePassword(newPassword)
+  }
+
+  async getProviders() {
+    if (typeof PlutoniumStore !== 'undefined') return PlutoniumStore.getProviders()
+    return []
+  }
+
+  async unlinkProvider(providerId) {
+    if (typeof PlutoniumStore !== 'undefined') await PlutoniumStore.unlinkProvider(providerId)
+  }
+
+  async linkWithOAuth(provider) {
+    if (typeof PlutoniumStore !== 'undefined') await PlutoniumStore.linkWithOAuth(provider)
+  }
+
+  _renderProfile() {
+    const avatar = document.getElementById('acct-avatar')
+    const nameEl = document.getElementById('acct-display-name')
+    const emailEl = document.getElementById('acct-profile-email')
+    if (!nameEl || !emailEl) return
+    const name = this.user.displayName || (this.user.email || '').split('@')[0] || 'User'
+    nameEl.textContent = name
+    emailEl.textContent = this.user.email || ''
+    if (avatar) {
+      const photo = this.user.photoURL
+      if (photo) {
+        avatar.style.backgroundImage = `url('${photo}')`
+        avatar.classList.add('has-photo')
+        avatar.innerHTML = ''
+      } else {
+        avatar.style.backgroundImage = ''
+        avatar.classList.remove('has-photo')
+        const initials = name.split(/\s+/).map(w => w[0] || '').slice(0, 2).join('').toUpperCase()
+        avatar.innerHTML = `<span>${initials || 'U'}</span>`
+      }
+    }
+    this._bindNameEdit()
+  }
+
+  _bindNameEdit() {
+    const btn = document.getElementById('acct-edit-name')
+    const wrap = document.querySelector('.acct-profile-name')
+    if (!btn || !wrap || this._nameEditBound) return
+    this._nameEditBound = true
+    btn.addEventListener('click', () => {
+      const textEl = document.getElementById('acct-display-name')
+      if (!textEl) return
+      const input = document.createElement('input')
+      input.className = 'acct-name-input'
+      input.type = 'text'
+      input.maxLength = 40
+      input.value = textEl.textContent
+      wrap.replaceChild(input, textEl)
+      btn.hidden = true
+      input.focus()
+      input.select()
+      let done = false
+      const commit = async save => {
+        if (done) return
+        done = true
+        if (save) {
+          const val = input.value.trim()
+          if (val && val !== this.user.displayName) {
+            try {
+              if (typeof PlutoniumStore !== 'undefined') {
+                await PlutoniumStore.updateProfile(val)
+                this.user.displayName = val
+              }
+            } catch (_) {}
+          }
+        }
+        wrap.replaceChild(textEl, input)
+        this._renderProfile()
+        btn.hidden = false
+      }
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') commit(true)
+        else if (e.key === 'Escape') commit(false)
+      })
+      input.addEventListener('blur', () => commit(true))
+    })
+  }
+
+  _renderProviders() {
+    const box = document.getElementById('acct-providers')
+    const passSection = document.getElementById('acct-password-section')
+    const passSave = document.getElementById('acct-pass-save')
+    if (!box) return
+    const providers = [
+      { id: 'password',   label: 'Email & password', icon: 'fa-envelope' },
+      { id: 'google.com', label: 'Google',           icon: 'fa-google' },
+      { id: 'github.com', label: 'GitHub',           icon: 'fa-github' },
+    ]
+    const render = list => {
+      box.innerHTML = ''
+      const linked = new Set((list || []).map(p => p.providerId))
+      if (passSection) passSection.hidden = !linked.has('password')
+      if (passSave) passSave.textContent = linked.has('password') ? 'Update password' : 'Set password'
+      const single = (list || []).length <= 1
+      providers.forEach(p => {
+        const row = document.createElement('div')
+        row.className = 'acct-provider-row'
+        const icon = document.createElement('i')
+        icon.className = `fa-brands ${p.icon} acct-provider-row__icon`
+        const name = document.createElement('span')
+        name.className = 'acct-provider-row__name'
+        name.textContent = p.label
+        const action = document.createElement('button')
+        action.type = 'button'
+        action.className = 'acct-provider-row__action'
+        if (linked.has(p.id)) {
+          if (!single) {
+            action.classList.add('can-unlink')
+            action.textContent = 'Unlink'
+            action.addEventListener('click', async () => {
+              action.disabled = true
+              action.textContent = '…'
+              try {
+                await this.unlinkProvider(p.id)
+                render(await this.getProviders())
+              } catch (e) {
+                action.disabled = false
+                action.textContent = 'Failed'
+                setTimeout(() => { action.textContent = 'Unlink' }, 1800)
+              }
+            })
+          } else {
+            action.textContent = 'Linked'
+          }
+        } else {
+          action.textContent = p.id === 'password' ? 'Set' : 'Link'
+          action.addEventListener('click', async () => {
+            if (p.id === 'password') {
+              if (passSection) passSection.hidden = false
+              const input = document.getElementById('acct-new-pass')
+              if (input) input.focus()
+              return
+            }
+            action.disabled = true
+            action.textContent = 'Linking…'
+            try {
+              await this.linkWithOAuth(p.id.replace('.com', ''))
+              render(await this.getProviders())
+            } catch (e) {
+              action.disabled = false
+              action.textContent = 'Failed'
+              setTimeout(() => { action.textContent = 'Link' }, 1800)
+            }
+          })
+        }
+        row.appendChild(icon)
+        row.appendChild(name)
+        row.appendChild(action)
+        box.appendChild(row)
+      })
+    }
+    this.getProviders().then(render).catch(() => render([]))
+  }
+
+  _bindPasswordForm() {
+    const btn = document.getElementById('acct-pass-save')
+    const input = document.getElementById('acct-new-pass')
+    const err = document.getElementById('acct-pass-error')
+    if (!btn || !input || !err || this._passBound) return
+    this._passBound = true
+    const submit = async () => {
+      const val = input.value
+      err.textContent = ''
+      err.classList.remove('ok')
+      if (!val || val.length < 6) { err.textContent = 'Password must be at least 6 characters.'; return }
+      btn.disabled = true
+      btn.textContent = 'Saving…'
+      try {
+        await this.changePassword(val)
+        input.value = ''
+        err.classList.add('ok')
+        err.textContent = 'Password updated.'
+        btn.textContent = 'Saved'
+        this._renderProviders()
+      } catch (e) {
+        err.classList.remove('ok')
+        err.textContent = 'Could not update password.'
+        btn.textContent = 'Try again'
+      }
+      btn.disabled = false
+      setTimeout(() => { btn.textContent = 'Update password' }, 2200)
+    }
+    btn.addEventListener('click', submit)
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit() })
+  }
+
+  _renderQuota() {
+    const el = document.getElementById('acct-quota')
+    if (!el) return
+    el.textContent = 'Loading…'
+    const token = (typeof PlutoniumStore !== 'undefined' && PlutoniumStore.currentUser) ? PlutoniumStore.currentUser.idToken : ''
+    fetch('https://ai.cdn.plutoniumnet.work/ratelimit', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(d => {
+        if (d && typeof d.remaining === 'number' && typeof d.max === 'number') {
+          const pct = Math.max(0, Math.min(100, Math.round((d.remaining / d.max) * 100)))
+          el.innerHTML =
+            `<span class="acct-quota__track"><span class="acct-quota__bar" style="width:${pct}%"></span></span>` +
+            `<span class="acct-quota__text">${d.remaining} of ${d.max} AI requests left in this window</span>`
+        } else {
+          el.textContent = 'AI usage unavailable'
+        }
+      })
+      .catch(() => { el.textContent = 'AI usage unavailable' })
+  }
+
+  _bindExport() {
+    const btn = document.getElementById('acct-export')
+    if (!btn || this._exportBound) return
+    this._exportBound = true
+    btn.addEventListener('click', () => {
+      const grab = key => { try { return JSON.parse(localStorage.getItem(key)) } catch (_) { return null } }
+      const data = {
+        exportedAt: new Date().toISOString(),
+        account: {
+          email:       this.user?.email || '',
+          displayName: this.user?.displayName || '',
+        },
+        bookmarks: grab(this.BM_KEY),
+        pins:      grab(this.PINS_KEY),
+        tabs:      grab(this.TABS_KEY),
+        recent:    grab(this.RECENT_KEY),
+        aiChats:   grab('plu_ai_chats'),
+        games:     grab('plu_games_data'),
+        settings: {
+          theme:       localStorage.getItem('plu_theme') || null,
+          proxyEngine: localStorage.getItem('plu_net_mode') || localStorage.getItem('plu_proxy_engine') || null,
+          wispServer:  localStorage.getItem('plu_relay_server') || localStorage.getItem('plu_wisp_server') || null,
+          onboarded:   localStorage.getItem('plu_onboarded') || null,
+        },
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `plutonium-account-data-${new Date().toISOString().slice(0, 10)}.json`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000)
+    })
+  }
+
+  _bindForgotPassword() {
+    const btn = document.getElementById('acct-forgot')
+    const emailEl = document.getElementById('acct-email-input')
+    const errEl = document.getElementById('acct-error')
+    if (!btn || this._forgotBound) return
+    this._forgotBound = true
+    btn.addEventListener('click', async () => {
+      const email = emailEl ? emailEl.value.trim() : ''
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        if (errEl) { errEl.classList.remove('ok'); errEl.textContent = 'Enter your account email first.' }
+        if (emailEl) emailEl.focus()
+        return
+      }
+      if (errEl) errEl.textContent = ''
+      btn.disabled = true
+      btn.textContent = 'Sending…'
+      try {
+        if (typeof PlutoniumStore !== 'undefined') await PlutoniumStore.resetPassword(email)
+        if (errEl) { errEl.classList.add('ok'); errEl.textContent = 'Reset email sent — check your inbox.' }
+        btn.textContent = 'Sent ✓'
+      } catch (e) {
+        if (errEl) { errEl.classList.remove('ok'); errEl.textContent = 'Could not send reset email.' }
+        btn.textContent = 'Forgot password?'
+      }
+      btn.disabled = false
+    })
+  }
+
   async signOut() {
     await this.pushBookmarks()
     await this.pushPins()
@@ -544,8 +843,11 @@ class AccountManager {
   showAuthPrompt() {
     this.isGuest = false
     if (typeof showNewTabPage === 'function') showNewTabPage()
-    const email = document.getElementById('acct-email-input')
-    if (email) setTimeout(() => email.focus(), 60)
+    if (typeof openAccountDialog === 'function') openAccountDialog()
+    else {
+      const email = document.getElementById('acct-email-input')
+      if (email) setTimeout(() => email.focus(), 60)
+    }
   }
 
   wireAuthForm() {
