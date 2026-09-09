@@ -1074,6 +1074,13 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   position:absolute;top:20px;left:20px;z-index:6;
   width:min(280px,calc(100vw - 40px));
 }
+.acct-panel.acct-pulse{animation:acct-pulse .9s cubic-bezier(.22,1,.36,1)}
+@keyframes acct-pulse{
+  0%{opacity:.35;transform:translateX(-12px)}
+  40%{opacity:1;transform:translateX(4px)}
+  70%{transform:translateX(-2px)}
+  100%{opacity:1;transform:translateX(0)}
+}
 .acct-name{
   font-size:40.5px;font-weight:200;color:#fff;line-height:1;
   letter-spacing:-0.56px;

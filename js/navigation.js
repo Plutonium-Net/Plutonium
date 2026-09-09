@@ -351,6 +351,13 @@ btnUserPage.addEventListener('click', () => {
   const am = (typeof accountManager !== 'undefined') ? accountManager : null
   if (am && am.user) showNewTabPage()
   else if (am) am.showAuthPrompt()
+  else showNewTabPage()
+  const panel = document.getElementById('acct-panel')
+  if (panel) {
+    panel.classList.remove('acct-pulse')
+    void panel.offsetWidth
+    panel.classList.add('acct-pulse')
+  }
 })
 urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') navigate(urlInput.value) })
 urlInput.addEventListener('focus', () => urlInput.select())
