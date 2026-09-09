@@ -844,6 +844,8 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .engine-switch.dragging .engine-slider{transition:none}
 .engine-switch.dragging{transition:none}
+.engine-switch.springing{transition:none}
+.engine-switch.springing .engine-slider{transition:none}
 
 .status-bar{
   position:fixed;left:50%;bottom:12px;transform:translateX(-50%);

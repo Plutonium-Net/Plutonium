@@ -319,6 +319,9 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
   // so the elastic overscroll is measured against a stable reference.
   let naturalRect = null
   let baseWidth = 0
+  let stretchSide = 0
+  let springExt = 0
+  let springAnim = null
 
   // How far the pill can stretch past either horizontal edge before it
   // resists (the asymptote). The curve tracks the pointer almost 1:1 right
@@ -382,6 +385,8 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
       switchEl.style.width = ''
       switchEl.style.transform = ''
     }
+    stretchSide = overLeft > 0 ? -1 : (overRight > 0 ? 1 : 0)
+    springExt = ext
 
     const switchRect = switchEl.getBoundingClientRect()
     const engines = enginesInOrder()
@@ -419,8 +424,60 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
     }
   }
 
+  function cancelSpring() {
+    if (springAnim) cancelAnimationFrame(springAnim)
+    springAnim = null
+    switchEl.classList.remove('springing')
+    switchEl.classList.add('dragging')
+    switchEl.style.width = ''
+    switchEl.style.transform = ''
+    void switchEl.offsetWidth
+    switchEl.classList.remove('dragging')
+  }
+
+  function springBack(ext, side) {
+    if (springAnim) cancelAnimationFrame(springAnim)
+    springAnim = null
+    const stiffness = 0.0004
+    const damping = 0.02
+    let o = ext
+    let v = 0
+    switchEl.classList.add('springing')
+    let last = performance.now()
+    function step(now) {
+      const dt = Math.min(32, now - last)
+      last = now
+      const accel = -stiffness * o - damping * v
+      v += accel * dt
+      o += v * dt
+      if (o < -6) o = -6
+      if (Math.abs(o) < 0.3 && Math.abs(v) < 0.3) {
+        springAnim = null
+        switchEl.classList.remove('springing')
+        switchEl.style.width = ''
+        switchEl.style.transform = ''
+        if (typeof syncEngineButtons === 'function') syncEngineButtons()
+        return
+      }
+      switchEl.style.width = (baseWidth + o) + 'px'
+      switchEl.style.transform = 'translateX(' + (side * o / 2) + 'px)'
+      const switchRect = switchEl.getBoundingClientRect()
+      const btn = switchEl.querySelector('.engine-btn.active')
+      if (btn) {
+        const r = btn.getBoundingClientRect()
+        slider.style.left = (r.left - switchRect.left) + 'px'
+        slider.style.width = r.width + 'px'
+      }
+      springAnim = requestAnimationFrame(step)
+    }
+    springAnim = requestAnimationFrame(step)
+  }
+
   switchEl.addEventListener('pointerdown', function (e) {
     if (pointerId !== null) return
+    cancelSpring()
+    springExt = 0
+    stretchSide = 0
     pointerId = e.pointerId
     startX = e.clientX
     dragging = false
@@ -447,16 +504,16 @@ Array.from(document.querySelectorAll('.engine-btn')).forEach(btn => {
     pointerId = null
     dragging = false
     switchEl.classList.remove('dragging')
-    // Let the bar spring back to its natural size (its CSS transition
-    // runs now that .dragging is gone), then re-home the pill.
-    switchEl.style.width = ''
-    switchEl.style.transform = ''
     try { switchEl.releasePointerCapture(e.pointerId) } catch (_) {}
-    // Re-home the pill over the selected engine on the next frame so the CSS
-    // transition has a chance to run and the pill visibly springs back.
-    requestAnimationFrame(function () {
-      if (typeof syncEngineButtons === 'function') syncEngineButtons()
-    })
+    if (springExt > 0 && Math.abs(stretchSide) === 1) {
+      springBack(springExt, stretchSide)
+    } else {
+      switchEl.style.width = ''
+      switchEl.style.transform = ''
+      requestAnimationFrame(function () {
+        if (typeof syncEngineButtons === 'function') syncEngineButtons()
+      })
+    }
   }
 
   switchEl.addEventListener('pointerup', endDrag)
