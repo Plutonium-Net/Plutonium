@@ -1204,6 +1204,17 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .acct-recent__sub{font-size:11px;font-weight:200;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acct-recent__arrow{font-size:11px;opacity:0;transform:translateX(-4px);transition:opacity .15s,transform .15s}
 .acct-recent__row:hover .acct-recent__arrow{opacity:.7;transform:translateX(0)}
+.acct-recent__row:focus-visible{outline:2px solid var(--ui-accent);outline-offset:1px}
+.acct-recent__remove{
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  width:22px;height:22px;padding:0;border:none;border-radius:50%;
+  background:transparent;color:var(--ui-text-muted);font-size:11px;
+  cursor:pointer;opacity:.35;transition:opacity .15s,background .15s,color .15s;
+}
+.acct-recent__row:hover .acct-recent__remove,
+.acct-recent__row:focus-within .acct-recent__remove{opacity:1}
+.acct-recent__remove:hover{background:rgba(var(--ui-danger-rgb),0.16);color:var(--ui-danger)}
+.acct-recent__remove:focus-visible{opacity:1;outline:2px solid var(--ui-accent);outline-offset:1px}
 .acct-signout{
   display:flex;align-items:center;justify-content:center;gap:6px;
   margin-top:6px;padding:9px;border:1px solid var(--ui-border-sub);

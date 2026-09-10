@@ -12,7 +12,7 @@
   const CACHE_KEY = 'plutonium-bg-v2';
   const GAMES_CACHE_KEY = 'plutonium-games-v1';
   const CLOUD_CACHE_KEY = 'plutonium-cloud-v1';
-  const LOGOS_CACHE_KEY = 'plutonium-logos-v1';
+  const LOGOS_CACHE_KEY = 'plutonium-logos-v2';
   const PGCDN_BASE = 'https://g.cdn.plutoniumnet.work';
   const BG_IMAGES = [
     'img/backgrounds/coast.jpg',
@@ -32,7 +32,7 @@
 
   const LOGO_COLORS = ['plutonium-pink', 'violet', 'blue', 'emerald', 'amber', 'red', 'cyan', 'fuchsia', 'white'];
   const LOGO_VARIANTS = ['brand-logo', 'logo', 'icon'];
-  const LOGO_IMAGES = ['img/logos/stelena.svg'];
+  const LOGO_IMAGES = ['img/logos/stelena.svg?v=2'];
   LOGO_VARIANTS.forEach(function (variant) {
     LOGO_COLORS.forEach(function (color) {
       LOGO_IMAGES.push('img/logos/' + variant + '-' + color + '.png');

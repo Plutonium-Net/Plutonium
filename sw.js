@@ -335,10 +335,30 @@ function handlePersonalGameFetch(event) {
 	return true;
 }
 
+// Asset cache buckets. The version suffix is the cache-buster for that asset
+// group: bump it whenever those files change, and the previous bucket is
+// dropped on activate so clients stop being served the old copies.
+const CACHE_NAMES = {
+	bg:    "plutonium-bg-v2",
+	games: "plutonium-games-v1",
+	cloud: "plutonium-cloud-v1",
+	logos: "plutonium-logos-v2",
+};
+const MANAGED_CACHE_RE = /^plutonium-(bg|games|cloud|logos)-v\d+$/;
+
 self.addEventListener("install", () => self.skipWaiting());
 
 self.addEventListener("activate", (event) => {
-	event.waitUntil(self.clients.claim());
+	event.waitUntil((async () => {
+		const current = Object.values(CACHE_NAMES);
+		const names   = await caches.keys();
+		await Promise.all(
+			names
+				.filter((name) => MANAGED_CACHE_RE.test(name) && !current.includes(name))
+				.map((name) => caches.delete(name))
+		);
+		await self.clients.claim();
+	})());
 });
 
 const CORE_PREFIX = "/core/service/";
@@ -352,7 +372,7 @@ self.addEventListener("fetch", (event) => {
 
 	if (url.includes('/img/backgrounds/')) {
 		event.respondWith(
-			caches.open('plutonium-bg-v2').then(function (cache) {
+			caches.open(CACHE_NAMES.bg).then(function (cache) {
 				return cache.match(event.request).then(function (cached) {
 					return cached || fetch(event.request).then(function (network) {
 						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());
@@ -366,7 +386,7 @@ self.addEventListener("fetch", (event) => {
 
 	if (url.includes('g.cdn.plutoniumnet.work/') && (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.webp') || url.endsWith('.gif') || url.endsWith('.svg'))) {
 		event.respondWith(
-			caches.open('plutonium-games-v1').then(function (cache) {
+			caches.open(CACHE_NAMES.games).then(function (cache) {
 				return cache.match(event.request).then(function (cached) {
 					return cached || fetch(event.request).then(function (network) {
 						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());
@@ -380,7 +400,7 @@ self.addEventListener("fetch", (event) => {
 
 	if (url.includes('/img/cloud/')) {
 		event.respondWith(
-			caches.open('plutonium-cloud-v1').then(function (cache) {
+			caches.open(CACHE_NAMES.cloud).then(function (cache) {
 				return cache.match(event.request).then(function (cached) {
 					return cached || fetch(event.request).then(function (network) {
 						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());
@@ -394,7 +414,7 @@ self.addEventListener("fetch", (event) => {
 
 	if (url.includes('/img/logos/')) {
 		event.respondWith(
-			caches.open('plutonium-logos-v1').then(function (cache) {
+			caches.open(CACHE_NAMES.logos).then(function (cache) {
 				return cache.match(event.request).then(function (cached) {
 					return cached || fetch(event.request).then(function (network) {
 						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());

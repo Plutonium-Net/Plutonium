@@ -417,7 +417,15 @@ class AccountManager {
 
   removeRecent(type, id) {
     if (!type) return
-    const list = this.getRecentList().filter(i => !(i.type === type && id && i.id === id))
+    this._saveRecentList(this.getRecentList().filter(i => !(i.type === type && id && i.id === id)))
+  }
+
+  removeRecentByHref(href) {
+    if (!href) return
+    this._saveRecentList(this.getRecentList().filter(i => i.href !== href))
+  }
+
+  _saveRecentList(list) {
     try { localStorage.setItem(this.RECENT_KEY, JSON.stringify(list)) } catch (_) {}
     this._renderRecentPanel()
     this._renderHomePanel()
@@ -441,33 +449,64 @@ class AccountManager {
   }
 
   _renderRecentPanel() {
-    const panel = document.getElementById('acct-recent')
+    this._renderRecentInto('acct-recent', false)
+  }
+
+  _renderRecentInto(panelId, removable) {
+    const panel = document.getElementById(panelId)
     if (!panel) return
     panel.querySelectorAll('.acct-recent__row').forEach(el => el.remove())
     const list = this.getRecentList()
     if (!list.length) { panel.hidden = true; return }
     panel.hidden = false
+    list.slice(0, 5).forEach(recent => panel.appendChild(this._recentRow(recent, removable)))
+  }
+
+  _recentRow(recent, removable) {
     const icons = { game: 'fa-gamepad', vm: 'fa-display', media: 'fa-clapperboard', ai: 'fa-robot' }
-    list.slice(0, 5).forEach(recent => {
-      const row = document.createElement('button')
+    // Rows that carry their own remove button can't be <button> (no nesting).
+    const row = document.createElement(removable ? 'div' : 'button')
+    row.className = 'acct-recent__row'
+    if (removable) {
+      row.setAttribute('role', 'button')
+      row.tabIndex = 0
+    } else {
       row.type = 'button'
-      row.className = 'acct-recent__row'
-      row.innerHTML =
-        '<i class="fa-solid ' + (icons[recent.type] || 'fa-clock-rotate-left') + '"></i>' +
-        '<span class="acct-recent__meta">' +
-          '<span class="acct-recent__title"></span>' +
-          '<span class="acct-recent__sub"></span>' +
-        '</span>' +
-        '<i class="fa-solid fa-arrow-right acct-recent__arrow"></i>'
-      row.querySelector('.acct-recent__title').textContent = recent.title || ''
-      const sub = row.querySelector('.acct-recent__sub')
-      sub.textContent = recent.sub || ''
-      sub.hidden = !recent.sub
-      row.addEventListener('click', () => {
-        if (recent.href && typeof navigate === 'function') navigate(recent.href)
-      })
-      panel.appendChild(row)
+    }
+    row.innerHTML =
+      '<i class="fa-solid ' + (icons[recent.type] || 'fa-clock-rotate-left') + '"></i>' +
+      '<span class="acct-recent__meta">' +
+        '<span class="acct-recent__title"></span>' +
+        '<span class="acct-recent__sub"></span>' +
+      '</span>' +
+      (removable
+        ? '<button class="acct-recent__remove" type="button"><i class="fa-solid fa-xmark"></i></button>'
+        : '<i class="fa-solid fa-arrow-right acct-recent__arrow"></i>')
+    row.querySelector('.acct-recent__title').textContent = recent.title || ''
+    const sub = row.querySelector('.acct-recent__sub')
+    sub.textContent = recent.sub || ''
+    sub.hidden = !recent.sub
+    const go = () => {
+      if (recent.href && typeof navigate === 'function') navigate(recent.href)
+    }
+    row.addEventListener('click', (e) => {
+      if (e.target.closest && e.target.closest('.acct-recent__remove')) return
+      go()
     })
+    if (!removable) return row
+    row.addEventListener('keydown', (e) => {
+      if (e.target !== row || (e.key !== 'Enter' && e.key !== ' ')) return
+      e.preventDefault()
+      go()
+    })
+    const remove = row.querySelector('.acct-recent__remove')
+    remove.title = 'Remove from this list'
+    remove.setAttribute('aria-label', 'Remove ' + (recent.title || 'this item') + ' from Continue From Where You Left Off')
+    remove.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.removeRecentByHref(recent.href)
+    })
+    return row
   }
 
   _renderHomePanel() {
@@ -499,33 +538,7 @@ class AccountManager {
   }
 
   _renderHomeRecent() {
-    const panel = document.getElementById('home-acct-recent')
-    if (!panel) return
-    panel.querySelectorAll('.acct-recent__row').forEach(el => el.remove())
-    const list = this.getRecentList()
-    if (!list.length) { panel.hidden = true; return }
-    panel.hidden = false
-    const icons = { game: 'fa-gamepad', vm: 'fa-display', media: 'fa-clapperboard', ai: 'fa-robot' }
-    list.slice(0, 5).forEach(recent => {
-      const row = document.createElement('button')
-      row.type = 'button'
-      row.className = 'acct-recent__row'
-      row.innerHTML =
-        '<i class="fa-solid ' + (icons[recent.type] || 'fa-clock-rotate-left') + '"></i>' +
-        '<span class="acct-recent__meta">' +
-          '<span class="acct-recent__title"></span>' +
-          '<span class="acct-recent__sub"></span>' +
-        '</span>' +
-        '<i class="fa-solid fa-arrow-right acct-recent__arrow"></i>'
-      row.querySelector('.acct-recent__title').textContent = recent.title || ''
-      const sub = row.querySelector('.acct-recent__sub')
-      sub.textContent = recent.sub || ''
-      sub.hidden = !recent.sub
-      row.addEventListener('click', () => {
-        if (recent.href && typeof navigate === 'function') navigate(recent.href)
-      })
-      panel.appendChild(row)
-    })
+    this._renderRecentInto('home-acct-recent', true)
   }
 
   _bindHomeSignIn() {
