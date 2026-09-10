@@ -1082,6 +1082,31 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .account-dialog__body{overflow-y:auto;padding:20px;flex:1}
 .account-dialog .acct-panel{position:static;width:100%;max-width:340px;margin:0 auto}
 .account-dialog .acct-signed{margin-top:6px;max-width:340px}
+.home-acct-panel{
+  position:absolute;top:20px;left:20px;z-index:6;
+  width:min(280px,calc(100vw - 40px));
+}
+.home-acct-panel .acct-signed{
+  display:flex;flex-direction:column;gap:10px;margin-top:14px;max-width:280px;
+}
+.home-acct-panel .acct-signed[hidden]{display:none}
+.home-acct-panel .acct-signout{
+  display:flex;align-items:center;gap:6px;margin-top:2px;align-self:flex-start;
+  background:none;border:none;padding:2px 4px;cursor:pointer;font-family:inherit;
+  font-size:11px;font-weight:200;color:rgba(255,255,255,.4);transition:color .15s;
+}
+.home-acct-panel .acct-signout i{font-size:9px}
+.home-acct-panel .acct-signout:hover{color:#fff}
+.home-acct-panel .acct-signout[hidden]{display:none}
+.home-acct-panel .acct-signin-cta{
+  display:flex;align-items:center;gap:8px;margin-top:14px;
+  background:none;border:none;padding:0;cursor:pointer;font-family:inherit;
+  font-size:15px;font-weight:300;color:rgba(255,255,255,.85);transition:color .15s;
+}
+.home-acct-panel .acct-signin-cta i{font-size:12px;transition:transform .15s}
+.home-acct-panel .acct-signin-cta:hover{color:#fff}
+.home-acct-panel .acct-signin-cta:hover i{transform:translateX(4px)}
+.home-acct-panel .acct-signin-cta[hidden]{display:none}
 .acct-signed{display:flex;flex-direction:column;gap:10px;max-width:340px}
 .acct-signed[hidden]{display:none}
 .acct-profile{display:flex;align-items:center;gap:12px}

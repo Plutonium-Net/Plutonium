@@ -232,6 +232,7 @@ function setStreaming(on) {
   const talk = document.getElementById('talkBtn');
   if (talk) talk.disabled = on;
   if (stop) stop.style.display = on ? 'flex' : 'none';
+  if (!on && typeof refreshQuota === 'function') refreshQuota();
 }
 
 function setAuthed(state) {
@@ -248,6 +249,7 @@ function setAuthed(state) {
   } else {
     renderGate();
   }
+  if (typeof refreshQuota === 'function') refreshQuota();
 }
 
 function initSpeech() {
@@ -1347,6 +1349,29 @@ function initTalkMode() {
 
 let _inited = false;
 
+let _quotaTimer = null;
+
+function refreshQuota() {
+  const textEl = document.getElementById('aiQuotaText');
+  const barEl = document.getElementById('aiQuotaBar');
+  if (!textEl) return;
+  const apply = u => {
+    if (!u) { textEl.textContent = 'Unavailable'; return; }
+    textEl.textContent = u.remaining + ' / ' + u.max;
+    if (barEl) barEl.style.width = Math.max(0, Math.min(100, Math.round((u.remaining / u.max) * 100))) + '%';
+  };
+  if (typeof window.fetchAIUsage === 'function') window.fetchAIUsage().then(apply);
+  else textEl.textContent = 'Unavailable';
+}
+window.refreshQuota = refreshQuota;
+
+function initQuota() {
+  if (!document.getElementById('aiQuotaPill')) return;
+  refreshQuota();
+  if (_quotaTimer) clearInterval(_quotaTimer);
+  _quotaTimer = setInterval(refreshQuota, 60000);
+}
+
 function init() {
   if (_inited) return;
   _inited = true;
@@ -1363,6 +1388,7 @@ function init() {
   initModelSelect();
   initVoiceSelect();
   initTalkMode();
+  initQuota();
 
   const clearBtn = document.getElementById('ai-clear-btn');
   if (clearBtn) clearBtn.addEventListener('click', clearConversation);

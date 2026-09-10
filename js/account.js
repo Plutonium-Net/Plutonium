@@ -73,22 +73,17 @@ class AccountManager {
 
 
   _renderAccountPanel() {
-    const signinEl = document.getElementById('acct-signin-text')
-    const subEl = document.getElementById('acct-signin-sub')
     const fieldsEl = document.getElementById('acct-signin-fields')
     const signedEl = document.getElementById('acct-signed')
-    if (!signinEl || !subEl || !fieldsEl || !signedEl) return
+    if (!fieldsEl || !signedEl) return
     if (!this.user) {
-      signinEl.hidden = false
-      subEl.hidden = false
       fieldsEl.hidden = false
       signedEl.hidden = true
       this._bindSignInButton()
       this._bindForgotPassword()
+      this._renderHomePanel()
       return
     }
-    signinEl.hidden = true
-    subEl.hidden = true
     fieldsEl.hidden = true
     signedEl.hidden = false
     this._bindSignOut()
@@ -102,6 +97,7 @@ class AccountManager {
     this._renderQuota()
     this._bindPasswordForm()
     this._bindExport()
+    this._renderHomePanel()
   }
 
   _bindSignInButton() {
@@ -378,21 +374,26 @@ class AccountManager {
   _updatePanelLive() {
     if (!this.user) return
     const s = this.syncStatus
-    const dot = document.getElementById('acct-sync-dot')
-    const text = document.getElementById('acct-sync-text')
-    if (dot && text) {
-      if (s.lastErr) {
-        dot.className = 'acct-sync__dot err'
-        text.textContent = 'Sync failed, will retry'
-      } else if (s.lastOk) {
-        dot.className = 'acct-sync__dot ok'
-        const mins = Math.max(0, Math.round((Date.now() - s.lastOk) / 60000))
-        text.textContent = mins === 0 ? 'Synced just now' : mins < 60 ? `Synced ${mins}m ago` : `Synced ${Math.round(mins / 60)}h ago`
-      } else {
-        dot.className = 'acct-sync__dot syncing'
-        text.textContent = 'Syncing…'
-      }
+    let cls = 'acct-sync__dot syncing'
+    let txt = 'Syncing…'
+    if (s.lastErr) {
+      cls = 'acct-sync__dot err'
+      txt = 'Sync failed, will retry'
+    } else if (s.lastOk) {
+      cls = 'acct-sync__dot ok'
+      const mins = Math.max(0, Math.round((Date.now() - s.lastOk) / 60000))
+      txt = mins === 0 ? 'Synced just now' : mins < 60 ? `Synced ${mins}m ago` : `Synced ${Math.round(mins / 60)}h ago`
     }
+    const pairs = [
+      ['acct-sync-dot', 'acct-sync-text'],
+      ['home-acct-sync-dot', 'home-acct-sync-text'],
+    ]
+    pairs.forEach(pair => {
+      const dot = document.getElementById(pair[0])
+      const text = document.getElementById(pair[1])
+      if (dot) dot.className = cls
+      if (text) text.textContent = txt
+    })
   }
 
   recordRecent(entry) {
@@ -410,6 +411,7 @@ class AccountManager {
     if (list.length > this.RECENT_MAX) list = list.slice(0, this.RECENT_MAX)
     try { localStorage.setItem(this.RECENT_KEY, JSON.stringify(list)) } catch (_) {}
     this._renderRecentPanel()
+    this._renderHomePanel()
     this.pushRecent()
   }
 
@@ -418,6 +420,7 @@ class AccountManager {
     const list = this.getRecentList().filter(i => !(i.type === type && id && i.id === id))
     try { localStorage.setItem(this.RECENT_KEY, JSON.stringify(list)) } catch (_) {}
     this._renderRecentPanel()
+    this._renderHomePanel()
     this.pushRecent()
   }
 
@@ -467,6 +470,80 @@ class AccountManager {
     })
   }
 
+  _renderHomePanel() {
+    const panel = document.getElementById('home-acct-panel')
+    if (!panel) return
+    const signedEl = document.getElementById('home-acct-signed')
+    const signinTextEl = document.getElementById('home-acct-signin-text')
+    const subEl = document.getElementById('home-acct-signin-sub')
+    const ctaEl = document.getElementById('home-acct-signin-cta')
+    if (!signedEl || !signinTextEl || !subEl || !ctaEl) return
+    if (!this.user) {
+      signedEl.hidden = true
+      signinTextEl.hidden = false
+      subEl.hidden = false
+      ctaEl.hidden = false
+      this._bindHomeSignIn()
+      return
+    }
+    const firstName = (this.user.displayName || (this.user.email || '').split('@')[0] || 'there').split(/\s+/)[0] || 'there'
+    signinTextEl.hidden = false
+    signinTextEl.textContent = 'Welcome back, ' + firstName
+    subEl.hidden = false
+    subEl.textContent = 'Manage your account, sync and continue where you left off.'
+    ctaEl.hidden = true
+    signedEl.hidden = false
+    this._renderHomeRecent()
+    this._bindHomeSignOut()
+    this._updatePanelLive()
+  }
+
+  _renderHomeRecent() {
+    const panel = document.getElementById('home-acct-recent')
+    if (!panel) return
+    panel.querySelectorAll('.acct-recent__row').forEach(el => el.remove())
+    const list = this.getRecentList()
+    if (!list.length) { panel.hidden = true; return }
+    panel.hidden = false
+    const icons = { game: 'fa-gamepad', vm: 'fa-display', media: 'fa-clapperboard', ai: 'fa-robot' }
+    list.slice(0, 5).forEach(recent => {
+      const row = document.createElement('button')
+      row.type = 'button'
+      row.className = 'acct-recent__row'
+      row.innerHTML =
+        '<i class="fa-solid ' + (icons[recent.type] || 'fa-clock-rotate-left') + '"></i>' +
+        '<span class="acct-recent__meta">' +
+          '<span class="acct-recent__title"></span>' +
+          '<span class="acct-recent__sub"></span>' +
+        '</span>' +
+        '<i class="fa-solid fa-arrow-right acct-recent__arrow"></i>'
+      row.querySelector('.acct-recent__title').textContent = recent.title || ''
+      const sub = row.querySelector('.acct-recent__sub')
+      sub.textContent = recent.sub || ''
+      sub.hidden = !recent.sub
+      row.addEventListener('click', () => {
+        if (recent.href && typeof navigate === 'function') navigate(recent.href)
+      })
+      panel.appendChild(row)
+    })
+  }
+
+  _bindHomeSignIn() {
+    const btn = document.getElementById('home-acct-signin-cta')
+    if (!btn || this._homeSignInBound) return
+    this._homeSignInBound = true
+    btn.addEventListener('click', () => {
+      if (typeof openAccountDialog === 'function') openAccountDialog()
+    })
+  }
+
+  _bindHomeSignOut() {
+    const btn = document.getElementById('home-acct-signout')
+    if (!btn || this._homeSignOutBound) return
+    this._homeSignOutBound = true
+    btn.addEventListener('click', () => { this.signOut() })
+  }
+
   async pushRecent() {
     if (!this.user) return
     const recent = this.getRecentList()
@@ -495,6 +572,7 @@ class AccountManager {
       if (!list.length) return
       localStorage.setItem(this.RECENT_KEY, JSON.stringify(list))
       this._renderRecentPanel()
+      this._renderHomePanel()
     } catch (e) {
       console.warn('[Account] Recent pull failed:', e)
     }
@@ -832,24 +910,16 @@ class AccountManager {
     input.addEventListener('keydown', e => { if (e.key === 'Enter') submit() })
   }
 
-  _renderQuota() {
+  async _renderQuota() {
     const el = document.getElementById('acct-quota')
     if (!el) return
     el.textContent = 'Loading…'
-    const token = (typeof PlutoniumStore !== 'undefined' && PlutoniumStore.currentUser) ? PlutoniumStore.currentUser.idToken : ''
-    fetch('https://ai.cdn.plutoniumnet.work/ratelimit', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then(d => {
-        if (d && typeof d.remaining === 'number' && typeof d.max === 'number') {
-          const pct = Math.max(0, Math.min(100, Math.round((d.remaining / d.max) * 100)))
-          el.innerHTML =
-            `<span class="acct-quota__track"><span class="acct-quota__bar" style="width:${pct}%"></span></span>` +
-            `<span class="acct-quota__text">${d.remaining} of ${d.max} AI requests left in this window</span>`
-        } else {
-          el.textContent = 'AI usage unavailable'
-        }
-      })
-      .catch(() => { el.textContent = 'AI usage unavailable' })
+    const usage = await fetchAIUsage()
+    if (!usage) { el.textContent = 'AI usage unavailable'; return }
+    const pct = Math.max(0, Math.min(100, Math.round((usage.remaining / usage.max) * 100)))
+    el.innerHTML =
+      `<span class="acct-quota__track"><span class="acct-quota__bar" style="width:${pct}%"></span></span>` +
+      `<span class="acct-quota__text">${usage.remaining} of ${usage.max} AI requests left in this window</span>`
   }
 
   _bindExport() {
@@ -1015,3 +1085,15 @@ class AccountManager {
 
 const accountManager = new AccountManager()
 window.accountManager = accountManager
+
+async function fetchAIUsage() {
+  try {
+    const token = (typeof PlutoniumStore !== 'undefined' && PlutoniumStore.currentUser) ? PlutoniumStore.currentUser.idToken : ''
+    const res = await fetch('https://ai.cdn.plutoniumnet.work/ratelimit', { headers: { Authorization: `Bearer ${token}` } })
+    if (!res.ok) return null
+    const d = await res.json()
+    if (d && typeof d.remaining === 'number' && typeof d.max === 'number') return { remaining: d.remaining, max: d.max }
+    return null
+  } catch (_) { return null }
+}
+window.fetchAIUsage = fetchAIUsage

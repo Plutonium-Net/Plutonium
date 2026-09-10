@@ -56,7 +56,7 @@
       <main id="main-content">
         <header class="ai-header">
           <div class="ai-brand">
-            <div class="ai-brand__logo"><img id="ai-logo" src="img/logos/stelena.svg" alt="Stelena" /></div>
+            <div class="ai-brand__logo"><svg class="stelena-mark" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="2.5" opacity=".22"/><circle cx="50" cy="50" r="33" fill="none" stroke="currentColor" stroke-width="3" opacity=".6"/><path d="M50 12 C53.5 37 63 46.5 88 50 C63 53.5 53.5 63 50 88 C46.5 63 37 53.5 12 50 C37 46.5 46.5 37 50 12 Z" fill="currentColor"/><circle cx="50" cy="50" r="7" fill="#fff"/><circle cx="78.5" cy="33.5" r="4" fill="currentColor" opacity=".85"/></svg></div>
             <div class="ai-brand__copy"><div class="ai-brand__name">Stelena AI</div><div class="ai-brand__sub">Plutonium Network's assistant</div></div>
           </div>
           <div class="ai-header__actions">
@@ -65,11 +65,12 @@
               <button class="voice-pill" id="voicePill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-waveform"></i><span id="selectedVoiceName">Hannah</span><i class="fas fa-chevron-down voice-pill__caret"></i></button>
               <div class="voice-menu" id="voiceMenu" role="listbox"><div class="voice-menu__head">Choose a voice</div><div class="voice-menu__list" id="voice-menu-list"></div></div>
             </div>
+            <button class="ai-quota-pill" id="aiQuotaPill" type="button" title="AI request usage this window"><i class="fas fa-gauge-high"></i><span id="aiQuotaText">…</span><span class="ai-quota-bar"><span id="aiQuotaBar"></span></span></button>
             <button class="ai-clear-btn" id="ai-clear-btn" title="Clear conversation"><i class="fas fa-trash"></i></button>
           </div>
         </header>
         <div class="chat-panel"><div class="chat-panel-inner"><div id="chatContainer"><div class="welcome-screen" id="welcomeScreen">
-          <div class="welcome-icon"><img id="welcome-logo" src="img/logos/stelena.svg" alt="Stelena" /></div>
+          <div class="welcome-icon"><svg class="stelena-mark" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="2.5" opacity=".22"/><circle cx="50" cy="50" r="33" fill="none" stroke="currentColor" stroke-width="3" opacity=".6"/><path d="M50 12 C53.5 37 63 46.5 88 50 C63 53.5 53.5 63 50 88 C46.5 63 37 53.5 12 50 C37 46.5 46.5 37 50 12 Z" fill="currentColor"/><circle cx="50" cy="50" r="7" fill="#fff"/><circle cx="78.5" cy="33.5" r="4" fill="currentColor" opacity=".85"/></svg></div>
           <div class="welcome-title">How can I help you?</div>
           <div class="welcome-sub">Ask Stelena anything: coding, research, writing, or just brainstorm ideas.</div>
           <div class="suggestion-grid">
@@ -130,7 +131,7 @@
 
   const bundles = {
     games: { css: 'css/games.css?v=1', scripts: ['https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js', 'js/games.js?v=1', 'js/personal-games.js'] },
-    ai: { css: 'css/ai.css', scripts: ['js/orb.js', 'js/ai.js'] },
+    ai: { css: 'css/ai.css', scripts: ['js/orb.js', 'js/ai.js?v=1'] },
     cloud: { css: 'css/cloud.css', scripts: ['js/cloud.js'] },
     media: { css: 'css/stream.css', scripts: ['js/stream.js?v=20260825'] },
     vms: { css: 'css/vms.css', scripts: ['js/vms.js'], module: true }

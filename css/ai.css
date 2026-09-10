@@ -24,8 +24,9 @@ html,body{
   border:1px solid rgba(var(--workspace-accent-rgb),.4);
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 0 18px rgba(var(--workspace-accent-rgb),.25);
+  color:var(--workspace-accent);
 }
-.ai-brand__logo img{width:26px;height:26px;object-fit:contain}
+.ai-brand__logo svg{width:26px;height:26px;display:block}
 .ai-brand__name{font-size:18px;font-weight:600;color:#fff;letter-spacing:-.2px}
 .ai-brand__sub{font-size:12px;color:rgba(255,255,255,0.5)}
 .ai-header__actions{display:flex;align-items:center;gap:8px}
@@ -54,6 +55,20 @@ html,body{
 .voice-pill i{color:var(--workspace-accent);font-size:13px}
 .voice-pill .voice-pill__caret{font-size:10px;opacity:.6;transition:transform .2s ease}
 .voice-pill.open .voice-pill__caret{transform:rotate(180deg)}
+.ai-quota-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px 11px;border-radius:999px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);
+  color:rgba(255,255,255,.75);font-size:12px;font-weight:500;cursor:default;font-family:inherit;
+  position:relative;overflow:hidden;flex-shrink:0;
+}
+.ai-quota-pill i{color:var(--workspace-accent);font-size:13px}
+.ai-quota-pill .ai-quota-bar{
+  position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08);
+}
+.ai-quota-pill .ai-quota-bar span{
+  display:block;height:100%;background:var(--workspace-accent);transition:width .4s ease;
+}
 .voice-menu{
   position:absolute;top:calc(100% + 10px);right:0;z-index:520;
   width:min(240px,calc(100vw - 32px));
@@ -206,8 +221,9 @@ html,body{
   border:1px solid rgba(var(--workspace-accent-rgb),.4);
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 0 45px rgba(var(--workspace-accent-rgb),.25);margin-bottom:20px;
+  color:var(--workspace-accent);
 }
-.welcome-icon img{width:100%;height:100%;object-fit:contain}
+.welcome-icon svg{width:100px;height:100px;display:block}
 .welcome-title{font-size:22px;font-weight:600;color:#fff;letter-spacing:-.3px;margin-bottom:8px}
 .welcome-sub{font-size:14px;color:rgba(255,255,255,0.5);max-width:420px;line-height:1.6;margin-bottom:26px}
 .suggestion-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-width:620px}
