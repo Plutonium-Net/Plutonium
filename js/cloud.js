@@ -21,6 +21,16 @@
   let _activeTag   = null;
   let _searchQ     = '';
 
+  function _historyLog(game) {
+    if (typeof historyManager === 'undefined' || !historyManager.record) return;
+    const key = game && (game.game_key || game.id);
+    historyManager.record({
+      type:  'cloud',
+      title: (game && game.name) || 'Cloud game',
+      href:  key ? 'pluto://cloud#' + encodeURIComponent(key) : 'pluto://cloud',
+    });
+  }
+
   function _parentPins() {
     try { return window.Pins || (window.parent && window.parent.Pins); } catch (_) { return null; }
   }
@@ -490,6 +500,7 @@
   async function _launch(game) {
     _ensureOverlay();
     _currentGame = game;
+    _historyLog(game);
     const titleEl = document.getElementById('cg-launch-game-title');
     if (titleEl) titleEl.textContent = game.name;
     const barTitle = document.getElementById('cg-player-title');

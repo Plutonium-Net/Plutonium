@@ -204,7 +204,7 @@
     thumb.className = 'onb-pin-thumb'
 
     if (pin.type === 'vm') {
-      thumb.innerHTML = '<i class="fa-solid fa-desktop"></i>'
+      thumb.innerHTML = VmsMark.svg(30)
     } else if (previewSrc) {
       const img = document.createElement('img')
       img.src = previewSrc

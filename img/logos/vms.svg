@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Plutonium VMs mark: a remote browser session inside an orbit ring
+       (neutral white version, sibling of stelena.svg).
+       The VMs workspace inlines the same geometry with currentColor so it adapts
+       to the theme accent, and drops the chrome bar, the prompt, the stand and
+       the satellite dot below ~24px where they stop resolving. -->
+  <circle cx="50" cy="50" r="40" fill="none" stroke="#FFFFFF" stroke-width="2.5" opacity="0.22"/>
+  <circle cx="50" cy="50" r="33" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.6"/>
+  <rect x="30" y="33" width="40" height="27" rx="5" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+  <path d="M32 41h36" stroke="#FFFFFF" stroke-width="2.5" opacity="0.5"/>
+  <path d="M45.5 46l4.5 4.5-4.5 4.5" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M52.5 55h4" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M50 60v7" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M42 70h16" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="78.5" cy="33.5" r="4" fill="#FFFFFF" opacity="0.85"/>
+</svg>

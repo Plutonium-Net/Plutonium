@@ -161,7 +161,7 @@ async function _openPinPicker(anchorEl) {
   const vmItem = document.createElement('div')
   vmItem.className = 'pin-picker__item' + (pinned.has('vm') ? ' pin-picker__item--pinned' : '')
   vmItem.innerHTML = `
-    <div class="pin-picker__icon"><i class="fa-solid fa-desktop"></i></div>
+    <div class="pin-picker__icon">${VmsMark.svg(20, true)}</div>
     <span class="pin-picker__name">Virtual Machines</span>
     ${pinned.has('vm') ? '<i class="fa-solid fa-check pin-picker__check"></i>' : ''}
   `
@@ -340,7 +340,7 @@ function renderPins() {
     thumb.className = 'icon'
 
     if (pin.type === 'vm') {
-      thumb.innerHTML = '<i class="fa-solid fa-desktop"></i>'
+      thumb.innerHTML = VmsMark.svg(30)
       item.classList.add('vm-tile')
     } else if (pin.type === 'cloud' && pin.image) {
       const img = document.createElement('img')

@@ -186,6 +186,7 @@ function showBrowserMenu(x, y) {
     '-',
     { label: 'Apps', icon: 'fa-solid fa-bars', onClick: () => { if (typeof toggleWaffleMenu === 'function') toggleWaffleMenu() } },
     { label: 'Customize', icon: 'fa-solid fa-paintbrush', onClick: () => { if (typeof toggleCustomizeMenu === 'function') toggleCustomizeMenu() } },
+    { label: 'History', icon: 'fa-solid fa-clock-rotate-left', onClick: () => { if (typeof openHistoryDialog === 'function') openHistoryDialog() } },
     { label: 'About', icon: 'fa-solid fa-circle-info', onClick: () => { if (typeof openAboutDialog === 'function') openAboutDialog() } },
     { label: 'Account', icon: 'fa-solid fa-user', onClick: () => {
       const am = (typeof accountManager !== 'undefined') ? accountManager : null

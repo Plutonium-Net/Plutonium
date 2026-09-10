@@ -406,6 +406,9 @@ class AccountManager {
       href:  String(entry.href),
       ts:    Date.now(),
     }
+    if (typeof historyManager !== 'undefined' && historyManager.record) {
+      historyManager.record({ type: item.type, title: item.title, sub: item.sub, href: item.href })
+    }
     let list = this.getRecentList().filter(i => i.href !== item.href)
     list.unshift(item)
     if (list.length > this.RECENT_MAX) list = list.slice(0, this.RECENT_MAX)
@@ -464,7 +467,6 @@ class AccountManager {
 
   _recentRow(recent, removable) {
     const icons = { game: 'fa-gamepad', vm: 'fa-display', media: 'fa-clapperboard', ai: 'fa-robot' }
-    // Rows that carry their own remove button can't be <button> (no nesting).
     const row = document.createElement(removable ? 'div' : 'button')
     row.className = 'acct-recent__row'
     if (removable) {
@@ -951,6 +953,7 @@ class AccountManager {
         pins:      grab(this.PINS_KEY),
         tabs:      grab(this.TABS_KEY),
         recent:    grab(this.RECENT_KEY),
+        history:   grab('plu_history'),
         aiChats:   grab('plu_ai_chats'),
         games:     grab('plu_games_data'),
         settings: {

@@ -1,7 +1,5 @@
 const GROQ_WORKER = 'https://ai.cdn.plutoniumnet.work';
 
-// Versioned on purpose: logo art is cached cache-first by the service worker and
-// pre-cached by the boot loader, so the query is what retires a stale mark.
 const STELENA_LOGO = 'img/logos/stelena.svg?v=2';
 
 const TTS_MODEL = 'canopylabs/orpheus-v1-english';

@@ -31,10 +31,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="shortcut icon" id="app-favicon" href="img/favicon.png" type="image/x-icon">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-<link rel="stylesheet" href="css/style.css?v=15">
+<link rel="stylesheet" href="css/style.css?v=16">
 <link rel="stylesheet" href="css/glass.css">
 <link rel="stylesheet" href="css/plu-tokens.css">
 <link rel="stylesheet" href="css/workspace.css">
+<link rel="stylesheet" href="css/history.css?v=2">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/version.js?v=8" defer></script>
@@ -108,6 +109,7 @@
       </div>
     </div>
     <div class="toolbar-right">
+      <button class="nav-btn" id="btn-history" title="History" aria-label="History"><i class="fa-solid fa-clock-rotate-left"></i></button>
       <div class="customize-wrap" id="customize-wrap">
         <button class="nav-btn" id="btn-customize" title="Customize" aria-label="Customize" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-paintbrush"></i></button>
       </div>
@@ -304,6 +306,23 @@
 <div class="about-scrim" id="about-scrim" hidden></div>
 <div class="about-dialog glass" id="about-dialog" hidden></div>
 
+<div class="history-scrim" id="history-scrim" hidden></div>
+<div class="history-dialog glass" id="history-dialog" hidden>
+  <div class="history-dialog__head">
+    <span class="history-dialog__title"><i class="fas fa-clock-rotate-left"></i>History</span>
+    <button class="history-dialog__close" id="history-dialog-close" type="button" aria-label="Close history"><i class="fas fa-xmark"></i></button>
+  </div>
+  <div class="history-dialog__tools">
+    <div class="history-search">
+      <i class="fas fa-magnifying-glass"></i>
+      <input type="text" id="history-search-input" placeholder="Search history" autocomplete="off" spellcheck="false">
+      <button class="history-search__clear" id="history-search-clear" type="button" aria-label="Clear search" hidden><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="history-tags" id="history-tags" aria-label="Filter history by type"></div>
+  </div>
+  <div class="history-dialog__body" id="history-list"></div>
+</div>
+
 
 <div class="relay-switcher-menu glass" id="relay-switcher-menu" hidden>
   <div class="relay-switcher-menu-head">
@@ -340,7 +359,8 @@
 
 <script src="js/cloud-store.js?v=2"></script>
 <script src="js/cloud-store-config.js"></script>
-<script src="js/account.js?v=29"></script>
+<script src="js/account.js?v=30"></script>
+<script src="js/history.js?v=2"></script>
 <script src="https://unpkg.com/draggabilly@2.2.0/dist/draggabilly.pkgd.min.js"></script>
 <script src="/bridge/index.js"></script>
 <script src="/core/bundle.js"></script>
@@ -349,10 +369,11 @@
 <script src="js/chrome-tabs.js"></script>
 <script src="js/bookmarks.js"></script>
 <script src="js/bookmarks-bar.js"></script>
-<script src="js/net.js"></script>
+<script src="js/net.js?v=1"></script>
 <script src="js/url.js"></script>
-<script src="js/workspaces.js?v=3"></script>
-<script src="js/navigation.js?v=5"></script>
+<script src="js/vms-mark.js"></script>
+<script src="js/workspaces.js?v=5"></script>
+<script src="js/navigation.js?v=6"></script>
 <script src="js/keyboard.js"></script>
 <script src="js/pins.js"></script>
 <script src="js/theme-state.js"></script>
@@ -363,8 +384,8 @@
 <script src="js/newtab-search.js"></script>
 <script src="js/main.js?v=11"></script>
 <script src="js/tabs.js"></script>
-<script src="js/context-menu.js?v=1"></script>
-<script src="js/loading.js"></script>
+<script src="js/context-menu.js?v=2"></script>
+<script src="js/loading.js?v=2"></script>
 <script src="js/onboarding-redirect.js"></script>
 <script src="js/escape.js"></script>
 <script src="js/news-ticker.js"></script>

@@ -8,6 +8,7 @@ const btnForward = document.getElementById('btn-forward')
 const btnRefresh = document.getElementById('btn-refresh')
 const btnHome = document.getElementById('btn-home')
 const btnAbout = document.getElementById('btn-about')
+const btnHistory = document.getElementById('btn-history')
 const btnUserPage = document.getElementById('btn-user-page')
 
 const tabHistory = new WeakMap()
@@ -207,6 +208,11 @@ function showNewTabPage() {
   renderBookmarksBar()
 }
 
+function recordProxyVisit(kind, title, href, engine) {
+  if (typeof historyManager === 'undefined' || !historyManager.record) return
+  historyManager.record({ type: kind, title: title, href: href, engine: engine })
+}
+
 async function navigate(url) {
   if (!coreReady || !bridgeReady) await initNetStack()
   let full = (url || '').trim()
@@ -221,15 +227,20 @@ async function navigate(url) {
   }
 
   if (typeof getNetEngine === 'function' && getNetEngine() === 'remote') {
+    recordProxyVisit(/^https?:\/\//i.test(full) ? 'web' : 'search', full, full, 'remote')
     await activateRemoteTab(full, getActiveTab())
     return
   }
 
   await endRemoteSession()
 
+  let searchQuery = null
   if (!/^https?:\/\//i.test(full) && !full.startsWith('about:')) {
     if (full.includes('.') && !full.includes(' ')) full = 'https://' + full
-    else full = 'https://www.duckduckgo.com/search?q=' + encodeURIComponent(full)
+    else { searchQuery = full; full = 'https://www.duckduckgo.com/search?q=' + encodeURIComponent(full) }
+  }
+  if (!full.startsWith('about:')) {
+    recordProxyVisit(searchQuery ? 'search' : 'web', searchQuery || full, full, typeof getNetEngine === 'function' ? getNetEngine() : 'core')
   }
   urlInput.value = full
   newTabPage.style.display = 'none'
@@ -347,6 +358,7 @@ btnForward.addEventListener('click', async () => {
 })
 
 btnAbout.addEventListener('click', () => { if (typeof openAboutDialog === 'function') openAboutDialog() })
+btnHistory.addEventListener('click', () => { if (typeof openHistoryDialog === 'function') openHistoryDialog() })
 btnUserPage.addEventListener('click', () => {
   if (typeof openAccountDialog === 'function') openAccountDialog()
   else if (typeof accountManager !== 'undefined') accountManager.showAuthPrompt()

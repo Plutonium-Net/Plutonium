@@ -937,9 +937,9 @@ function openNetInfoPopup() {
 }
 
 function currentEngineLabel() {
-  return selectedNet === 'runtime' ? 'Runtime (SJ)'
-    : selectedNet === 'remote' ? 'Remote (Hyperbeam)'
-    : 'Core (UV)'
+  return selectedNet === 'runtime' ? 'SJ'
+    : selectedNet === 'remote' ? 'Hyperbeam'
+    : 'UV'
 }
 
 function renderConnectionHud() {
