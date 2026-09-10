@@ -13,8 +13,8 @@
 
   if (!clockEl || !storyEl) return;
 
-  var sectionData = [];
-  var sectionIdx  = 0;
+  var articles    = [];
+  var dots        = [];
   var articleIdx  = 0;
   var rotateTimer = null;
 
@@ -47,10 +47,11 @@
       .catch(function () { return []; });
   }
 
-  function showStory (secIdx, artIdx) {
-    var articles = sectionData[secIdx];
-    if (!articles || !articles.length) return;
-    var a = articles[artIdx % articles.length];
+  function showStory (artIdx) {
+    if (!articles.length) return;
+    var next = ((artIdx % articles.length) + articles.length) % articles.length;
+    articleIdx = next;
+    var a = articles[next];
 
     storyEl.classList.add('slide-out');
 
@@ -63,12 +64,21 @@
       void storyEl.offsetWidth;
       storyEl.style.transition = '';
       storyEl.classList.remove('slide-in');
+      setActiveDot(next);
     }, 400);
   }
 
+  function setActiveDot (idx) {
+    dots.forEach(function (d, j) { d.classList.toggle('active', j === idx); });
+  }
+
   function rotate () {
-    articleIdx++;
-    showStory(0, articleIdx);
+    showStory(articleIdx + 1);
+  }
+
+  function startRotation () {
+    clearInterval(rotateTimer);
+    rotateTimer = setInterval(rotate, ROTATE_MS);
   }
 
   function buildDots (count) {
@@ -83,24 +93,19 @@
 
   loadNews().then(function (sections) {
     if (!sections.length || !sections[0].length) return;
-    sectionData = sections;
-
-    var articles = sections[0];
-    var dots = buildDots(articles.length);
+    articles = sections[0];
+    dots = buildDots(articles.length);
 
     titleEl.textContent = articles[0].title;
     descEl.textContent  = articles[0].desc;
 
     dots.forEach(function (dot, i) {
       dot.addEventListener('click', function () {
-        articleIdx = i;
-        showStory(0, articleIdx);
-        clearInterval(rotateTimer);
-        rotateTimer = setInterval(rotate, ROTATE_MS);
-        dots.forEach(function (d, j) { d.classList.toggle('active', j === i); });
+        showStory(i);
+        startRotation();
       });
     });
 
-    rotateTimer = setInterval(rotate, ROTATE_MS);
+    startRotation();
   });
 })();

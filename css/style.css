@@ -1374,7 +1374,14 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   .news-story-desc{font-size:12px}
 }
 
-.help-wrap{position:absolute;bottom:40px;right:20px;z-index:6}
+.help-wrap{position:absolute;bottom:20px;right:20px;z-index:6;display:flex;align-items:center;gap:10px}
+.help-copy{
+  position:absolute;top:50%;right:100%;transform:translateY(-50%);
+  margin-right:12px;white-space:nowrap;
+  font-size:12px;font-weight:500;color:rgba(255,255,255,.5);
+  letter-spacing:.2px;text-shadow:0 1px 3px rgba(0,0,0,.35);
+  pointer-events:none;user-select:none;
+}
 .help-btn{
   width:38px;height:38px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
@@ -1384,7 +1391,10 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   transition:background .15s,color .15s,transform .15s;
 }
 .help-btn:hover{background:rgba(255,255,255,.12);color:#fff;transform:scale(1.06)}
-.help-wrap.is-open .help-btn{background:rgba(255,255,255,.14);color:#fff}
+.help-wrap.is-open #help-btn{background:rgba(255,255,255,.14);color:#fff}
+.help-discord,.help-tiktok{text-decoration:none}
+.help-discord:hover{background:rgba(88,101,242,.18);border-color:rgba(88,101,242,.45);color:#aab2ff}
+.help-tiktok:hover{background:rgba(37,244,238,.14);border-color:rgba(37,244,238,.4);color:#7ef2ec}
 #help-menu{
   position:absolute !important;
   bottom:48px;right:0;width:230px;padding:6px;
