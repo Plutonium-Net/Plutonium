@@ -1,6 +1,6 @@
 const Pins = (() => {
   const LS_KEY   = 'plu_pins'
-  const MAX_PINS = 12
+  const MAX_PINS = 6
 
   const DEFAULTS = []
 
@@ -29,7 +29,7 @@ const Pins = (() => {
       save(DEFAULTS)
       return DEFAULTS
     }
-    const clean = sanitize(stored)
+    const clean = sanitize(stored).slice(0, MAX_PINS)
     if (clean.length !== stored.length) save(clean)
     return clean
   }
@@ -38,7 +38,7 @@ const Pins = (() => {
     if (!pin || !pin.id) return
     const list = getAll().filter(p => p.id !== pin.id)
     list.unshift(pin)
-    if (list.length > MAX_PINS) list.pop()
+    while (list.length > MAX_PINS) list.pop()
     save(list)
     renderPins()
   }

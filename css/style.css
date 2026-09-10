@@ -639,7 +639,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   width:48px;height:48px;border-radius:12px;background:var(--ui-icon-bg);
   display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;
 }
-.shortcut span{color:var(--ui-text-sub);font-size:12px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+.shortcut span{color:var(--ui-text-sub);font-size:12px;line-height:1.3;text-align:center;white-space:normal;overflow-wrap:anywhere;width:100%}
 
 .pin-thumb{width:100%;height:100%;object-fit:cover;display:block}
 
