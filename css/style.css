@@ -628,6 +628,16 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .new-tab-page .search-box i{color:var(--ui-text-sub);font-size:16px}
 .new-tab-page .search-box input{flex:1;background:transparent;border:none;outline:none;color:var(--ui-text);font-size:16px;font-family:inherit}
 .new-tab-page .search-box input::placeholder{color:var(--ui-text-muted)}
+.new-tab-page .search-box input:-webkit-autofill,
+.new-tab-page .search-box input:-webkit-autofill:hover,
+.new-tab-page .search-box input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px transparent inset;
+  -webkit-text-fill-color:var(--ui-text);
+  caret-color:var(--ui-text);
+  animation-name:plu-autofill-in;
+  animation-duration:.001s;
+}
+@keyframes plu-autofill-in{from{opacity:1}to{opacity:1}}
 .shortcuts{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:680px}
 .shortcut{
   display:flex;flex-direction:column;align-items:center;gap:8px;
@@ -1393,8 +1403,14 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .help-btn:hover{background:rgba(255,255,255,.12);color:#fff;transform:scale(1.06)}
 .help-wrap.is-open #help-btn{background:rgba(255,255,255,.14);color:#fff}
 .help-discord,.help-tiktok{text-decoration:none}
-.help-discord:hover{background:rgba(88,101,242,.18);border-color:rgba(88,101,242,.45);color:#aab2ff}
-.help-tiktok:hover{background:rgba(37,244,238,.14);border-color:rgba(37,244,238,.4);color:#7ef2ec}
+.help-discord:hover{background:rgba(88,101,242,.18);border-color:rgba(88,101,242,.45)}
+.help-discord i{color:#5865f2}
+.help-tiktok:hover{background:rgba(37,244,238,.14);border-color:rgba(37,244,238,.4)}
+.help-tiktok i{
+  background:linear-gradient(135deg,#25f4ee 0%,#25f4ee 35%,#fe2c55 65%,#fe2c55 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
 #help-menu{
   position:absolute !important;
   bottom:48px;right:0;width:230px;padding:6px;

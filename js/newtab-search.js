@@ -396,7 +396,28 @@
     else renderGeneral(q);
   }
 
+  var userTyped = false;
+
+  function browserAutofilled() {
+    try { return input.matches(':-webkit-autofill'); } catch (_) { return false; }
+  }
+
+  function dropBrowserAutofill() {
+    if (userTyped || !browserAutofilled()) return;
+    input.value = '';
+    clearTimeout(debounce);
+    hide();
+  }
+
+  input.addEventListener('keydown', () => { userTyped = true; }, true);
+  input.addEventListener('paste', () => { userTyped = true; }, true);
+  input.addEventListener('change', dropBrowserAutofill);
+  input.addEventListener('animationstart', e => {
+    if (e.animationName === 'plu-autofill-in') dropBrowserAutofill();
+  });
+
   input.addEventListener('focus', () => {
+    dropBrowserAutofill();
     if (box.hidden) render();
   });
 
