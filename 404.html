@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>404 — Page not found · Plutonium Network</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex">
+<meta name="description" content="The page you were looking for isn't on the Plutonium Network.">
+<link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="/css/plu-tokens.css">
+<link rel="stylesheet" href="/css/onboarding.css">
+<link rel="stylesheet" href="/css/glass.css">
+</head>
+<body class="onboarding-body">
+<main class="onb-card">
+  <div class="onb-steps">
+    <section class="onb-step active" aria-label="Page not found">
+      <img class="onb-logo" src="/img/logos/icon-plutonium-pink.png" alt="Plutonium Network">
+
+      <h1 class="onb-title">Page not found</h1>
+      <p class="onb-sub">
+        We couldn&rsquo;t find <span id="nf-path">that page</span>.
+        It may have been moved, renamed, or never existed.
+      </p>
+
+      <div class="onb-actions">
+        <button class="onb-btn onb-btn-primary" id="nf-home" type="button">Travel Home</button>
+        <button class="onb-btn onb-btn-ghost" id="nf-back" type="button">Go back</button>
+      </div>
+
+      <p class="onb-hint">Error 404 &middot; &copy; <span id="nf-year"></span> Plutonium Network</p>
+    </section>
+  </div>
+</main>
+
+<script>
+  (function () {
+    'use strict';
+
+    var path = location.pathname + location.search;
+    var slot = document.getElementById('nf-path');
+    if (slot && path && path !== '/') slot.textContent = path.slice(0, 160);
+
+    var year = document.getElementById('nf-year');
+    if (year) year.textContent = String(new Date().getFullYear());
+
+    var home = document.getElementById('nf-home');
+    if (home) home.addEventListener('click', function () { location.href = '/'; });
+
+    var back = document.getElementById('nf-back');
+    if (back) {
+      back.addEventListener('click', function () {
+        if (window.history.length > 1) window.history.back();
+        else location.href = '/';
+      });
+    }
+  })();
+</script>
+</body>
+</html>
