@@ -2,11 +2,23 @@
   'use strict';
 
   const PGCDN_BASE = 'https://g.cdn.plutoniumnet.work';
+  const GAME_ORIGIN = (function () {
+    try { return new URL(PGCDN_BASE).origin; } catch (_) { return '*'; }
+  })();
+
   const LS_KEY = 'plu_games_data';
   const CLOUD_DOC = 'games_data/saved';
   const SHELF_LIMIT = 10;
   const GRID_MIN = 300;
   const GRID_GAP = 18;
+
+  const IDB_KEY = '__plu_idb__';
+  const SAVE_DOC_PREFIX = 'game_saves/';
+
+  const SAVE_WRITE_DELAY = 1200;
+  const FINAL_SAVE_GRACE = 1600;
+  const SAVE_RETRY_DELAY = 15000;
+  const SAVE_MAX_CHARS = 900000;
 
   let games = [];
   let filteredGames = [];
@@ -14,6 +26,7 @@
   let knownSaves = null;
   let pendingSaves = null;
   let syncGameId = null;
+  let closingGameId = null;
   let currentGame = null;
   let pendingGameUrl = null;
   let launchAnimating = false;
@@ -21,6 +34,13 @@
   let historyQuery = '';
   let activePanel = 'pgcdn';
   let luminStarted = false;
+
+  const saveState = new Map();
+  const saveQueue = new Map();
+  const oversizeWarned = new Set();
+  let saveWriteTimer = null;
+  let badgeFlashTimer = null;
+  let closeFrameTimer = null;
 
   const els = {};
 
@@ -104,10 +124,20 @@
   function setBadge(synced) {
     const badge = els['pgcdn-sync-badge'];
     if (!badge) return;
+    clearTimeout(badgeFlashTimer);
     badge.className = 'pgcdn-sync-badge ' + (synced ? 'synced' : 'unsynced');
     badge.innerHTML = synced
       ? '<i class="fa-solid fa-cloud-arrow-up"></i> Synced to account'
       : '<i class="fa-solid fa-cloud"></i> Sign in to sync across devices';
+  }
+
+  function flashBadge(text) {
+    const badge = els['pgcdn-sync-badge'];
+    if (!badge) return;
+    if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
+    clearTimeout(badgeFlashTimer);
+    badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> ' + text;
+    badgeFlashTimer = setTimeout(() => setBadge(true), 1200);
   }
 
   function recordPlay(game) {
@@ -119,17 +149,81 @@
     renderHistory();
   }
 
+  function saveStateFor(gameId) {
+    let st = saveState.get(gameId);
+    if (!st) {
+      st = { sig: '', idb: null, retryAfter: 0 };
+      saveState.set(gameId, st);
+    }
+    return st;
+  }
+
+  function idbBlobOf(saves) {
+    if (!saves || typeof saves !== 'object') return null;
+    const blob = saves[IDB_KEY];
+    return typeof blob === 'string' && blob.length ? blob : null;
+  }
+
+  function scheduleSaveWrite() {
+    if (saveWriteTimer) clearTimeout(saveWriteTimer);
+    saveWriteTimer = setTimeout(flushSaveWrites, SAVE_WRITE_DELAY);
+  }
+
   async function onSaveData(gameId, saves) {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
-    if (!gameId || !saves || !Object.keys(saves).length) return;
-    try {
-      await PlutoniumStore.setDoc('game_saves/' + gameId, { saves: JSON.stringify(saves) });
-      if (knownSaves && !knownSaves.has(gameId)) {
-        knownSaves.add(gameId);
-        await saveCloud();
+    if (!gameId || !saves || typeof saves !== 'object') return;
+    if (!Object.keys(saves).length) return;
+
+    const st = saveStateFor(gameId);
+    if (Date.now() < st.retryAfter) return;
+
+    const fresh = idbBlobOf(saves);
+    if (fresh) st.idb = fresh;
+    else if (st.idb) saves[IDB_KEY] = st.idb;
+
+    const sig = JSON.stringify(saves);
+    if (sig === st.sig) return;
+
+    saveQueue.set(gameId, { saves, sig });
+    scheduleSaveWrite();
+  }
+
+  async function flushSaveWrites() {
+    saveWriteTimer = null;
+    const jobs = Array.from(saveQueue.entries());
+    saveQueue.clear();
+
+    for (const [gameId, job] of jobs) {
+      const st = saveStateFor(gameId);
+      const payload = JSON.stringify(job.saves);
+
+      if (payload.length > SAVE_MAX_CHARS) {
+        st.sig = job.sig;
+        if (!oversizeWarned.has(gameId)) {
+          oversizeWarned.add(gameId);
+          console.warn('[games] save for "' + gameId + '" is ' +
+            Math.round(payload.length / 1024) + ' KB and exceeds the store limit; not persisted.');
+        }
+        continue;
       }
-    } catch (e) {
-      console.warn('[games] save-sync write failed:', e.message);
+
+      try {
+        await PlutoniumStore.setDoc(SAVE_DOC_PREFIX + gameId, {
+          saves: payload,
+          updatedAt: Date.now()
+        });
+        st.sig = job.sig;
+        st.retryAfter = 0;
+        flashBadge('Saved');
+
+        if (knownSaves && !knownSaves.has(gameId)) {
+          knownSaves.add(gameId);
+          await saveCloud();
+        }
+      } catch (e) {
+        st.retryAfter = Date.now() + SAVE_RETRY_DELAY;
+        console.warn('[games] save-sync write failed:', e.message);
+      }
     }
   }
 
@@ -139,9 +233,15 @@
     if (!gameId || (knownSaves && !knownSaves.has(gameId))) return;
     showRestoreOverlay();
     try {
-      const doc = await PlutoniumStore.getDoc('game_saves/' + gameId);
+      const doc = await PlutoniumStore.getDoc(SAVE_DOC_PREFIX + gameId);
       if (doc && doc.saves) {
-        pendingSaves = JSON.parse(doc.saves);
+        const parsed = JSON.parse(doc.saves);
+        pendingSaves = parsed;
+
+        const st = saveStateFor(gameId);
+        st.sig = JSON.stringify(parsed);
+        st.idb = idbBlobOf(parsed) || st.idb;
+
         if (knownSaves) knownSaves.add(gameId);
       }
     } catch (e) {
@@ -159,27 +259,47 @@
     if (els['game-restore-overlay']) els['game-restore-overlay'].classList.remove('active');
   }
 
-  function pushPendingSaves() {
+  function frameTarget() {
     const iframe = els['game-iframe'];
-    if (!pendingSaves || !iframe || !iframe.contentWindow) return;
-    iframe.contentWindow.postMessage({ plu: true, type: 'plu_sync_restore', saves: pendingSaves }, '*');
+    return iframe && iframe.contentWindow ? iframe.contentWindow : null;
+  }
+
+  function postToGame(message) {
+    const target = frameTarget();
+    if (!target) return false;
+    try {
+      target.postMessage(message, GAME_ORIGIN);
+    } catch (_) {
+      return false;
+    }
+    return true;
+  }
+
+  function pushPendingSaves() {
+    if (!pendingSaves) return;
+    const saves = pendingSaves;
     pendingSaves = null;
+    postToGame({ plu: true, type: 'plu_sync_restore', saves });
   }
 
   function requestSaveSnapshot() {
-    const iframe = els['game-iframe'];
-    if (!syncGameId || !iframe || !iframe.contentWindow) return;
-    iframe.contentWindow.postMessage({ plu: true, type: 'plu_sync_request' }, '*');
+    if (!syncGameId && !closingGameId) return;
+    postToGame({ plu: true, type: 'plu_sync_request' });
   }
 
   window.addEventListener('message', e => {
-    if (!e.data || !e.data.plu) return;
+    if (!e.data || e.data.plu !== true) return;
+
+    const iframe = els['game-iframe'];
+    if (!iframe || e.source !== iframe.contentWindow) return;
+
+    const ownerId = syncGameId || closingGameId;
+
     if (e.data.type === 'plu_sync_ready') {
       pushPendingSaves();
       setTimeout(requestSaveSnapshot, 1000);
-    }
-    if (e.data.type === 'plu_sync_data' && syncGameId) {
-      onSaveData(syncGameId, e.data.saves);
+    } else if (e.data.type === 'plu_sync_data' && ownerId) {
+      onSaveData(ownerId, e.data.saves);
     }
   });
 
@@ -414,6 +534,7 @@
   }
 
   async function launchGame(game) {
+    cancelFrameRelease();
     syncGameId = game.id;
     recordPlay(game);
     if (typeof accountManager !== 'undefined' && accountManager.recordRecent) {
@@ -558,12 +679,37 @@
     }
   }
 
+  function releaseGameFrame() {
+    clearTimeout(closeFrameTimer);
+    closeFrameTimer = null;
+    closingGameId = null;
+    if (els['game-iframe']) {
+      els['game-iframe'].src = '';
+      els['game-iframe'].classList.remove('entering');
+    }
+  }
+
+  function cancelFrameRelease() {
+    clearTimeout(closeFrameTimer);
+    closeFrameTimer = null;
+    closingGameId = null;
+  }
+
   function closeViewer() {
     if (window.SoundFX) window.SoundFX.play('close');
-    requestSaveSnapshot();
-    syncGameId = null;
+
+    const closingId = syncGameId;
+    if (closingId) {
+      closingGameId = closingId;
+      syncGameId = null;
+      requestSaveSnapshot();
+      clearTimeout(closeFrameTimer);
+      closeFrameTimer = setTimeout(releaseGameFrame, FINAL_SAVE_GRACE);
+    } else {
+      releaseGameFrame();
+    }
+
     if (els['game-viewer']) els['game-viewer'].classList.remove('active');
-    if (els['game-iframe']) { els['game-iframe'].src = ''; els['game-iframe'].classList.remove('entering'); }
     if (els['viewer-title']) els['viewer-title'].textContent = '';
     if (els['game-launch']) els['game-launch'].classList.remove('done', 'hidden');
     if (els['game-corner-logo']) els['game-corner-logo'].classList.remove('visible');
@@ -672,6 +818,7 @@
       if (icon) icon.className = document.fullscreenElement ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
     });
   }
+
 
   function positionSourceSlider() {
     const tabs = document.querySelector('.source-tabs');
@@ -784,6 +931,7 @@
     window.addEventListener('resize', measureGridWidth);
   }
 
+
   function preloadImages(list, onProgress) {
     return new Promise(resolve => {
       const items = (list || []).filter(g => g && g.image);
@@ -862,6 +1010,7 @@
     }
   }
 
+
   function accentIconName() {
     const map = {
       '#e8175d': 'plutonium-pink',
@@ -893,6 +1042,7 @@
       if (img) img.src = 'img/logos/icon-' + name + '.png';
     });
   }
+
 
   async function init() {
     initEls();
@@ -927,6 +1077,14 @@
       }
     });
   }
+
+  window.addEventListener('pagehide', () => {
+    if (saveWriteTimer) {
+      clearTimeout(saveWriteTimer);
+      saveWriteTimer = null;
+    }
+    if (saveQueue.size) flushSaveWrites();
+  });
 
   window.PGViewer = { open: openViewer, close: closeViewer };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
