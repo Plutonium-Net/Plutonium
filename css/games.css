@@ -267,32 +267,170 @@ body {
 #viewer-bar {
   position: fixed;
   bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  /* `left/right: 0` + `margin:auto` + `fit-content` centres the bar without the
+     `left: 50%` shrink-to-fit trap, which capped its width at half the viewport
+     and truncated the title on mid-size windows. */
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 92vw;
   z-index: 201;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   background: var(--panel-bg);
   border: 1px solid rgba(var(--pink-rgb),0.22);
   backdrop-filter: var(--ui-blur);
   -webkit-backdrop-filter: var(--ui-blur);
   border-radius: 60px;
-  padding: 6px 20px;
+  padding: 6px 12px 6px 18px;
+  min-width: min(92vw, 430px);
   box-shadow: 0 6px 32px rgba(var(--ui-shadow-rgb),0.7), 0 0 16px rgba(var(--pink-rgb),0.1);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
+/* --- Zones: identity | transport | presence --------------------------- */
+.viewer-zone {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+/* The two side tracks are equal (`1fr`), so the transport is always dead
+   centre. Each side then fills its own track: the identity column pins its
+   divider to the track edge, the presence column stretches its save chip. */
+.viewer-zone--identity {
+  gap: 10px;
+  overflow: hidden;
+}
+
+.viewer-zone--transport {
+  gap: 2px;
+}
+
+.viewer-zone--presence {
+  justify-self: stretch;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.viewer-zone--identity::after {
+  content: "";
+  width: 1px;
+  height: 26px;
+  margin-left: auto;
+  background: linear-gradient(to bottom, transparent, var(--surface-4), transparent);
+  flex-shrink: 0;
+}
+
+.viewer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.viewer-meta__sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.viewer-meta__icon {
+  font-size: 0.58rem;
+  opacity: 0.7;
+}
+
+/* --- Save-sync chip --------------------------------------------------- */
+.viewer-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: 20px;
+  border: 1px solid rgba(var(--pink-rgb),0.22);
+  background: rgba(var(--pink-rgb),0.08);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  flex: 1 1 auto;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.viewer-save i { font-size: 0.72rem; }
+
+.viewer-save:hover {
+  color: var(--text);
+  background: rgba(var(--pink-rgb),0.16);
+  border-color: rgba(var(--pink-rgb),0.45);
+}
+
+.viewer-save--saved {
+  color: var(--pink);
+  border-color: rgba(var(--pink-rgb),0.35);
+}
+
+.viewer-save--saving i {
+  animation: viewer-save-spin 0.9s linear infinite;
+}
+
+.viewer-save--retry {
+  color: #f0b429;
+  border-color: rgba(240,180,41,0.42);
+  background: rgba(240,180,41,0.1);
+}
+
+.viewer-save--off {
+  color: var(--muted);
+  background: none;
+  border-color: var(--surface-4);
+}
+
+@keyframes viewer-save-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Primary exit ----------------------------------------------------- */
+.viewer-btn--exit {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(var(--pink-rgb),0.14);
+  color: var(--text);
+}
+
+.viewer-btn--exit:hover {
+  background: var(--pink);
+  color: #fff;
+}
+
+.viewer-btn--exit:hover i { text-shadow: none; }
+
 #viewer-bar.bar-hidden {
   opacity: 0;
   pointer-events: none;
-  transform: translateX(-50%) translateY(16px);
+  transform: translateY(16px);
 }
 
 #viewer-bar.bar-peek {
   opacity: 1 !important;
   pointer-events: all !important;
-  transform: translateX(-50%) translateY(0) !important;
+  transform: translateY(0) !important;
 }
 
 #viewer-bar-ghost {
@@ -489,21 +627,12 @@ body {
     0 0 24px rgba(var(--pink-rgb),0.3);
 }
 
-.viewer-bar__sep {
-  width: 1px;
-  height: 28px;
-  background: var(--surface-4);
-  margin: 0 4px;
-  flex-shrink: 0;
-}
-
 .viewer-bar__logo {
   width: 30px;
   height: 30px;
   border-radius: 8px;
   object-fit: contain;
   flex-shrink: 0;
-  margin-right: 2px;
 }
 
 .viewer-bar__title {
@@ -511,9 +640,9 @@ body {
   font-weight: 600;
   color: var(--text);
   letter-spacing: 0.02em;
-  padding: 0 10px;
   white-space: nowrap;
-  max-width: 240px;
+  max-width: 200px;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1550,11 +1679,46 @@ body.preload-open {
 
   #viewer-bar {
     width: min(94vw, 560px);
+    min-width: 0;
     padding: 6px 10px;
+    gap: 4px;
   }
 
   .viewer-btn {
-    width: 42px;
-    height: 42px;
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
   }
+
+  .viewer-btn--exit {
+    width: 38px;
+    height: 38px;
+  }
+
+  .viewer-bar__logo { width: 26px; height: 26px; }
+
+  .viewer-zone--transport { gap: 0; }
+
+  .viewer-zone--identity { gap: 8px; }
+
+  .viewer-zone--identity::after { display: none; }
+
+  .viewer-meta__sub { display: none; }
+
+  .viewer-bar__title {
+    max-width: 78px;
+    font-size: 0.76rem;
+  }
+
+  .viewer-save {
+    flex: 0 0 auto;
+    height: 30px;
+    padding: 0 10px;
+  }
+
+  .viewer-save span { display: none; }
+}
+
+@media (max-width: 380px) {
+  #vbtn-hide { display: none; }
 }

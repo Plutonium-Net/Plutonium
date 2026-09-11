@@ -2,11 +2,13 @@
   'use strict';
 
   const STORAGE_KEY = 'plu_history';
+  const DELETED_KEY = 'plu_history_deleted';
   const DOC_NAME    = 'history';
   const MAX_ENTRIES = 600;
   const PUSH_MS     = 8000;
   const HOUR_MS     = 3600000;
   const REPEAT_MS   = 60000;
+  const TOMBSTONE_TTL_MS = 30 * 24 * HOUR_MS;
 
   const TYPE_META = {
     search: { label: 'Search',          icon: 'fa-magnifying-glass' },
@@ -36,11 +38,14 @@
   };
 
   let entries       = loadEntries();
+  let deleted       = loadDeleted();
   let activeFilter  = 'all';
   let searchQuery   = '';
   let pushTimer     = null;
   let periodicTimer = null;
   let lastPushHash  = '';
+  let clearArmed    = false;
+  let clearTimer    = null;
   let bound         = false;
 
   function loadEntries() {
@@ -70,6 +75,52 @@
 
   function saveEntries() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch (_) {}
+  }
+
+  /* Tombstones record "this id was deleted at ts" so a cloud pull can't
+     resurrect an entry the user removed here (or on another device). */
+  function loadDeleted() {
+    try {
+      const raw = localStorage.getItem(DELETED_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+      const cutoff = Date.now() - TOMBSTONE_TTL_MS;
+      const out = {};
+      Object.keys(parsed).forEach(function (id) {
+        const ts = Number(parsed[id]) || 0;
+        if (id && ts >= cutoff) out[id] = ts;
+      });
+      return out;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveDeleted() {
+    try { localStorage.setItem(DELETED_KEY, JSON.stringify(deleted)); } catch (_) {}
+  }
+
+  function mergeDeleted(a, b) {
+    const out = {};
+    [a, b].forEach(function (src) {
+      if (!src || typeof src !== 'object') return;
+      Object.keys(src).forEach(function (id) {
+        const ts = Number(src[id]) || 0;
+        if (!id || !ts) return;
+        if (!out[id] || ts > out[id]) out[id] = ts;
+      });
+    });
+    const cutoff = Date.now() - TOMBSTONE_TTL_MS;
+    Object.keys(out).forEach(function (id) {
+      if (out[id] < cutoff) delete out[id];
+    });
+    return out;
+  }
+
+  function isDeleted(entry) {
+    const key = String((entry && entry.id) || '');
+    const ts = key ? deleted[key] : 0;
+    return !!ts && ts >= (Number(entry && entry.ts) || 0);
   }
 
   function makeId() {
@@ -110,9 +161,35 @@
 
   function getEntries() { return entries.slice(); }
 
+  function removeEntry(id) {
+    const key = String(id || '');
+    if (!key) return false;
+    if (!entries.some(function (e) { return e.id === key; })) return false;
+    deleted[key] = Date.now();
+    entries = entries.filter(function (e) { return e.id !== key; });
+    saveEntries();
+    saveDeleted();
+    if (isOpen()) render();
+    push();
+    return true;
+  }
+
+  function clearAll() {
+    if (!entries.length) return false;
+    const ts = Date.now();
+    entries.forEach(function (e) { if (e.id) deleted[e.id] = ts; });
+    entries = [];
+    saveEntries();
+    saveDeleted();
+    if (isOpen()) render();
+    push();
+    return true;
+  }
+
   function mergeEntries(list) {
     const byId = new Map();
     entries.concat(list).forEach(function (e) {
+      if (isDeleted(e)) return;
       const key = String(e.id || e.ts);
       const existing = byId.get(key);
       if (!existing || (Number(e.ts) || 0) > (Number(existing.ts) || 0)) byId.set(key, e);
@@ -126,28 +203,34 @@
     return list.length + ':' + (list[0] ? list[0].id + ':' + list[0].ts : '');
   }
 
+  function stateHash() {
+    return fingerprint(entries) + '|' + Object.keys(deleted).sort().join(',');
+  }
+
   function refreshFromStorage() {
-    const stored = loadEntries();
-    if (fingerprint(stored) === fingerprint(entries)) return false;
+    const stored        = loadEntries();
+    const storedDeleted = loadDeleted();
+    const incoming      = fingerprint(stored) + '|' + Object.keys(storedDeleted).sort().join(',');
+    if (incoming === stateHash()) return false;
+    deleted = mergeDeleted(deleted, storedDeleted);
     entries = mergeEntries(stored);
     saveEntries();
+    saveDeleted();
     return true;
   }
 
   window.addEventListener('storage', function (e) {
-    if (e.key !== STORAGE_KEY) return;
+    if (e.key !== STORAGE_KEY && e.key !== DELETED_KEY) return;
     if (!refreshFromStorage()) return;
     if (isOpen()) render();
   });
 
-  function entryHash() { return fingerprint(entries); }
-
   async function push() {
     if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) return;
-    const hash = entryHash();
+    const hash = stateHash();
     if (hash === lastPushHash) return;
     try {
-      await PlutoniumStore.setDoc(DOC_NAME, { entries: entries, lastSync: new Date() });
+      await PlutoniumStore.setDoc(DOC_NAME, { entries: entries, deleted: deleted, lastSync: new Date() });
       lastPushHash = hash;
     } catch (e) {
       console.warn('[History] push failed:', e);
@@ -161,8 +244,13 @@
       const remote = doc && Array.isArray(doc.entries)
         ? doc.entries.filter(function (e) { return e && e.type && e.ts && e.title; })
         : [];
+      const remoteDeleted = doc && doc.deleted && typeof doc.deleted === 'object' && !Array.isArray(doc.deleted)
+        ? doc.deleted
+        : {};
+      deleted = mergeDeleted(deleted, remoteDeleted);
       entries = mergeEntries(remote);
       saveEntries();
+      saveDeleted();
       lastPushHash = '';
       if (isOpen()) render();
       push();
@@ -255,10 +343,28 @@
     const scrim = document.getElementById('history-scrim');
     const dlg   = document.getElementById('history-dialog');
     if (!dlg || !scrim || dlg.hidden) return;
+    disarmClearButton();
     dlg.style.opacity = '0';
     dlg.style.transform = 'translate(-50%,-50%) scale(0.96)';
     scrim.style.opacity = '0';
     setTimeout(function () { dlg.hidden = true; scrim.hidden = true; }, 200);
+  }
+
+  function disarmClearButton() {
+    clearArmed = false;
+    if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
+    const btn = document.getElementById('history-dialog-clear');
+    if (!btn) return;
+    btn.classList.remove('is-armed');
+    btn.innerHTML = '<i class="fas fa-trash-can"></i>Clear all';
+  }
+
+  function updateClearButton() {
+    const btn = document.getElementById('history-dialog-clear');
+    if (!btn) return;
+    const empty = !entries.length;
+    btn.disabled = empty;
+    if (empty) disarmClearButton();
   }
 
   function bindOnce() {
@@ -269,6 +375,7 @@
     const dlg   = document.getElementById('history-dialog');
     const input = document.getElementById('history-search-input');
     const clear = document.getElementById('history-search-clear');
+    const clearAllBtn = document.getElementById('history-dialog-clear');
 
     document.getElementById('history-dialog-close').addEventListener('click', closeDialog);
     scrim.addEventListener('click', closeDialog);
@@ -287,12 +394,27 @@
     });
     if (clear) clear.addEventListener('click', function () { input.value = ''; applyQuery(); input.focus(); });
 
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', function () {
+        if (!clearArmed) {
+          clearArmed = true;
+          clearAllBtn.classList.add('is-armed');
+          clearAllBtn.innerHTML = '<i class="fas fa-trash-can"></i>Clear all?';
+          clearTimer = setTimeout(disarmClearButton, 3000);
+          return;
+        }
+        disarmClearButton();
+        clearAll();
+      });
+    }
+
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && isOpen()) closeDialog();
     });
   }
 
   function render() {
+    updateClearButton();
     renderTags();
     renderList();
   }
@@ -360,17 +482,19 @@
 
   function makeRow(entry) {
     const meta = TYPE_META[entry.type] || TYPE_META.web;
-    const row = document.createElement('button');
-    row.type = 'button';
+    const row = document.createElement('div');
     row.className = 'history-row';
     row.dataset.type = entry.type;
+    row.setAttribute('role', 'button');
+    row.tabIndex = 0;
     row.innerHTML =
       '<span class="history-row__icon"><i class="fa-solid ' + meta.icon + '"></i></span>' +
       '<span class="history-row__body">' +
         '<span class="history-row__title"></span>' +
         '<span class="history-row__sub"></span>' +
       '</span>' +
-      '<span class="history-row__time"></span>';
+      '<span class="history-row__time"></span>' +
+      '<button class="history-row__delete" type="button"><i class="fas fa-trash-can"></i></button>';
 
     row.querySelector('.history-row__title').textContent = entry.title;
 
@@ -385,20 +509,43 @@
     row.querySelector('.history-row__time').textContent = timeLabel(entry.ts);
     row.title = entry.href || entry.title;
 
-    row.addEventListener('click', function () {
+    function activate() {
       if (!entry.href || typeof navigate !== 'function') return;
       closeDialog();
       navigate(entry.href);
+    }
+    row.addEventListener('click', activate);
+    row.addEventListener('keydown', function (e) {
+      if (e.key === 'Delete') {
+        e.preventDefault();
+        removeEntry(entry.id);
+        return;
+      }
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      activate();
     });
+
+    const del = row.querySelector('.history-row__delete');
+    del.title = 'Delete from history';
+    del.setAttribute('aria-label', 'Delete ' + entry.title + ' from history');
+    del.addEventListener('click', function (e) {
+      e.stopPropagation();
+      removeEntry(entry.id);
+    });
+
     return row;
   }
 
   window.historyManager = {
     record:     record,
     getEntries: getEntries,
+    remove:     removeEntry,
+    clear:      clearAll,
     push:       push,
     pull:       pull,
     STORAGE_KEY: STORAGE_KEY,
+    DELETED_KEY: DELETED_KEY,
     MAX_ENTRIES: MAX_ENTRIES,
   };
 

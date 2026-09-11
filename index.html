@@ -35,7 +35,7 @@
 <link rel="stylesheet" href="css/glass.css">
 <link rel="stylesheet" href="css/plu-tokens.css">
 <link rel="stylesheet" href="css/workspace.css">
-<link rel="stylesheet" href="css/history.css?v=2">
+<link rel="stylesheet" href="css/history.css?v=3">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/version.js?v=8" defer></script>
@@ -313,7 +313,10 @@
 <div class="history-dialog glass" id="history-dialog" hidden>
   <div class="history-dialog__head">
     <span class="history-dialog__title"><i class="fas fa-clock-rotate-left"></i>History</span>
-    <button class="history-dialog__close" id="history-dialog-close" type="button" aria-label="Close history"><i class="fas fa-xmark"></i></button>
+    <div class="history-dialog__head-actions">
+      <button class="history-dialog__clear" id="history-dialog-clear" type="button"><i class="fas fa-trash-can"></i>Clear all</button>
+      <button class="history-dialog__close" id="history-dialog-close" type="button" aria-label="Close history"><i class="fas fa-xmark"></i></button>
+    </div>
   </div>
   <div class="history-dialog__tools">
     <div class="history-search">
@@ -363,7 +366,7 @@
 <script src="js/cloud-store.js?v=2"></script>
 <script src="js/cloud-store-config.js"></script>
 <script src="js/account.js?v=30"></script>
-<script src="js/history.js?v=2"></script>
+<script src="js/history.js?v=3"></script>
 <script src="https://unpkg.com/draggabilly@2.2.0/dist/draggabilly.pkgd.min.js"></script>
 <script src="/bridge/index.js"></script>
 <script src="/core/bundle.js"></script>
@@ -375,7 +378,7 @@
 <script src="js/net.js?v=1"></script>
 <script src="js/url.js"></script>
 <script src="js/vms-mark.js"></script>
-<script src="js/workspaces.js?v=5"></script>
+<script src="js/workspaces.js?v=6"></script>
 <script src="js/navigation.js?v=6"></script>
 <script src="js/keyboard.js"></script>
 <script src="js/pins.js"></script>

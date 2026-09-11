@@ -53,7 +53,7 @@
       'history-list', 'history-count', 'history-search', 'history-clear',
       'pgcdn-ctx-menu', 'pgcdn-toast', 'pgcdn-toast-msg', 'pgcdn-toast-actions',
       'game-viewer', 'game-iframe', 'game-restore-overlay', 'viewer-bar',
-      'viewer-bar-ghost', 'viewer-title',
+      'viewer-bar-ghost', 'viewer-title', 'viewer-timer', 'viewer-save',
       'game-launch', 'game-launch-btn', 'viewer-bar-hint', 'viewer-bar-logo',
       'game-corner-logo', 'game-launch-logo',
       'games-preload-overlay', 'games-preload-label'
@@ -186,6 +186,7 @@
 
     saveQueue.set(gameId, { saves, sig });
     scheduleSaveWrite();
+    renderSaveChip();
   }
 
   async function flushSaveWrites() {
@@ -214,7 +215,9 @@
         });
         st.sig = job.sig;
         st.retryAfter = 0;
+        lastSaveAt = Date.now();
         flashBadge('Saved');
+        renderSaveChip();
 
         if (knownSaves && !knownSaves.has(gameId)) {
           knownSaves.add(gameId);
@@ -223,6 +226,7 @@
       } catch (e) {
         st.retryAfter = Date.now() + SAVE_RETRY_DELAY;
         console.warn('[games] save-sync write failed:', e.message);
+        renderSaveChip();
       }
     }
   }
@@ -533,6 +537,88 @@
     return new Date(ts).toLocaleDateString();
   }
 
+  // --- Viewer dock: session clock --------------------------------------
+  let sessionTimer = null;
+  let sessionStart = 0;
+  let saveChipTimer = null;
+
+  function formatSession(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const mm = h ? String(m).padStart(2, '0') : String(m);
+    return (h ? h + ':' : '') + mm + ':' + String(s).padStart(2, '0');
+  }
+
+  function startSessionTimer() {
+    stopSessionTimer();
+    sessionStart = Date.now();
+    if (els['viewer-timer']) els['viewer-timer'].textContent = '0:00';
+    sessionTimer = setInterval(() => {
+      if (els['viewer-timer']) els['viewer-timer'].textContent = formatSession(Date.now() - sessionStart);
+    }, 1000);
+  }
+
+  function stopSessionTimer() {
+    if (sessionTimer) clearInterval(sessionTimer);
+    sessionTimer = null;
+    sessionStart = 0;
+  }
+
+  // --- Viewer dock: save-sync chip -------------------------------------
+  let lastSaveAt = 0;
+  let manualSavingUntil = 0;
+  let saveChipMode = '';
+
+  function saveChipState() {
+    if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) {
+      return { mode: 'off', icon: 'fa-solid fa-cloud', label: 'Sign in to sync',
+               title: 'Sign in to sync saves across devices' };
+    }
+    if (Date.now() < manualSavingUntil || saveQueue.size) {
+      return { mode: 'saving', icon: 'fa-solid fa-arrows-rotate', label: 'Saving\u2026',
+               title: 'Uploading your save to the cloud' };
+    }
+    const st = syncGameId ? saveStateFor(syncGameId) : null;
+    if (st && st.retryAfter && Date.now() < st.retryAfter) {
+      return { mode: 'retry', icon: 'fa-solid fa-triangle-exclamation', label: 'Retry sync',
+               title: 'Last sync failed. Click to retry now.' };
+    }
+    if (lastSaveAt) {
+      return { mode: 'saved', icon: 'fa-solid fa-cloud-arrow-up', label: 'Saved',
+               title: 'Saved to your account \u00b7 ' + relativeTime(lastSaveAt) };
+    }
+    return { mode: 'idle', icon: 'fa-solid fa-cloud', label: 'Save sync on',
+             title: 'Cloud save sync is active. Click to save now.' };
+  }
+
+  function renderSaveChip(force) {
+    const chip = els['viewer-save'];
+    if (!chip) return;
+    const info = saveChipState();
+    if (!force && info.mode === saveChipMode) return;
+    saveChipMode = info.mode;
+    chip.className = 'viewer-save viewer-save--' + info.mode;
+    chip.innerHTML = '<i class="' + info.icon + '"></i><span>' + info.label + '</span>';
+    chip.title = info.title;
+  }
+
+  function saveNow() {
+    if (typeof PlutoniumStore === 'undefined' || !PlutoniumStore.currentUser) {
+      showToast('Sign in to sync saves across devices', [], 2400);
+      return;
+    }
+    if (!syncGameId) return;
+    saveStateFor(syncGameId).retryAfter = 0;
+    manualSavingUntil = Date.now() + 1400;
+    renderSaveChip(true);
+    requestSaveSnapshot();
+    setTimeout(() => { if (saveQueue.size) flushSaveWrites(); }, 700);
+    clearTimeout(saveChipTimer);
+    saveChipTimer = setTimeout(() => renderSaveChip(true), 1700);
+  }
+
   async function launchGame(game) {
     cancelFrameRelease();
     syncGameId = game.id;
@@ -566,6 +652,10 @@
     if (els['game-corner-logo']) els['game-corner-logo'].classList.remove('visible');
     barManualHide = false;
     clearTimeout(barTimer);
+    lastSaveAt = 0;
+    manualSavingUntil = 0;
+    saveChipMode = '';
+    renderSaveChip(true);
     hideBar();
   }
 
@@ -674,6 +764,8 @@
       if (els['game-corner-logo']) els['game-corner-logo'].classList.add('visible');
       els['game-iframe'].src = pendingGameUrl;
       els['game-iframe'].classList.add('entering');
+      startSessionTimer();
+      renderSaveChip(true);
       showBar();
       scheduleBarHide();
     }
@@ -718,6 +810,8 @@
     launchAnimating = false;
     document.body.classList.remove('viewer-open');
     clearTimeout(barTimer);
+    clearTimeout(saveChipTimer);
+    stopSessionTimer();
     hideBar();
     hideBarHint();
     const stray = document.querySelector('.transition-box');
@@ -767,6 +861,12 @@
 
   function wireViewer() {
     $('vbtn-back').addEventListener('click', closeViewer);
+    const saveChip = els['viewer-save'];
+    if (saveChip) saveChip.addEventListener('click', saveNow);
+    els['viewer-bar'].addEventListener('mouseenter', () => clearTimeout(barTimer));
+    els['viewer-bar'].addEventListener('mouseleave', () => {
+      if (!barManualHide) scheduleBarHide();
+    });
     const gameBackBtn = $('game-back-btn');
     if (gameBackBtn) gameBackBtn.addEventListener('click', closeViewer);
     $('vbtn-reload').addEventListener('click', () => {
@@ -1059,6 +1159,7 @@
       PlutoniumStore.onAuthChange(user => {
         if (user) loadCloud();
         else setBadge(false);
+        renderSaveChip(true);
       });
     }
     window.addEventListener('plu-workspace-route', () => {

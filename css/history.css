@@ -32,6 +32,17 @@
   transition:background .12s,color .12s;
 }
 .history-dialog__close:hover{background:var(--ui-hover);color:var(--ui-text)}
+.history-dialog__head-actions{display:flex;align-items:center;gap:4px}
+.history-dialog__clear{
+  display:inline-flex;align-items:center;gap:6px;border:none;background:transparent;
+  color:var(--ui-text-muted);font-family:inherit;font-size:12px;padding:5px 9px;
+  border-radius:7px;cursor:pointer;white-space:nowrap;
+  transition:background .12s,color .12s;
+}
+.history-dialog__clear i{font-size:11px}
+.history-dialog__clear:hover:not(:disabled){background:var(--ui-hover);color:var(--ui-text)}
+.history-dialog__clear.is-armed{background:rgba(var(--ui-danger-rgb),.12);color:var(--ui-danger)}
+.history-dialog__clear:disabled{opacity:.4;cursor:default}
 
 .history-dialog__tools{
   display:flex;flex-direction:column;gap:10px;
@@ -98,6 +109,18 @@
   font-size:11px;color:var(--ui-text-muted);flex-shrink:0;
   font-variant-numeric:tabular-nums;
 }
+/* Faded rather than display:none so hovering a row never shifts the time. */
+.history-row__delete{
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:8px;border:none;background:transparent;
+  color:var(--ui-text-muted);cursor:pointer;font-size:11px;opacity:0;
+  transition:opacity .12s,background .12s,color .12s;
+}
+.history-row:hover .history-row__delete,
+.history-row:focus-within .history-row__delete{opacity:1}
+.history-row__delete:hover{background:rgba(var(--ui-danger-rgb),.16);color:var(--ui-danger)}
+.history-row__delete:focus-visible{opacity:1;outline:2px solid var(--ui-danger);outline-offset:1px}
+@media (hover:none){.history-row__delete{opacity:1}}
 .history-empty{
   display:flex;flex-direction:column;align-items:center;gap:10px;
   padding:52px 24px;text-align:center;color:var(--ui-text-muted);
