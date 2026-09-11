@@ -105,7 +105,6 @@
   const BAR_SMALL_W  = 14.5;
   const BAR_ACTIVE_H = 10;
   const BAR_SMALL_H  = 4.8;
-  const STEP_MIN_MS  = 5000;
 
   const barRow = document.createElement('div');
   barRow.style.cssText =
@@ -177,33 +176,10 @@
     return 0;
   }
 
-  let stepStartTime = 0;
-  let currentStepIdx = -1;
-  let realPct = 0;
-  let fillTicker = null;
-
-  function startFillTicker() {
-    if (fillTicker) return;
-    fillTicker = setInterval(function () {
-      if (currentStepIdx < 0) return;
-      const elapsed = Date.now() - stepStartTime;
-      const envelope = Math.min(100, (elapsed / STEP_MIN_MS) * 100);
-      barSegments[currentStepIdx].fill.style.width = Math.min(realPct, envelope) + '%';
-    }, 100);
-  }
-
-  function stopFillTicker() {
-    if (fillTicker) { clearInterval(fillTicker); fillTicker = null; }
-  }
-
   function updateProgress(cached, total, bytesDone, bytesTotal, label) {
     const pct = total > 0 ? Math.round((cached / total) * 100) : 0;
     const idx = stepIndexFromLabel(label);
-    if (idx !== currentStepIdx) {
-      currentStepIdx = idx;
-      stepStartTime = Date.now();
-    }
-    realPct = pct;
+    barSegments[idx].fill.style.width = pct + '%';
     setStepActive(idx);
     statusText.textContent =
       (label || 'Caching assets:') + ' ' + cached + '/' + total + ' items  ' +
@@ -213,7 +189,6 @@
   function showProgress() {
     progressShown = true;
     progressWrap.style.opacity = '1';
-    startFillTicker();
   }
 
   function formatMB(bytes) {
@@ -270,7 +245,6 @@
   }
 
   function hideLoader() {
-    stopFillTicker();
     window.__pluBootDone = true;
     window.dispatchEvent(new CustomEvent('plu-boot-done'));
     overlay.style.opacity = '0';
@@ -460,36 +434,20 @@
     } catch (_) {}
   }
 
-  function sleep(ms) {
-    return new Promise(function (resolve) { setTimeout(resolve, ms); });
-  }
-
   function markStepComplete(label) {
     if (!progressShown) return;
     const idx = stepIndexFromLabel(label);
-    currentStepIdx = idx;
-    stepStartTime = Date.now();
-    realPct = 100;
+    barSegments[idx].fill.style.width = '100%';
     setStepActive(idx);
     statusText.textContent = label.replace('Caching ', 'Cached ') + ' up to date';
   }
 
-  async function withMinStepTime(task, ms) {
-    const start = Date.now();
-    try {
-      await task;
-    } finally {
-      const remaining = ms - (Date.now() - start);
-      if (remaining > 0 && progressShown) await sleep(remaining);
-    }
-  }
-
   async function cacheVisibleAssets() {
     try {
-      await withMinStepTime(cacheBackgroundImages(), STEP_MIN_MS);
-      await withMinStepTime(cacheLogoImages(), STEP_MIN_MS);
-      await withMinStepTime(cacheGameImages(), STEP_MIN_MS);
-      await withMinStepTime(cacheCloudImages(), STEP_MIN_MS);
+      await cacheBackgroundImages();
+      await cacheLogoImages();
+      await cacheGameImages();
+      await cacheCloudImages();
     } finally {
       cacheComplete = true;
       checkAndHide();
