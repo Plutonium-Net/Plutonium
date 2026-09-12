@@ -572,7 +572,7 @@ class AccountManager {
       if (!this._avatarPhoto()) this._applyGravatar()
     }
     subEl.hidden = false
-    subEl.textContent = 'Manage your account, sync and continue where you left off.'
+    subEl.textContent = ''
     ctaEl.hidden = true
     signedEl.hidden = false
     this._renderHomeRecent()
