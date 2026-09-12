@@ -1117,12 +1117,8 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .home-acct-panel .acct-signin-cta:hover{color:#fff}
 .home-acct-panel .acct-signin-cta:hover i{transform:translateX(4px)}
 .home-acct-panel .acct-signin-cta[hidden]{display:none}
-.home-acct-panel .acct-signin-title .shuffle-word{display:inline-block;white-space:nowrap}
-.home-acct-panel .acct-signin-title .shuffle-cell{
-  display:inline-block;overflow:hidden;vertical-align:bottom;
-  padding:.18em 0;margin:-.18em 0;
-}
-.home-acct-panel .acct-signin-title .shuffle-char{display:inline-block}
+.home-acct-panel .acct-signin-title .shuffle-stack{display:inline-grid;align-items:baseline;justify-items:start}
+.home-acct-panel .acct-signin-title .shuffle-layer{grid-area:1 / 1}
 .home-acct-panel .acct-welcome{display:flex;align-items:center;gap:12px;min-width:0}
 .home-acct-panel .acct-welcome .acct-signin-title{min-width:0}
 .home-acct-panel.has-account .acct-signin-title{font-size:26px}

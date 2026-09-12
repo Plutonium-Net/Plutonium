@@ -1,9 +1,13 @@
 
 const HOME_SIGNIN_TITLE = 'Welcome to<br>Plutonium Network'
 
-const GREETING_ROLL_MS = 420
-const GREETING_STAGGER_MS = 26
 const GREETING_NAME_TOKEN = '{name}'
+
+// Crossfade timings: the outgoing line fades out while the incoming one fades in, with a
+// real overlap (~170ms) so you see one dissolve into the other rather than a dip to blank.
+const FADE_OUT_MS = 260
+const FADE_DELAY_MS = 90
+const FADE_IN_MS = 260
 
 function prefersReducedMotion() {
   return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
@@ -27,6 +31,7 @@ class AccountManager {
     this._greetingsReq   = null
     this._greeting       = { hour: null, index: 0 }
     this._greetingTimer  = null
+    this._greetingParts  = null
 
     this.user          = null
     this.isGuest       = false
@@ -773,45 +778,59 @@ class AccountManager {
     if (el) this._setHomeGreeting(el, this._greetingTemplate(), this._firstName(), true)
   }
 
-  // Slot-machine style reveal: characters roll up into clipped cells, staggered left to
-  // right (vanilla stand-in for the GSAP Shuffle/SplitText pattern). The name is a
-  // static node between the animated chunks, so it never rolls or shifts.
+  // Crossfade from the previous greeting to the next one. Both phrases sit stacked in the
+  // same grid cell so they overlap exactly, fade on opacity only (compositor-friendly), and
+  // the name is rendered once outside the stacks - so it never ghosts, fades or moves.
   _setHomeGreeting(el, template, name, animate) {
     if (!el) return
     const raw = String(template == null ? '' : template)
     const who = name || 'there'
-    if (!animate || prefersReducedMotion() || typeof el.animate !== 'function') {
-      el.textContent = raw.replace(/\{name\}/g, who)
-      return
-    }
-
     const at = raw.indexOf(GREETING_NAME_TOKEN)
     const before = (at < 0 ? raw : raw.slice(0, at)).replace(/\s+$/, '')
     const after = at < 0 ? '' : raw.slice(at + GREETING_NAME_TOKEN.length).replace(/^\s+/, '')
 
-    el.textContent = ''
-    const chars = []
-    const addChunk = text => {
-      text.split(' ').forEach((word, i) => {
-        if (i) el.appendChild(document.createTextNode(' '))
-        if (!word) return
-        const wordEl = document.createElement('span')
-        wordEl.className = 'shuffle-word'
-        for (const ch of word) {
-          const cell = document.createElement('span')
-          cell.className = 'shuffle-cell'
-          const inner = document.createElement('span')
-          inner.className = 'shuffle-char'
-          inner.textContent = ch
-          cell.appendChild(inner)
-          wordEl.appendChild(cell)
-          chars.push(inner)
-        }
-        el.appendChild(wordEl)
-      })
+    if (!animate || prefersReducedMotion() || typeof el.animate !== 'function') {
+      el.textContent = raw.replace(/\{name\}/g, who)
+      this._greetingParts = { before, after }
+      return
     }
 
-    addChunk(before)
+    const prev = this._greetingParts
+    el.textContent = ''
+    const running = []
+    const stacks = []
+
+    const addChunk = (oldText, newText) => {
+      if (!prev || !oldText || oldText === newText) {
+        el.appendChild(document.createTextNode(newText))
+        return
+      }
+      const wrap = document.createElement('span')
+      wrap.className = 'shuffle-stack'
+      const out = document.createElement('span')
+      out.className = 'shuffle-layer'
+      out.textContent = oldText
+      out.setAttribute('aria-hidden', 'true')
+      const inn = document.createElement('span')
+      inn.className = 'shuffle-layer'
+      inn.textContent = newText
+      wrap.appendChild(out)
+      wrap.appendChild(inn)
+      el.appendChild(wrap)
+      stacks.push({ wrap, text: newText })
+      running.push(
+        out.animate(
+          [{ opacity: 1 }, { opacity: 0 }],
+          { duration: FADE_OUT_MS, easing: 'ease-out', fill: 'forwards' }
+        ),
+        inn.animate(
+          [{ opacity: 0 }, { opacity: 1 }],
+          { duration: FADE_IN_MS, delay: FADE_DELAY_MS, easing: 'ease-out', fill: 'both' }
+        )
+      )
+    }
+
+    addChunk(prev ? prev.before : '', before)
     if (at >= 0) {
       el.appendChild(document.createTextNode(' '))
       const nameEl = document.createElement('span')
@@ -819,17 +838,18 @@ class AccountManager {
       nameEl.textContent = who
       el.appendChild(nameEl)
     }
-    addChunk(after)
+    addChunk(prev ? prev.after : '', after)
 
-    chars.forEach((inner, i) => inner.animate(
-      [{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }],
-      {
-        duration: GREETING_ROLL_MS,
-        delay: i * GREETING_STAGGER_MS,
-        easing: 'cubic-bezier(.16, 1, .3, 1)',
-        fill: 'backwards',
-      }
-    ))
+    this._greetingParts = { before, after }
+    if (!running.length) return
+
+    // Collapse the stacks back to plain text once the fade has played, so the line keeps
+    // its natural width (and the next crossfade has a clean plain-text starting point).
+    Promise.all(running.map(a => a.finished.catch(() => null))).then(() => {
+      stacks.forEach(({ wrap, text }) => {
+        if (wrap.isConnected) wrap.replaceWith(document.createTextNode(text))
+      })
+    })
   }
 
   _avatarPhoto() {
@@ -1171,6 +1191,7 @@ class AccountManager {
     this._gravatarTried = false
     this._stopGreetingRoll()
     this._greeting = { hour: null, index: 0 }
+    this._greetingParts = null
   }
 
   async deleteAccount() {
