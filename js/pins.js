@@ -394,7 +394,7 @@ function renderPins() {
     item.addEventListener('click', () => {
       if (pin.type === 'vm') navigate('pluto://vms?autostart=1')
       else if (pin.type === 'cloud') navigate(`pluto://cloud#${encodeURIComponent(pin.id)}`)
-      else navigate(`pluto://games#${encodeURIComponent(pin.id)}`)
+      else navigate(`pluto://games?autostart=1#${encodeURIComponent(pin.id)}`)
     })
     container.appendChild(item)
   })

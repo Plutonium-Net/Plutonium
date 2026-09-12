@@ -33,6 +33,46 @@ cloud-synced saves) added in.
 All worker calls that need it carry `Authorization: Bearer <Firebase idToken>`
 from `PlutoniumStore` — the AI and VM pages gate on sign-in.
 
+### Games CDN metadata (overview modal)
+
+Clicking a game card in `pluto://games` opens an overview modal (banner, title,
+description, controls, Play / Pin, cloud-sync status) instead of launching
+straight away. Its copy is read from the games CDN, per game id, from either
+source (the sidecar wins when both define a field):
+
+- inline on the game's `config.json` entry, in a `details` object holding
+  `description`, `controls`, `banner`, `cloudSync`, `tags`; or
+- a sidecar map at `https://g.cdn.plutoniumnet.work/details.json`:
+
+```json
+{
+  "basket-random": {
+    "description": "Two-player basketball…",
+    "controls": [
+      { "keys": "W A S D", "action": "Move" },
+      { "keys": "Space", "action": "Jump / shoot" }
+    ],
+    "banner": "banners/basket-random.png",
+    "cloudSync": true,
+    "tags": ["2 Player", "Sports"]
+  }
+}
+```
+
+`controls` also accepts a plain string or `"Key: Action"` lines. `cloudSync`
+(`true` / `false` / absent) drives the sync chip. Everything is optional, and a
+missing sidecar is ignored — the modal then shows the title, artwork and a
+"no description yet" note.
+
+`banner` is relative to the CDN root (or an absolute URL). When a game has no
+banner, `js/games.js` **generates one**: the key art is composed into a
+1200×400 strip — blurred ambient backdrop, the sharp artwork lifted on the
+right and the Plutonium wordmark on the left, tinted by the current accent — so
+every game gets proper hero art with nothing to publish. Generated banners are
+cached in memory per game + accent, and a broken CDN `banner` path falls back to
+the generated art (the CDN answers missing files with its own HTML page, so a
+typo would otherwise render as an empty hero).
+
 ## Shared shell
 
 `index.html` is the browser: chrome tabs (`js/chrome-tabs.js`), toolbar with

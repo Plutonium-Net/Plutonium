@@ -42,6 +42,25 @@
         <div class="pg-modal glass" id="pg-modal-file"><div class="pg-modal__header"><span class="pg-modal__title"><i class="fa-solid fa-file-code"></i> Add HTML Game</span><button class="pg-modal__close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div><div class="pg-modal__body"><div class="pg-drop-zone" id="pg-file-drop"><i class="fa-solid fa-file-arrow-up pg-drop-zone__icon"></i><span class="pg-drop-zone__label" id="pg-file-drop-label">Click or drag an HTML file here</span><input type="file" id="pg-file-input" accept=".html,.htm" style="display:none" /></div><div class="pg-field-group"><label class="pg-field-label">Game name</label><input class="pg-field-input" id="pg-file-name" type="text" placeholder="Leave blank to use filename" /></div><div class="pg-field-group"><label class="pg-field-label">Import from GitHub</label><input class="pg-field-input" id="pg-github-url" type="url" placeholder="https://github.com/owner/repo" /><div style="margin-top:8px"><button class="pg-btn pg-btn--secondary" id="pg-github-import" type="button"><i class="fa-solid fa-magnifying-glass"></i> Scan GitHub</button></div><div id="pg-github-picker" class="pg-github-picker" style="display:none"></div></div></div><div class="pg-modal__footer"><button class="pg-btn pg-btn--ghost" id="pg-file-cancel">Cancel</button><button class="pg-btn pg-btn--primary" id="pg-file-save">Add Game</button></div></div>
         <div class="pg-modal glass" id="pg-modal-edit"><div class="pg-modal__header"><span class="pg-modal__title"><i class="fa-solid fa-pencil"></i> Edit Game</span><button class="pg-modal__close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div><div class="pg-modal__body"><div class="pg-field-group"><label class="pg-field-label">Game name</label><input class="pg-field-input" id="pg-edit-name" type="text" placeholder="Game name" /></div></div><div class="pg-modal__footer"><button class="pg-btn pg-btn--ghost" id="pg-edit-cancel">Cancel</button><button class="pg-btn pg-btn--primary" id="pg-edit-save">Save</button></div></div>
       </div>
+      <div id="pg-details-overlay" role="presentation">
+        <div class="pg-details glass" id="pg-details" role="dialog" aria-modal="true" aria-labelledby="pg-details-title">
+          <button class="pg-details__close" id="pg-details-close" type="button" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+          <div class="pg-details__banner"><img id="pg-details-banner" alt="" draggable="false"></div>
+          <div class="pg-details__body">
+            <div class="pg-details__chips" id="pg-details-chips"></div>
+            <h2 class="pg-details__title" id="pg-details-title"></h2>
+            <p class="pg-details__desc" id="pg-details-desc"></p>
+            <div class="pg-details__section" id="pg-details-controls-wrap" hidden>
+              <div class="pg-details__label"><i class="fa-solid fa-gamepad"></i>Controls</div>
+              <div class="pg-details__controls" id="pg-details-controls"></div>
+            </div>
+            <div class="pg-details__actions">
+              <button class="pg-details__play" id="pg-details-play" type="button"><i class="fa-solid fa-play"></i>Play</button>
+              <button class="pg-details__pin" id="pg-details-pin" type="button"><i class="fa-solid fa-thumbtack"></i><span>Pin to Home</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="pgcdn-ctx-menu" class="hidden glass"></div>
       <div id="pgcdn-toast"><span class="toast-msg" id="pgcdn-toast-msg"></span><div class="toast-actions" id="pgcdn-toast-actions"></div></div>
       <div id="game-viewer" class="glass"><iframe id="game-iframe" allowfullscreen allow="autoplay; fullscreen"></iframe><img class="game-corner-logo" id="game-corner-logo" src="img/logos/icon-plutonium-pink.png" alt="" draggable="false"><div id="game-launch"><img class="game-launch__logo" id="game-launch-logo" src="img/logos/icon-plutonium-pink.png" alt="Plutonium" draggable="false"><button id="game-launch-btn" aria-label="Launch game">Launch</button><button id="game-back-btn" aria-label="Back to games"><i class="fa-solid fa-arrow-left"></i>Back to games</button></div><div id="game-restore-overlay"><div class="game-restore-spinner"></div><span class="game-restore-label">Restoring saves...</span></div></div>
@@ -173,7 +192,7 @@
   };
 
   const bundles = {
-    games: { css: 'css/games.css?v=2', scripts: ['https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js', 'js/games.js?v=3', 'js/personal-games.js'] },
+    games: { css: 'css/games.css?v=4', scripts: ['https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js', 'js/games.js?v=10', 'js/personal-games.js'] },
     ai: { css: 'css/ai.css?v=8', scripts: ['js/orb.js', 'js/ai.js?v=7'] },
     cloud: { css: 'css/cloud.css', scripts: ['js/cloud.js?v=1'] },
     media: { css: 'css/stream.css', scripts: ['js/stream.js?v=20260825'] },

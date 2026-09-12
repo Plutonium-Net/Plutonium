@@ -237,7 +237,9 @@ document.addEventListener('contextmenu', e => {
   const pinType = shortcut.dataset.pinType
   if (!pinId || !pinName) return
   e.preventDefault()
-  const url = pinType === 'vm' ? 'pluto://vms?autostart=1' : `pluto://games#${encodeURIComponent(pinId)}`
+  const url = pinType === 'vm' ? 'pluto://vms?autostart=1'
+    : pinType === 'cloud' ? `pluto://cloud#${encodeURIComponent(pinId)}`
+    : `pluto://games?autostart=1#${encodeURIComponent(pinId)}`
   ContextMenu.show([
     { label: `Open ${pinName}`, icon: 'fa-solid fa-play', onClick: () => navigate(url) },
     { label: 'Open in New Tab', icon: 'fa-solid fa-plus', onClick: () => { openNewTab(); navigate(url) } },

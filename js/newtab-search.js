@@ -222,7 +222,7 @@
       }
       if (gameMatches.length) {
         addHeader('Games');
-        gameMatches.forEach(g => addRow(g.name, 'fa-gamepad', () => go('pluto://games#' + encodeURIComponent(g.id)), 'Play now'));
+        gameMatches.forEach(g => addRow(g.name, 'fa-gamepad', () => go('pluto://games?autostart=1#' + encodeURIComponent(g.id)), 'Play now'));
       }
       if (bmMatches.length) {
         addHeader('Bookmarks');
@@ -263,7 +263,7 @@
         if (!matches.length) {
           addHint('No games match "' + rest + '": press Enter to open Games');
         } else {
-          matches.forEach(g => addRow(g.name, 'fa-gamepad', () => go('pluto://games#' + encodeURIComponent(g.id)), 'Play now'));
+          matches.forEach(g => addRow(g.name, 'fa-gamepad', () => go('pluto://games?autostart=1#' + encodeURIComponent(g.id)), 'Play now'));
         }
         show();
         if (rows.length) setActive(0);

@@ -56,7 +56,10 @@
       'viewer-bar-ghost', 'viewer-title', 'viewer-timer', 'viewer-save',
       'game-launch', 'game-launch-btn', 'viewer-bar-hint', 'viewer-bar-logo',
       'game-corner-logo', 'game-launch-logo',
-      'games-preload-overlay', 'games-preload-label'
+      'games-preload-overlay', 'games-preload-label',
+      'pg-details-overlay', 'pg-details', 'pg-details-close', 'pg-details-banner',
+      'pg-details-chips', 'pg-details-title', 'pg-details-desc',
+      'pg-details-controls-wrap', 'pg-details-controls', 'pg-details-play', 'pg-details-pin'
     ].forEach(id => { els[id] = $(id); });
   }
 
@@ -373,18 +376,380 @@
     if (els['pgcdn-ctx-menu']) els['pgcdn-ctx-menu'].classList.add('hidden');
   }
 
+  function shellPins() {
+    return window.Pins || (window.parent && window.parent.Pins) || null;
+  }
+
   function pinGame(game) {
-    const P = window.Pins || (window.parent && window.parent.Pins);
+    const P = shellPins();
     if (!P) return;
     if (P.find(game.id)) P.remove(game.id);
     else P.add({ id: game.id, name: game.name, image: game.image || undefined });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Game overview modal
+   *
+   * Per-game copy comes from the games CDN: either inline on the game's
+   * config.json entry (`description`, `controls`, `banner`, `cloudSync`) or,
+   * when present, from a sidecar `/details.json` map keyed by game id.
+   * ------------------------------------------------------------------ */
+
+  const PGCDN_DETAILS_URL = PGCDN_BASE + '/details.json';
+  const detailsCache = new Map();
+  let detailsIndexPromise = null;
+  let detailsGame = null;
+  let detailsRequest = 0;
+
+  function loadDetailsIndex() {
+    if (!detailsIndexPromise) {
+      detailsIndexPromise = fetch(PGCDN_DETAILS_URL, { cache: 'default' })
+        .then(res => (res.ok ? res.json() : null))
+        .then(json => (json && typeof json === 'object' && !Array.isArray(json) ? json : {}))
+        .catch(() => ({}));
+    }
+    return detailsIndexPromise;
+  }
+
+  function absoluteCdnUrl(value) {
+    const path = String(value || '').trim();
+    if (!path) return '';
+    if (/^https?:\/\//i.test(path)) return path;
+    return PGCDN_BASE + '/' + path.replace(/^\.?\.?\//, '');
+  }
+
+  function normalizeControls(value) {
+    if (!value) return [];
+    const list = Array.isArray(value) ? value : String(value).split(/\r?\n|;/);
+    return list.map(entry => {
+      if (entry && typeof entry === 'object') {
+        const keys = String(entry.keys || entry.key || entry.input || '').trim();
+        const action = String(entry.action || entry.label || entry.does || '').trim();
+        return keys || action ? { keys, action } : null;
+      }
+      const text = String(entry || '').trim();
+      if (!text) return null;
+      const split = text.match(/^([^:]{1,26})\s*:\s*(.+)$/);
+      return split ? { keys: split[1].trim(), action: split[2].trim() } : { keys: '', action: text };
+    }).filter(Boolean);
+  }
+
+  async function loadGameDetails(game) {
+    const cached = detailsCache.get(game.id);
+    if (cached) return cached;
+    const index = await loadDetailsIndex();
+    const extra = (index && index[game.id]) || {};
+    const meta = Object.assign({}, game.details || {}, extra);
+    const details = {
+      description: typeof meta.description === 'string' ? meta.description.trim() : '',
+      controls: normalizeControls(meta.controls),
+      banner: absoluteCdnUrl(meta.banner || meta.bannerImage || meta.hero),
+      cloudSync: meta.cloudSync === true ? true : (meta.cloudSync === false ? false : null),
+      tags: Array.isArray(meta.tags) ? meta.tags.slice(0, 4).map(t => String(t).trim()).filter(Boolean) : []
+    };
+    detailsCache.set(game.id, details);
+    return details;
+  }
+
+  /* ---- generated banner art ---------------------------------------- *
+   * The CDN only ships square thumbnails, so a wide hero banner is
+   * composed here: the key art as a blurred ambient backdrop, the sharp
+   * artwork contained on the right and the title set on the left, tinted
+   * with the current accent. A `banner` field on the CDN still wins.
+   * ------------------------------------------------------------------ */
+
+  const BANNER_W = 1200;
+  const BANNER_H = 400;
+  const BANNER_FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
+  const bannerCache = new Map();
+
+  function accentColor() {
+    let raw = '';
+    try { raw = getComputedStyle(document.documentElement).getPropertyValue('--ui-accent').trim(); } catch (_) {}
+    return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw) ? raw : '#e8175d';
+  }
+
+  function hexToRgba(hex, alpha) {
+    let value = hex.replace('#', '');
+    if (value.length === 3) value = value.split('').map(c => c + c).join('');
+    const int = parseInt(value, 16);
+    return 'rgba(' + ((int >> 16) & 255) + ',' + ((int >> 8) & 255) + ',' + (int & 255) + ',' + alpha + ')';
+  }
+
+  function loadArtwork(url) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.decoding = 'async';
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  }
+
+  function coverRect(sourceW, sourceH, destW, destH) {
+    const scale = Math.max(destW / sourceW, destH / sourceH);
+    const w = sourceW * scale;
+    const h = sourceH * scale;
+    return { x: (destW - w) / 2, y: (destH - h) / 2, w, h };
+  }
+
+  function roundRectPath(ctx, x, y, w, h, r) {
+    const radius = Math.max(0, Math.min(r, w / 2, h / 2));
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radius);
+    ctx.arcTo(x + w, y + h, x, y + h, radius);
+    ctx.arcTo(x, y + h, x, y, radius);
+    ctx.arcTo(x, y, x + w, y, radius);
+    ctx.closePath();
+  }
+
+  async function generateBanner(game) {
+    const accent = accentColor();
+    const cacheKey = game.id + '|' + accent;
+    if (bannerCache.has(cacheKey)) return bannerCache.get(cacheKey);
+
+    const img = await loadArtwork(gameImage(game));
+    if (!img || !img.naturalWidth || !img.naturalHeight) {
+      bannerCache.set(cacheKey, '');
+      return '';
+    }
+
+    let dataUrl = '';
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = BANNER_W;
+      canvas.height = BANNER_H;
+      const ctx = canvas.getContext('2d');
+
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        // ambient backdrop: downscale the art, stretch it back up (cheap blur)
+        const small = document.createElement('canvas');
+        small.width = 48;
+        small.height = 16;
+        const smallCtx = small.getContext('2d');
+        const cover = coverRect(img.naturalWidth, img.naturalHeight, small.width, small.height);
+        smallCtx.drawImage(img, cover.x, cover.y, cover.w, cover.h);
+        ctx.drawImage(small, 0, 0, BANNER_W, BANNER_H);
+
+        ctx.fillStyle = 'rgba(8,6,10,0.42)';
+        ctx.fillRect(0, 0, BANNER_W, BANNER_H);
+
+        const glow = ctx.createRadialGradient(BANNER_W * 0.2, BANNER_H * 0.85, 8, BANNER_W * 0.2, BANNER_H * 0.85, BANNER_W * 0.62);
+        glow.addColorStop(0, hexToRgba(accent, 0.34));
+        glow.addColorStop(1, hexToRgba(accent, 0));
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, BANNER_W, BANNER_H);
+
+        const scrim = ctx.createLinearGradient(0, 0, BANNER_W, 0);
+        scrim.addColorStop(0, 'rgba(6,5,8,0.88)');
+        scrim.addColorStop(0.46, 'rgba(6,5,8,0.44)');
+        scrim.addColorStop(1, 'rgba(6,5,8,0.1)');
+        ctx.fillStyle = scrim;
+        ctx.fillRect(0, 0, BANNER_W, BANNER_H);
+
+        // sharp key art, contained on the right, lifted off the backdrop
+        const artH = BANNER_H * 0.82;
+        const artW = Math.min(artH * (img.naturalWidth / img.naturalHeight), BANNER_W * 0.42);
+        const artX = BANNER_W - artW - 56;
+        const artY = (BANNER_H - artH) / 2;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 44;
+        ctx.shadowOffsetY = 12;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        roundRectPath(ctx, artX, artY, artW, artH, 20);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        roundRectPath(ctx, artX, artY, artW, artH, 20);
+        ctx.clip();
+        ctx.drawImage(img, artX, artY, artW, artH);
+        ctx.restore();
+
+        ctx.save();
+        roundRectPath(ctx, artX + 0.5, artY + 0.5, artW - 1, artH - 1, 20);
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
+
+        // wordmark on the calm left side (the modal prints the title below)
+        const padX = 58;
+        const markY = Math.round(BANNER_H / 2) - 26;
+
+        ctx.fillStyle = accent;
+        roundRectPath(ctx, padX, markY, 54, 6, 3);
+        ctx.fill();
+
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'left';
+        ctx.font = '700 20px ' + BANNER_FONT;
+        ctx.fillStyle = 'rgba(255,255,255,0.94)';
+        ctx.fillText('PLUTONIUM NETWORK', padX, markY + 26);
+
+        dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      }
+    } catch (_) {
+      dataUrl = '';
+    }
+
+    bannerCache.set(cacheKey, dataUrl);
+    return dataUrl;
+  }
+
+  function setBannerSrc(src, onError) {
+    const img = els['pg-details-banner'];
+    if (!img || !src) return;
+    img.classList.add('swapping');
+
+    const cleanup = () => {
+      img.removeEventListener('load', settle);
+      img.removeEventListener('error', failed);
+    };
+    const settle = () => { img.classList.remove('swapping'); cleanup(); };
+    const failed = () => { cleanup(); if (onError) onError(); else img.classList.remove('swapping'); };
+
+    img.addEventListener('load', settle);
+    img.addEventListener('error', failed);
+    img.src = src;
+    if (img.complete && img.naturalWidth) settle();
+  }
+
+  function cloudChipHtml(game, details) {
+    const signedIn = typeof PlutoniumStore !== 'undefined' && !!PlutoniumStore.currentUser;
+    const savedHere = !!(knownSaves && knownSaves.has(game.id));
+
+    if (savedHere) {
+      return '<span class="pg-details__chip pg-details__chip--ok"><i class="fa-solid fa-cloud-arrow-up"></i> Cloud saves active</span>';
+    }
+    if (details.cloudSync === true) {
+      return signedIn
+        ? '<span class="pg-details__chip pg-details__chip--ok"><i class="fa-solid fa-cloud-arrow-up"></i> Cloud sync</span>'
+        : '<span class="pg-details__chip pg-details__chip--warn"><i class="fa-solid fa-cloud"></i> Cloud sync \u00b7 sign in</span>';
+    }
+    if (details.cloudSync === false) {
+      return '<span class="pg-details__chip"><i class="fa-solid fa-cloud-slash"></i> No cloud sync</span>';
+    }
+    if (signedIn) {
+      return '<span class="pg-details__chip pg-details__chip--muted"><i class="fa-solid fa-cloud"></i> Cloud sync not confirmed</span>';
+    }
+    return '<span class="pg-details__chip pg-details__chip--muted"><i class="fa-solid fa-user-lock"></i> Sign in to sync saves</span>';
+  }
+
+  function renderDetailsPin() {
+    const btn = els['pg-details-pin'];
+    if (!btn || !detailsGame) return;
+    const P = shellPins();
+    const pinned = !!(P && P.find(detailsGame.id));
+    btn.classList.toggle('is-pinned', pinned);
+    btn.innerHTML = '<i class="fa-solid fa-thumbtack"></i><span>' + (pinned ? 'Pinned' : 'Pin to Home') + '</span>';
+  }
+
+  function closeDetails() {
+    if (!detailsGame) return;
+    detailsGame = null;
+    detailsRequest++;
+    if (els['pg-details-overlay']) els['pg-details-overlay'].classList.remove('active');
+  }
+
+  function openDetails(game) {
+    const overlay = els['pg-details-overlay'];
+    if (!overlay || !game) return;
+    detailsGame = game;
+    const request = ++detailsRequest;
+
+    els['pg-details-banner'].src = gameImage(game);
+    els['pg-details-title'].textContent = game.name;
+    els['pg-details-desc'].classList.add('is-loading');
+    els['pg-details-desc'].textContent = 'Loading details\u2026';
+    els['pg-details-controls'].innerHTML = '';
+    els['pg-details-controls-wrap'].hidden = true;
+    els['pg-details-chips'].innerHTML =
+      '<span class="pg-details__chip"><i class="fa-solid fa-server"></i> Plutonium-GCDN</span>' +
+      cloudChipHtml(game, { cloudSync: null });
+    renderDetailsPin();
+
+    overlay.classList.add('active');
+    if (window.SoundFX) window.SoundFX.play('open');
+
+    loadGameDetails(game).then(async details => {
+      if (detailsRequest !== request || detailsGame !== game) return;
+
+      const stillOpen = () => detailsRequest === request && detailsGame === game;
+
+      if (details.banner) {
+        // CDN art wins, but the games CDN answers missing files with its own
+        // HTML page, so fall back to generated art if it fails to load.
+        setBannerSrc(details.banner, () => {
+          generateBanner(game).then(art => {
+            if (stillOpen() && art) setBannerSrc(art);
+          });
+        });
+      } else {
+        const art = await generateBanner(game);
+        if (!stillOpen()) return;
+        if (art) setBannerSrc(art);
+      }
+
+      els['pg-details-desc'].classList.remove('is-loading');
+      els['pg-details-desc'].textContent = details.description ||
+        'No description has been added for this game yet.';
+
+      let chips = '<span class="pg-details__chip"><i class="fa-solid fa-server"></i> Plutonium-GCDN</span>';
+      chips += cloudChipHtml(game, details);
+      details.tags.forEach(tag => {
+        chips += '<span class="pg-details__chip">' + escapeHtml(tag) + '</span>';
+      });
+      els['pg-details-chips'].innerHTML = chips;
+
+      if (details.controls.length) {
+        els['pg-details-controls'].innerHTML = details.controls.map(row => {
+          const action = escapeHtml(row.action);
+          return '<span class="pg-details__key">' +
+            (row.keys ? '<kbd>' + escapeHtml(row.keys) + '</kbd>' : '') +
+            '<span>' + action + '</span></span>';
+        }).join('');
+        els['pg-details-controls-wrap'].hidden = false;
+      }
+    });
+  }
+
+  function wireDetails() {
+    const overlay = els['pg-details-overlay'];
+    if (!overlay) return;
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay || e.target === els['pg-details']) closeDetails();
+    });
+    if (els['pg-details-close']) els['pg-details-close'].addEventListener('click', closeDetails);
+    if (els['pg-details-play']) {
+      els['pg-details-play'].addEventListener('click', () => {
+        const game = detailsGame;
+        closeDetails();
+        if (game) launchGame(game, true);
+      });
+    }
+    if (els['pg-details-pin']) {
+      els['pg-details-pin'].addEventListener('click', () => {
+        if (!detailsGame) return;
+        pinGame(detailsGame);
+        renderDetailsPin();
+        if (window.SoundFX) window.SoundFX.play('switch');
+      });
+    }
   }
 
   function showCardCtx(e, game, zone) {
     const P = window.Pins || (window.parent && window.parent.Pins);
     const pinned = !!(P && P.find(game.id));
     const items = [
-      { icon: 'fa-solid fa-play', label: 'Play', action: () => launchGame(game) },
+      { icon: 'fa-solid fa-play', label: 'Play', action: () => launchGame(game, true) },
       'sep',
       { icon: 'fa-solid fa-thumbtack', label: pinned ? 'Unpin from Home' : 'Pin to Home', action: () => pinGame(game) }
     ];
@@ -426,7 +791,7 @@
       '<img class="pgcdn-card__img" src="' + gameImage(game) + '" alt="' + escapeHtml(game.name) + '" loading="lazy" decoding="async">' +
       '<div class="pgcdn-card__name">' + escapeHtml(game.name) + '</div>' +
       '';
-    card.addEventListener('click', () => launchGame(game));
+    card.addEventListener('click', () => openDetails(game));
     card.addEventListener('contextmenu', e => showCardCtx(e, game, zone || 'grid'));
     return card;
   }
@@ -619,7 +984,7 @@
     saveChipTimer = setTimeout(() => renderSaveChip(true), 1700);
   }
 
-  async function launchGame(game) {
+  async function launchGame(game, autostart) {
     cancelFrameRelease();
     syncGameId = game.id;
     recordPlay(game);
@@ -628,6 +993,18 @@
     }
     await prefetchGameSaves(game.id);
     openViewer(PGCDN_BASE + '/' + game.path, game.name, game);
+    if (autostart) startLaunch();
+  }
+
+  // Route suffixes look like `#<gameId>` (open the game) optionally with
+  // `?autostart=1` (quick-launch it from a home pin or the spotlight).
+  function parseGameRoute(suffix) {
+    const raw = suffix || '';
+    const launchId = decodeURIComponent((raw.match(/#([^?&]*)/) || [,''])[1] || '');
+    const autostart = /(?:^|[?&])autostart=1(?:&|#|$)/.test(raw);
+    const query = (raw.match(/\?([^#]*)/) || [,''])[1] || '';
+    const searchQuery = (new URLSearchParams(query).get('q') || '').trim();
+    return { launchId, autostart, searchQuery };
   }
 
   let barManualHide = false;
@@ -636,6 +1013,7 @@
     const viewer = els['game-viewer'];
     const iframe = els['game-iframe'];
     if (!viewer || !iframe) return;
+    closeDetails();
     pendingGameUrl = url;
     currentGame = game || null;
     els['viewer-title'].textContent = name || '';
@@ -879,6 +1257,7 @@
       els['game-launch-btn'].addEventListener('click', startLaunch);
     }
     document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && detailsGame) closeDetails();
       if (e.key === 'Escape' && els['game-viewer'].classList.contains('active') && !document.fullscreenElement) closeViewer();
       if (e.key === 'Shift' && e.location === 1 && els['game-viewer'].classList.contains('active')) {
         if (els['game-launch'] && !els['game-launch'].classList.contains('hidden')) return;
@@ -1058,13 +1437,13 @@
       renderShelves();
       renderHistory();
 
-      const routeSuffix = window.PluWorkspaceRouteSuffix || '';
-      const launchId = decodeURIComponent((routeSuffix.match(/#(.*)$/) || [,''])[1]);
-      const routeQuery = new URLSearchParams((routeSuffix.match(/\?(.*)$/) || [,''])[1]).get('q') || '';
-      const searchQuery = routeQuery.trim();
+      const route = parseGameRoute(window.PluWorkspaceRouteSuffix || '');
+      const launchId = route.launchId;
+      const searchQuery = route.searchQuery;
       if (launchId) {
         const game = games.find(g => g.id === launchId);
-        if (game) launchGame(game);
+        if (game) launchGame(game, route.autostart);
+        else showToast('That game is no longer available', [], 3200);
         window.PluWorkspaceRouteSuffix = '';
         history.replaceState(null, '', location.pathname);
       } else if (searchQuery) {
@@ -1130,6 +1509,7 @@
     wireTabs();
     wireInputs();
     wireViewer();
+    wireDetails();
     setFavicon();
     setBadge(false);
     renderHistory();
@@ -1142,17 +1522,16 @@
       });
     }
     window.addEventListener('plu-workspace-route', () => {
-      const suffix = window.PluWorkspaceRouteSuffix || '';
+      const route = parseGameRoute(window.PluWorkspaceRouteSuffix || '');
       window.PluWorkspaceRouteSuffix = '';
-      const launchId = decodeURIComponent((suffix.match(/#(.*)$/) || [,''])[1]);
-      const searchQuery = (new URLSearchParams((suffix.match(/\?(.*)$/) || [,''])[1]).get('q') || '').trim();
-      if (launchId) {
-        const game = games.find(g => g.id === launchId);
-        if (game) launchGame(game);
+      if (route.launchId) {
+        const game = games.find(g => g.id === route.launchId);
+        if (game) launchGame(game, route.autostart);
+        else showToast('That game is no longer available', [], 3200);
         history.replaceState(null, '', location.pathname);
-      } else if (searchQuery) {
-        els['pgcdn-search'].value = searchQuery;
-        applySearch(searchQuery);
+      } else if (route.searchQuery) {
+        els['pgcdn-search'].value = route.searchQuery;
+        applySearch(route.searchQuery);
         history.replaceState(null, '', location.pathname);
       }
     });
@@ -1166,7 +1545,7 @@
     if (saveQueue.size) flushSaveWrites();
   });
 
-  window.PGViewer = { open: openViewer, close: closeViewer };
+  window.PGViewer = { open: openViewer, close: closeViewer, banner: generateBanner };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

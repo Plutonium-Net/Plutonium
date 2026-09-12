@@ -749,6 +749,15 @@
 .onboarding-body.accent-light .acct-auth-submit { color: #0b0b0b; }
 .onb-step[data-step="1"] #onb-guest { display: flex; margin: 18px auto 0; }
 .onb-step[data-step="1"] .onb-hint { margin-top: 12px; }
+.onb-legal { max-width: 340px; margin-top: 10px; }
+.onb-legal a {
+  color: rgba(255, 255, 255, 0.62);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color .15s;
+}
+.onb-legal a:hover { color: #fff; }
+.onb-legal a:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; border-radius: 2px; }
 
 .device-block-overlay {
   position: fixed;
