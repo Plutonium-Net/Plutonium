@@ -132,6 +132,29 @@ STRICT RULES: follow them always:
 3. Sound natural and conversational, like a quick spoken chat. No robotic filler.
 4. When a topic could get long, give the short spoken answer and offer to go deeper.`;
 
+const SYSTEM_BUDGET = 7800;
+
+const CONTINUE_DIRECTIVE = '\n\n## Continuation instruction\n' +
+  'The user has asked you to CONTINUE your previous response from exactly where it stopped. ' +
+  'Do not repeat anything already written, begin directly with the continuation. ' +
+  'If the previous response is already complete, say so briefly.';
+
+const MEMORY_DIRECTIVE = '\n\n## Silent memory\n' +
+  'You have a silent memory system. When the user reveals a durable personal fact worth remembering ' +
+  '(name, job, location, hobby, goal, preference, project), append exactly one block at the very end of your reply, ' +
+  'after all other text, with nothing after it:\n' +
+  '[MEMORY:{"key":"short label","value":"the fact"}]\n' +
+  'Rules: only one block per reply; never mention it, never say you will remember, never explain or reference it. ' +
+  'The block is hidden from the user. Skip it when there is nothing worth remembering.';
+
+const BUILTIN_PERSONAS = [
+  { id: 'p_stelena', name: 'Stelena', emoji: '✦', builtin: true, prompt: SYSTEM_PROMPT.content },
+  { id: 'p_code', name: 'Code Expert', emoji: '⌘', builtin: true, prompt: 'You are Code Expert, a senior software engineer inside Plutonium Network\'s Stelena AI. You write clean, modern, well-structured code and explain the important decisions behind it. Prefer minimal, working solutions over clever abstractions. When debugging, identify the most likely cause first, then walk through the fix logically. Use markdown code blocks with language tags. Ask a clarifying question only when the task is genuinely ambiguous.' },
+  { id: 'p_writer', name: 'Creative Writer', emoji: '✎', builtin: true, prompt: 'You are Creative Writer, a storyteller inside Plutonium Network\'s Stelena AI. You craft vivid, engaging prose, build believable characters and help with plot, pacing and voice. Offer constructive, specific feedback and always keep the user\'s own style in mind. When asked to write, produce the work itself rather than describing it.' },
+  { id: 'p_tutor', name: 'Tutor', emoji: '◎', builtin: true, prompt: 'You are Tutor, a patient teacher inside Plutonium Network\'s Stelena AI. You explain ideas in plain language, check understanding, and build on what the user already knows. Use short steps, concrete examples and analogies. Encourage curiosity and never make the user feel stupid for asking. If a question is ambiguous, ask what they already know first.' },
+  { id: 'p_brainstorm', name: 'Brainstormer', emoji: '✳', builtin: true, prompt: 'You are Brainstormer, a fast, generative idea partner inside Plutonium Network\'s Stelena AI. You produce many varied options quickly, then help the user narrow them down. Favor surprising, concrete ideas over generic ones. Label tradeoffs briefly and always end with a recommended next step.' },
+];
+
 const MODELS = [
   { id: 'openai/gpt-oss-120b',       name: 'GPT OSS 120B',    label: 'ChatGPT OSS 120B',          desc: '~500 tps · flagship open-weight model' },
   { id: 'openai/gpt-oss-20b',        name: 'GPT OSS 20B',     label: 'ChatGPT OSS 20B',           desc: '~1000 tps · fast everyday model' },
@@ -150,6 +173,14 @@ let welcomeTemplate = null;
 
 let chats = [];
 let activeChatId = null;
+
+let personas = [];
+let personasDeleted = {};
+let defaultPersonaId = 'p_stelena';
+let facts = [];
+let factsDeleted = {};
+let memoryEnabled = true;
+let editingPersonaId = null;
 
 
 function chatContainer() { return document.getElementById('chatContainer'); }
@@ -189,6 +220,7 @@ function makeChat(title) {
     id: 'c' + now.toString(36) + Math.random().toString(36).slice(2, 7),
     title: title || 'New chat',
     messages: [],
+    personaId: defaultPersonaId || 'p_stelena',
     createdAt: now,
     updatedAt: now,
   };
@@ -323,7 +355,7 @@ function initModelSelect() {
   pill.addEventListener('click', e => {
     e.stopPropagation();
     if (menu.classList.contains('open')) closeMenu();
-    else { syncActive(); openMenu(); }
+    else { syncActive(); openMenu(); if (window._aiClosePersonaMenu) window._aiClosePersonaMenu(); }
   });
   document.addEventListener('click', closeMenu);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
@@ -400,6 +432,7 @@ function restoreWelcome() {
   const w = welcomeTemplate.cloneNode(true);
   w.id = 'welcomeScreen';
   c.appendChild(w);
+  updateWelcomePersona();
 }
 
 function addSystem(text) {
@@ -433,7 +466,7 @@ function addMessage(content, type, idx) {
   bubble.className = `msg-bubble ${type}`;
 
   if (type === 'ai') {
-    bubble.innerHTML = marked.parse(content || '');
+    bubble.innerHTML = marked.parse(stripMemoryDirective(content || ''));
     if (idx != null && content) attachAiActions(bubble, idx);
   } else {
     bubble.textContent = content;
@@ -515,7 +548,456 @@ function renderConversation() {
   c.querySelectorAll('.msg-row, .msg-system, #typingRow').forEach(n => n.remove());
   messages.forEach((m, i) => addMessage(m.content, (m.role === 'ai' || m.role === 'assistant') ? 'ai' : 'user', i));
   if (!messages.length) restoreWelcome();
+  updateWelcomePersona();
+  updatePersonaPill();
   scrollBottom();
+}
+
+function allPersonas() { return BUILTIN_PERSONAS.concat(personas); }
+
+function personaById(id) {
+  if (!id) return BUILTIN_PERSONAS[0];
+  return allPersonas().find(p => p.id === id) || BUILTIN_PERSONAS[0];
+}
+
+function factsSorted() {
+  return facts.slice().sort((a, b) => (b.ts || 0) - (a.ts || 0));
+}
+
+function memoryFactsBlock(spoken) {
+  if (!memoryEnabled || !facts.length) return '';
+  const list = factsSorted();
+  if (spoken) {
+    return ' Things you already know about the user: ' +
+      list.slice(0, 8).map(f => `${f.key}: ${f.value}`).join('; ') + '.';
+  }
+  return '\n\n## Known facts about this user\n' + list.map(f => `- ${f.key}: ${f.value}`).join('\n') + '\n';
+}
+
+function composeSystem(chat, opts) {
+  opts = opts || {};
+  const persona = personaById(chat ? chat.personaId : defaultPersonaId);
+  const base = (persona && persona.prompt) || BUILTIN_PERSONAS[0].prompt;
+  let tail = '';
+  if (opts.continue) tail += CONTINUE_DIRECTIVE;
+  if (memoryEnabled) tail += MEMORY_DIRECTIVE;
+
+  let factsText = '';
+  if (memoryEnabled && facts.length) {
+    const header = '\n\n## Known facts about this user\n';
+    const lines = [];
+    for (const f of factsSorted()) {
+      const candidate = header + lines.concat([`- ${f.key}: ${f.value}`]).join('\n') + '\n';
+      if (base.length + candidate.length + tail.length > SYSTEM_BUDGET) break;
+      lines.push(`- ${f.key}: ${f.value}`);
+    }
+    if (lines.length) factsText = header + lines.join('\n') + '\n';
+  }
+
+  let content = base + factsText + tail;
+  if (content.length > SYSTEM_BUDGET) content = content.slice(0, SYSTEM_BUDGET);
+  return content;
+}
+
+function talkSystemPrompt() {
+  let content = TALK_SYSTEM_PROMPT + memoryFactsBlock(true);
+  if (content.length > SYSTEM_BUDGET) content = content.slice(0, SYSTEM_BUDGET);
+  return content;
+}
+
+function stripMemoryDirective(text) {
+  let s = String(text == null ? '' : text);
+  s = s.replace(/\[MEMORY:\s*\{[\s\S]*?\}\s*\]/g, '');
+  s = s.replace(/\[MEMORY[\s\S]*$/, '');
+  return s.replace(/\s+$/, '');
+}
+
+function extractMemory(text) {
+  const s = String(text == null ? '' : text);
+  const m = s.match(/\[MEMORY:\s*(\{[\s\S]*?\})\s*\]/);
+  if (!m) return { clean: s.trim(), fact: null };
+  let fact = null;
+  try {
+    const obj = JSON.parse(m[1]);
+    if (obj && obj.key && obj.value) fact = { key: String(obj.key).trim(), value: String(obj.value).trim() };
+  } catch (_) {
+    const k = m[1].match(/"key"\s*:\s*"([^"]+)"/);
+    const v = m[1].match(/"value"\s*:\s*"([^"]+)"/);
+    if (k && v) fact = { key: k[1].trim(), value: v[1].trim() };
+  }
+  const clean = (s.slice(0, m.index) + s.slice(m.index + m[0].length)).trim();
+  return { clean, fact };
+}
+
+function makeFactId() { return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function saveFact(fact) {
+  if (!fact || !fact.key || !fact.value) return false;
+  const keyLower = fact.key.toLowerCase();
+  const existing = facts.find(f => (f.key || '').toLowerCase() === keyLower);
+  const now = Date.now();
+  if (existing) {
+    if (existing.value === fact.value) return false;
+    existing.value = String(fact.value).slice(0, MAX_FACT_VALUE);
+    existing.ts = now;
+  } else {
+    if (facts.length >= MAX_FACTS) facts.shift();
+    facts.push({ id: makeFactId(), key: String(fact.key).slice(0, 80), value: String(fact.value).slice(0, MAX_FACT_VALUE), ts: now });
+  }
+  persistMemoryLocal();
+  scheduleMemorySync();
+  renderMemoryStudio();
+  return true;
+}
+
+function deleteFact(id) {
+  const i = facts.findIndex(f => f.id === id);
+  if (i < 0) return;
+  facts.splice(i, 1);
+  factsDeleted[id] = Date.now();
+  persistMemoryLocal();
+  scheduleMemorySync();
+  renderMemoryStudio();
+}
+
+function clearAllFacts() {
+  const now = Date.now();
+  facts.forEach(f => { factsDeleted[f.id] = now; });
+  facts = [];
+  persistMemoryLocal();
+  scheduleMemorySync();
+  renderMemoryStudio();
+}
+
+function attachMemoryChip(bubble, fact) {
+  if (!bubble || !fact) return;
+  const chip = document.createElement('div');
+  chip.className = 'memory-chip';
+  chip.innerHTML = `<i class="fa-solid fa-brain"></i> <span>Memory saved: <strong>${escapeHtml(fact.value)}</strong></span>`;
+  bubble.appendChild(chip);
+}
+
+function makePersonaId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function studioError(msg) {
+  const el = document.getElementById('studioError');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function fillStudioForm(p) {
+  const nameEl = document.getElementById('studioName');
+  const emojiEl = document.getElementById('studioEmoji');
+  const promptEl = document.getElementById('studioPrompt');
+  if (nameEl) nameEl.value = p.name || '';
+  if (emojiEl) emojiEl.value = p.emoji || '';
+  if (promptEl) promptEl.value = p.prompt || '';
+  studioError('');
+}
+
+function resetStudioForm() {
+  editingPersonaId = null;
+  fillStudioForm({});
+  const saveBtn = document.getElementById('studioSaveBtn');
+  const resetBtn = document.getElementById('studioResetBtn');
+  if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-plus"></i> Create persona';
+  if (resetBtn) resetBtn.style.display = 'none';
+}
+
+function saveStudioPersona() {
+  const nameEl = document.getElementById('studioName');
+  const emojiEl = document.getElementById('studioEmoji');
+  const promptEl = document.getElementById('studioPrompt');
+  if (!nameEl || !promptEl) return;
+  const name = nameEl.value.trim();
+  const prompt = promptEl.value.trim();
+  const emoji = ((emojiEl ? emojiEl.value.trim() : '') || '✦').slice(0, 2);
+  if (!name || !prompt) { studioError('A persona needs a name and a system prompt.'); return; }
+  const now = Date.now();
+  if (editingPersonaId) {
+    const p = personas.find(x => x.id === editingPersonaId);
+    if (p) {
+      p.name = name.slice(0, 40);
+      p.emoji = emoji;
+      p.prompt = prompt.slice(0, MAX_PERSONA_PROMPT);
+      p.updatedAt = now;
+    }
+  } else {
+    if (personas.length >= MAX_PERSONAS) { studioError('Persona limit reached (' + MAX_PERSONAS + ').'); return; }
+    personas.push({ id: makePersonaId(), name: name.slice(0, 40), emoji, prompt: prompt.slice(0, MAX_PERSONA_PROMPT), builtin: false, createdAt: now, updatedAt: now });
+  }
+  studioError('');
+  persistPersonasLocal();
+  schedulePersonaSync();
+  resetStudioForm();
+  renderPersonaStudioList();
+  renderPersonaMenu();
+  updatePersonaPill();
+}
+
+function editPersona(id) {
+  const p = personas.find(x => x.id === id);
+  if (!p) return;
+  editingPersonaId = id;
+  fillStudioForm(p);
+  const saveBtn = document.getElementById('studioSaveBtn');
+  const resetBtn = document.getElementById('studioResetBtn');
+  if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-check"></i> Save persona';
+  if (resetBtn) resetBtn.style.display = 'inline-flex';
+}
+
+function duplicatePersona(id) {
+  const p = personaById(id);
+  if (!p) return;
+  editingPersonaId = null;
+  fillStudioForm({ name: p.name + ' copy', emoji: p.emoji, prompt: p.prompt });
+  const saveBtn = document.getElementById('studioSaveBtn');
+  const resetBtn = document.getElementById('studioResetBtn');
+  if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-plus"></i> Create persona';
+  if (resetBtn) resetBtn.style.display = 'none';
+}
+
+function deletePersona(id) {
+  const i = personas.findIndex(x => x.id === id);
+  if (i < 0) return;
+  personas.splice(i, 1);
+  personasDeleted[id] = Date.now();
+  if (editingPersonaId === id) resetStudioForm();
+  if (defaultPersonaId === id) defaultPersonaId = 'p_stelena';
+  chats.forEach(c => { if (c.personaId === id) c.personaId = 'p_stelena'; });
+  persistPersonasLocal();
+  persistLocal();
+  schedulePersonaSync();
+  renderPersonaStudioList();
+  renderPersonaMenu();
+  updatePersonaPill();
+  updateWelcomePersona();
+}
+
+function renderPersonaStudioList() {
+  const list = document.getElementById('studioPersonaList');
+  if (!list) return;
+  list.innerHTML = '';
+  allPersonas().forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'persona-item' + (p.builtin ? ' persona-item--builtin' : '');
+    row.innerHTML =
+      `<span class="persona-item__emoji">${escapeHtml(p.emoji || '✦')}</span>` +
+      `<span class="persona-item__main"><span class="persona-item__name">${escapeHtml(p.name)}` +
+      (p.builtin ? ' <span class="persona-item__tag">Built-in</span>' : '') +
+      `</span><span class="persona-item__desc">${escapeHtml((p.prompt || '').slice(0, 110))}${(p.prompt || '').length > 110 ? '…' : ''}</span></span>` +
+      `<span class="persona-item__tools"></span>`;
+    const tools = row.querySelector('.persona-item__tools');
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'studio-icon-btn';
+    editBtn.title = p.builtin ? 'Duplicate' : 'Edit';
+    editBtn.innerHTML = p.builtin ? '<i class="fas fa-copy"></i>' : '<i class="fas fa-pen"></i>';
+    editBtn.addEventListener('click', () => { if (p.builtin) duplicatePersona(p.id); else editPersona(p.id); });
+    tools.appendChild(editBtn);
+    if (!p.builtin) {
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'studio-icon-btn studio-icon-btn--danger';
+      delBtn.title = 'Delete';
+      delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+      delBtn.addEventListener('click', () => {
+        if (delBtn.dataset.armed === '1') { deletePersona(p.id); return; }
+        delBtn.dataset.armed = '1';
+        delBtn.classList.add('armed');
+        delBtn.title = 'Click again to delete';
+        setTimeout(() => { delete delBtn.dataset.armed; delBtn.classList.remove('armed'); delBtn.title = 'Delete'; }, 2500);
+      });
+      tools.appendChild(delBtn);
+    }
+    list.appendChild(row);
+  });
+}
+
+function renderMemoryStudio() {
+  const list = document.getElementById('studioMemoryList');
+  const toggle = document.getElementById('memoryToggle');
+  const clearBtn = document.getElementById('memoryClearBtn');
+  if (toggle) {
+    toggle.classList.toggle('on', memoryEnabled);
+    toggle.setAttribute('aria-checked', String(memoryEnabled));
+  }
+  if (clearBtn) clearBtn.style.display = facts.length ? 'inline-flex' : 'none';
+  if (!list) return;
+  list.innerHTML = '';
+  if (!facts.length) {
+    const empty = document.createElement('div');
+    empty.className = 'studio-empty';
+    empty.textContent = 'Nothing remembered yet. Stelena will save useful facts as you chat.';
+    list.appendChild(empty);
+    return;
+  }
+  factsSorted().forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'memory-item';
+    row.innerHTML =
+      `<span class="memory-item__main"><span class="memory-item__key">${escapeHtml(f.key)}</span>` +
+      `<span class="memory-item__value">${escapeHtml(f.value)}</span></span>`;
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'studio-icon-btn studio-icon-btn--danger';
+    del.title = 'Forget';
+    del.innerHTML = '<i class="fas fa-trash"></i>';
+    del.addEventListener('click', () => deleteFact(f.id));
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+function setStudioTab(tab) {
+  document.querySelectorAll('.studio-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.studio-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === tab));
+}
+
+function openStudio(tab) {
+  const overlay = document.getElementById('studioOverlay');
+  if (!overlay || streaming) return;
+  resetStudioForm();
+  renderPersonaStudioList();
+  renderMemoryStudio();
+  setStudioTab(tab || 'personas');
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+function closeStudio() {
+  const overlay = document.getElementById('studioOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+function toggleMemory() {
+  memoryEnabled = !memoryEnabled;
+  persistMemoryLocal();
+  scheduleMemorySync();
+  renderMemoryStudio();
+}
+
+function initStudio() {
+  const overlay = document.getElementById('studioOverlay');
+  if (!overlay) return;
+  const close = document.getElementById('studioClose');
+  if (close) close.addEventListener('click', closeStudio);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeStudio(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeStudio(); });
+  document.querySelectorAll('.studio-tab').forEach(tab => tab.addEventListener('click', () => setStudioTab(tab.dataset.tab)));
+  const manage = document.getElementById('personaManageBtn');
+  if (manage) manage.addEventListener('click', () => openStudio('personas'));
+  const saveBtn = document.getElementById('studioSaveBtn');
+  if (saveBtn) saveBtn.addEventListener('click', saveStudioPersona);
+  const resetBtn = document.getElementById('studioResetBtn');
+  if (resetBtn) resetBtn.addEventListener('click', resetStudioForm);
+  const memToggle = document.getElementById('memoryToggle');
+  if (memToggle) memToggle.addEventListener('click', toggleMemory);
+  const clearBtn = document.getElementById('memoryClearBtn');
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    if (clearBtn.dataset.armed === '1') { clearBtn.dataset.armed = ''; clearBtn.classList.remove('armed'); clearAllFacts(); return; }
+    clearBtn.dataset.armed = '1';
+    clearBtn.classList.add('armed');
+    setTimeout(() => { clearBtn.dataset.armed = ''; clearBtn.classList.remove('armed'); }, 2500);
+  });
+  ['studioName', 'studioEmoji', 'studioPrompt'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => studioError(''));
+  });
+}
+
+function initPersonaSelect() {
+  const pill = document.getElementById('personaPill');
+  const menu = document.getElementById('personaMenu');
+  if (!pill || !menu) return;
+  renderPersonaMenu();
+  function closeMenu() {
+    menu.classList.remove('open');
+    pill.classList.remove('open');
+    pill.setAttribute('aria-expanded', 'false');
+  }
+  window._aiClosePersonaMenu = closeMenu;
+  pill.addEventListener('click', e => {
+    e.stopPropagation();
+    if (menu.classList.contains('open')) closeMenu();
+    else {
+      const mm = document.getElementById('modelMenu');
+      const mp = document.getElementById('modelPill');
+      if (mm) mm.classList.remove('open');
+      if (mp) { mp.classList.remove('open'); mp.setAttribute('aria-expanded', 'false'); }
+      renderPersonaMenu(); menu.classList.add('open'); pill.classList.add('open'); pill.setAttribute('aria-expanded', 'true');
+    }
+  });
+  document.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+}
+
+function renderPersonaMenu() {
+  const list = document.getElementById('persona-menu-list');
+  if (!list) return;
+  const chat = activeChat();
+  const currentId = chat ? (chat.personaId || defaultPersonaId) : defaultPersonaId;
+  const locked = !!(chat && messages.length > 0);
+  list.innerHTML = '';
+  allPersonas().forEach(p => {
+    const opt = document.createElement('button');
+    opt.type = 'button';
+    opt.className = 'ai-model-option persona-option' + (p.id === currentId ? ' active' : '') + (locked ? ' disabled' : '');
+    opt.innerHTML =
+      `<span class="ai-model-option__name"><span class="persona-option__emoji">${escapeHtml(p.emoji || '✦')}</span>${escapeHtml(p.name)}</span>` +
+      `<span class="ai-model-option__desc">${escapeHtml((p.prompt || '').slice(0, 80))}${(p.prompt || '').length > 80 ? '…' : ''}</span>`;
+    opt.addEventListener('click', e => {
+      e.stopPropagation();
+      if (locked) return;
+      selectPersona(p.id);
+    });
+    list.appendChild(opt);
+  });
+  updatePersonaPill();
+}
+
+function selectPersona(id) {
+  const chat = activeChat();
+  const p = personaById(id);
+  if (chat) {
+    if (messages.length > 0) { addSystem('Start a new chat to change persona.'); return; }
+    chat.personaId = id;
+  }
+  defaultPersonaId = id;
+  persistLocal();
+  persistPersonasLocal();
+  schedulePersonaSync();
+  updatePersonaPill();
+  updateWelcomePersona();
+  if (window._aiClosePersonaMenu) window._aiClosePersonaMenu();
+  if (p) addSystem('Persona: ' + p.name);
+}
+
+function updatePersonaPill() {
+  const pill = document.getElementById('personaPill');
+  const nameEl = document.getElementById('selectedPersonaName');
+  const emojiEl = document.getElementById('selectedPersonaEmoji');
+  if (!pill || !nameEl) return;
+  const chat = activeChat();
+  const p = personaById(chat ? chat.personaId : defaultPersonaId);
+  nameEl.textContent = p.name;
+  if (emojiEl) emojiEl.textContent = p.emoji || '✦';
+  const locked = !!(chat && messages.length > 0);
+  pill.classList.toggle('locked', locked);
+  pill.title = locked ? 'Start a new chat to change persona' : 'Choose a persona for this chat';
+}
+
+function updateWelcomePersona() {
+  const el = document.getElementById('welcomePersona');
+  if (!el) return;
+  const chat = activeChat();
+  const p = personaById(chat ? chat.personaId : defaultPersonaId);
+  if (!p || p.id === 'p_stelena') { el.hidden = true; el.textContent = ''; return; }
+  el.hidden = false;
+  el.innerHTML = `<span class="welcome-persona__emoji">${escapeHtml(p.emoji || '✦')}</span> Chatting as <strong>${escapeHtml(p.name)}</strong>`;
 }
 
 function sendMessage() {
@@ -548,15 +1030,9 @@ async function requestReply(userContent, opts = {}) {
 
   let system;
   if (talkMode) {
-    system = TALK_SYSTEM_PROMPT;
-  } else if (opts.continue) {
-    system = SYSTEM_PROMPT.content +
-      '\n\n## Continuation instruction\n' +
-      'The user has asked you to CONTINUE your previous response from exactly where it stopped. ' +
-      'Do not repeat anything already written, begin directly with the continuation. ' +
-      'If the previous response is already complete, say so briefly.';
+    system = talkSystemPrompt();
   } else {
-    system = SYSTEM_PROMPT.content;
+    system = composeSystem(activeChat(), opts);
   }
 
   let streamBubble = null;
@@ -588,10 +1064,12 @@ async function requestReply(userContent, opts = {}) {
 
     if (!contentType.includes('text/event-stream')) {
       const data = await res.json();
-      const reply = data.content || '';
+      const parsed = extractMemory(data.content || '');
+      const reply = parsed.clean;
       if (talkMode) { setTalkAiText(reply); finishTalkAiTurn(); }
+      const bubble = addMessage(reply, 'ai', messages.length - 1);
       messages.push({ role: 'assistant', content: reply });
-      addMessage(reply, 'ai', messages.length - 1);
+      if (!talkMode && parsed.fact && saveFact(parsed.fact)) attachMemoryChip(bubble, parsed.fact);
       noteChange();
       if (talkMode && reply) speakReply(reply);
     } else {
@@ -617,7 +1095,7 @@ async function requestReply(userContent, opts = {}) {
         const token = chunk.choices?.[0]?.delta?.content;
         if (token) {
           reply += token;
-          streamBubble.innerHTML = marked.parse(reply);
+          streamBubble.innerHTML = marked.parse(stripMemoryDirective(reply));
           scrollBottom();
           if (talkMode && Date.now() - lastTalkMirror > 80) {
             setTalkAiText(reply);
@@ -636,8 +1114,12 @@ async function requestReply(userContent, opts = {}) {
       }
       if (buffer) processLine(buffer);
 
-      messages.push({ role: 'assistant', content: reply });
+      const parsed = talkMode ? { clean: reply, fact: null } : extractMemory(reply);
+      const cleanReply = parsed.clean;
+      if (cleanReply !== reply) streamBubble.innerHTML = marked.parse(cleanReply);
+      messages.push({ role: 'assistant', content: cleanReply });
       attachAiActions(streamBubble, messages.length - 1);
+      if (!talkMode && parsed.fact && saveFact(parsed.fact)) attachMemoryChip(streamBubble, parsed.fact);
       noteChange();
       if (talkMode) { setTalkAiText(reply); finishTalkAiTurn(); }
       if (talkMode && reply) speakReply(reply);
@@ -800,6 +1282,124 @@ function mergeMessages(a, b) {
   const merged = base.slice();
   other.forEach(m => { if (!seen.has(key(m))) { merged.push(m); seen.add(key(m)); } });
   return merged;
+}
+
+const PERSONAS_LS = 'plu_ai_personas';
+const MEMORY_LS = 'plu_ai_memory';
+const PERSONAS_DOC = 'ai_personas';
+const MEMORY_DOC = 'ai_memory';
+const MAX_PERSONAS = 50;
+const MAX_PERSONA_PROMPT = 4000;
+const MAX_FACTS = 200;
+const MAX_FACT_VALUE = 500;
+
+let _personaSyncT = null;
+let _memorySyncT = null;
+
+function persistPersonasLocal() {
+  try { localStorage.setItem(PERSONAS_LS, JSON.stringify({ personas, defaultPersonaId })); } catch (_) {}
+}
+
+function loadLocalPersonas() {
+  try {
+    const raw = localStorage.getItem(PERSONAS_LS);
+    const data = raw ? JSON.parse(raw) : null;
+    if (data) {
+      if (Array.isArray(data.personas)) personas = data.personas.filter(p => p && p.id && p.name && p.prompt);
+      if (typeof data.defaultPersonaId === 'string') defaultPersonaId = data.defaultPersonaId;
+    }
+  } catch (_) {}
+  if (!Array.isArray(personas)) personas = [];
+}
+
+function persistMemoryLocal() {
+  try { localStorage.setItem(MEMORY_LS, JSON.stringify({ facts, enabled: memoryEnabled })); } catch (_) {}
+}
+
+function loadLocalMemory() {
+  try {
+    const raw = localStorage.getItem(MEMORY_LS);
+    const data = raw ? JSON.parse(raw) : null;
+    if (data) {
+      if (Array.isArray(data.facts)) facts = data.facts.filter(f => f && f.id && f.key && f.value);
+      if (typeof data.enabled === 'boolean') memoryEnabled = data.enabled;
+    }
+  } catch (_) {}
+  if (!Array.isArray(facts)) facts = [];
+}
+
+function mergeById(localArr, remoteArr, deletedMap, stamp) {
+  const out = new Map();
+  (localArr || []).forEach(x => { if (x && x.id) out.set(x.id, x); });
+  (remoteArr || []).forEach(r => {
+    if (!r || !r.id) return;
+    const l = out.get(r.id);
+    if (!l) { out.set(r.id, r); return; }
+    out.set(r.id, (stamp(r) || 0) > (stamp(l) || 0) ? r : l);
+  });
+  Object.keys(deletedMap || {}).forEach(id => out.delete(id));
+  return Array.from(out.values());
+}
+
+function schedulePersonaSync() {
+  if (!currentUser()) return;
+  clearTimeout(_personaSyncT);
+  _personaSyncT = setTimeout(pushPersonas, 1200);
+}
+
+function scheduleMemorySync() {
+  if (!currentUser()) return;
+  clearTimeout(_memorySyncT);
+  _memorySyncT = setTimeout(pushMemory, 1200);
+}
+
+async function pushPersonas() {
+  if (!currentUser()) return;
+  try {
+    await PlutoniumStore.setDoc(PERSONAS_DOC, { list: personas, deleted: personasDeleted, defaultPersonaId, lastSync: new Date() });
+  } catch (e) { console.warn('[ai] persona sync push failed:', e); }
+}
+
+async function pullPersonas() {
+  if (!currentUser()) return;
+  try {
+    const doc = await PlutoniumStore.getDoc(PERSONAS_DOC);
+    if (!doc) return;
+    if (doc.deleted && typeof doc.deleted === 'object' && !Array.isArray(doc.deleted)) {
+      personasDeleted = Object.assign({}, personasDeleted, doc.deleted);
+    }
+    const remote = Array.isArray(doc.list) ? doc.list.filter(p => p && p.id && p.name && p.prompt) : [];
+    personas = mergeById(personas, remote, personasDeleted, x => x.updatedAt || x.createdAt || 0);
+    if (typeof doc.defaultPersonaId === 'string') defaultPersonaId = doc.defaultPersonaId;
+    persistPersonasLocal();
+    renderPersonaMenu();
+    renderPersonaStudioList();
+    updatePersonaPill();
+    updateWelcomePersona();
+  } catch (e) { console.warn('[ai] persona sync pull failed:', e); }
+}
+
+async function pushMemory() {
+  if (!currentUser()) return;
+  try {
+    await PlutoniumStore.setDoc(MEMORY_DOC, { facts, deleted: factsDeleted, enabled: memoryEnabled, lastSync: new Date() });
+  } catch (e) { console.warn('[ai] memory sync push failed:', e); }
+}
+
+async function pullMemory() {
+  if (!currentUser()) return;
+  try {
+    const doc = await PlutoniumStore.getDoc(MEMORY_DOC);
+    if (!doc) return;
+    if (doc.deleted && typeof doc.deleted === 'object' && !Array.isArray(doc.deleted)) {
+      factsDeleted = Object.assign({}, factsDeleted, doc.deleted);
+    }
+    const remote = Array.isArray(doc.facts) ? doc.facts.filter(f => f && f.id && f.key && f.value) : [];
+    facts = mergeById(facts, remote, factsDeleted, x => x.ts || 0);
+    if (typeof doc.enabled === 'boolean') memoryEnabled = doc.enabled;
+    persistMemoryLocal();
+    renderMemoryStudio();
+  } catch (e) { console.warn('[ai] memory sync pull failed:', e); }
 }
 
 function noteChange() {
@@ -1052,7 +1652,7 @@ function renderTalkMini() {
     const el = document.createElement('div');
     el.className = 'talk-minichat__msg ' + (m.role === 'user' ? 'talk-minichat__msg--user' : 'talk-minichat__msg--ai');
     if (m.role === 'ai' && talkAiStreaming && i === arr.length - 1) el.classList.add('streaming');
-    if (m.role === 'ai') el.innerHTML = marked.parse(m.text || '');
+    if (m.role === 'ai') el.innerHTML = marked.parse(stripMemoryDirective(m.text || ''));
     else el.textContent = m.text;
     box.appendChild(el);
   });
@@ -1380,6 +1980,8 @@ function init() {
   if (welcome) welcomeTemplate = welcome.cloneNode(true);
 
   loadLocalChats();
+  loadLocalPersonas();
+  loadLocalMemory();
   initChatList();
   renderChatList();
   openChat(activeChatId);
@@ -1388,7 +1990,10 @@ function init() {
   initModelSelect();
   initVoiceSelect();
   initTalkMode();
+  initPersonaSelect();
+  initStudio();
   initQuota();
+  updatePersonaPill();
 
   const clearBtn = document.getElementById('ai-clear-btn');
   if (clearBtn) clearBtn.addEventListener('click', clearConversation);
@@ -1399,7 +2004,7 @@ function init() {
   if (typeof PlutoniumStore !== 'undefined') {
     PlutoniumStore.onAuthChange(user => {
       setAuthed(!!user);
-      if (user) pullChats();
+      if (user) { pullChats(); pullPersonas(); pullMemory(); }
     });
   }
 

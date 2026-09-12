@@ -60,6 +60,7 @@
             <div class="ai-brand__copy"><div class="ai-brand__name">Stelena AI</div><div class="ai-brand__sub">Plutonium Network's assistant</div></div>
           </div>
           <div class="ai-header__actions">
+            <button class="persona-pill" id="personaPill" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="persona-pill__emoji" id="selectedPersonaEmoji">✦</span><span id="selectedPersonaName">Stelena</span><i class="fas fa-chevron-down persona-pill__caret"></i></button>
             <button class="model-pill" id="modelPill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-microchip"></i><span id="selectedModelName">GPT OSS 120B</span><i class="fas fa-chevron-down model-pill__caret"></i></button>
             <div class="voice-pill-wrap">
               <button class="voice-pill" id="voicePill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-waveform"></i><span id="selectedVoiceName">Hannah</span><i class="fas fa-chevron-down voice-pill__caret"></i></button>
@@ -73,6 +74,7 @@
           <div class="welcome-icon"><svg class="stelena-mark" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="2.5" opacity=".22"/><circle cx="50" cy="50" r="33" fill="none" stroke="currentColor" stroke-width="3" opacity=".6"/><path d="M50 12 C53.5 37 63 46.5 88 50 C63 53.5 53.5 63 50 88 C46.5 63 37 53.5 12 50 C37 46.5 46.5 37 50 12 Z" fill="currentColor"/><circle cx="50" cy="50" r="7" fill="#fff"/><circle cx="78.5" cy="33.5" r="4" fill="currentColor" opacity=".85"/></svg></div>
           <div class="welcome-title">How can I help you?</div>
           <div class="welcome-sub">Ask Stelena anything: coding, research, writing, or just brainstorm ideas.</div>
+          <div class="welcome-persona" id="welcomePersona" hidden></div>
           <div class="suggestion-grid">
             <button class="suggestion-card" onclick="useSuggestion('Write a Python script to analyze CSV data')"><span class="suggestion-card-label">Code</span><span class="suggestion-card-text">Write a Python script to analyze CSV data</span></button>
             <button class="suggestion-card" onclick="useSuggestion('Explain quantum computing in simple terms')"><span class="suggestion-card-label">Learn</span><span class="suggestion-card-text">Explain quantum computing in simple terms</span></button>
@@ -88,7 +90,45 @@
         <button class="composer__btn composer__btn--talk" id="talkBtn" title="Talk with me" onclick="toggleTalk()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.4 4.4l2 2M17.6 17.6l2 2M19.6 4.4l-2 2M6.4 17.6l-2 2"/></svg></button>
         <button class="composer__btn composer__btn--send" id="sendBtn" title="Send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
       </div>
+      <div class="persona-menu" id="personaMenu" role="listbox"><div class="persona-menu__head">Choose a persona</div><div class="persona-menu__list" id="persona-menu-list"></div><button class="persona-menu__manage" id="personaManageBtn" type="button"><i class="fas fa-sliders"></i> Manage personas &amp; memory</button></div>
       <div class="model-menu" id="modelMenu" role="listbox"><div class="model-menu__head">Choose a model</div><div class="model-menu__list" id="model-menu-list"></div></div>
+      <div class="studio-overlay" id="studioOverlay" aria-hidden="true">
+        <div class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioTitle">
+          <div class="studio-header">
+            <div class="studio-title" id="studioTitle"><i class="fas fa-masks-theater"></i> AI Studio</div>
+            <button class="studio-close" id="studioClose" type="button" title="Close"><i class="fas fa-xmark"></i></button>
+          </div>
+          <div class="studio-tabs">
+            <button class="studio-tab active" data-tab="personas" type="button"><i class="fas fa-user-astronaut"></i> Personas</button>
+            <button class="studio-tab" data-tab="memory" type="button"><i class="fas fa-brain"></i> Memory</button>
+          </div>
+          <div class="studio-body">
+            <section class="studio-pane active" data-pane="personas">
+              <div class="studio-form">
+                <div class="studio-field-row">
+                  <div class="studio-field studio-field--emoji"><label class="studio-label">Icon</label><input class="studio-input" id="studioEmoji" maxlength="2" placeholder="✦"></div>
+                  <div class="studio-field studio-field--name"><label class="studio-label">Name</label><input class="studio-input" id="studioName" maxlength="40" placeholder="e.g. Code Expert"></div>
+                </div>
+                <div class="studio-field"><label class="studio-label">System prompt</label><textarea class="studio-input studio-textarea" id="studioPrompt" rows="6" maxlength="4000" placeholder="Describe how this persona thinks, speaks and what it focuses on..."></textarea><span class="studio-hint">This defines the persona's behaviour. Be specific about tone, expertise and boundaries.</span></div>
+                <span class="studio-error" id="studioError" style="display:none"></span>
+                <div class="studio-form-actions">
+                  <button class="studio-btn studio-btn--ghost" id="studioResetBtn" type="button" style="display:none">Cancel edit</button>
+                  <button class="studio-btn studio-btn--primary" id="studioSaveBtn" type="button"><i class="fas fa-plus"></i> Create persona</button>
+                </div>
+              </div>
+              <div class="studio-list" id="studioPersonaList"></div>
+            </section>
+            <section class="studio-pane" data-pane="memory">
+              <div class="studio-memory-head">
+                <div class="studio-memory-copy"><div class="studio-memory-title">Long-term memory</div><div class="studio-memory-sub">Facts Stelena remembers about you across chats, synced to your account.</div></div>
+                <button class="studio-toggle" id="memoryToggle" type="button" role="switch" aria-checked="true" title="Toggle memory"><span class="studio-toggle__knob"></span></button>
+              </div>
+              <div class="studio-list" id="studioMemoryList"></div>
+              <button class="studio-btn studio-btn--danger" id="memoryClearBtn" type="button" style="display:none"><i class="fas fa-trash"></i> Clear all memory</button>
+            </section>
+          </div>
+        </div>
+      </div>
       <div class="talk-overlay" id="talkOverlay" aria-hidden="true">
         <div class="talk-orb" id="talkOrb" data-state="listening" title="Click to end">
           <div class="talk-orb__ring"></div>
@@ -131,7 +171,7 @@
 
   const bundles = {
     games: { css: 'css/games.css?v=2', scripts: ['https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js', 'js/games.js?v=2', 'js/personal-games.js'] },
-    ai: { css: 'css/ai.css', scripts: ['js/orb.js', 'js/ai.js?v=2'] },
+    ai: { css: 'css/ai.css?v=2', scripts: ['js/orb.js', 'js/ai.js?v=3'] },
     cloud: { css: 'css/cloud.css', scripts: ['js/cloud.js?v=1'] },
     media: { css: 'css/stream.css', scripts: ['js/stream.js?v=20260825'] },
     vms: { css: 'css/vms.css', scripts: ['js/vms.js'], module: true }

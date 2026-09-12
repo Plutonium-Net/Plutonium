@@ -294,7 +294,7 @@ async function handleChat(request, env, allowed) {
   }
 
   const upstream = [];
-  if (system) upstream.push({ role: 'system', content: String(system).slice(0, 2000) });
+  if (system) upstream.push({ role: 'system', content: String(system).slice(0, 8000) });
 
   const sanitized = messages
     .slice(-MAX_MESSAGES)
