@@ -639,7 +639,7 @@ function openAboutDialog() {
       <div class="about-dialog__row-title">Mizzery</div>
       <div class="about-dialog__row-sub">Co-Owner &amp; Community Manager</div>
     </div>
-    <a href="https://https://xxmizzeryxx.github.io/mizzery.github.io" class="about-dialog__row-link">Portfolio</a>
+    <a href="https://xxmizzeryxx.github.io/mizzery.github.io" class="about-dialog__row-link">Portfolio</a>
     <a href="https://github.com/xXmizzeryXx" class="about-dialog__row-link">GitHub</a>
   </div>
 </div>
