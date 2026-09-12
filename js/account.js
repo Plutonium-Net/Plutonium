@@ -1,4 +1,6 @@
 
+const HOME_SIGNIN_TITLE = 'Welcome to<br>Plutonium Network'
+
 class AccountManager {
   constructor() {
     this.BM_KEY      = 'plu_bookmarks'
@@ -10,7 +12,12 @@ class AccountManager {
     this.AVATAR_KEY  = 'plu_avatar_'
 
     this.photoDataUrl   = null
+    this.gravatarUrl    = null
     this._gravatarTried = false
+
+    this.greetings     = null
+    this._greetingsReq = null
+    this._greeting     = { hour: null, template: '' }
 
     this.user          = null
     this.isGuest       = false
@@ -39,6 +46,12 @@ class AccountManager {
 
     PlutoniumStore.onAuthChange(u => {
       if (u) {
+        const sameUser = !!(this.user && this.user.uid === u.uid)
+        if (!sameUser) {
+          this.photoDataUrl   = null
+          this.gravatarUrl    = null
+          this._gravatarTried = false
+        }
         this.user = {
           uid:         u.uid,
           email:       u.email || '',
@@ -516,12 +529,16 @@ class AccountManager {
     if (!panel) return
     const signedEl = document.getElementById('home-acct-signed')
     const signinTextEl = document.getElementById('home-acct-signin-text')
+    const avatarEl = document.getElementById('home-acct-avatar')
     const subEl = document.getElementById('home-acct-signin-sub')
     const ctaEl = document.getElementById('home-acct-signin-cta')
     if (!signedEl || !signinTextEl || !subEl || !ctaEl) return
+    panel.classList.toggle('has-account', !!this.user)
     if (!this.user) {
       signedEl.hidden = true
+      if (avatarEl) avatarEl.hidden = true
       signinTextEl.hidden = false
+      signinTextEl.innerHTML = HOME_SIGNIN_TITLE
       subEl.hidden = false
       ctaEl.hidden = false
       this._bindHomeSignIn()
@@ -529,7 +546,12 @@ class AccountManager {
     }
     const firstName = (this.user.displayName || (this.user.email || '').split('@')[0] || 'there').split(/\s+/)[0] || 'there'
     signinTextEl.hidden = false
-    signinTextEl.textContent = 'Welcome back, ' + firstName
+    signinTextEl.textContent = this._greetingFor(firstName)
+    if (avatarEl) {
+      avatarEl.hidden = false
+      this._paintAvatar(avatarEl, this.user.displayName || firstName)
+      if (!this._avatarPhoto()) this._applyGravatar()
+    }
     subEl.hidden = false
     subEl.textContent = 'Manage your account, sync and continue where you left off.'
     ctaEl.hidden = true
@@ -662,20 +684,9 @@ class AccountManager {
     const name = this.user.displayName || (this.user.email || '').split('@')[0] || 'User'
     nameEl.textContent = name
     emailEl.textContent = this.user.email || ''
-    if (avatar) {
-      const photo = this.photoDataUrl || this.user.photoURL
-      if (photo) {
-        avatar.style.backgroundImage = `url('${photo}')`
-        avatar.classList.add('has-photo')
-        avatar.innerHTML = ''
-      } else {
-        avatar.style.backgroundImage = ''
-        avatar.classList.remove('has-photo')
-        const initials = name.split(/\s+/).map(w => w[0] || '').slice(0, 2).join('').toUpperCase()
-        avatar.innerHTML = `<span>${initials || 'U'}</span>`
-        this._applyGravatar(avatar)
-      }
-    }
+    this._paintAvatar(avatar, name)
+    this._paintAvatar(document.getElementById('home-acct-avatar'), name)
+    if (!this._avatarPhoto()) this._applyGravatar()
     this._bindNameEdit()
     this._bindAvatarUpload()
   }
@@ -699,10 +710,59 @@ class AccountManager {
     } catch (_) {}
   }
 
-  _applyGravatar(avatar) {
+  _loadGreetings() {
+    if (this._greetingsReq) return this._greetingsReq
+    this._greetingsReq = fetch('data/greetings.json')
+      .then(r => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then(data => {
+        if (data && typeof data === 'object') this.greetings = data
+        if (this.user) this._renderHomePanel()
+        return this.greetings
+      })
+    return this._greetingsReq
+  }
+
+  _greetingFor(name) {
+    const who = name || 'there'
+    const hour = new Date().getHours()
+    const fallback = 'Welcome back, ' + who
+    if (!this.greetings) {
+      this._loadGreetings()
+      return fallback
+    }
+    const list = this.greetings[String(hour)]
+    if (!Array.isArray(list) || !list.length) return fallback
+    if (this._greeting.hour !== hour || !this._greeting.template) {
+      this._greeting = { hour, template: String(list[Math.floor(Math.random() * list.length)]) }
+    }
+    return this._greeting.template.replace(/\{name\}/g, who)
+  }
+
+  _avatarPhoto() {
+    if (!this.user) return ''
+    return this.photoDataUrl || this.user.photoURL || this.gravatarUrl || ''
+  }
+
+  _paintAvatar(el, name) {
+    if (!el || !this.user) return
+    const photo = this._avatarPhoto()
+    if (photo) {
+      el.style.backgroundImage = `url('${photo}')`
+      el.classList.add('has-photo')
+      el.innerHTML = ''
+      return
+    }
+    el.style.backgroundImage = ''
+    el.classList.remove('has-photo')
+    const initials = (name || '').split(/\s+/).map(w => w[0] || '').slice(0, 2).join('').toUpperCase()
+    el.innerHTML = `<span>${initials || 'U'}</span>`
+  }
+
+  _applyGravatar() {
     if (this._gravatarTried) return
     this._gravatarTried = true
-    if (!avatar || !this.user) return
+    if (!this.user) return
     const email = (this.user.email || '').trim().toLowerCase()
     const uid = this.user.uid
     if (!email || !uid) return
@@ -710,9 +770,10 @@ class AccountManager {
     if (flag === '0') return
     const apply = src => {
       if (this.photoDataUrl || this.user.photoURL) return
-      avatar.style.backgroundImage = `url('${src}')`
-      avatar.classList.add('has-photo')
-      avatar.innerHTML = ''
+      this.gravatarUrl = src
+      const name = this.user.displayName || (this.user.email || '').split('@')[0] || 'User'
+      this._paintAvatar(document.getElementById('acct-avatar'), name)
+      this._paintAvatar(document.getElementById('home-acct-avatar'), name)
     }
     crypto.subtle.digest('SHA-256', new TextEncoder().encode(email))
       .then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''))
@@ -1013,7 +1074,9 @@ class AccountManager {
     }
     this.user = null
     this.photoDataUrl = null
+    this.gravatarUrl = null
     this._gravatarTried = false
+    this._greeting = { hour: null, template: '' }
   }
 
   async deleteAccount() {

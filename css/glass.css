@@ -8,7 +8,7 @@
   box-shadow: 0 8px 32px rgba(var(--ui-accent-rgb), 0.2),
               inset 0 4px 20px rgba(var(--ui-accent-rgb), 0.04);
 }
-#workspace-root .workspace-view :is(.source-tabs, .pgcdn-toolbar, .history-toolbar, .pg-panel-toolbar, .model-pill, .voice-pill, .suggestion-card, .input-wrapper, .cg-toolbar, .cg-card, .media-tabs, .stream-controls, .vm-panel, .vm-frame-shell, .vm-status-card, .vm-note, .vm-timer, .vm-btn, .page-header-icon, .welcome-icon, .age-verify__box, .adult-gate__box, .persona-pill, .ai-quota-pill, .ai-new-chat, .composer, .chat-panel, .ai-sidebar, .ai-header, .model-menu, .persona-menu, .voice-menu, .ai-gate__card, .memory-chip, .welcome-persona, .studio-modal, .studio-form, .persona-item, .memory-item, .studio-memory-head, .msg-bubble.ai, .talk-minichat, .ai-chat-item) {
+#workspace-root .workspace-view :is(.source-tabs, .pgcdn-toolbar, .history-toolbar, .pg-panel-toolbar, .input-wrapper, .cg-toolbar, .cg-card, .media-tabs, .stream-controls, .vm-panel, .vm-frame-shell, .vm-status-card, .vm-note, .vm-timer, .vm-btn, .page-header-icon, .age-verify__box, .adult-gate__box) {
   background: rgba(255, 255, 255, 0.075);
   border-color: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(16px) saturate(180%);
@@ -16,7 +16,7 @@
   box-shadow: 0 8px 32px rgba(var(--ui-shadow-rgb), 0.28), inset 0 1px 0 rgba(255,255,255,0.12);
 }
 
-#workspace-root .workspace-view :is(.source-tabs, .pgcdn-toolbar, .history-toolbar, .pg-panel-toolbar, .cg-toolbar, .media-tabs, .stream-controls, .vm-panel, .vm-frame-shell, .age-verify__box, .adult-gate__box, .composer, .chat-panel, .ai-header, .studio-modal) {
+#workspace-root .workspace-view :is(.source-tabs, .pgcdn-toolbar, .history-toolbar, .pg-panel-toolbar, .cg-toolbar, .media-tabs, .stream-controls, .vm-panel, .vm-frame-shell, .age-verify__box, .adult-gate__box) {
   position: relative;
   overflow: hidden;
 }
@@ -26,6 +26,55 @@
 }
 
 #workspace-root .workspace-view :is(.source-tabs, .pgcdn-toolbar, .history-toolbar, .pg-panel-toolbar, .cg-toolbar, .media-tabs, .stream-controls, .vm-panel, .vm-frame-shell, .age-verify__box, .adult-gate__box)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,.12), transparent 42%, rgba(var(--ui-accent-rgb),.06));
+  opacity: .55;
+}
+
+/* ------------------------------------------------------------------- *
+ * Stelena AI workspace                                                 *
+ * Every AI surface takes its frosted look from here. The selectors stay *
+ * at single-class specificity on purpose: workspaces.js loads ai.css    *
+ * first and glass.css last, so the AI stylesheet keeps owning layout,   *
+ * hover / active / focus states, and anything that must stay pinned     *
+ * (`.composer` is position:fixed).                                      *
+ * ------------------------------------------------------------------- */
+/* `.chat-panel` and `.ai-header` are deliberately absent: the brand row, the
+   welcome screen and the message thread sit straight on the app background
+   instead of on big glass slabs. */
+.workspace-ai :where(.ai-sidebar, .composer, .ai-new-chat, .ai-chat-item,
+  .ai-quota-pill, .persona-pill, .model-pill, .voice-pill, .model-menu, .persona-menu, .voice-menu,
+  .suggestion-card, .msg-bubble.ai, .ai-gate__card, .welcome-icon, .welcome-persona, .memory-chip,
+  .talk-minichat, .studio-modal, .studio-form, .persona-item, .memory-item, .studio-memory-head) {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: 0 8px 32px rgba(var(--ui-shadow-rgb), 0.28), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+/* Secondary AI controls: same glass, without the heavy drop shadow. */
+.workspace-ai :where(.composer__btn, .ai-clear-btn, .msg-act, .persona-menu__manage,
+  .studio-close, .studio-icon-btn, .studio-input, .studio-btn, .talk-close) {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+/* Sheen overlay — only for AI panels that clip their own contents.
+   `.composer` must stay position:fixed, the sidebar and the chooser popups
+   scroll, and the chat panel is transparent, so they all keep their own
+   backgrounds only. */
+.workspace-ai :is(.studio-modal, .ai-gate__card) {
+  position: relative;
+  overflow: hidden;
+}
+.workspace-ai :is(.studio-modal, .ai-gate__card)::before {
   content: '';
   position: absolute;
   inset: 0;

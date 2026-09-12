@@ -1117,6 +1117,18 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .home-acct-panel .acct-signin-cta:hover{color:#fff}
 .home-acct-panel .acct-signin-cta:hover i{transform:translateX(4px)}
 .home-acct-panel .acct-signin-cta[hidden]{display:none}
+.home-acct-panel .acct-welcome{display:flex;align-items:center;gap:12px;min-width:0}
+.home-acct-panel .acct-welcome .acct-signin-title{min-width:0}
+.home-acct-panel.has-account .acct-signin-title{font-size:26px}
+.home-acct-panel .acct-avatar--welcome{
+  width:40px;height:40px;font-size:13px;
+  background-color:rgba(var(--ui-accent-rgb),0.22);color:#fff;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  box-shadow:0 2px 12px rgba(0,0,0,.35);
+}
+.home-acct-panel .acct-avatar--welcome span{font-size:13px;font-weight:600;letter-spacing:.3px}
+.home-acct-panel .acct-avatar--welcome.has-photo{border:1px solid rgba(255,255,255,.22)}
+.home-acct-panel .acct-avatar--welcome[hidden]{display:none}
 .acct-signed{display:flex;flex-direction:column;gap:10px;max-width:340px}
 .acct-signed[hidden]{display:none}
 .acct-profile{display:flex;align-items:center;gap:12px}

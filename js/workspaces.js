@@ -83,7 +83,6 @@
         <button class="persona-pill" id="personaPill" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="persona-pill__emoji" id="selectedPersonaEmoji">✦</span><span id="selectedPersonaName">Stelena</span><i class="fas fa-chevron-down persona-pill__caret"></i></button>
         <button class="model-pill" id="modelPill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-microchip"></i><span id="selectedModelName">GPT OSS 120B</span><i class="fas fa-chevron-down model-pill__caret"></i></button>
         <button class="voice-pill" id="voicePill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-waveform"></i><span id="selectedVoiceName">Hannah</span><i class="fas fa-chevron-down voice-pill__caret"></i></button>
-        <div class="voice-menu" id="voiceMenu" role="listbox"><div class="voice-menu__head">Choose a voice</div><div class="voice-menu__list" id="voice-menu-list"></div></div>
       </div>
       <div class="composer" id="composer" role="form">
         <textarea id="userInput" rows="1" placeholder="Message Stelena..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
@@ -93,6 +92,7 @@
         <button class="composer__btn composer__btn--send" id="sendBtn" title="Send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
       </div>
       <div class="persona-menu" id="personaMenu" role="listbox"><div class="persona-menu__head">Choose a persona</div><div class="persona-menu__list" id="persona-menu-list"></div><button class="persona-menu__manage" id="personaManageBtn" type="button"><i class="fas fa-sliders"></i> Manage personas &amp; memory</button></div>
+      <div class="voice-menu" id="voiceMenu" role="listbox"><div class="voice-menu__head">Choose a voice</div><div class="voice-menu__list" id="voice-menu-list"></div></div>
       <div class="model-menu" id="modelMenu" role="listbox"><div class="model-menu__head">Choose a model</div><div class="model-menu__list" id="model-menu-list"></div></div>
       <div class="studio-overlay" id="studioOverlay" aria-hidden="true">
         <div class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioTitle">
@@ -174,7 +174,7 @@
 
   const bundles = {
     games: { css: 'css/games.css?v=2', scripts: ['https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js', 'js/games.js?v=2', 'js/personal-games.js'] },
-    ai: { css: 'css/ai.css?v=5', scripts: ['js/orb.js', 'js/ai.js?v=5'] },
+    ai: { css: 'css/ai.css?v=8', scripts: ['js/orb.js', 'js/ai.js?v=7'] },
     cloud: { css: 'css/cloud.css', scripts: ['js/cloud.js?v=1'] },
     media: { css: 'css/stream.css', scripts: ['js/stream.js?v=20260825'] },
     vms: { css: 'css/vms.css', scripts: ['js/vms.js'], module: true }
@@ -243,7 +243,7 @@
     if (!sharedGlassStyle) {
       sharedGlassStyle = document.createElement('link');
       sharedGlassStyle.rel = 'stylesheet';
-      sharedGlassStyle.href = 'css/glass.css';
+      sharedGlassStyle.href = 'css/glass.css?v=3';
       sharedGlassStyle.dataset.workspaceGlass = 'true';
       document.head.appendChild(sharedGlassStyle);
     }

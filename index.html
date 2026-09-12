@@ -31,8 +31,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="shortcut icon" id="app-favicon" href="img/favicon.png" type="image/x-icon">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-<link rel="stylesheet" href="css/style.css?v=16">
-<link rel="stylesheet" href="css/glass.css">
+<link rel="stylesheet" href="css/style.css?v=17">
+<link rel="stylesheet" href="css/glass.css?v=3">
 <link rel="stylesheet" href="css/plu-tokens.css">
 <link rel="stylesheet" href="css/workspace.css">
 <link rel="stylesheet" href="css/history.css?v=3">
@@ -128,7 +128,10 @@
     <div class="new-tab-page" id="new-tab-page">
 
     <div class="home-acct-panel" id="home-acct-panel">
-      <h2 class="acct-signin-title" id="home-acct-signin-text" hidden>Welcome to<br>Plutonium Network</h2>
+      <div class="acct-welcome">
+        <div class="acct-avatar acct-avatar--welcome" id="home-acct-avatar" hidden aria-hidden="true"><i class="fa-solid fa-user"></i></div>
+        <h2 class="acct-signin-title" id="home-acct-signin-text" hidden>Welcome to<br>Plutonium Network</h2>
+      </div>
       <div class="acct-signin-sub" id="home-acct-signin-sub" hidden>Sign in to sync your bookmarks, pins and settings across devices.</div>
       <button class="acct-signin-cta" id="home-acct-signin-cta" type="button" hidden><span>Sign in</span><i class="fa-solid fa-arrow-right"></i></button>
       <div class="acct-signed" id="home-acct-signed" hidden>
@@ -365,7 +368,7 @@
 
 <script src="js/cloud-store.js?v=2"></script>
 <script src="js/cloud-store-config.js"></script>
-<script src="js/account.js?v=30"></script>
+<script src="js/account.js?v=32"></script>
 <script src="js/history.js?v=3"></script>
 <script src="https://unpkg.com/draggabilly@2.2.0/dist/draggabilly.pkgd.min.js"></script>
 <script src="/bridge/index.js"></script>
@@ -378,7 +381,7 @@
 <script src="js/net.js?v=1"></script>
 <script src="js/url.js"></script>
 <script src="js/vms-mark.js"></script>
-<script src="js/workspaces.js?v=6"></script>
+<script src="js/workspaces.js?v=7"></script>
 <script src="js/navigation.js?v=6"></script>
 <script src="js/keyboard.js"></script>
 <script src="js/pins.js"></script>

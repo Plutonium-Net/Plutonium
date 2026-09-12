@@ -31,27 +31,33 @@ html,body{
 .ai-brand__sub{font-size:12px;color:rgba(255,255,255,0.5)}
 .ai-header__actions{display:flex;align-items:center;gap:8px}
 
+/* Model / voice / persona live in the bottom-right corner, in the strip
+   between the composer and the right edge of the screen, and are all the
+   same size button. */
 .chooser-dock{
-  position:fixed;
-  bottom:calc(var(--composer-h,56px) + 22px);
-  left:calc(50% + var(--ai-sidebar-w,0px)/2);transform:translateX(-50%);
-  z-index:425;
+  position:fixed;z-index:425;
+  left:calc(50% + var(--ai-sidebar-w,0px)/2 + min(720px,100vw - 24px)/2 + 14px);
+  right:16px;bottom:20px;
+  height:var(--composer-h,56px);
   display:flex;align-items:center;justify-content:flex-end;flex-wrap:nowrap;gap:8px;
-  width:min(720px,calc(100vw - 24px));
-  padding:0 4px;
+  padding:0;
   pointer-events:none;
 }
 .chooser-dock .persona-pill,
 .chooser-dock .model-pill,
-.chooser-dock .voice-pill-wrap{
-  flex:1 1 0;max-width:140px;min-width:0;
-}
-.chooser-dock .persona-pill,
-.chooser-dock .model-pill,
 .chooser-dock .voice-pill{
-  height:34px;justify-content:center;padding:0 10px;
+  flex:1 1 0;width:auto;max-width:150px;min-width:0;
+  height:34px;justify-content:center;padding:0 12px;
 }
-.chooser-dock .voice-pill{width:100%}
+/* Below this width the strip beside the composer gets too narrow to read, so
+   the trio parks just above the composer, still hard against the right edge. */
+@media (max-width:1560px){
+  .chooser-dock{
+    left:auto;right:16px;bottom:calc(var(--composer-h,56px) + 30px);
+    width:min(466px,calc(100vw - 32px));
+    height:auto;
+  }
+}
 .voice-pill #selectedVoiceName{overflow:hidden;text-overflow:ellipsis}
 .chooser-dock > *{pointer-events:auto}
 
@@ -70,6 +76,7 @@ html,body{
 .model-pill #selectedModelName{overflow:hidden;text-overflow:ellipsis}
 
 .voice-pill-wrap{position:relative}
+.chooser-dock .voice-menu{position:fixed}
 .voice-pill{
   display:flex;align-items:center;gap:7px;white-space:nowrap;
   padding:7px 12px;border-radius:999px;
@@ -102,19 +109,18 @@ html,body{
 }
 .ai-sidebar-foot .ai-quota-pill #aiQuotaText{font-size:12px}
 .voice-menu{
-  position:fixed;
-  bottom:calc(var(--composer-h,56px) + 72px);
-  right:max(12px,calc((100vw - var(--ai-sidebar-w,0px) - min(720px,100vw - 24px))/2));
+  position:fixed;top:50%;left:50%;
   z-index:540;
-  width:min(250px,calc(100vw - 32px));
+  width:min(300px,calc(100vw - 40px));
+  max-height:min(78vh,560px);overflow-y:auto;
   background:rgba(18,18,23,.94);border:1px solid rgba(255,255,255,0.13);
   border-radius:24px;padding:8px;
   box-shadow:0 16px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);
   backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
-  opacity:0;visibility:hidden;transform:translateY(10px);
+  opacity:0;visibility:hidden;transform:translate(-50%,-46%) scale(.97);
   transition:opacity .18s ease,transform .18s ease,visibility .18s;
 }
-.voice-menu.open{opacity:1;visibility:visible;transform:translateY(0)}
+.voice-menu.open{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
 .voice-menu__head{
   padding:6px 14px 8px;font-size:11px;font-weight:600;letter-spacing:.08em;
   text-transform:uppercase;color:rgba(255,255,255,0.4);
@@ -131,19 +137,18 @@ html,body{
 .ai-clear-btn:hover{color:#ff6b6b;border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.08)}
 
 .model-menu{
-  position:fixed;
-  bottom:calc(var(--composer-h,56px) + 72px);
-  right:max(12px,calc((100vw - var(--ai-sidebar-w,0px) - min(720px,100vw - 24px))/2));
+  position:fixed;top:50%;left:50%;
   z-index:530;
-  width:min(320px,calc(100vw - 32px));
+  width:min(340px,calc(100vw - 40px));
+  max-height:min(78vh,560px);overflow-y:auto;
   background:rgba(18,18,23,.94);border:1px solid rgba(255,255,255,0.13);
   border-radius:24px;padding:8px;
   box-shadow:0 16px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);
   backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
-  opacity:0;visibility:hidden;transform:translateY(10px);
+  opacity:0;visibility:hidden;transform:translate(-50%,-46%) scale(.97);
   transition:opacity .18s ease,transform .18s ease,visibility .18s;
 }
-.model-menu.open{opacity:1;visibility:visible;transform:translateY(0)}
+.model-menu.open{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
 .model-menu__head{
   padding:6px 14px 8px;font-size:11px;font-weight:600;letter-spacing:.08em;
   text-transform:uppercase;color:rgba(255,255,255,0.4);
@@ -565,19 +570,18 @@ html,body{
 .persona-pill.locked{opacity:.72}
 
 .persona-menu{
-  position:fixed;
-  bottom:calc(var(--composer-h,56px) + 72px);
-  right:max(12px,calc((100vw - var(--ai-sidebar-w,0px) - min(720px,100vw - 24px))/2));
+  position:fixed;top:50%;left:50%;
   z-index:535;
-  width:min(340px,calc(100vw - 32px));
+  width:min(360px,calc(100vw - 40px));
+  max-height:min(78vh,560px);overflow-y:auto;
   background:rgba(18,18,23,.94);border:1px solid rgba(255,255,255,0.13);
   border-radius:24px;padding:8px;
   box-shadow:0 16px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);
   backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
-  opacity:0;visibility:hidden;transform:translateY(10px);
+  opacity:0;visibility:hidden;transform:translate(-50%,-46%) scale(.97);
   transition:opacity .18s ease,transform .18s ease,visibility .18s;
 }
-.persona-menu.open{opacity:1;visibility:visible;transform:translateY(0)}
+.persona-menu.open{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
 .persona-menu__head{
   padding:6px 14px 8px;font-size:11px;font-weight:600;letter-spacing:.08em;
   text-transform:uppercase;color:rgba(255,255,255,0.4);
@@ -735,26 +739,13 @@ html,body{
   .persona-item__desc{white-space:normal}
 }
 
-/* Chooser popups: centred with a dimmed backdrop */
-.model-menu,
-.persona-menu,
-.voice-menu{
-  top:50%;left:50%;right:auto;bottom:auto;
-  transform:translate(-50%,-46%) scale(.97);
-  width:min(360px,calc(100vw - 40px));
-  max-height:min(78vh,560px);
-  overflow-y:auto;
-  z-index:900;
-}
+/* Chooser popups: dead centre of the screen, dimming everything behind them.
+   The dim is drawn as a huge shadow spread so it survives the popup's own
+   scrolling (a fixed ::before would be clipped by overflow). */
 .model-menu.open,
 .persona-menu.open,
-.voice-menu.open{transform:translate(-50%,-50%) scale(1)}
-.model-menu::before,
-.persona-menu::before,
-.voice-menu::before{
-  content:'';position:fixed;inset:0;z-index:-1;border-radius:0;
-  background:rgba(3,4,10,.58);
-  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+.voice-menu.open{
+  box-shadow:0 0 0 100vmax rgba(3,4,10,.5),0 26px 70px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.1);
 }
 
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
