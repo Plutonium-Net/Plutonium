@@ -52,6 +52,9 @@
       <aside class="ai-sidebar" id="aiSidebar">
         <button class="ai-new-chat" id="aiNewChat" type="button"><i class="fa-solid fa-plus"></i>New chat</button>
         <div class="ai-chat-list" id="aiChatList"></div>
+        <div class="ai-sidebar-foot">
+          <button class="ai-quota-pill" id="aiQuotaPill" type="button" title="AI request usage this window"><i class="fas fa-gauge-high"></i><span id="aiQuotaText">…</span><span class="ai-quota-bar"><span id="aiQuotaBar"></span></span></button>
+        </div>
       </aside>
       <main id="main-content">
         <header class="ai-header">
@@ -60,13 +63,6 @@
             <div class="ai-brand__copy"><div class="ai-brand__name">Stelena AI</div><div class="ai-brand__sub">Plutonium Network's assistant</div></div>
           </div>
           <div class="ai-header__actions">
-            <button class="persona-pill" id="personaPill" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="persona-pill__emoji" id="selectedPersonaEmoji">✦</span><span id="selectedPersonaName">Stelena</span><i class="fas fa-chevron-down persona-pill__caret"></i></button>
-            <button class="model-pill" id="modelPill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-microchip"></i><span id="selectedModelName">GPT OSS 120B</span><i class="fas fa-chevron-down model-pill__caret"></i></button>
-            <div class="voice-pill-wrap">
-              <button class="voice-pill" id="voicePill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-waveform"></i><span id="selectedVoiceName">Hannah</span><i class="fas fa-chevron-down voice-pill__caret"></i></button>
-              <div class="voice-menu" id="voiceMenu" role="listbox"><div class="voice-menu__head">Choose a voice</div><div class="voice-menu__list" id="voice-menu-list"></div></div>
-            </div>
-            <button class="ai-quota-pill" id="aiQuotaPill" type="button" title="AI request usage this window"><i class="fas fa-gauge-high"></i><span id="aiQuotaText">…</span><span class="ai-quota-bar"><span id="aiQuotaBar"></span></span></button>
             <button class="ai-clear-btn" id="ai-clear-btn" title="Clear conversation"><i class="fas fa-trash"></i></button>
           </div>
         </header>
@@ -83,6 +79,12 @@
           </div>
         </div></div></div></div>
       </main>
+      <div class="chooser-dock" id="chooserDock">
+        <button class="persona-pill" id="personaPill" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="persona-pill__emoji" id="selectedPersonaEmoji">✦</span><span id="selectedPersonaName">Stelena</span><i class="fas fa-chevron-down persona-pill__caret"></i></button>
+        <button class="model-pill" id="modelPill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-microchip"></i><span id="selectedModelName">GPT OSS 120B</span><i class="fas fa-chevron-down model-pill__caret"></i></button>
+        <button class="voice-pill" id="voicePill" type="button" aria-haspopup="listbox" aria-expanded="false"><i class="fas fa-waveform"></i><span id="selectedVoiceName">Hannah</span><i class="fas fa-chevron-down voice-pill__caret"></i></button>
+        <div class="voice-menu" id="voiceMenu" role="listbox"><div class="voice-menu__head">Choose a voice</div><div class="voice-menu__list" id="voice-menu-list"></div></div>
+      </div>
       <div class="composer" id="composer" role="form">
         <textarea id="userInput" rows="1" placeholder="Message Stelena..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
         <button class="composer__btn" id="stopBtn" title="Stop generating" style="display:none"><i class="fas fa-stop"></i></button>
@@ -105,6 +107,7 @@
           <div class="studio-body">
             <section class="studio-pane active" data-pane="personas">
               <div class="studio-form">
+                <div class="studio-form-title" id="studioFormTitle">New persona</div>
                 <div class="studio-field-row">
                   <div class="studio-field studio-field--emoji"><label class="studio-label">Icon</label><input class="studio-input" id="studioEmoji" maxlength="2" placeholder="✦"></div>
                   <div class="studio-field studio-field--name"><label class="studio-label">Name</label><input class="studio-input" id="studioName" maxlength="40" placeholder="e.g. Code Expert"></div>
@@ -171,7 +174,7 @@
 
   const bundles = {
     games: { css: 'css/games.css?v=2', scripts: ['https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js', 'js/games.js?v=2', 'js/personal-games.js'] },
-    ai: { css: 'css/ai.css?v=2', scripts: ['js/orb.js', 'js/ai.js?v=3'] },
+    ai: { css: 'css/ai.css?v=5', scripts: ['js/orb.js', 'js/ai.js?v=5'] },
     cloud: { css: 'css/cloud.css', scripts: ['js/cloud.js?v=1'] },
     media: { css: 'css/stream.css', scripts: ['js/stream.js?v=20260825'] },
     vms: { css: 'css/vms.css', scripts: ['js/vms.js'], module: true }

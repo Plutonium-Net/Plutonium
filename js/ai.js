@@ -341,6 +341,7 @@ function initModelSelect() {
   }
   function openMenu() { menu.classList.add('open'); pill.classList.add('open'); pill.setAttribute('aria-expanded', 'true'); }
   function closeMenu() { menu.classList.remove('open'); pill.classList.remove('open'); pill.setAttribute('aria-expanded', 'false'); }
+  window._aiCloseModelMenu = closeMenu;
 
   function selectModel(id) {
     currentModel = id;
@@ -355,7 +356,7 @@ function initModelSelect() {
   pill.addEventListener('click', e => {
     e.stopPropagation();
     if (menu.classList.contains('open')) closeMenu();
-    else { syncActive(); openMenu(); if (window._aiClosePersonaMenu) window._aiClosePersonaMenu(); }
+    else { syncActive(); openMenu(); if (window._aiClosePersonaMenu) window._aiClosePersonaMenu(); if (window._aiCloseVoiceMenu) window._aiCloseVoiceMenu(); }
   });
   document.addEventListener('click', closeMenu);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
@@ -383,6 +384,7 @@ function initVoiceSelect() {
   }
   function openMenu() { menu.classList.add('open'); pill.classList.add('open'); pill.setAttribute('aria-expanded', 'true'); }
   function closeMenu() { menu.classList.remove('open'); pill.classList.remove('open'); pill.setAttribute('aria-expanded', 'false'); }
+  window._aiCloseVoiceMenu = closeMenu;
 
   function selectVoice(id) {
     ttsVoice = id;
@@ -401,7 +403,7 @@ function initVoiceSelect() {
   pill.addEventListener('click', e => {
     e.stopPropagation();
     if (menu.classList.contains('open')) closeMenu();
-    else { syncActive(); openMenu(); }
+    else { syncActive(); openMenu(); if (window._aiCloseModelMenu) window._aiCloseModelMenu(); if (window._aiClosePersonaMenu) window._aiClosePersonaMenu(); }
   });
   document.addEventListener('click', closeMenu);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
@@ -701,8 +703,12 @@ function resetStudioForm() {
   fillStudioForm({});
   const saveBtn = document.getElementById('studioSaveBtn');
   const resetBtn = document.getElementById('studioResetBtn');
+  const form = document.querySelector('#studioOverlay .studio-form');
+  const title = document.getElementById('studioFormTitle');
   if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-plus"></i> Create persona';
   if (resetBtn) resetBtn.style.display = 'none';
+  if (form) form.classList.remove('editing');
+  if (title) title.textContent = 'New persona';
 }
 
 function saveStudioPersona() {
@@ -743,8 +749,14 @@ function editPersona(id) {
   fillStudioForm(p);
   const saveBtn = document.getElementById('studioSaveBtn');
   const resetBtn = document.getElementById('studioResetBtn');
+  const form = document.querySelector('#studioOverlay .studio-form');
+  const title = document.getElementById('studioFormTitle');
   if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-check"></i> Save persona';
   if (resetBtn) resetBtn.style.display = 'inline-flex';
+  if (form) form.classList.add('editing');
+  if (title) title.textContent = 'Editing: ' + p.name;
+  const nameEl = document.getElementById('studioName');
+  if (nameEl) nameEl.focus();
 }
 
 function duplicatePersona(id) {
@@ -754,8 +766,12 @@ function duplicatePersona(id) {
   fillStudioForm({ name: p.name + ' copy', emoji: p.emoji, prompt: p.prompt });
   const saveBtn = document.getElementById('studioSaveBtn');
   const resetBtn = document.getElementById('studioResetBtn');
+  const form = document.querySelector('#studioOverlay .studio-form');
+  const title = document.getElementById('studioFormTitle');
   if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-plus"></i> Create persona';
   if (resetBtn) resetBtn.style.display = 'none';
+  if (form) form.classList.remove('editing');
+  if (title) title.textContent = 'New persona';
 }
 
 function deletePersona(id) {
@@ -880,6 +896,18 @@ function toggleMemory() {
   renderMemoryStudio();
 }
 
+function initChooserDock() {
+  const composer = document.getElementById('composer');
+  if (!composer) return;
+  const apply = () => {
+    const h = composer.offsetHeight || 56;
+    document.documentElement.style.setProperty('--composer-h', h + 'px');
+  };
+  apply();
+  if (window.ResizeObserver) new ResizeObserver(apply).observe(composer);
+  else window.addEventListener('resize', apply);
+}
+
 function initStudio() {
   const overlay = document.getElementById('studioOverlay');
   if (!overlay) return;
@@ -928,6 +956,7 @@ function initPersonaSelect() {
       const mp = document.getElementById('modelPill');
       if (mm) mm.classList.remove('open');
       if (mp) { mp.classList.remove('open'); mp.setAttribute('aria-expanded', 'false'); }
+      if (window._aiCloseVoiceMenu) window._aiCloseVoiceMenu();
       renderPersonaMenu(); menu.classList.add('open'); pill.classList.add('open'); pill.setAttribute('aria-expanded', 'true');
     }
   });
@@ -942,7 +971,17 @@ function renderPersonaMenu() {
   const currentId = chat ? (chat.personaId || defaultPersonaId) : defaultPersonaId;
   const locked = !!(chat && messages.length > 0);
   list.innerHTML = '';
-  allPersonas().forEach(p => {
+  const builtins = BUILTIN_PERSONAS;
+  const customs = personas;
+  const addSection = label => {
+    if (label) {
+      const head = document.createElement('div');
+      head.className = 'persona-menu__section';
+      head.textContent = label;
+      list.appendChild(head);
+    }
+  };
+  const addOption = p => {
     const opt = document.createElement('button');
     opt.type = 'button';
     opt.className = 'ai-model-option persona-option' + (p.id === currentId ? ' active' : '') + (locked ? ' disabled' : '');
@@ -955,7 +994,13 @@ function renderPersonaMenu() {
       selectPersona(p.id);
     });
     list.appendChild(opt);
-  });
+  };
+  addSection(customs.length ? 'Built-in' : '');
+  builtins.forEach(addOption);
+  if (customs.length) {
+    addSection('Your personas');
+    customs.forEach(addOption);
+  }
   updatePersonaPill();
 }
 
@@ -1990,6 +2035,7 @@ function init() {
   initModelSelect();
   initVoiceSelect();
   initTalkMode();
+  initChooserDock();
   initPersonaSelect();
   initStudio();
   initQuota();

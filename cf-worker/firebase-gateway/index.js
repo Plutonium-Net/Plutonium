@@ -12,67 +12,67 @@ export default {
 
     try {
       if (path === '/' && request.method === 'GET') {
-        return handleHomepage();
+        return await handleHomepage();
       }
 
       if (path === '/config' && request.method === 'GET') {
-        return handleConfig(env, allowed);
+        return await handleConfig(env, allowed);
       }
 
       if (path === '/auth/email' && request.method === 'POST') {
-        return handleEmailSignIn(request, env, allowed);
+        return await handleEmailSignIn(request, env, allowed);
       }
 
       if (path === '/auth/signup' && request.method === 'POST') {
-        return handleEmailSignUp(request, env, allowed);
+        return await handleEmailSignUp(request, env, allowed);
       }
 
       if (path === '/auth/reset' && request.method === 'POST') {
-        return handlePasswordReset(request, env, allowed);
+        return await handlePasswordReset(request, env, allowed);
       }
 
       if (path === '/auth/update' && request.method === 'POST') {
-        return handleProfileUpdate(request, env, allowed);
+        return await handleProfileUpdate(request, env, allowed);
       }
 
       if (path === '/auth/delete' && request.method === 'POST') {
-        return handleAccountDelete(request, env, allowed);
+        return await handleAccountDelete(request, env, allowed);
       }
 
       if (path === '/auth/password' && request.method === 'POST') {
-        return handlePasswordChange(request, env, allowed);
+        return await handlePasswordChange(request, env, allowed);
       }
 
       if (path === '/auth/providers' && request.method === 'POST') {
-        return handleListProviders(request, env, allowed);
+        return await handleListProviders(request, env, allowed);
       }
 
       if (path === '/auth/unlink' && request.method === 'POST') {
-        return handleUnlinkProvider(request, env, allowed);
+        return await handleUnlinkProvider(request, env, allowed);
       }
 
       if (path === '/auth/link' && request.method === 'POST') {
-        return handleLinkProvider(request, env, allowed);
+        return await handleLinkProvider(request, env, allowed);
       }
 
       if (path === '/auth/oauth/start' && request.method === 'GET') {
-        return handleOAuthStart(request, env, url);
+        return await handleOAuthStart(request, env, url);
       }
 
       if (path === '/auth/oauth/callback' && request.method === 'GET') {
-        return handleOAuthCallback(request, env, url);
+        return await handleOAuthCallback(request, env, url);
       }
 
       if (path === '/vm/session' && request.method === 'POST') {
-        return handleVMSession(request, env, allowed);
+        return await handleVMSession(request, env, allowed);
       }
 
       if (path.startsWith('/firestore/')) {
-        return handleFirestore(request, env, allowed, path);
+        return await handleFirestore(request, env, allowed, path);
       }
 
       if (path.startsWith('/rtdb/')) {
-        return handleRTDB(request, env, allowed, path, url);
+        return await handleRTDB(request, env, allowed, path, url);
       }
 
       return corsResponse({ error: 'Not found' }, 404, allowed);
@@ -420,6 +420,9 @@ async function handleOAuthCallback(request, env, url) {
   const siteUrl     = (env.SITE_URL || '').replace(/\/$/, '');
   const workerUrl   = new URL(request.url).origin;
   const callbackUri = `${workerUrl}/auth/oauth/callback`;
+
+  const code  = url.searchParams.get('code') || '';
+  const error = url.searchParams.get('error_description') || url.searchParams.get('error') || '';
 
   const stateParts = (url.searchParams.get('state') || '').split(':');
   const provider = stateParts[0];
