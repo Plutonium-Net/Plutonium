@@ -4,10 +4,10 @@ const HOME_SIGNIN_TITLE = 'Welcome to<br>Plutonium Network'
 const GREETING_NAME_TOKEN = '{name}'
 
 // Crossfade timings: the outgoing line fades out while the incoming one fades in, with a
-// real overlap (~170ms) so you see one dissolve into the other rather than a dip to blank.
-const FADE_OUT_MS = 260
-const FADE_DELAY_MS = 90
-const FADE_IN_MS = 260
+// real overlap (~220ms) so you see one dissolve into the other rather than a dip to blank.
+const FADE_OUT_MS = 330
+const FADE_DELAY_MS = 110
+const FADE_IN_MS = 330
 
 function prefersReducedMotion() {
   return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
