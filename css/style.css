@@ -1096,6 +1096,9 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
   position:absolute;top:20px;left:20px;z-index:6;
   width:min(280px,calc(100vw - 40px));
 }
+/* Signed in the greeting runs at hero size, so the panel needs a little more room for the
+   longer lines to stay within two rows instead of stacking to three and four. */
+.home-acct-panel.has-account{width:min(360px,calc(100vw - 40px))}
 .home-acct-panel .acct-signed{
   display:flex;flex-direction:column;gap:10px;margin-top:14px;max-width:280px;
 }
@@ -1117,11 +1120,15 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .home-acct-panel .acct-signin-cta:hover{color:#fff}
 .home-acct-panel .acct-signin-cta:hover i{transform:translateX(4px)}
 .home-acct-panel .acct-signin-cta[hidden]{display:none}
-.home-acct-panel .acct-signin-title .shuffle-stack{display:inline-grid;align-items:baseline;justify-items:start}
+.home-acct-panel .acct-signin-title .shuffle-stack{display:inline-grid;align-items:baseline;justify-items:start;position:relative}
 .home-acct-panel .acct-signin-title .shuffle-layer{grid-area:1 / 1}
+/* The outgoing layer is painted over the incoming one instead of sitting beside it, so the
+   stack is exactly as wide as the text that stays - the fade can't change how the line wraps. */
+.home-acct-panel .acct-signin-title .shuffle-layer--out{position:absolute;top:0;left:0;width:100%}
 .home-acct-panel .acct-welcome{display:flex;align-items:center;gap:12px;min-width:0}
 .home-acct-panel .acct-welcome .acct-signin-title{min-width:0}
-.home-acct-panel.has-account .acct-signin-title{font-size:26px}
+.home-acct-panel.has-account .acct-signin-title{font-size:30px}
+.home-acct-panel.has-account .acct-avatar--welcome{width:44px;height:44px}
 .home-acct-panel .acct-avatar--welcome{
   width:40px;height:40px;font-size:13px;
   background-color:rgba(var(--ui-accent-rgb),0.22);color:#fff;

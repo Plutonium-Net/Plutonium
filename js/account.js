@@ -32,6 +32,8 @@ class AccountManager {
     this._greeting       = { hour: null, index: 0 }
     this._greetingTimer  = null
     this._greetingParts  = null
+    this._greetFitBound  = false
+    this._greetFitTimer  = null
 
     this.user          = null
     this.isGuest       = false
@@ -553,6 +555,7 @@ class AccountManager {
       signedEl.hidden = true
       if (avatarEl) avatarEl.hidden = true
       signinTextEl.hidden = false
+      signinTextEl.style.minHeight = ''
       signinTextEl.innerHTML = HOME_SIGNIN_TITLE
       subEl.hidden = false
       ctaEl.hidden = false
@@ -561,6 +564,7 @@ class AccountManager {
     }
     signinTextEl.hidden = false
     this._setHomeGreeting(signinTextEl, this._greetingTemplate(), this._firstName(), false)
+    this._fitGreetingHeight(signinTextEl, this._firstName())
     this._startGreetingRoll()
     if (avatarEl) {
       avatarEl.hidden = false
@@ -756,6 +760,46 @@ class AccountManager {
     return String(list[this._greeting.index % list.length] || list[0])
   }
 
+  // The greeting rolls every 5s through the current hour's pool, and those lines don't all wrap
+  // to the same number of rows. Reserve the tallest row count the current pool can produce (in
+  // px, measured on the live element so wrapping matches exactly) so the block underneath the
+  // greeting - sync state, recent list, sign out - never nudges up and down mid-roll. Pools that
+  // happen to be uniform stay at their natural height instead of carrying a fixed two-row gap.
+  _fitGreetingHeight(el, name) {
+    if (!this._greetFitBound) {
+      this._greetFitBound = true
+      window.addEventListener('resize', () => {
+        clearTimeout(this._greetFitTimer)
+        this._greetFitTimer = setTimeout(() => {
+          this._fitGreetingHeight(document.getElementById('home-acct-signin-text'), this._firstName())
+        }, 150)
+      })
+    }
+    if (!el) return
+    if (el.hidden) {
+      el.style.minHeight = ''
+      return
+    }
+    const list = this.greetings && this.greetings[String(new Date().getHours())]
+    if (!el.getBoundingClientRect().width || !Array.isArray(list) || list.length < 2) {
+      el.style.minHeight = ''
+      return
+    }
+    const vis = el.style.visibility
+    el.style.minHeight = '0'
+    el.style.visibility = 'hidden'
+    let tallest = 0
+    for (const tpl of list) {
+      el.textContent = String(tpl).replace(/\{name\}/g, name)
+      tallest = Math.max(tallest, el.getBoundingClientRect().height)
+    }
+    el.style.visibility = vis
+    el.style.minHeight = tallest ? Math.ceil(tallest) + 'px' : ''
+    // The measuring pass left plain text behind, so re-render the current line from a clean base.
+    this._greetingParts = null
+    this._setHomeGreeting(el, this._greetingTemplate(), name, false)
+  }
+
   _startGreetingRoll() {
     if (this._greetingTimer) return
     this._greetingTimer = setInterval(() => this._rollGreeting(), 5000)
@@ -772,15 +816,22 @@ class AccountManager {
     const hour = new Date().getHours()
     const list = this.greetings[String(hour)]
     if (!Array.isArray(list) || !list.length) return
-    if (this._greeting.hour === hour) this._greeting.index = (this._greeting.index + 1) % list.length
-    else this._greeting = { hour, index: 0 }
+    const newHour = this._greeting.hour !== hour
+    if (newHour) this._greeting = { hour, index: 0 }
+    else this._greeting.index = (this._greeting.index + 1) % list.length
     const el = document.getElementById('home-acct-signin-text')
     if (el) this._setHomeGreeting(el, this._greetingTemplate(), this._firstName(), true)
+    // A new hour means a new pool, so its tallest line may be a different number of rows.
+    if (newHour) this._fitGreetingHeight(el, this._firstName())
   }
 
-  // Crossfade from the previous greeting to the next one. Both phrases sit stacked in the
-  // same grid cell so they overlap exactly, fade on opacity only (compositor-friendly), and
-  // the name is rendered once outside the stacks - so it never ghosts, fades or moves.
+  // Crossfade from the previous greeting to the next one. Both phrases sit in the same grid
+  // cell so they overlap exactly, fade on opacity only (compositor-friendly), and the name is
+  // rendered once outside the stacks - so it never ghosts, fades or moves. The outgoing layer
+  // is taken out of flow (see .shuffle-layer--out) so only the incoming text has any width:
+  // the animated layout then wraps exactly like the settled plain text, which is what
+  // _fitGreetingHeight reserved space for. A layer in flow would widen the line mid-fade and
+  // bump everything below the greeting down a row until it settled again.
   _setHomeGreeting(el, template, name, animate) {
     if (!el) return
     const raw = String(template == null ? '' : template)
@@ -808,7 +859,7 @@ class AccountManager {
       const wrap = document.createElement('span')
       wrap.className = 'shuffle-stack'
       const out = document.createElement('span')
-      out.className = 'shuffle-layer'
+      out.className = 'shuffle-layer shuffle-layer--out'
       out.textContent = oldText
       out.setAttribute('aria-hidden', 'true')
       const inn = document.createElement('span')
