@@ -686,14 +686,11 @@ function openAboutDialog() {
       <div class="about-dialog__contact">
         <a href="https://discord.gg/sQvNX6SVfA" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;display:flex;align-items:center">
           <i class="fab fa-discord"></i>
-          <span> Have questions or suggestions? Find us on Discord!</span>
+          <span>.    Have questions or suggestions? Find us on Discord!</span>
         </a>
       </div>
     </div>
   `
-
-  document.getElementById('about-clear-cache').addEventListener('click', window.clearCacheAndReload);
-
   dlg.hidden = false
   scrim.hidden = false
   dlg.offsetHeight
