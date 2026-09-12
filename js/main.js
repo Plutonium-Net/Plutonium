@@ -683,17 +683,10 @@ function openAboutDialog() {
         </div>
       </div>
 
-      <div class="about-dialog__section">
-        <div class="about-dialog__section-label">Maintenance</div>
-        <button class="about-dialog__cache-btn" id="about-clear-cache" type="button">
-          <i class="fas fa-trash-can" style="margin-right:6px"></i>Clear Cache &amp; Reload
-        </button>
-      </div>
-
       <div class="about-dialog__contact">
         <a href="https://discord.gg/sQvNX6SVfA" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;display:flex;align-items:center">
           <i class="fab fa-discord"></i>
-          <span>Have questions or suggestions? Find us on Discord!</span>
+          <span> Have questions or suggestions? Find us on Discord!</span>
         </a>
       </div>
     </div>
