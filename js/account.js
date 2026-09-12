@@ -790,7 +790,10 @@ class AccountManager {
     el.style.visibility = 'hidden'
     let tallest = 0
     for (const tpl of list) {
-      el.textContent = String(tpl).replace(/\{name\}/g, name)
+      const { raw, at, before, after } = this._splitGreeting(tpl)
+      el.textContent = ''
+      if (at < 0) el.textContent = raw
+      else el.append(...this._greetingNodes(before, name, after))
       tallest = Math.max(tallest, el.getBoundingClientRect().height)
     }
     el.style.visibility = vis
@@ -825,6 +828,26 @@ class AccountManager {
     if (newHour) this._fitGreetingHeight(el, this._firstName())
   }
 
+  // Split a greeting template around its {name} token. Whitespace hugging the token is dropped
+  // so the two halves stack cleanly without a dangling gap.
+  _splitGreeting(template) {
+    const raw = String(template == null ? '' : template)
+    const at = raw.indexOf(GREETING_NAME_TOKEN)
+    const before = (at < 0 ? raw : raw.slice(0, at)).replace(/\s+$/, '')
+    const after = at < 0 ? '' : raw.slice(at + GREETING_NAME_TOKEN.length).replace(/^\s+/, '')
+    return { raw, at, before, after }
+  }
+
+  // The name always starts its own line: the greeting phrase sits on the first line, a <br>
+  // separates them, and trailing punctuation stays glued to the name on the second line.
+  _greetingNodes(before, name, after) {
+    const nodes = []
+    if (before) nodes.push(document.createTextNode(before), document.createElement('br'))
+    nodes.push(document.createTextNode(name))
+    if (after) nodes.push(document.createTextNode(after))
+    return nodes
+  }
+
   // Crossfade from the previous greeting to the next one. Both phrases sit in the same grid
   // cell so they overlap exactly, fade on opacity only (compositor-friendly), and the name is
   // rendered once outside the stacks - so it never ghosts, fades or moves. The outgoing layer
@@ -834,14 +857,18 @@ class AccountManager {
   // bump everything below the greeting down a row until it settled again.
   _setHomeGreeting(el, template, name, animate) {
     if (!el) return
-    const raw = String(template == null ? '' : template)
     const who = name || 'there'
-    const at = raw.indexOf(GREETING_NAME_TOKEN)
-    const before = (at < 0 ? raw : raw.slice(0, at)).replace(/\s+$/, '')
-    const after = at < 0 ? '' : raw.slice(at + GREETING_NAME_TOKEN.length).replace(/^\s+/, '')
+    const { raw, at, before, after } = this._splitGreeting(template)
+
+    if (at < 0) {
+      el.textContent = raw
+      this._greetingParts = { before, after }
+      return
+    }
 
     if (!animate || prefersReducedMotion() || typeof el.animate !== 'function') {
-      el.textContent = raw.replace(/\{name\}/g, who)
+      el.textContent = ''
+      el.append(...this._greetingNodes(before, who, after))
       this._greetingParts = { before, after }
       return
     }
@@ -882,13 +909,11 @@ class AccountManager {
     }
 
     addChunk(prev ? prev.before : '', before)
-    if (at >= 0) {
-      el.appendChild(document.createTextNode(' '))
-      const nameEl = document.createElement('span')
-      nameEl.className = 'shuffle-name'
-      nameEl.textContent = who
-      el.appendChild(nameEl)
-    }
+    el.appendChild(document.createElement('br'))
+    const nameEl = document.createElement('span')
+    nameEl.className = 'shuffle-name'
+    nameEl.textContent = who
+    el.appendChild(nameEl)
     addChunk(prev ? prev.after : '', after)
 
     this._greetingParts = { before, after }
