@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Terms of Service &amp; Privacy Policy — Plutonium Network</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="The Terms of Service and Privacy Policy for Plutonium Network.">
+<link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+  :root {
+    --pink: #e8175d;
+    --muted: rgba(255, 255, 255, .55);
+    --line: rgba(255, 255, 255, .14);
+    --panel: rgba(255, 255, 255, .03);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #000000;
+    color: #ffffff;
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 56px 24px 96px; }
+
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+  .brand img { width: 40px; height: 40px; }
+  .brand span { font-size: 15px; font-weight: 600; letter-spacing: .2px; }
+
+  /* ---- jump nav, built from the document's H2s ---- */
+  .legal-nav {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    padding: 14px 16px; margin-bottom: 44px;
+    border: 1px solid var(--line); border-radius: 12px;
+    background: var(--panel);
+  }
+  .legal-nav[hidden] { display: none; }
+  .legal-nav a {
+    color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px;
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--line);
+    transition: background .15s, border-color .15s;
+  }
+  .legal-nav a:hover { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .3); }
+
+  /* ---- rendered markdown ---- */
+  #doc h1 { font-size: 34px; line-height: 1.25; font-weight: 700; margin: 0 0 10px; letter-spacing: -.4px; }
+  #doc h1 + p { color: var(--muted); margin: 0 0 30px; }
+  #doc h2 {
+    font-size: 26px; font-weight: 700; margin: 0 0 6px;
+    padding-bottom: 14px; border-bottom: 1px solid var(--line);
+    letter-spacing: -.2px; scroll-margin-top: 24px;
+  }
+  #doc h2 + p { color: var(--muted); font-size: 13px; margin: 12px 0 30px; }
+  #doc h3 { font-size: 16px; font-weight: 600; margin: 30px 0 8px; scroll-margin-top: 24px; }
+  #doc p { margin: 0 0 14px; }
+  #doc ul { margin: 0 0 16px; padding-left: 22px; }
+  #doc li { margin-bottom: 8px; }
+  #doc a { color: inherit; }
+  #doc strong { font-weight: 600; }
+  #doc code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px; background: rgba(255, 255, 255, .08);
+    padding: 2px 6px; border-radius: 5px;
+  }
+
+  #doc blockquote {
+    margin: 0 0 22px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--pink);
+    border-radius: 10px;
+    background: var(--panel);
+    padding: 16px 18px;
+  }
+  #doc blockquote p { margin: 0 0 10px; }
+  #doc blockquote ul { margin: 0; padding-left: 20px; }
+  #doc blockquote li:last-child { margin-bottom: 0; }
+
+  #doc table { width: 100%; border-collapse: collapse; margin: 0 0 20px; font-size: 14px; }
+  #doc th, #doc td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  #doc th { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 600; }
+  #doc td:first-child { white-space: nowrap; font-weight: 600; }
+
+  /* ---- load states ---- */
+  #doc-status { color: var(--muted); }
+  #doc-error {
+    border: 1px solid var(--line); border-left: 3px solid var(--pink);
+    border-radius: 10px; background: var(--panel); padding: 16px 18px;
+  }
+  #doc-error[hidden] { display: none; }
+  #doc-error p { margin: 0; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 26px; color: var(--muted); font-size: 13px;
+    display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center;
+  }
+  footer a { color: #ffffff; text-decoration: none; border-bottom: 1px solid var(--line); }
+  footer a:hover { border-bottom-color: #ffffff; }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 36px 18px 72px; }
+    #doc h1 { font-size: 27px; }
+    #doc h2 { font-size: 22px; }
+    #doc td:first-child { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <div class="brand">
+    <img src="/img/logos/icon-plutonium-pink.png" alt="" width="40" height="40">
+    <span>Plutonium Network</span>
+  </div>
+
+  <nav class="legal-nav" id="legal-nav" aria-label="Jump to section" hidden></nav>
+
+  <article id="doc">
+    <p id="doc-status">Loading…</p>
+    <noscript>
+      <p>This page renders its text from <a href="legal.md">legal.md</a>, which needs JavaScript.
+      You can read that file directly.</p>
+    </noscript>
+  </article>
+
+  <div id="doc-error" role="alert" hidden>
+    <p>Could not load the policy text. You can read the source document at
+    <a href="legal.md">legal.md</a>.</p>
+  </div>
+
+  <footer>
+    <span>&copy; Plutonium Network 2026</span>
+    <a href="#terms">Terms of Service</a>
+    <a href="#privacy">Privacy Policy</a>
+    <a href="index.html">Back to Plutonium</a>
+  </footer>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var DOC_SRC = 'legal.md';
+  var FIXED_IDS = { 'terms of service': 'terms', 'privacy policy': 'privacy' };
+
+  var doc    = document.getElementById('doc');
+  var nav    = document.getElementById('legal-nav');
+  var errBox = document.getElementById('doc-error');
+
+  function slug(text) {
+    return String(text)
+      .toLowerCase()
+      .replace(/<[^>]*>/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function fail() {
+    doc.innerHTML = '';
+    doc.hidden = true;
+    errBox.hidden = false;
+  }
+
+  function buildNav() {
+    var heads = doc.querySelectorAll('h2');
+    if (!heads.length) return;
+    heads.forEach(function (h) {
+      var a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent;
+      nav.appendChild(a);
+    });
+    nav.hidden = false;
+  }
+
+  function render(markdown) {
+    if (typeof marked === 'undefined') { fail(); return; }
+    var renderer = new marked.Renderer();
+
+    renderer.heading = function (text, level, raw) {
+      var plain = String(raw != null ? raw : text).replace(/<[^>]*>/g, '').trim();
+      var id = FIXED_IDS[plain.toLowerCase()] || slug(plain);
+      return '<h' + level + ' id="' + id + '">' + text + '</h' + level + '>';
+    };
+
+    doc.innerHTML = marked.parse(markdown, { renderer: renderer, mangle: false, headerIds: false });
+    buildNav();
+    jumpToHash();
+  }
+
+  function jumpToHash() {
+    var hash = location.hash.slice(1);
+    if (!hash) return;
+    var target = document.getElementById(decodeURIComponent(hash));
+    if (target) target.scrollIntoView({ block: 'start' });
+  }
+
+  window.addEventListener('hashchange', jumpToHash);
+
+  fetch(DOC_SRC, { cache: 'no-cache' })
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.text();
+    })
+    .then(render)
+    .catch(function (e) {
+      console.error('[legal] failed to load ' + DOC_SRC + ':', e);
+      fail();
+    });
+})();
+</script>
+</body>
+</html>

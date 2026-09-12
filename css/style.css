@@ -1406,12 +1406,23 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 
 .help-wrap{position:absolute;bottom:20px;right:20px;z-index:6;display:flex;align-items:center;gap:10px}
-.help-copy{
+.help-legal{
   position:absolute;top:50%;right:100%;transform:translateY(-50%);
   margin-right:12px;white-space:nowrap;
+  display:flex;align-items:center;gap:14px;
   font-size:12px;font-weight:500;color:rgba(255,255,255,.5);
   letter-spacing:.2px;text-shadow:0 1px 3px rgba(0,0,0,.35);
-  pointer-events:none;user-select:none;
+}
+.help-copy{pointer-events:none;user-select:none}
+.help-legal-link{
+  color:rgba(255,255,255,.62);text-decoration:none;cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.22);
+  transition:color .15s,border-color .15s;
+}
+.help-legal-link:hover{color:#fff;border-bottom-color:rgba(255,255,255,.6)}
+.help-legal-link:focus-visible{outline:2px solid var(--pink);outline-offset:3px;border-radius:2px}
+@media (max-width: 1080px){
+  .help-legal{gap:10px;font-size:11px;letter-spacing:.1px}
 }
 .help-btn{
   width:38px;height:38px;border-radius:50%;
