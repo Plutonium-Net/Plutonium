@@ -630,7 +630,6 @@
     openViewer(PGCDN_BASE + '/' + game.path, game.name, game);
   }
 
-  let barTimer = null;
   let barManualHide = false;
 
   function openViewer(url, name, game) {
@@ -651,7 +650,6 @@
     updateBrandLogos();
     if (els['game-corner-logo']) els['game-corner-logo'].classList.remove('visible');
     barManualHide = false;
-    clearTimeout(barTimer);
     lastSaveAt = 0;
     manualSavingUntil = 0;
     saveChipMode = '';
@@ -767,7 +765,6 @@
       startSessionTimer();
       renderSaveChip(true);
       showBar();
-      scheduleBarHide();
     }
   }
 
@@ -809,7 +806,6 @@
     pendingGameUrl = null;
     launchAnimating = false;
     document.body.classList.remove('viewer-open');
-    clearTimeout(barTimer);
     clearTimeout(saveChipTimer);
     stopSessionTimer();
     hideBar();
@@ -849,24 +845,10 @@
     if (ghost) ghost.classList.toggle('ghost-visible', !!viewer && viewer.classList.contains('active') && !launchActive);
   }
 
-  function scheduleBarHide() {
-    clearTimeout(barTimer);
-    barTimer = setTimeout(() => {
-      if (!barManualHide) {
-        hideBar();
-        showBarHint();
-      }
-    }, 2600);
-  }
-
   function wireViewer() {
     $('vbtn-back').addEventListener('click', closeViewer);
     const saveChip = els['viewer-save'];
     if (saveChip) saveChip.addEventListener('click', saveNow);
-    els['viewer-bar'].addEventListener('mouseenter', () => clearTimeout(barTimer));
-    els['viewer-bar'].addEventListener('mouseleave', () => {
-      if (!barManualHide) scheduleBarHide();
-    });
     const gameBackBtn = $('game-back-btn');
     if (gameBackBtn) gameBackBtn.addEventListener('click', closeViewer);
     $('vbtn-reload').addEventListener('click', () => {
@@ -887,13 +869,11 @@
       if (barManualHide) return;
       if (els['game-launch'] && !els['game-launch'].classList.contains('hidden')) return;
       showBar();
-      scheduleBarHide();
     });
     els['viewer-bar-ghost'].addEventListener('click', () => {
       barManualHide = false;
       if (els['game-launch'] && !els['game-launch'].classList.contains('hidden')) return;
       showBar();
-      scheduleBarHide();
     });
     if (els['game-launch-btn']) {
       els['game-launch-btn'].addEventListener('click', startLaunch);
@@ -905,7 +885,6 @@
         if (els['viewer-bar'].classList.contains('bar-hidden')) {
           barManualHide = false;
           showBar();
-          scheduleBarHide();
         } else {
           barManualHide = true;
           hideBar();
