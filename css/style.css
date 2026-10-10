@@ -1035,6 +1035,13 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .engine-switch.dragging{transition:none}
 .engine-switch.springing{transition:none}
 .engine-switch.springing .engine-slider{transition:none}
+/* Five engines no longer fit a phone-width pill, so down here the buttons keep
+   their logo and drop the text; the title/aria-label still carries the name. */
+@media (max-width:560px){
+  .engine-btn{padding:6px 9px}
+  .engine-btn .engine-label{display:none}
+  .engine-badge{display:none}
+}
 
 .status-bar{
   position:fixed;left:50%;bottom:12px;transform:translateX(-50%);
