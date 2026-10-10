@@ -4,6 +4,7 @@
 <meta name="plu-build" content="8">
 <meta name="plu-presence" content="https://admin.plutoniumnet.work">
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Plutonium Network</title>
 <meta name="description" content="Plutonium Network: a full browser-style web platform with a built-in secure browsing, games, cloud gaming, streaming, VMs and the Stelena AI assistant.">
 <meta name="theme-color" content="#e8175d">
@@ -41,9 +42,11 @@
 <link rel="stylesheet" href="css/plu-tokens.css">
 <link rel="stylesheet" href="css/workspace.css">
 <link rel="stylesheet" href="css/history.css?v=3">
+<link rel="stylesheet" href="css/mobile.css?v=1">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="js/pwa.js" defer></script>
 <script src="js/global-config.js"></script>
+<script src="js/mobile-mode.js?v=1"></script>
 <script src="js/version.js?v=8" defer></script>
 </head>
 <body>
@@ -165,12 +168,12 @@
     <div class="option-wheel app-wheel__wheel" id="app-wheel-options"></div>
   </div>
   <div class="app-grid">
-    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Games" data-local-uri="pluto://games" data-name="Games" data-desc="Play hundreds of browser games instantly"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span></button></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Artificial Intelligence" data-local-uri="pluto://ai" data-name="Artificial Intelligence" data-desc="Chat with AI assistants and tools"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span></button></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Cloud Gaming" data-local-uri="pluto://cloud" data-name="Cloud Gaming" data-desc="Stream high-end games from the cloud"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-cloud"></i></span></button></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Media" data-local-uri="pluto://media" data-name="Media" data-desc="Watch movies, TV, and anime"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-film"></i></span></button></div>
-    <div class="app-tile-wrap app-tile-wrap--wide"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Virtual Machines" data-local-uri="pluto://vms" data-name="Virtual Machines" data-desc="Access remote virtual machines"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-server"></i></span></button></div>
-    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Apps" data-local-uri="pluto://apps" data-name="Apps" data-desc="Launch web apps through your chosen server"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-cube"></i></span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Games" data-local-uri="pluto://games" data-name="Games" data-desc="Play hundreds of browser games instantly"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span><span class="app-tile-label">Games</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Artificial Intelligence" data-local-uri="pluto://ai" data-name="Artificial Intelligence" data-desc="Chat with AI assistants and tools"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span><span class="app-tile-label">AI</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Cloud Gaming" data-local-uri="pluto://cloud" data-name="Cloud Gaming" data-desc="Stream high-end games from the cloud"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-cloud"></i></span><span class="app-tile-label">Cloud</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Media" data-local-uri="pluto://media" data-name="Media" data-desc="Watch movies, TV, and anime"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-film"></i></span><span class="app-tile-label">Media</span></button></div>
+    <div class="app-tile-wrap app-tile-wrap--wide"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Virtual Machines" data-local-uri="pluto://vms" data-name="Virtual Machines" data-desc="Access remote virtual machines"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-server"></i></span><span class="app-tile-label">VMs</span></button></div>
+    <div class="app-tile-wrap"><button class="app-tile glass" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Apps" data-local-uri="pluto://apps" data-name="Apps" data-desc="Launch web apps through your chosen server"><span class="app-tile-icon" aria-hidden="true"><i class="fa-solid fa-cube"></i></span><span class="app-tile-label">Apps</span></button></div>
   </div>
 </div>
 

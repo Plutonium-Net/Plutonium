@@ -20,35 +20,9 @@
 <link rel="stylesheet" href="css/glass.css">
 </head>
 <body class="onboarding-body">
-<div id="device-block-overlay" class="device-block-overlay" hidden>
-  <div class="device-block-box">
-    <div class="device-block-icon"><i class="fa-solid fa-desktop"></i></div>
-    <h1 class="device-block-title">Plutonium doesn't support mobile or tablet</h1>
-    <p class="device-block-sub">Please open Plutonium on a desktop or laptop to continue.</p>
-  </div>
-</div>
-<script>
-  (function () {
-    'use strict';
-    var ua = (navigator.userAgent || '').toLowerCase();
-    var uaData = navigator.userAgentData;
-    var isMobile = uaData && typeof uaData.mobile === 'boolean' ? uaData.mobile : false;
-
-    if (!isMobile) {
-      isMobile = /android|iphone|ipod|ipad|windows phone|iemobile|blackberry|kindle|silk|opera mini|fennec|mobi|playbook|tablet|smart-?tv|googletv|roku/i.test(ua);
-    }
-
-    if (!isMobile && /macintosh/.test(ua) && navigator.maxTouchPoints > 1) {
-      isMobile = true;
-    }
-
-    if (isMobile) {
-      document.documentElement.classList.add('device-blocked');
-      var overlay = document.getElementById('device-block-overlay');
-      if (overlay) overlay.hidden = false;
-    }
-  })();
-</script>
+<!-- Mobile is supported: the layout it gets is chosen by js/mobile-mode.js on
+     the app itself. The operator's blockMobile kill-switch lives there too, so
+     this page no longer refuses phones on its own. -->
 
 <main class="onb-card" id="onb-card">
   <div class="onb-steps" id="onb-steps">

@@ -1,0 +1,593 @@
+/* ============================================================================
+   Plutonium mobile mode
+   ----------------------------------------------------------------------------
+   Everything below applies only while <html> carries `mobile-mode`, which
+   js/mobile-mode.js sets from detection or from the Layout control in the
+   paintbrush menu. Nothing here changes the desktop layout.
+
+   The shell is a browser UI squeezed into 390px: chrome on top, a scrollable
+   home column, and every overlay turned into a phone-sized sheet. The same
+   elements and the same scripts keep working — this file only moves them.
+   ========================================================================== */
+
+html.mobile-mode {
+  /* On a phone the layout column is the screen; on a desktop preview it is a
+     centred phone-like column rather than a stretched version of it. */
+  --plu-mobile-column: 560px;
+  --plu-safe-top: env(safe-area-inset-top, 0px);
+  --plu-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --plu-safe-left: env(safe-area-inset-left, 0px);
+  --plu-safe-right: env(safe-area-inset-right, 0px);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html.mobile-mode body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html.mobile-mode .browser {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* iOS zooms the page when a focused field is under 16px; keep every field at
+   the zoom-free size instead of fighting it per input. */
+html.mobile-mode input,
+html.mobile-mode textarea,
+html.mobile-mode select {
+  font-size: 16px;
+}
+
+html.mobile-mode button,
+html.mobile-mode a,
+html.mobile-mode .app-tile,
+html.mobile-mode .chrome-tab {
+  touch-action: manipulation;
+}
+
+/* ----------------------------------------------------------------------------
+   1. Chrome: tabs + toolbar
+   -------------------------------------------------------------------------- */
+
+html.mobile-mode .chrome {
+  margin: 0;
+  border-radius: 0;
+  padding-top: var(--plu-safe-top);
+}
+
+html.mobile-mode .titlebar {
+  height: 44px;
+  padding-left: var(--plu-safe-left);
+  padding-right: var(--plu-safe-right);
+}
+
+html.mobile-mode .chrome-tabs {
+  height: 44px;
+  padding: 6px 2px 4px;
+}
+
+/* Touch-sized tap areas for the two small controls a tab carries. */
+html.mobile-mode .chrome-tabs .chrome-tab .chrome-tab-close::after,
+html.mobile-mode .chrome-tabs .chrome-tab .chrome-tab-favicon::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+html.mobile-mode .toolbar {
+  flex-wrap: wrap;
+  height: auto;
+  padding: 6px calc(8px + var(--plu-safe-right)) 8px calc(8px + var(--plu-safe-left));
+  row-gap: 6px;
+  column-gap: 4px;
+  width: 100%;
+  max-width: calc(var(--plu-mobile-column) + 120px);
+  margin: 0 auto;
+}
+
+html.mobile-mode .toolbar .nav-btn {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+}
+
+html.mobile-mode .address-bar-wrap {
+  flex: 1 1 auto;
+  min-width: 110px;
+  height: 40px;
+  padding: 0 12px;
+}
+
+html.mobile-mode .connection-popup {
+  top: 48px;
+  left: 0;
+  right: 0;
+  width: auto;
+}
+
+/* The navigation row keeps the four history controls; every other control
+   drops to a full-width row of its own, spread evenly so each one is a
+   fingertip wide. */
+html.mobile-mode .toolbar-right {
+  flex: 1 1 100%;
+  justify-content: space-evenly;
+  gap: 0;
+  padding: 2px 0 0;
+}
+
+html.mobile-mode .bookmarks-bar {
+  height: auto;
+  min-height: 36px;
+  margin: 4px calc(6px + var(--plu-safe-right)) 0 calc(6px + var(--plu-safe-left));
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+html.mobile-mode .bookmarks-bar::-webkit-scrollbar {
+  display: none;
+}
+
+html.mobile-mode .bm-item {
+  height: 30px;
+}
+
+/* ----------------------------------------------------------------------------
+   2. Home (new tab) column
+   -------------------------------------------------------------------------- */
+
+html.mobile-mode .new-tab-page {
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 16px calc(14px + var(--plu-safe-right))
+    calc(28px + var(--plu-safe-bottom)) calc(14px + var(--plu-safe-left));
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+html.mobile-mode .new-tab-page::-webkit-scrollbar {
+  display: none;
+}
+
+/* One phone-width column, whatever the screen behind it is doing. */
+html.mobile-mode .new-tab-page > * {
+  width: 100%;
+  max-width: var(--plu-mobile-column);
+  flex: 0 0 auto;
+}
+
+/* Order: identity, search, apps, pins, connection, stories, footer, account. */
+html.mobile-mode .new-tab-page .logo { order: 1; }
+html.mobile-mode .new-tab-page .search-box { order: 2; }
+html.mobile-mode .new-tab-page .app-flanks { order: 3; }
+html.mobile-mode .new-tab-page .shortcuts { order: 4; }
+html.mobile-mode .new-tab-page .engine-switch { order: 5; }
+html.mobile-mode .new-tab-page .engine-relay { order: 6; }
+html.mobile-mode .new-tab-page .status-bar { order: 6; }
+html.mobile-mode .new-tab-page .online-count { order: 6; }
+html.mobile-mode .new-tab-page .news-ticker { order: 7; }
+html.mobile-mode .new-tab-page .help-wrap { order: 8; }
+html.mobile-mode .new-tab-page .home-acct-panel { order: 9; }
+
+/* -- logo -- */
+html.mobile-mode .new-tab-page .logo {
+  width: min(320px, 74vw);
+  margin-bottom: 0;
+}
+
+/* -- search -- */
+html.mobile-mode .new-tab-page .search-box {
+  padding: 12px 14px;
+  gap: 10px;
+}
+
+/* The dropdown is a child of the .glass search box, which (via its
+   backdrop-filter) is the containing block for fixed descendants, so it stays
+   absolute and simply gets a shorter cap on a phone. */
+html.mobile-mode .new-tab-page .search-suggest {
+  max-height: min(46vh, 360px);
+}
+
+/* -- engine picker + relay line -- */
+html.mobile-mode .new-tab-page .engine-switch {
+  max-width: 100%;
+  margin-top: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+html.mobile-mode .engine-switch::-webkit-scrollbar {
+  display: none;
+}
+
+html.mobile-mode .new-tab-page .engine-relay {
+  height: auto;
+  margin-top: 0;
+}
+
+/* -- online count -- */
+html.mobile-mode .new-tab-page .online-count {
+  position: static;
+  margin: 0;
+  justify-content: center;
+}
+
+/* -- shortcuts (pins) -- */
+html.mobile-mode .new-tab-page .shortcuts {
+  gap: 8px;
+  max-width: 100%;
+}
+
+html.mobile-mode .shortcut {
+  width: 72px;
+  padding: 8px 4px;
+}
+
+html.mobile-mode .shortcut .icon {
+  width: 48px;
+  height: 48px;
+}
+
+/* -- stories + clock -- */
+html.mobile-mode .new-tab-page .news-ticker {
+  position: static;
+  max-width: 100%;
+  gap: 4px;
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html.mobile-mode .news-clock {
+  font-size: 42px;
+  font-weight: 300;
+}
+
+html.mobile-mode .news-clock .clock-ampm {
+  font-size: 18px;
+}
+
+html.mobile-mode .news-date {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+html.mobile-mode .news-story {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+html.mobile-mode .news-story-title {
+  font-size: 15px;
+}
+
+html.mobile-mode .news-story-desc {
+  font-size: 12.5px;
+}
+
+html.mobile-mode .news-dots {
+  gap: 8px;
+  margin-top: 10px;
+}
+
+html.mobile-mode .news-dot {
+  width: 10px;
+  height: 10px;
+}
+
+/* -- footer: legal links, socials, help -- */
+html.mobile-mode .new-tab-page .help-wrap {
+  position: static;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+html.mobile-mode .help-legal {
+  position: static;
+  order: -1;
+  flex: 1 1 100%;
+  transform: none;
+  margin: 0 0 2px;
+  gap: 8px 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  white-space: normal;
+  text-align: center;
+}
+
+html.mobile-mode .help-btn {
+  width: 42px;
+  height: 42px;
+}
+
+html.mobile-mode #help-menu {
+  position: fixed !important;
+  left: 50%;
+  right: auto;
+  bottom: calc(20px + var(--plu-safe-bottom));
+  width: min(300px, calc(100vw - 24px));
+  transform: translateX(-50%) translateY(6px) scale(0.98);
+}
+
+html.mobile-mode #help-menu.is-open {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* -- account panel -- */
+html.mobile-mode .new-tab-page .home-acct-panel {
+  position: static;
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html.mobile-mode .home-acct-panel .acct-signin-title {
+  font-size: 20px;
+}
+
+html.mobile-mode .home-acct-panel.has-account .acct-signin-title {
+  font-size: 20px;
+}
+
+html.mobile-mode .home-acct-panel .acct-signin-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--ui-accent, #e8175d);
+}
+
+html.mobile-mode .new-tab-page .acct-recent {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* ----------------------------------------------------------------------------
+   3. App rail -> home grid + wheel sheet
+   -------------------------------------------------------------------------- */
+
+html.mobile-mode .app-flanks {
+  position: static;
+  transform: none;
+  align-items: center;
+  width: 100%;
+}
+
+html.mobile-mode .app-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: stretch;
+  justify-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+
+html.mobile-mode .app-tile-wrap,
+html.mobile-mode .app-tile-wrap--wide {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  grid-column: auto;
+  justify-self: stretch;
+}
+
+html.mobile-mode .app-grid .app-tile {
+  width: 100%;
+  max-width: 118px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 24px;
+  transform: none !important;
+  transform-origin: 50% 50%;
+  flex-direction: column;
+  gap: 8px;
+}
+
+html.mobile-mode .app-grid .app-tile:hover,
+html.mobile-mode .app-grid .app-tile:active {
+  --tile-x: 1;
+  --tile-y: 1;
+  box-shadow: none;
+  border-color: var(--ui-border-sub);
+}
+
+html.mobile-mode .app-grid .app-tile.is-active {
+  border-color: rgba(var(--ui-accent-rgb), 0.7);
+  box-shadow: 0 0 18px rgba(var(--ui-accent-rgb), 0.28);
+  color: var(--ui-text);
+}
+
+html.mobile-mode .app-tile-icon {
+  font-size: 26px;
+}
+
+html.mobile-mode .app-tile-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--ui-text-sub);
+  text-align: center;
+  line-height: 1.1;
+  padding: 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Hover captions and the hover-only growth are desktop affordances. */
+html.mobile-mode .app-grid-popup {
+  display: none;
+}
+
+/* The wheel becomes a centred sheet: taps open it, a tap outside closes it. */
+html.mobile-mode .app-flanks.wheel-open::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  pointer-events: auto;
+}
+
+html.mobile-mode .app-flanks .app-wheel {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  top: 50%;
+  margin: 0;
+  width: min(340px, 92vw);
+  max-height: min(72vh, 520px);
+  padding: 18px 14px 14px;
+  transform: translate(-50%, -50%);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(12, 12, 14, 0.94);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  z-index: 40;
+}
+
+html.mobile-mode .app-wheel__title {
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  font-size: 18px;
+  letter-spacing: 3px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+html.mobile-mode .app-flanks .app-wheel .app-wheel__wheel {
+  width: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  align-self: stretch;
+}
+
+/* ----------------------------------------------------------------------------
+   4. Dialogs + menus
+   -------------------------------------------------------------------------- */
+
+html.mobile-mode .account-dialog,
+html.mobile-mode .about-dialog,
+html.mobile-mode .history-dialog,
+html.mobile-mode .feedback-dialog {
+  width: calc(100vw - 16px);
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+}
+
+html.mobile-mode .account-dialog__body,
+html.mobile-mode .about-dialog__body,
+html.mobile-mode .feedback-dialog__body {
+  padding: 14px;
+}
+
+html.mobile-mode .history-dialog {
+  height: calc(100vh - 40px);
+  height: calc(100dvh - 40px);
+}
+
+html.mobile-mode .history-dialog__tools {
+  padding: 10px 12px 8px;
+}
+
+html.mobile-mode .customize-menu {
+  width: min(360px, calc(100vw - 16px));
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+}
+
+html.mobile-mode .customize-menu-scroll {
+  max-height: calc(100vh - 90px);
+  max-height: calc(100dvh - 90px);
+}
+
+html.mobile-mode .pin-picker {
+  width: calc(100vw - 24px);
+  max-height: min(70vh, 520px);
+}
+
+html.mobile-mode .conn-hud-box {
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+}
+
+html.mobile-mode .status-bar {
+  bottom: calc(12px + var(--plu-safe-bottom));
+}
+
+html.mobile-mode .page-loading-url {
+  max-width: calc(100vw - 40px);
+}
+
+/* ----------------------------------------------------------------------------
+   5. Workspace pages (games, AI, cloud, media, VMs, apps)
+   -------------------------------------------------------------------------- */
+
+html.mobile-mode #workspace-root {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+html.mobile-mode #workspace-root .workspace-view {
+  padding-bottom: var(--plu-safe-bottom);
+}
+
+/* Nothing in a workspace is allowed to push the page sideways; wide rows
+   scroll themselves instead. */
+html.mobile-mode #workspace-root .workspace-view {
+  overflow-x: hidden;
+}
+
+html.mobile-mode #workspace-root .source-tabs,
+html.mobile-mode #workspace-root .media-tabs,
+html.mobile-mode #workspace-root .games-filter-row {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+html.mobile-mode #workspace-root .source-tabs::-webkit-scrollbar,
+html.mobile-mode #workspace-root .media-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* ----------------------------------------------------------------------------
+   6. Reload safety: a phone should not be able to bounce-scroll the shell
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html.mobile-mode .app-flanks.wheel-open::before {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
