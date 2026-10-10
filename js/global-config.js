@@ -56,10 +56,6 @@
         proxyScramjet: { enabled: true, notice: '' },
         accounts:      { enabled: true, notice: '' },
       },
-      // Mobile ships a dedicated layout (js/mobile-mode.js + css/mobile.css),
-      // so the gate that used to shut phones out is opt-in now: an operator
-      // sets blockMobile: true to bring the old block screen back.
-      devices: { blockMobile: false, blockedUA: [] },
       theme:   { forced: false, preset: null, effect: null, image: null },
       content: { banner: null, announcements: true },
     };
@@ -137,15 +133,6 @@
           };
         }
       });
-    }
-
-    if (raw.devices && typeof raw.devices === 'object') {
-      out.devices = {
-        blockMobile: raw.devices.blockMobile === true,
-        blockedUA: Array.isArray(raw.devices.blockedUA)
-          ? raw.devices.blockedUA.filter(function (u) { return typeof u === 'string' && u; })
-          : [],
-      };
     }
 
     if (raw.theme && typeof raw.theme === 'object') {

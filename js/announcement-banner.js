@@ -186,9 +186,7 @@
   /* ------------------------------------------------------------------ *
    * Maintenance takeover
    *
-   * Reuses the existing device-block convention: an `html` class plus a
-   * full-screen element. js/onboarding-redirect.js already bails out early on
-   * `device-blocked`, so we mirror that shape rather than invent a new one.
+   * A class on `html` (`plu-maintenance`) plus a full-screen element.
    * ------------------------------------------------------------------ */
 
   var maintenanceEl = null;

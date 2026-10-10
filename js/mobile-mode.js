@@ -7,10 +7,9 @@
  *      PlutoniumMobile.setMode('on'|'off')). It is stored per browser and it
  *      always wins, so a user who prefers the desktop layout on a phone can
  *      keep it — and a desktop user can preview the mobile UI.
- *   2. Detection, when no explicit choice has been made. The same heuristics
- *      js/device-detect.js uses: the user-agent string, plus a coarse-pointer
- *      touch screen for devices that report a desktop UA (iPadOS, tablets in
- *      desktop mode).
+ *   2. Detection, when no explicit choice has been made. The heuristics are
+ *      the user-agent string, plus a coarse-pointer touch screen for devices
+ *      that report a desktop UA (iPadOS, tablets in desktop mode).
  *
  * The mode is one class on <html> — `mobile-mode` — and css/mobile.css owns
  * everything below it. Nothing in the app needs to know the mode is on; the
