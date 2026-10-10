@@ -36,6 +36,7 @@
     runtime:   'SJ',
     remote:    'Hyperbeam',
     vanillia:  'VanilliaPXY',
+    compaxy:   'Compaxy',
   };
 
   let entries       = loadEntries();

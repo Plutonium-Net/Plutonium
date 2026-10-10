@@ -36,6 +36,20 @@ const VANILLIA_SERVERS = [
 ]
 const VANILLIA_SERVER_KEY = 'plu_vanillia_server'
 
+// Compaxy runs its own regional hosts as well. It is not fronted by a single
+// global host the way VanilliaPXY is, so no row carries `preferred` and the
+// picker falls back to the same IP lookup and ping race the wisp relay uses.
+// The hostnames mirror data/app-servers.json, which points the Apps section at
+// this same fleet.
+const COMPAXY_SERVERS = [
+  { id: 'us-east-1', label: 'US East 1', location: 'Virginia, USA',      host: 'compaxy-us-east-1.plutoniumnet.work', flagSrc: 'img/flags/us.png', lat: 37.4316, lon: -78.6569  },
+  { id: 'us-east-2', label: 'US East 2', location: 'Ohio, USA',          host: 'compaxy-us-east-2.plutoniumnet.work', flagSrc: 'img/flags/us.png', lat: 39.9612, lon: -82.9988  },
+  { id: 'us-west',   label: 'US West',   location: 'Oregon, USA',        host: 'compaxy-us-west.plutoniumnet.work',   flagSrc: 'img/flags/us.png', lat: 43.8041, lon: -120.5542 },
+  { id: 'europe',    label: 'Europe',    location: 'Frankfurt, Germany', host: 'compaxy-europe.plutoniumnet.work',    flagSrc: 'img/flags/eu.png', lat: 50.1109, lon: 8.6821    },
+  { id: 'asia',      label: 'Asia',      location: 'Singapore',          host: 'compaxy-asia.plutoniumnet.work',      flagSrc: 'img/flags/sg.png', lat: 1.3521,  lon: 103.8198  },
+]
+const COMPAXY_SERVER_KEY = 'plu_compaxy_server'
+
 const resolvedRelayUrlCache = new Map()
 
 async function resolveRelayUrl(serverId) {
@@ -90,6 +104,7 @@ let pendingInitPromise = null
 let relayPreloadSocket = null
 let currentRelayServerId = RELAY_SERVERS[0] ? RELAY_SERVERS[0].id : ''
 let currentVanilliaServerId = loadVanilliaServerId()
+let currentCompaxyServerId = loadCompaxyServerId()
 let currentRelayLatencyMs = null
 let bestRelayServerId = ''
 let currentRelayStatus = 'connecting'
@@ -133,6 +148,13 @@ function loadVanilliaServerId() {
   return fallback ? fallback.id : ''
 }
 
+function loadCompaxyServerId() {
+  const stored = localStorage.getItem(COMPAXY_SERVER_KEY)
+  if (stored && COMPAXY_SERVERS.some(server => server.id === stored)) return stored
+  const fallback = getDefaultCompaxyServer()
+  return fallback ? fallback.id : ''
+}
+
 // The row the app falls back to within a source: `preferred` when the source
 // marks one, otherwise the first row (the wisp relay's documented fallback).
 function getPreferredPickerServer(servers = getPickerServers()) {
@@ -140,11 +162,19 @@ function getPreferredPickerServer(servers = getPickerServers()) {
 }
 
 function getDefaultVanilliaServer() { return getPreferredPickerServer(VANILLIA_SERVERS) }
+function getDefaultCompaxyServer() { return getPreferredPickerServer(COMPAXY_SERVERS) }
 
 function isVanilliaEngine() { return selectedNet === 'vanillia' }
+function isCompaxyEngine() { return selectedNet === 'compaxy' }
+// VanilliaPXY and Compaxy both serve a proxy page from their own hosts, so
+// neither needs a local service worker, wisp relay or BareMux bridge: only the
+// frame URL changes between them and the wisp engines.
+function isHostProxyEngine() { return isVanilliaEngine() || isCompaxyEngine() }
 
 function getPickerServers() {
-  return isVanilliaEngine() ? VANILLIA_SERVERS : RELAY_SERVERS
+  if (isVanilliaEngine()) return VANILLIA_SERVERS
+  if (isCompaxyEngine()) return COMPAXY_SERVERS
+  return RELAY_SERVERS
 }
 
 function getPickerServerById(id) {
@@ -152,19 +182,26 @@ function getPickerServerById(id) {
 }
 
 function getPickerServerId() {
-  return isVanilliaEngine() ? currentVanilliaServerId : currentRelayServerId
+  if (isVanilliaEngine()) return currentVanilliaServerId
+  if (isCompaxyEngine()) return currentCompaxyServerId
+  return currentRelayServerId
 }
 
 function getPickerServer() {
   return getPickerServerById(getPickerServerId()) || getPickerServers()[0] || null
 }
 
-function getPickerNoun() { return isVanilliaEngine() ? 'server' : 'relay' }
+function getPickerNoun() { return isHostProxyEngine() ? 'server' : 'relay' }
 
 function setPickerServerId(id) {
   if (isVanilliaEngine()) {
     currentVanilliaServerId = id
     localStorage.setItem(VANILLIA_SERVER_KEY, id)
+    return
+  }
+  if (isCompaxyEngine()) {
+    currentCompaxyServerId = id
+    localStorage.setItem(COMPAXY_SERVER_KEY, id)
     return
   }
   currentRelayServerId = id
@@ -173,7 +210,7 @@ function setPickerServerId(id) {
 
 // Ping results are keyed per source: both lists use ids like `europe`, so a
 // shared namespace would let a wisp reading masquerade as a vanillia one.
-function pickerPingKey(id) { return (isVanilliaEngine() ? 'vanillia:' : 'wisp:') + id }
+function pickerPingKey(id) { return (isVanilliaEngine() ? 'vanillia:' : isCompaxyEngine() ? 'compaxy:' : 'wisp:') + id }
 function wispPingKey(id) { return 'wisp:' + id }
 
 function getVanilliaRouteUrl() {
@@ -185,6 +222,24 @@ function isVanilliaFrameUrl(raw) {
   try {
     const absolute = new URL(raw, window.location.origin)
     return absolute.pathname === '/vanillia' && VANILLIA_SERVERS.some(server => server.host === absolute.hostname)
+  } catch (e) {
+    return false
+  }
+}
+
+// Compaxy takes the target as a ?url= query on its host root, then redirects
+// into its own /proxy/ path.
+function getCompaxyRouteUrl() {
+  const server = getPickerServerById(currentCompaxyServerId) || getDefaultCompaxyServer()
+  return server ? `https://${server.host}/?url=` : ''
+}
+
+// Any compaxy host decodes, not just the selected one: a frame loaded before a
+// region switch is still a valid ?url= wrapper.
+function isCompaxyFrameUrl(raw) {
+  try {
+    const absolute = new URL(raw, window.location.origin)
+    return COMPAXY_SERVERS.some(server => server.host === absolute.hostname) && absolute.searchParams.has('url')
   } catch (e) {
     return false
   }
@@ -303,7 +358,7 @@ function updateRelaySwitcherButton() {
     : currentRelayStatus === 'disconnecting' ? 'Disconnecting'
     : 'Connecting'
   button.setAttribute('aria-label', `Choose ${getPickerNoun()}: ${server.label}, ${stateWords}`)
-  button.title = `${isVanilliaEngine() ? 'Server' : 'Relay'}: ${server.label}, ${stateWords}`
+  button.title = `${isHostProxyEngine() ? 'Server' : 'Relay'}: ${server.label}, ${stateWords}`
 }
 
 function renderRelaySwitcherMenu() {
@@ -529,8 +584,30 @@ async function measureVanilliaServer(server, options = {}) {
   }
 }
 
+// Compaxy answers with a proxy page rather than an API, and exposes no
+// CORS-readable health route, so an opaque no-cors request is the probe: it
+// resolving proves the region answered, which is all the picker needs.
+async function measureCompaxyServer(server, options = {}) {
+  const timeoutMs = options.timeoutMs || RELAY_PING_TIMEOUT_MS
+  if (!server) return { ok: false, latency: null, server }
+
+  const startedAt = performance.now()
+  try {
+    await fetch(`https://${server.host}/`, {
+      mode: 'no-cors',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+    return { ok: true, latency: Math.max(1, Math.round(performance.now() - startedAt)), server }
+  } catch (e) {
+    return { ok: false, latency: null, server }
+  }
+}
+
 function measurePickerServer(server, options) {
-  return isVanilliaEngine() ? measureVanilliaServer(server, options) : measureRelayServer(server, options)
+  if (isVanilliaEngine()) return measureVanilliaServer(server, options)
+  if (isCompaxyEngine()) return measureCompaxyServer(server, options)
+  return measureRelayServer(server, options)
 }
 
 async function preloadRelayConnection() {
@@ -661,7 +738,9 @@ async function chooseBestPickerServer() {
 
   const savedServer = isVanilliaEngine()
     ? localStorage.getItem(VANILLIA_SERVER_KEY)
-    : (localStorage.getItem('plu_relay_server') || localStorage.getItem('plu_wisp_server'))
+    : isCompaxyEngine()
+      ? localStorage.getItem(COMPAXY_SERVER_KEY)
+      : (localStorage.getItem('plu_relay_server') || localStorage.getItem('plu_wisp_server'))
   if (savedServer && getPickerServerById(savedServer)) {
     setPickerServerId(savedServer)
     currentRelayLatencyMs = null
@@ -744,9 +823,10 @@ async function switchRelayServer(serverId) {
 
   hideRelaySwitcherMenu()
 
-  // A VanilliaPXY server is picked, not connected: the frame just points at the
-  // other host, so there is no socket, bridge or transport to tear down.
-  if (isVanilliaEngine()) {
+  // A VanilliaPXY or Compaxy server is picked, not connected: the frame just
+  // points at the other host, so there is no socket, bridge or transport to
+  // tear down.
+  if (isHostProxyEngine()) {
     setPickerServerId(targetServer.id)
     currentRelayLatencyMs = relayPingByServerId.get(pickerPingKey(targetServer.id))?.latency ?? null
     updateRelaySwitcherButton()
@@ -754,7 +834,7 @@ async function switchRelayServer(serverId) {
     refreshConnectionHud()
     if (sameServer) return true
 
-    const probed = await measureVanilliaServer(targetServer)
+    const probed = await measurePickerServer(targetServer)
     relayPingByServerId.set(pickerPingKey(targetServer.id), { ok: probed.ok, latency: probed.latency })
     currentRelayLatencyMs = probed.latency
     setRelayStatus(probed.ok ? 'ok' : 'err', { server: targetServer, latency: probed.latency })
@@ -788,10 +868,14 @@ async function switchRelayServer(serverId) {
 let lastPickerSource = ''
 
 function refreshPickerForEngine() {
-  const source = isVanilliaEngine() ? 'vanillia' : 'wisp'
+  const source = isVanilliaEngine() ? 'vanillia' : isCompaxyEngine() ? 'compaxy' : 'wisp'
   if (isVanilliaEngine() && !getPickerServerById(currentVanilliaServerId)) {
     const fallback = getDefaultVanilliaServer()
     currentVanilliaServerId = fallback ? fallback.id : ''
+  }
+  if (isCompaxyEngine() && !getPickerServerById(currentCompaxyServerId)) {
+    const fallback = getDefaultCompaxyServer()
+    currentCompaxyServerId = fallback ? fallback.id : ''
   }
 
   const cached = relayPingByServerId.get(pickerPingKey(getPickerServerId()))
@@ -847,7 +931,7 @@ let currentRemoteTargetUrl = null
 function getNetEngine() { return selectedNet }
 
 function setNetEngine(engine) {
-  if (!['core', 'runtime', 'remote', 'vanillia'].includes(engine)) return
+  if (!['core', 'runtime', 'remote', 'vanillia', 'compaxy'].includes(engine)) return
   const previous = selectedNet
   selectedNet = engine
   localStorage.setItem(NET_MODE_KEY, engine)
@@ -990,9 +1074,10 @@ async function initBridge() {
 async function initNetStack() {
   await initCore()
   await initRuntime()
-  // VanilliaPXY is a host of its own: it needs no BareMux transport and no wisp
-  // relay, and skipping the bridge keeps its connection status truthful.
-  if (getNetEngine() === 'vanillia') return
+  // VanilliaPXY and Compaxy are hosts of their own: they need no BareMux
+  // transport and no wisp relay, and skipping the bridge keeps their connection
+  // status truthful.
+  if (isHostProxyEngine()) return
   await initBridge()
 }
 
@@ -1062,6 +1147,7 @@ window.endRemoteSession = endRemoteSession
 function getNetUrl(url) {
   if (selectedNet === 'remote') return url
   if (selectedNet === 'vanillia') return getVanilliaRouteUrl() + encodeURIComponent(url)
+  if (selectedNet === 'compaxy') return getCompaxyRouteUrl() + encodeURIComponent(url)
   if (selectedNet === 'runtime') {
     if (runtimeReady && runtimeController) return runtimeController.encodeUrl(url)
     return url
@@ -1077,6 +1163,17 @@ function getRealUrlFromNet(maybeNetUrl) {
     // Any vanillia host decodes, not just the selected one: a frame loaded before
     // a server switch is still a valid target URL.
     if (isVanilliaFrameUrl(maybeNetUrl)) {
+      try {
+        return new URL(maybeNetUrl, window.location.origin).searchParams.get('url') || maybeNetUrl
+      } catch (e) {}
+    }
+    return maybeNetUrl
+  }
+
+  if (selectedNet === 'compaxy') {
+    // Any compaxy host decodes, not just the selected one, and the target is in
+    // the ?url= query Compaxy was handed when the frame was pointed at it.
+    if (isCompaxyFrameUrl(maybeNetUrl)) {
       try {
         return new URL(maybeNetUrl, window.location.origin).searchParams.get('url') || maybeNetUrl
       } catch (e) {}
@@ -1126,6 +1223,7 @@ function currentEngineLabel() {
   return selectedNet === 'runtime' ? 'SJ'
     : selectedNet === 'remote' ? 'Hyperbeam'
     : selectedNet === 'vanillia' ? 'VanilliaPXY'
+    : selectedNet === 'compaxy' ? 'Compaxy'
     : 'UV'
 }
 
@@ -1205,9 +1303,10 @@ function closeNetInfoPopup() {
 async function runNetInit() {
   try {
     await chooseBestPickerServer()
-    lastPickerSource = isVanilliaEngine() ? 'vanillia' : 'wisp'
-    if (isVanilliaEngine()) {
-      // Nothing to preload: the vanillia host is probed over HTTP instead.
+    lastPickerSource = isVanilliaEngine() ? 'vanillia' : isCompaxyEngine() ? 'compaxy' : 'wisp'
+    if (isHostProxyEngine()) {
+      // Nothing to preload: a vanillia or compaxy host is probed over HTTP
+      // instead.
       updateRelaySwitcherButton()
       renderRelaySwitcherMenu()
       probeCurrentPickerServer()
