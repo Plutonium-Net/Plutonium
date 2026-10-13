@@ -55,10 +55,10 @@ const COMPAXY_SERVER_KEY = 'plu_compaxy_server'
 // `preferred`: the regions are peers, so the picker uses the same IP lookup and
 // ping race as the wisp relay and Compaxy.
 const RH_SERVERS = [
-  { id: 'us-east', label: 'US East', location: 'Virginia, USA',      host: 'rammerhead-us-east.plutoniumnet.work', flagSrc: 'img/flags/us.png', lat: 37.4316, lon: -78.6569  },
-  { id: 'us-west', label: 'US West', location: 'Oregon, USA',        host: 'rammerhead-us-west.plutoniumnet.work', flagSrc: 'img/flags/us.png', lat: 43.8041, lon: -120.5542 },
-  { id: 'europe',  label: 'Europe',  location: 'Frankfurt, Germany', host: 'rammerhead-europe.plutoniumnet.work',  flagSrc: 'img/flags/eu.png', lat: 50.1109, lon: 8.6821    },
-  { id: 'asia',    label: 'Asia',    location: 'Singapore',          host: 'rammerhead-asia.plutoniumnet.work',    flagSrc: 'img/flags/sg.png', lat: 1.3521,  lon: 103.8198  },
+  { id: 'us-east', label: 'US East', location: 'Virginia, USA',      host: 'rh-us-east.plutoniumnet.work', flagSrc: 'img/flags/us.png', lat: 37.4316, lon: -78.6569  },
+  { id: 'us-west', label: 'US West', location: 'Oregon, USA',        host: 'rh-us-west.plutoniumnet.work', flagSrc: 'img/flags/us.png', lat: 43.8041, lon: -120.5542 },
+  { id: 'europe',  label: 'Europe',  location: 'Frankfurt, Germany', host: 'rh-europe.plutoniumnet.work',  flagSrc: 'img/flags/eu.png', lat: 50.1109, lon: 8.6821    },
+  { id: 'asia',    label: 'Asia',    location: 'Singapore',          host: 'rh-asia.plutoniumnet.work',    flagSrc: 'img/flags/sg.png', lat: 1.3521,  lon: 103.8198  },
 ]
 const RH_SERVER_KEY = 'plu_rh_server'
 
