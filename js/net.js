@@ -50,17 +50,17 @@ const COMPAXY_SERVERS = [
 ]
 const COMPAXY_SERVER_KEY = 'plu_compaxy_server'
 
-// Rammerhead runs one host per region and takes the target as a `?url=` query on
+// RH runs one host per region and takes the target as a `?url=` query on
 // the host root, which redirects into `/<session>/<target>`. No row carries
 // `preferred`: the regions are peers, so the picker uses the same IP lookup and
 // ping race as the wisp relay and Compaxy.
-const RAMMERHEAD_SERVERS = [
+const RH_SERVERS = [
   { id: 'us-east', label: 'US East', location: 'Virginia, USA',      host: 'rammerhead-us-east.plutoniumnet.work', flagSrc: 'img/flags/us.png', lat: 37.4316, lon: -78.6569  },
   { id: 'us-west', label: 'US West', location: 'Oregon, USA',        host: 'rammerhead-us-west.plutoniumnet.work', flagSrc: 'img/flags/us.png', lat: 43.8041, lon: -120.5542 },
   { id: 'europe',  label: 'Europe',  location: 'Frankfurt, Germany', host: 'rammerhead-europe.plutoniumnet.work',  flagSrc: 'img/flags/eu.png', lat: 50.1109, lon: 8.6821    },
   { id: 'asia',    label: 'Asia',    location: 'Singapore',          host: 'rammerhead-asia.plutoniumnet.work',    flagSrc: 'img/flags/sg.png', lat: 1.3521,  lon: 103.8198  },
 ]
-const RAMMERHEAD_SERVER_KEY = 'plu_rammerhead_server'
+const RH_SERVER_KEY = 'plu_rh_server'
 
 const resolvedRelayUrlCache = new Map()
 
@@ -117,7 +117,7 @@ let relayPreloadSocket = null
 let currentRelayServerId = RELAY_SERVERS[0] ? RELAY_SERVERS[0].id : ''
 let currentVanilliaServerId = loadVanilliaServerId()
 let currentCompaxyServerId = loadCompaxyServerId()
-let currentRammerheadServerId = loadRammerheadServerId()
+let currentRhServerId = loadRhServerId()
 let currentRelayLatencyMs = null
 let bestRelayServerId = ''
 let currentRelayStatus = 'connecting'
@@ -168,10 +168,10 @@ function loadCompaxyServerId() {
   return fallback ? fallback.id : ''
 }
 
-function loadRammerheadServerId() {
-  const stored = localStorage.getItem(RAMMERHEAD_SERVER_KEY)
-  if (stored && RAMMERHEAD_SERVERS.some(server => server.id === stored)) return stored
-  const fallback = getDefaultRammerheadServer()
+function loadRhServerId() {
+  const stored = localStorage.getItem(RH_SERVER_KEY)
+  if (stored && RH_SERVERS.some(server => server.id === stored)) return stored
+  const fallback = getDefaultRhServer()
   return fallback ? fallback.id : ''
 }
 
@@ -183,24 +183,24 @@ function getPreferredPickerServer(servers = getPickerServers()) {
 
 function getDefaultVanilliaServer() { return getPreferredPickerServer(VANILLIA_SERVERS) }
 function getDefaultCompaxyServer() { return getPreferredPickerServer(COMPAXY_SERVERS) }
-function getDefaultRammerheadServer() { return getPreferredPickerServer(RAMMERHEAD_SERVERS) }
+function getDefaultRhServer() { return getPreferredPickerServer(RH_SERVERS) }
 
 function isVanilliaEngine() { return selectedNet === 'vanillia' }
 function isCompaxyEngine() { return selectedNet === 'compaxy' }
-function isRammerheadEngine() { return selectedNet === 'rammerhead' }
+function isRhEngine() { return selectedNet === 'rh' }
 // Scramjet V2 keeps the wisp relay but not the BareMux bridge: its own
 // controller reaches the relay through libcurl, so the transport is built in
 // js/runtimev2.js instead of by initBridge().
 function isRuntimeV2Engine() { return selectedNet === 'runtimev2' }
-// VanilliaPXY, Compaxy and Rammerhead serve a proxy page from their own hosts,
+// VanilliaPXY, Compaxy and RH serve a proxy page from their own hosts,
 // so none needs a local service worker, wisp relay or BareMux bridge: only the
 // frame URL changes between them and the wisp engines.
-function isHostProxyEngine() { return isVanilliaEngine() || isCompaxyEngine() || isRammerheadEngine() }
+function isHostProxyEngine() { return isVanilliaEngine() || isCompaxyEngine() || isRhEngine() }
 
 function getPickerServers() {
   if (isVanilliaEngine()) return VANILLIA_SERVERS
   if (isCompaxyEngine()) return COMPAXY_SERVERS
-  if (isRammerheadEngine()) return RAMMERHEAD_SERVERS
+  if (isRhEngine()) return RH_SERVERS
   return RELAY_SERVERS
 }
 
@@ -211,7 +211,7 @@ function getPickerServerById(id) {
 function getPickerServerId() {
   if (isVanilliaEngine()) return currentVanilliaServerId
   if (isCompaxyEngine()) return currentCompaxyServerId
-  if (isRammerheadEngine()) return currentRammerheadServerId
+  if (isRhEngine()) return currentRhServerId
   return currentRelayServerId
 }
 
@@ -232,9 +232,9 @@ function setPickerServerId(id) {
     localStorage.setItem(COMPAXY_SERVER_KEY, id)
     return
   }
-  if (isRammerheadEngine()) {
-    currentRammerheadServerId = id
-    localStorage.setItem(RAMMERHEAD_SERVER_KEY, id)
+  if (isRhEngine()) {
+    currentRhServerId = id
+    localStorage.setItem(RH_SERVER_KEY, id)
     return
   }
   currentRelayServerId = id
@@ -243,7 +243,7 @@ function setPickerServerId(id) {
 
 // Ping results are keyed per source: both lists use ids like `europe`, so a
 // shared namespace would let a wisp reading masquerade as a vanillia one.
-function pickerPingKey(id) { return (isVanilliaEngine() ? 'vanillia:' : isCompaxyEngine() ? 'compaxy:' : isRammerheadEngine() ? 'rammerhead:' : 'wisp:') + id }
+function pickerPingKey(id) { return (isVanilliaEngine() ? 'vanillia:' : isCompaxyEngine() ? 'compaxy:' : isRhEngine() ? 'rh:' : 'wisp:') + id }
 function wispPingKey(id) { return 'wisp:' + id }
 
 function getVanilliaRouteUrl() {
@@ -278,20 +278,20 @@ function isCompaxyFrameUrl(raw) {
   }
 }
 
-// Rammerhead takes the target as a ?url= query on its host root, then redirects
+// RH takes the target as a ?url= query on its host root, then redirects
 // into /<session>/<target>. The entry form is what this builds; both forms are
 // recognised so a frame that has already redirected still decodes.
-function getRammerheadRouteUrl() {
-  const server = getPickerServerById(currentRammerheadServerId) || getDefaultRammerheadServer()
+function getRhRouteUrl() {
+  const server = getPickerServerById(currentRhServerId) || getDefaultRhServer()
   return server ? `https://${server.host}/?url=` : ''
 }
 
-// Any rammerhead host decodes, not just the selected one. Accept the entry
+// Any RH host decodes, not just the selected one. Accept the entry
 // `?url=` form as well as the post-redirect `/<32-hex-session>/<target>` form.
-function isRammerheadFrameUrl(raw) {
+function isRhFrameUrl(raw) {
   try {
     const absolute = new URL(raw, window.location.origin)
-    if (!RAMMERHEAD_SERVERS.some(server => server.host === absolute.hostname)) return false
+    if (!RH_SERVERS.some(server => server.host === absolute.hostname)) return false
     return absolute.searchParams.has('url') || /^\/[0-9a-f]{32}\//i.test(absolute.pathname)
   } catch (e) {
     return false
@@ -657,10 +657,10 @@ async function measureCompaxyServer(server, options = {}) {
   }
 }
 
-// Rammerhead's root answers with a page rather than a JSON health API and
+// RH's root answers with a page rather than a JSON health API and
 // exposes no CORS-readable route, so an opaque no-cors request is the probe: it
 // resolving proves the region answered, which is all the picker needs.
-async function measureRammerheadServer(server, options = {}) {
+async function measureRhServer(server, options = {}) {
   const timeoutMs = options.timeoutMs || RELAY_PING_TIMEOUT_MS
   if (!server) return { ok: false, latency: null, server }
 
@@ -680,7 +680,7 @@ async function measureRammerheadServer(server, options = {}) {
 function measurePickerServer(server, options) {
   if (isVanilliaEngine()) return measureVanilliaServer(server, options)
   if (isCompaxyEngine()) return measureCompaxyServer(server, options)
-  if (isRammerheadEngine()) return measureRammerheadServer(server, options)
+  if (isRhEngine()) return measureRhServer(server, options)
   return measureRelayServer(server, options)
 }
 
@@ -814,8 +814,8 @@ async function chooseBestPickerServer() {
     ? localStorage.getItem(VANILLIA_SERVER_KEY)
     : isCompaxyEngine()
       ? localStorage.getItem(COMPAXY_SERVER_KEY)
-      : isRammerheadEngine()
-        ? localStorage.getItem(RAMMERHEAD_SERVER_KEY)
+      : isRhEngine()
+        ? localStorage.getItem(RH_SERVER_KEY)
         : (localStorage.getItem('plu_relay_server') || localStorage.getItem('plu_wisp_server'))
   if (savedServer && getPickerServerById(savedServer)) {
     setPickerServerId(savedServer)
@@ -922,7 +922,7 @@ async function switchRelayServer(serverId) {
     return probed.ok
   }
 
-  // A VanilliaPXY, Compaxy or Rammerhead server is picked, not connected: the
+  // A VanilliaPXY, Compaxy or RH server is picked, not connected: the
   // frame just points at the other host, so there is no socket, bridge or
   // transport to tear down.
   if (isHostProxyEngine()) {
@@ -967,7 +967,7 @@ async function switchRelayServer(serverId) {
 let lastPickerSource = ''
 
 function refreshPickerForEngine() {
-  const source = isVanilliaEngine() ? 'vanillia' : isCompaxyEngine() ? 'compaxy' : isRammerheadEngine() ? 'rammerhead' : 'wisp'
+  const source = isVanilliaEngine() ? 'vanillia' : isCompaxyEngine() ? 'compaxy' : isRhEngine() ? 'rh' : 'wisp'
   if (isVanilliaEngine() && !getPickerServerById(currentVanilliaServerId)) {
     const fallback = getDefaultVanilliaServer()
     currentVanilliaServerId = fallback ? fallback.id : ''
@@ -976,9 +976,9 @@ function refreshPickerForEngine() {
     const fallback = getDefaultCompaxyServer()
     currentCompaxyServerId = fallback ? fallback.id : ''
   }
-  if (isRammerheadEngine() && !getPickerServerById(currentRammerheadServerId)) {
-    const fallback = getDefaultRammerheadServer()
-    currentRammerheadServerId = fallback ? fallback.id : ''
+  if (isRhEngine() && !getPickerServerById(currentRhServerId)) {
+    const fallback = getDefaultRhServer()
+    currentRhServerId = fallback ? fallback.id : ''
   }
 
   const cached = relayPingByServerId.get(pickerPingKey(getPickerServerId()))
@@ -1017,11 +1017,18 @@ const LEGACY_NET_MODE_MAP = { uv: 'core', sj: 'runtime', hb: 'remote' }
 // host that URL names comes from the server picked in the switcher.
 const REMOTE_WORKER_URL    = 'https://net.cdn.plutoniumnet.work'
 
+// Only ids the switch actually offers are accepted, so a value left behind by a
+// retired or renamed engine falls back to the default instead of a dead state.
+const NET_MODE_IDS = ['core', 'runtime', 'runtimev2', 'remote', 'vanillia', 'compaxy', 'rh']
+
 function loadNetMode() {
   const stored = localStorage.getItem(NET_MODE_KEY)
-  if (stored) return stored
+  if (stored && NET_MODE_IDS.includes(stored)) return stored
   const legacy = localStorage.getItem(LEGACY_NET_MODE_KEY)
-  if (legacy) return LEGACY_NET_MODE_MAP[legacy] || legacy
+  if (legacy) {
+    const mapped = LEGACY_NET_MODE_MAP[legacy] || legacy
+    if (NET_MODE_IDS.includes(mapped)) return mapped
+  }
   return 'core'
 }
 
@@ -1034,7 +1041,7 @@ let currentRemoteTargetUrl = null
 function getNetEngine() { return selectedNet }
 
 function setNetEngine(engine) {
-  if (!['core', 'runtime', 'runtimev2', 'remote', 'vanillia', 'compaxy', 'rammerhead'].includes(engine)) return
+  if (!NET_MODE_IDS.includes(engine)) return
   const previous = selectedNet
   selectedNet = engine
   localStorage.setItem(NET_MODE_KEY, engine)
@@ -1252,7 +1259,7 @@ async function initNetStack() {
   if (isRuntimeV2Engine()) return ensureRuntimeV2()
   await initCore()
   await initRuntime()
-  // VanilliaPXY, Compaxy and Rammerhead are hosts of their own: they need no
+  // VanilliaPXY, Compaxy and RH are hosts of their own: they need no
   // BareMux transport and no wisp relay, and skipping the bridge keeps their
   // connection status truthful.
   if (isHostProxyEngine()) return
@@ -1329,7 +1336,7 @@ function getNetUrl(url) {
   }
   if (selectedNet === 'vanillia') return getVanilliaRouteUrl() + encodeURIComponent(url)
   if (selectedNet === 'compaxy') return getCompaxyRouteUrl() + encodeURIComponent(url)
-  if (selectedNet === 'rammerhead') return getRammerheadRouteUrl() + encodeURIComponent(url)
+  if (selectedNet === 'rh') return getRhRouteUrl() + encodeURIComponent(url)
   if (selectedNet === 'runtime') {
     if (runtimeReady && runtimeController) return runtimeController.encodeUrl(url)
     return url
@@ -1369,11 +1376,11 @@ function getRealUrlFromNet(maybeNetUrl) {
     return maybeNetUrl
   }
 
-  if (selectedNet === 'rammerhead') {
-    // Any rammerhead host decodes, not just the selected one. The entry form
+  if (selectedNet === 'rh') {
+    // Any RH host decodes, not just the selected one. The entry form
     // carries the target in ?url=; after the redirect it lives in the path as
     // /<session>/<target>, so unwrap whichever form the frame is on.
-    if (isRammerheadFrameUrl(maybeNetUrl)) {
+    if (isRhFrameUrl(maybeNetUrl)) {
       try {
         const absolute = new URL(maybeNetUrl, window.location.origin)
         const viaQuery = absolute.searchParams.get('url')
@@ -1429,7 +1436,7 @@ function currentEngineLabel() {
     : selectedNet === 'remote' ? 'Hyperbeam'
     : selectedNet === 'vanillia' ? 'VanilliaPXY'
     : selectedNet === 'compaxy' ? 'Compaxy'
-    : selectedNet === 'rammerhead' ? 'Rammerhead'
+    : selectedNet === 'rh' ? 'RH'
     : 'UV'
 }
 
@@ -1509,7 +1516,7 @@ function closeNetInfoPopup() {
 async function runNetInit() {
   try {
     await chooseBestPickerServer()
-    lastPickerSource = isVanilliaEngine() ? 'vanillia' : isCompaxyEngine() ? 'compaxy' : isRammerheadEngine() ? 'rammerhead' : 'wisp'
+    lastPickerSource = isVanilliaEngine() ? 'vanillia' : isCompaxyEngine() ? 'compaxy' : isRhEngine() ? 'rh' : 'wisp'
     if (isHostProxyEngine() || isRuntimeV2Engine()) {
       // Nothing to preload: a vanillia or compaxy host is probed over HTTP, and
       // v2's libcurl opens its own relay connection instead of a BareMux socket.

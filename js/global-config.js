@@ -55,7 +55,7 @@
         proxyUV:       { enabled: true, notice: '' },
         proxyScramjet: { enabled: true, notice: '' },
         proxyScramjetV2: { enabled: true, notice: '' },
-        proxyRammerhead: { enabled: true, notice: '' },
+        proxyRh: { enabled: true, notice: '' },
         accounts:      { enabled: true, notice: '' },
       },
       theme:   { forced: false, preset: null, effect: null, image: null },

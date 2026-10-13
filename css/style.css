@@ -1062,7 +1062,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 .engine-btn:hover{color:var(--ui-text)}
 .engine-btn.active{color:var(--ui-text)}
-/* The pill shows the primary engines up front (UV and Rammerhead); the extra
+/* The pill shows the primary engines up front (UV and RH); the extra
    set — Hyperbeam, Compaxy, VanilliaPXY and the deprecated Scramjet V1 — lives in
    this wrapper and slides open in place, so the whole control stays one
    connected pill instead of a detached panel. */
