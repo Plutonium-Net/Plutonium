@@ -735,17 +735,6 @@ function openAboutDialog() {
     <a href="https://xxmizzeryxx.github.io/mizzery.github.io" class="about-dialog__row-link">Portfolio</a>
     <a href="https://github.com/xXmizzeryXx" class="about-dialog__row-link">GitHub</a>
   </div>
-  
-  <div class="about-dialog__row">
-    <div class="about-dialog__row-icon grey">
-      <img src="./img/about-images/blake.webp" alt="Blake181041">
-    </div>
-    <div class="about-dialog__row-body">
-      <div class="about-dialog__row-title">Blake181041</div>
-      <div class="about-dialog__row-sub">Vanilla Proxy Developer &amp; Bug Fix Contributor</div>
-    </div>
-    <a href="https://github.com/Blake181041" class="about-dialog__row-link">GitHub</a>
-  </div>
 </div>
 
       <div class="about-dialog__section">
@@ -754,7 +743,6 @@ function openAboutDialog() {
         <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Սⅼtrаⅴіоⅼеt</div><div class="about-dialog__row-sub">Browsing technology</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Տсrаⅿјеt V1 and V2</div><div class="about-dialog__row-sub">Browsing technology</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Ŕаⅿⅿеrḣеаḋ</div><div class="about-dialog__row-sub">Browsing technology</div></div></div>
-        <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">VanilliaPXY</div><div class="about-dialog__row-sub">Browsing technology</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon teal"><i class="fas fa-network-wired"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Hyperbeam</div><div class="about-dialog__row-sub">Browsing technology</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon grey"><i class="fas fa-database"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">GitHub</div><div class="about-dialog__row-sub">File hosting</div></div></div>
         <div class="about-dialog__row"><div class="about-dialog__row-icon orange"><i class="fas fa-cloud"></i></div><div class="about-dialog__row-body"><div class="about-dialog__row-title">Cloudflare</div><div class="about-dialog__row-sub">Site hosting &amp; DDoS protection</div></div></div>

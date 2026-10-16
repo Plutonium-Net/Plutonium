@@ -460,7 +460,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .relay-switcher-item-copy{display:flex;flex-direction:column;min-width:0;flex:1}
 .relay-switcher-item-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Where the region runs, under its name; same second line the connection HUD
-   rows use, so a relay and a Vanillia host read alike. */
+   rows use, so a relay row and a host-proxy row read alike. */
 .relay-switcher-item-location{
   min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   color:var(--ui-text-muted);font-size:10px;font-weight:500;line-height:1.2;margin-top:1px;
@@ -1063,7 +1063,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 .engine-btn:hover{color:var(--ui-text)}
 .engine-btn.active{color:var(--ui-text)}
 /* The pill shows the primary engines up front (UV and RH); the extra
-   set — Hyperbeam, Compaxy, VanilliaPXY and the deprecated Scramjet V1 — lives in
+   set — Hyperbeam, Compaxy and the deprecated Scramjet V1 — lives in
    this wrapper and slides open in place, so the whole control stays one
    connected pill instead of a detached panel. */
 .engine-more{
@@ -1878,8 +1878,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
 }
 /* No relay to pick when the cloud (Hyperbeam) engine is active: collapse the row
    and swallow the flex gap on both sides, so everything below slides up into
-   exactly the space the row would have taken. The VanilliaPXY engine keeps the
-   row visible; it picks that engine's host rather than a wisp relay. */
+   exactly the space the row would have taken. */
 .new-tab-page:has(.engine-btn[data-engine="remote"].active) .engine-relay{
   height:0;
   margin-top:0;
