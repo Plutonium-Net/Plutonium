@@ -66,13 +66,13 @@ export function landingPage() {
     display: grid;
     align-content: start;
     justify-items: start;
-    gap: clamp(10px, 1.2vw, 14px);
+    gap: clamp(10px, 1vw, 12px);
     /* background.png is exactly 2:1 and its Plutonium wordmark fills the lower
        third. Under cover the image is max(50vw, 100svh) tall and the artwork
        starts 34.8% of that above the bottom edge, so that band is reserved:
        the cards sit above the brand instead of on top of it. */
     padding:
-      clamp(44px, 8vh, 104px)
+      clamp(40px, 7vh, 92px)
       22px
       calc(max(50vw, 100svh) * 0.348 + 28px)
       clamp(26px, 9vw, 150px);
@@ -80,7 +80,7 @@ export function landingPage() {
 
   .card {
     width: min(100%, 720px);
-    padding: clamp(20px, 2.2vw, 28px);
+    padding: clamp(18px, 1.9vw, 24px);
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 22px;
@@ -100,7 +100,7 @@ export function landingPage() {
   }
   .card__mark {
     flex: none;
-    width: clamp(48px, 5vw, 66px);
+    width: clamp(44px, 4.6vw, 58px);
     height: auto;
     filter: drop-shadow(0 0 20px rgba(232, 23, 93, 0.3));
   }
@@ -113,7 +113,7 @@ export function landingPage() {
     margin-bottom: 6px;
   }
   .card__title {
-    font-size: clamp(2rem, 4.2vw, 3rem);
+    font-size: clamp(1.9rem, 4vw, 2.8rem);
     font-weight: 650;
     letter-spacing: -0.03em;
     line-height: 1.05;
@@ -178,8 +178,8 @@ export function landingPage() {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px 26px;
-    margin-top: 18px;
-    padding-top: 16px;
+    margin-top: 14px;
+    padding-top: 13px;
     border-top: 1px solid rgba(255, 255, 255, 0.07);
     list-style: none;
   }
@@ -202,7 +202,7 @@ export function landingPage() {
   .checks li[data-ok="false"] .checks__val { color: rgba(242, 85, 90, 0.95); }
 
   .status__foot {
-    margin-top: 14px;
+    margin-top: 11px;
     font-family: var(--mono);
     font-size: 0.7rem;
     color: rgba(255, 255, 255, 0.3);
@@ -211,10 +211,10 @@ export function landingPage() {
   /* ---- 3. description --------------------------------------------------- */
 
   .card__desc {
-    max-width: 62ch;
+    max-width: 68ch;
     color: var(--muted);
-    font-size: clamp(0.95rem, 1.1vw, 1.02rem);
-    line-height: 1.75;
+    font-size: clamp(0.94rem, 1vw, 1rem);
+    line-height: 1.7;
   }
   .card__desc strong { color: rgba(245, 245, 247, 0.88); font-weight: 550; }
 
@@ -242,7 +242,7 @@ export function landingPage() {
 
 <main class="stage">
   <section class="card card--title">
-    <img class="card__mark" src="/logo.png" alt="" width="66" height="66" />
+    <img class="card__mark" src="/logo.png" alt="" width="58" height="58" />
     <div>
       <p class="card__eyebrow">api.plutoniumnet.work</p>
       <h1 class="card__title">Plutonium API</h1>
