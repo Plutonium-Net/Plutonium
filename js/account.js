@@ -1493,7 +1493,12 @@ window.accountManager = accountManager
 
 async function fetchAIUsage() {
   try {
-    const token = (typeof PlutoniumStore !== 'undefined' && PlutoniumStore.currentUser) ? PlutoniumStore.currentUser.idToken : ''
+    const user = (typeof PlutoniumStore !== 'undefined') ? PlutoniumStore.currentUser : null
+    // Sign-out fires the auth listeners, which refresh the quota pill. There is
+    // no session left at that point, so don't send an empty bearer token: the
+    // API rightly answers 401 and it just shows up as console noise.
+    const token = (user && user.idToken) ? user.idToken : ''
+    if (!token) return null
     const res = await fetch('https://api.plutoniumnet.work/ai/ratelimit', { headers: { Authorization: `Bearer ${token}` } })
     if (!res.ok) return null
     const d = await res.json()
