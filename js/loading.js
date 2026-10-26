@@ -66,7 +66,7 @@
   });
 
   // Five cache groups, one progress segment each, in the order they run.
-  var GROUP_COUNT = 5;
+  var GROUP_COUNT = 4;
   var completedGroups = 0;
   var activeGroupIndex = -1;
   var activeGroupPct = 0;

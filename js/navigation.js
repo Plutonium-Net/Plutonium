@@ -387,10 +387,14 @@ function saveTabsSnapshot() {
 
 async function restoreTabs(tabList) {
   if (!Array.isArray(tabList) || !tabList.length) return
+  // Cloud gaming was removed, so a snapshot stored before that must not reopen
+  // a pluto://cloud tab; nothing would route it any more.
+  const restorable = tabList.filter(t => t && !/^(?:plu|pluto):\/\/cloud(?:[?#]|$)/i.test(String(t.url || '')))
+  if (!restorable.length) return
   const existing = [...chromeTabs.tabEls]
   existing.forEach(t => t.parentNode.removeChild(t))
   let activeTabEl = null
-  for (const tabData of tabList) {
+  for (const tabData of restorable) {
     chromeTabs.addTab({ title: tabData.title || 'New Tab', favicon: false }, { background: true, animate: false })
     const tabEl = chromeTabs.tabEls[chromeTabs.tabEls.length - 1]
     tabEl.dataset.url = tabData.url || 'newtab'
@@ -406,5 +410,5 @@ async function restoreTabs(tabList) {
     else await navigate(url)
   }
   syncNavButtons()
-  console.log('[Tabs] Restored', tabList.length, 'tabs from account')
+  console.log('[Tabs] Restored', restorable.length, 'tabs from account')
 }
