@@ -1,98 +1,257 @@
 /**
- * The API index page. Replaces the four near-identical landing pages that each
- * worker served at its own root.
+ * The API index page: brand splash on api.plutoniumnet.work.
+ *
+ * Full-bleed background + glass status card. The card's health pill is filled
+ * in by one same-origin request to /healthz, so the page never claims "up"
+ * before it has actually asked.
+ *
+ * Background, logo and favicon are static files in ../../public, served by the
+ * Worker's [assets] binding rather than inlined here (the background alone is
+ * 414 KB, which has no place in a Worker bundle).
  */
 
-const GROUPS = [
-  {
-    heading: 'Firebase',
-    rows: [
-      ['GET',    '/config',            'Sanitised Firebase client config'],
-      ['POST',   '/auth/email',        'Sign in with email & password'],
-      ['POST',   '/auth/signup',       'Create an email account'],
-      ['POST',   '/auth/reset',        'Send a password-reset email'],
-      ['POST',   '/auth/update',       'Update the display name'],
-      ['POST',   '/auth/password',     'Change the password'],
-      ['POST',   '/auth/providers',    'List linked providers'],
-      ['POST',   '/auth/link',         'Link a provider'],
-      ['POST',   '/auth/unlink',       'Unlink a provider'],
-      ['POST',   '/auth/delete',       'Purge cloud data, then delete the account'],
-      ['GET',    '/auth/oauth/start',  'Redirect to GitHub or Google OAuth'],
-      ['GET',    '/auth/oauth/callback', 'Exchange the code for a Firebase token'],
-      ['*',      '/firestore/…',       'Firestore REST gateway'],
-      ['*',      '/rtdb/…',            'Realtime Database REST gateway'],
-    ],
-  },
-  {
-    heading: 'AI',
-    rows: [
-      ['POST',   '/ai/chat',           'Chat completion, streaming on Accept: text/event-stream'],
-      ['POST',   '/ai/tts',            'Orpheus text-to-speech'],
-      ['POST',   '/ai/transcribe',     'Whisper transcription'],
-      ['GET',    '/ai/models',         'Supported models'],
-      ['GET',    '/ai/ratelimit',      'Current quota window for the caller'],
-    ],
-  },
-  {
-    heading: 'Remote sessions',
-    rows: [
-      ['POST',   '/vm/session',        'Create or delete a full VM session'],
-      ['GET',    '/vm/stats',          'VM rate-limit config'],
-      ['POST',   '/net/session',       'Create a kiosk browser session'],
-      ['DELETE', '/net/session',       'Destroy one kiosk session'],
-      ['DELETE', '/net/sessions',      'Destroy every kiosk session'],
-    ],
-  },
-];
-
 export function landingPage() {
-  const sections = GROUPS.map(group => `
-<div class="section">
-  <div class="section__heading">${group.heading}</div>
-  <table>
-    <tbody>
-      ${group.rows.map(([method, route, description]) => `<tr>
-        <td class="method">${method}</td>
-        <td><code>${route}</code></td>
-        <td class="desc">${description}</td>
-      </tr>`).join('\n      ')}
-    </tbody>
-  </table>
-</div>`).join('\n');
-
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Plutonium API</title>
+<meta name="description" content="Authentication, AI and remote sessions for Plutonium Network, served by one Cloudflare Worker." />
+<meta name="theme-color" content="#050508" />
+<meta property="og:title" content="Plutonium API" />
+<meta property="og:description" content="Authentication, AI and remote sessions for Plutonium Network." />
+<meta property="og:image" content="/background.png" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/favicon.png" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root { --pink: #e8175d; --bg: #000000; --text: #ffffff; --muted: #a0a0a0; }
-  body { background-color: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", system-ui, sans-serif; line-height: 1.6; }
-  .hero { min-height: 100vh; display: flex; align-items: flex-start; justify-content: flex-start; padding: 160px 0 120px 16vw; }
-  .hero__inner { max-width: 680px; }
-  .hero__title { font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 700; letter-spacing: -0.02em; color: var(--pink); line-height: 1.1; margin-bottom: 18px; }
-  .hero__desc { font-size: clamp(1rem, 2vw, 1.15rem); color: var(--muted); max-width: 520px; line-height: 1.7; margin-bottom: 40px; }
-  .section { margin-bottom: 40px; }
-  .section__heading { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pink); margin-bottom: 14px; opacity: 0.8; }
-  table { border-collapse: collapse; width: 100%; max-width: 640px; font-size: 0.88rem; }
-  td { text-align: left; padding: 7px 12px 7px 0; border-bottom: 1px solid rgba(255,255,255,0.07); vertical-align: top; }
-  td.method { color: var(--pink); font-weight: 600; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; width: 74px; white-space: nowrap; }
-  td.desc { color: var(--muted); }
-  code { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.82rem; color: var(--text); background: rgba(255,255,255,0.06); border-radius: 4px; padding: 1px 6px; }
-  .note { font-size: 0.82rem; color: var(--muted); margin-top: 16px; max-width: 560px; line-height: 1.7; }
+
+  :root {
+    --text:   #f5f5f7;
+    --muted:  #9b9ba4;
+    --accent: #e8175d;
+    --ok:     #3ecf8e;
+    --warn:   #f5a524;
+    --err:    #f2555a;
+    --card:   rgba(6, 6, 10, 0.72);
+    --line:   rgba(255, 255, 255, 0.10);
+    --mono:   ui-monospace, "SF Mono", "Fira Code", Menlo, monospace;
+  }
+
+  html { background: #000; }
+
+  body {
+    min-height: 100%;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Background layer is fixed so the artwork stays put while the page
+     scrolls on short screens; the vignette keeps the card legible. */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: #000 url("/background.png") center / cover no-repeat;
+  }
+  .backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(130% 95% at 50% 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%);
+  }
+
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    padding: clamp(18px, 2.4vw, 30px);
+  }
+  .brand {
+    display: block;
+    width: clamp(38px, 3.4vw, 46px);
+    height: auto;
+    filter: drop-shadow(0 0 20px rgba(232, 23, 93, 0.35));
+  }
+
+  .stage {
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    /* Extra bottom padding biases the card upward, clear of the mark baked
+       into the bottom-left of the background image. */
+    padding: clamp(96px, 15vh, 150px) 22px clamp(80px, 16vh, 160px);
+  }
+
+  .card {
+    width: min(100%, 560px);
+    padding: clamp(26px, 3.4vw, 40px);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    backdrop-filter: blur(22px) saturate(130%);
+    -webkit-backdrop-filter: blur(22px) saturate(130%);
+    box-shadow:
+      0 30px 80px -32px rgba(0, 0, 0, 0.95),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .card__eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(232, 23, 93, 0.95);
+    margin-bottom: 14px;
+  }
+
+  .card__title {
+    font-size: clamp(1.9rem, 4.4vw, 2.6rem);
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 18px;
+    padding: 7px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.045);
+    font-size: 0.83rem;
+    font-weight: 500;
+  }
+  .status__dot {
+    width: 7px;
+    height: 7px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--warn);
+    box-shadow: 0 0 0 4px rgba(245, 165, 36, 0.14);
+  }
+  .status__meta {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .status__meta:empty { display: none; }
+
+  .status[data-state="ok"] .status__dot {
+    background: var(--ok);
+    box-shadow: 0 0 0 4px rgba(62, 207, 142, 0.16);
+    animation: pulse 2.6s ease-in-out infinite;
+  }
+  .status[data-state="error"] .status__dot {
+    background: var(--err);
+    box-shadow: 0 0 0 4px rgba(242, 85, 90, 0.16);
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(62, 207, 142, 0.16); }
+    50%      { box-shadow: 0 0 0 7px rgba(62, 207, 142, 0.06); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .status[data-state="ok"] .status__dot { animation: none; }
+  }
+
+  .card__desc {
+    margin-top: 20px;
+    max-width: 46ch;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+  .card__desc strong { color: rgba(245, 245, 247, 0.86); font-weight: 550; }
+
+  .card__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    font-family: var(--mono);
+    font-size: 0.74rem;
+  }
+  .card__foot a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .card__foot a:hover,
+  .card__foot a:focus-visible { color: var(--accent); }
+  .card__foot span { color: rgba(255, 255, 255, 0.28); }
 </style>
 </head>
 <body>
-<div class="hero">
-<div class="hero__inner">
-  <h1 class="hero__title">Plutonium API</h1>
-  <p class="hero__desc">One Worker serving Firebase, AI and remote sessions for Plutonium Network. Provider keys stay server-side; AI and VM routes require a Firebase ID token.</p>
-  ${sections}
-  <p class="note">Rate limits apply per verified account: 100 AI messages every 12 hours, 2 VM sessions every 15 minutes. Browser sessions under <code>/net</code> are unauthenticated and unlimited.</p>
-</div>
-</div>
+<div class="backdrop" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a href="https://plutoniumnet.work" aria-label="Plutonium Network">
+    <img class="brand" src="/logo.png" alt="Plutonium" width="46" height="46" />
+  </a>
+</header>
+
+<main class="stage">
+  <section class="card">
+    <p class="card__eyebrow">api.plutoniumnet.work</p>
+    <h1 class="card__title">Plutonium API</h1>
+
+    <div class="status" data-state="checking" role="status" aria-live="polite">
+      <span class="status__dot" aria-hidden="true"></span>
+      <span class="status__label">Checking status</span>
+      <span class="status__meta"></span>
+    </div>
+    <noscript><style>.status { display: none; }</style></noscript>
+
+    <p class="card__desc">
+      Authentication, AI and remote sessions for Plutonium Network, served by a single Worker.
+      <strong>Provider keys stay server-side</strong>; AI and VM routes require a verified Firebase ID token.
+    </p>
+
+    <div class="card__foot">
+      <a href="/healthz">GET /healthz</a>
+      <span>Plutonium Network</span>
+    </div>
+  </section>
+</main>
+
+<script>
+  (function () {
+    var el    = document.querySelector('.status');
+    var label = el.querySelector('.status__label');
+    var meta  = el.querySelector('.status__meta');
+    var start = Date.now();
+
+    function settle(state, text, extra) {
+      el.dataset.state = state;
+      label.textContent = text;
+      meta.textContent  = extra || '';
+    }
+
+    fetch('/healthz', { cache: 'no-store', headers: { Accept: 'application/json' } })
+      .then(function (res) {
+        var ms = Math.max(1, Date.now() - start);
+        if (!res.ok) return settle('error', 'Degraded', 'HTTP ' + res.status);
+        return res.json().then(function (body) {
+          if (body && body.status === 'ok') settle('ok', 'Operational', ms + ' ms');
+          else settle('error', 'Degraded', 'unexpected response');
+        });
+      })
+      .catch(function () {
+        settle('error', 'Unreachable', 'network error');
+      });
+  })();
+</script>
 </body>
 </html>`;
 }

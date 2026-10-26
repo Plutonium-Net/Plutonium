@@ -8,6 +8,11 @@ keep_vars = true
 pattern   = "api.plutoniumnet.work/*"
 zone_name = "plutoniumnet.work"
 
+# Static files served directly by Cloudflare (background, logo, favicon).
+# Anything that isn't a file in here falls through to the Worker below.
+[assets]
+directory = "./public"
+
 [[kv_namespaces]]
 binding = "PLU_RATE_LIMIT"
 id      = "3f3c1c815b5b4c069bb13afb1d4bbb5a"

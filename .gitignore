@@ -4,3 +4,4 @@
 # use it as an environment variable where it is needed, then delete the file.
 *service-account*.json
 *serviceAccount*.json
+api/.wrangler

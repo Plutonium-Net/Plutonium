@@ -10,7 +10,7 @@
  * changed, so the handlers ported with their logic intact.
  */
 
-import { preflight, fail, html } from './lib/responses.js';
+import { preflight, fail, html, json } from './lib/responses.js';
 import { landingPage } from './lib/landing.js';
 import * as gateway from './routes/gateway.js';
 import * as ai from './routes/ai.js';
@@ -26,6 +26,13 @@ export default {
 
     try {
       if (path === '/') return html(landingPage());
+
+      // Liveness probe, and what the landing page's status pill reads.
+      if (path === '/healthz') {
+        return json({ status: 'ok', service: 'plutonium-api', time: new Date().toISOString() }, 200, {
+          'Cache-Control': 'no-store',
+        });
+      }
 
       if (
         path === '/config' ||
