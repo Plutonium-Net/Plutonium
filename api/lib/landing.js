@@ -64,8 +64,8 @@ export function landingPage() {
   .stage {
     min-height: 100svh;
     display: grid;
-    align-content: start;
-    justify-items: start;
+    align-content: center;
+    justify-items: center;
     gap: clamp(10px, 1.2vh, 12px);
     /* background.png is exactly 2:1 and its Plutonium wordmark fills the lower
        third. Under cover the image is max(50vw, 100svh) tall and the artwork
@@ -73,13 +73,13 @@ export function landingPage() {
        the cards sit above the brand instead of on top of it. */
     padding:
       clamp(34px, 7vh, 92px)
-      22px
+      clamp(18px, 2vw, 28px)
       calc(max(50vw, 100svh) * 0.348 + 4px)
-      clamp(26px, 9vw, 150px);
+      clamp(18px, 2vw, 28px);
   }
 
   .card {
-    width: min(100%, 720px);
+    width: min(100%, 1160px);
     padding: clamp(14px, 2.6vh, 24px);
     background: var(--card);
     border: 1px solid var(--line);
