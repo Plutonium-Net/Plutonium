@@ -1,7 +1,7 @@
 {
   "name": "Plutonium Network",
   "short_name": "Plutonium",
-  "description": "A full browser-style web platform: built-in secure browsing, games, cloud gaming, streaming, VMs and Stelena AI, all in one place.",
+  "description": "A full browser-style web platform: built-in secure browsing, games, streaming, VMs and Stelena AI, all in one place.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

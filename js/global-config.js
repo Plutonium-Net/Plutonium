@@ -34,7 +34,6 @@
   /* Which pluto:// page each feature hides. */
   var PAGE_FEATURES = {
     media: 'stream',
-    cloud: 'cloudGaming',
     vms:   'vms',
     ai:    'ai',
   };
@@ -48,7 +47,6 @@
       rollout: { minBuild: 0 },
       features: {
         stream:        { enabled: true, notice: '' },
-        cloudGaming:   { enabled: true, notice: '' },
         vms:           { enabled: true, notice: '' },
         ai:            { enabled: true, notice: '' },
         personalGames: { enabled: true, notice: '' },

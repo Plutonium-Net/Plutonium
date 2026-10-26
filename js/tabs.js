@@ -28,9 +28,6 @@ function purgeTabSession(url) {
     window.PGViewer.close()
   } else if (key === 'media' && typeof closePlayer === 'function') {
     closePlayer()
-  } else if (key === 'cloud') {
-    const frame = document.getElementById('cg-launch-frame')
-    if (frame) frame.src = ''
   } else if (key === 'ai' && window.speechSynthesis) {
     window.speechSynthesis.cancel()
   }

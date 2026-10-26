@@ -8,7 +8,6 @@
   var APPS = [
     { key: 'games', name: 'Games',        icon: 'fa-gamepad',      desc: 'Play hundreds of browser games instantly' },
     { key: 'ai',    name: 'AI',           icon: 'fa-robot',        desc: 'Chat with Stelena AI' },
-    { key: 'cloud', name: 'Cloud Gaming', icon: 'fa-cloud',        desc: 'Stream high-end games from the cloud' },
     { key: 'media', name: 'Media',        icon: 'fa-film',         desc: 'Movies, TV and anime' },
     { key: 'vms',   name: 'VMs',          icon: 'fa-server',       desc: 'Remote virtual machines' },
     { key: 'apps',  name: 'Apps',         icon: 'fa-cube',         desc: 'Launch web apps through a server' },
@@ -16,7 +15,6 @@
 
   var COMMANDS = [
     { cmd: '/g',     icon: 'fa-gamepad', usage: '/g <query>: search games',                          desc: 'search games' },
-    { cmd: '/cg',    icon: 'fa-cloud',   usage: '/cg <query>: search cloud games',                    desc: 'search cloud games' },
     { cmd: '/ai',    icon: 'fa-robot',   usage: '/ai <query>: start an AI chat',                      desc: 'start an AI chat' },
     { cmd: '/watch', icon: 'fa-film',    usage: '/watch movies|anime|tv <query>: find something to watch', desc: 'find something to watch' },
     { cmd: '/vm',    icon: 'fa-server',  usage: '/vm: launch a virtual machine',                      desc: 'launch a virtual machine' },
@@ -64,18 +62,6 @@
       .then(function (data) { return (data && Array.isArray(data[1])) ? data[1] : []; })
       .catch(function () { return []; });
     return suggestCache[key];
-  }
-
-  var cloudCache = null;
-  var cloudFetch = null;
-  function loadCloud() {
-    if (cloudCache) return Promise.resolve(cloudCache);
-    if (cloudFetch) return cloudFetch;
-    cloudFetch = fetch('data/cloud.json')
-      .then(function (r) { return r.json(); })
-      .then(function (g) { cloudCache = g || []; return cloudCache; })
-      .catch(function () { cloudCache = []; return cloudCache; });
-    return cloudFetch;
   }
 
   var rows = [];
@@ -265,31 +251,6 @@
           addHint('No games match "' + rest + '": press Enter to open Games');
         } else {
           matches.forEach(g => addRow(g.name, 'fa-gamepad', () => go('pluto://games?autostart=1#' + encodeURIComponent(g.id)), 'Play now'));
-        }
-        show();
-        if (rows.length) setActive(0);
-      });
-      return;
-    }
-
-    if (cmd === '/cg') {
-      addHeader('Cloud Games');
-      if (!rest) {
-        addRow('/cg <query>', 'fa-cloud', function () { completeCommand('/cg'); }, 'e.g. /cg gta');
-        show();
-        return;
-      }
-      addHint('Searching cloud games…');
-      show();
-      loadCloud().then(games => {
-        if (input.value.trim() !== q) return;
-        resetList();
-        addHeader('Cloud Games');
-        var matches = games.filter(g => String(g.name || '').toLowerCase().includes(rest.toLowerCase())).slice(0, 8);
-        if (!matches.length) {
-          addHint('No cloud games match "' + rest + '": press Enter to open Cloud Gaming');
-        } else {
-          matches.forEach(g => addRow(g.name, 'fa-cloud', () => go('pluto://cloud#cloud:' + encodeURIComponent(g.game_key)), 'Launch in cloud'));
         }
         show();
         if (rows.length) setActive(0);

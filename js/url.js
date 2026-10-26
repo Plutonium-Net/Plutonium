@@ -5,7 +5,6 @@ const LOCAL_PAGES = {
   stream: 'media',
   ai: 'ai',
   vms: 'vms',
-  cloud: 'cloud',
   apps: 'apps',
 }
 

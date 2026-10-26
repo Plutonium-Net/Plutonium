@@ -27,7 +27,7 @@
   var DRAFT_KEY = 'plu_feedback_draft';
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-  var AREAS = ['browsing engine', 'games', 'cloud gaming', 'media / streaming', 'AI (Stelena)', 'virtual machines', 'accounts', 'home screen', 'other'];
+  var AREAS = ['browsing engine', 'games', 'media / streaming', 'AI (Stelena)', 'virtual machines', 'accounts', 'home screen', 'other'];
 
   var TYPES = [
     {

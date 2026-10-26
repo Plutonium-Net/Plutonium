@@ -39,13 +39,6 @@ const WHEELS = {
       { label: 'Memory', work: (h) => call('openStudio', 'memory') }
     ]
   },
-  'pluto://cloud': {
-    title: 'Cloud Games',
-    items: [
-      { label: 'Browse' },
-      { label: 'Search', work: (h) => h.focus('#cg-search') }
-    ]
-  },
   'pluto://media': {
     title: 'Media',
     items: [

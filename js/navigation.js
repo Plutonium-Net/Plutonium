@@ -47,7 +47,7 @@ function pushTabHistory(tabEl, url) {
 }
 
 function workspaceTitle(key) {
-  return ({ games: 'Games', ai: 'AI', cloud: 'Cloud Gaming', media: 'Media', vms: 'VMs', apps: 'Apps' })[key] || key
+  return ({ games: 'Games', ai: 'AI', media: 'Media', vms: 'VMs', apps: 'Apps' })[key] || key
 }
 
 function updateLocalTab(tab, local, display) {

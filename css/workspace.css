@@ -43,7 +43,6 @@ html, body {
   height: auto;
 }
 #workspace-root .workspace-games,
-#workspace-root .workspace-cloud,
 #workspace-root .workspace-media {
   min-height: 100%;
 }
