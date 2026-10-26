@@ -229,6 +229,16 @@ export function landingPage() {
     .stage { padding-bottom: calc(72vh * 0.348 + 8px); }
   }
 
+  /* Portrait phones: cover would blow the wordmark up to a third of the screen
+     and crop it, so size the image by width instead and reserve 17.4vw. */
+  @media (max-width: 700px) {
+    .backdrop {
+      background-size: 100% auto;
+      background-position: left bottom;
+    }
+    .stage { padding-bottom: calc(50vw * 0.348 + 8px); }
+  }
+
   /* Every size above is vh-driven, so the stack shrinks with the window and
      keeps clear of the artwork band without a stack of breakpoints. Wide
      screens get a third column so the checks take two rows, not three. */
