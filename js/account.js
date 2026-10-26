@@ -163,7 +163,14 @@ class AccountManager {
     const rest = raw.match(/([A-Z][A-Z0-9_]{3,})/)
     const code = (sdk && sdk[1]) || (rest && rest[1])
     if (code && msgs[code]) return msgs[code]
-    if (raw.includes('failed:')) return 'Something went wrong. Please try again.'
+    if (raw.includes('failed:')) {
+      // Do not collapse provider failures into a generic sentence: "Could not
+      // exchange code for token" and a Firebase IDP rejection look identical
+      // otherwise, and neither reaches the console on its own.
+      console.warn('[auth]', raw)
+      return raw.replace(/^OAuth (link )?failed:\s*/i, 'Sign-in failed: ')
+    }
+    console.warn('[auth]', raw)
     return raw || 'Something went wrong. Please try again.'
   }
 
@@ -1391,7 +1398,10 @@ class AccountManager {
     const githubBtn = document.getElementById('acct-github-btn')
     const oauth = provider => {
       errorEl.textContent = ''
-      PlutoniumStore.signInWithOAuth(provider).catch(e => { errorEl.textContent = this._authErrorMessage(e) })
+      PlutoniumStore.signInWithOAuth(provider).catch(e => {
+        console.warn('[auth] OAuth sign-in failed:', e && e.message ? e.message : e)
+        errorEl.textContent = this._authErrorMessage(e)
+      })
     }
     if (googleBtn) googleBtn.addEventListener('click', () => oauth('google'))
     if (githubBtn) githubBtn.addEventListener('click', () => oauth('github'))
