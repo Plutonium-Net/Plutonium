@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>API Merge Checklist — Plutonium</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --pink: #e8175d;
+    --bg: #000;
+    --panel: #0c0c0c;
+    --line: rgba(255, 255, 255, 0.08);
+    --text: #fff;
+    --muted: #a0a0a0;
+    --ok: #35d07f;
+    --warn: #f0b429;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.65;
+    padding: 0 0 120px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 72px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 40px; }
+  .eyebrow {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--pink); margin-bottom: 14px;
+  }
+  h1 { font-size: clamp(1.9rem, 4vw, 2.7rem); line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .lede { color: var(--muted); max-width: 640px; font-size: 0.98rem; }
+  .lede code, .meta code { color: var(--text); }
+
+  code {
+    font-family: "SF Mono", "Fira Code", ui-monospace, monospace;
+    font-size: 0.85em;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 4px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
+  pre {
+    background: #060606;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin: 12px 0 0;
+  }
+  pre code { background: none; padding: 0; font-size: 0.82rem; white-space: pre; display: block; }
+
+  .progress-shell {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .progress-inner {
+    max-width: 860px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; gap: 16px; font-size: 0.82rem; color: var(--muted);
+  }
+  .bar { flex: 1; height: 5px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; width: 0%; background: var(--pink); transition: width 200ms ease; }
+  .count { font-variant-numeric: tabular-nums; color: var(--text); font-weight: 600; }
+  .reset {
+    background: none; border: 1px solid var(--line); color: var(--muted);
+    border-radius: 6px; padding: 4px 10px; font: inherit; font-size: 0.76rem; cursor: pointer;
+  }
+  .reset:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
+
+  section { margin-bottom: 44px; }
+  h2 {
+    font-size: 1.15rem; margin-bottom: 6px; letter-spacing: -0.01em;
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px;
+    border: 1px solid rgba(232, 23, 93, 0.45); color: var(--pink);
+  }
+  .tag.agent { border-color: rgba(255,255,255,0.18); color: var(--muted); }
+  .section-note { color: var(--muted); font-size: 0.9rem; margin-bottom: 18px; max-width: 680px; }
+
+  ul.items { list-style: none; display: grid; gap: 10px; }
+  li.item {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px 14px 44px;
+    position: relative;
+    transition: border-color 150ms ease, opacity 150ms ease;
+  }
+  li.item:hover { border-color: rgba(255,255,255,0.16); }
+  li.item input {
+    position: absolute; left: 16px; top: 19px;
+    width: 16px; height: 16px; accent-color: var(--pink); cursor: pointer;
+  }
+  li.item.done { opacity: 0.55; }
+  li.item.done .title { text-decoration: line-through; text-decoration-color: rgba(255,255,255,0.35); }
+  .title { font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 3px; }
+  .body { color: var(--muted); font-size: 0.88rem; }
+  .body p + p { margin-top: 8px; }
+  .body ul { margin: 8px 0 0 18px; }
+  .body li { margin-bottom: 4px; }
+  .body code { color: #e8e8e8; }
+
+  .callout {
+    border-left: 3px solid var(--warn);
+    background: rgba(240, 180, 41, 0.06);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    margin: 14px 0;
+    font-size: 0.88rem;
+    color: #e6d7b4;
+  }
+  .callout.pink { border-left-color: var(--pink); background: rgba(232, 23, 93, 0.07); color: #f3c6d5; }
+  .callout strong { color: #fff; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.86rem; margin-top: 10px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--pink); font-weight: 600;
+  }
+  td { color: var(--muted); }
+  td:first-child { color: var(--text); white-space: nowrap; }
+
+  .done-banner {
+    display: none;
+    border: 1px solid rgba(53, 208, 127, 0.4);
+    background: rgba(53, 208, 127, 0.08);
+    color: #b9f0d3;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 32px;
+    font-size: 0.9rem;
+  }
+  .done-banner.show { display: block; }
+
+  footer { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 20px; color: var(--muted); font-size: 0.8rem; }
+  a { color: var(--pink); }
+</style>
+</head>
+<body>
+
+<div class="progress-shell">
+  <div class="progress-inner">
+    <span class="count" id="count">0 / 0</span>
+    <div class="bar"><span id="bar"></span></div>
+    <button class="reset" id="reset" type="button">Reset</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Plutonium Network &middot; Ops</div>
+    <h1>Merge four Cloudflare Workers into one</h1>
+    <p class="lede">
+      Manual steps only — everything you have to click in a console. The worker source, route table,
+      token verifier and client changes live in the repo and are handled in code.
+      Target: one worker serving <code>https://api.plutoniumnet.work</code> with path prefixes
+      (<code>/auth/*</code>, <code>/firestore/*</code>, <code>/rtdb/*</code>, <code>/ai/*</code>,
+      <code>/vm/*</code>, <code>/net/*</code>), replacing
+      <code>accounting.cdn</code>, <code>ai.cdn</code>, <code>vm.cdn</code> and <code>net.cdn</code>.
+    </p>
+    <div class="callout pink">
+      <strong>Order matters.</strong> Steps 1–3 are safe at any time. Step 4 is the cutover: the GitHub
+      callback URL can only point at one host, so it flips together with the client commit.
+      Ticks are saved in this browser only.
+    </div>
+  </header>
+
+  <div class="done-banner" id="done-banner">
+    All steps ticked. The merge is live — remember to delete the four old workers and drop the old
+    Google redirect URI if you haven't (step 7).
+  </div>
+
+  <!-- 1 -->
+  <section>
+    <h2>1. Cloudflare — access <span class="tag">you</span></h2>
+    <p class="section-note">
+      Nothing below can run without an authenticated wrangler session or an API token in your shell.
+      There are no Cloudflare credentials in this checkout.
+    </p>
+    <ul class="items">
+      <li class="item">
+        <input type="checkbox" id="cf-login" />
+        <label for="cf-login">
+          <span class="title">Authenticate wrangler</span>
+          <span class="body">
+            From the repo root: <code>npx wrangler login</code> — approve in the browser.
+            For CI or a headless shell instead export a token with
+            <em>Workers Scripts: Edit</em>, <em>Workers KV Storage: Edit</em>,
+            <em>Workers Routes: Edit</em> and <em>Zone: Read</em>.
+            <pre><code>npx wrangler whoami</code></pre>
+            Confirms the account and that the <code>plutoniumnet.work</code> zone is visible.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="cf-dns" />
+        <label for="cf-dns">
+          <span class="title">Give <code>api.plutoniumnet.work</code> a proxied DNS record</span>
+          <span class="body">
+            Workers routes only match hostnames that already exist in the zone.
+            Either add an <code>A</code> record to <code>192.0.2.1</code> (or <code>AAAA</code> to
+            <code>100::</code>) with the orange cloud <strong>on</strong>, or add the worker as a
+            Custom Domain in the dashboard and let Cloudflare create the record for you.
+            A proxied <code>*.plutoniumnet.work</code> wildcard may already cover this — check before adding.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="cf-kv" />
+        <label for="cf-kv">
+          <span class="title">Create the rate-limit KV namespace</span>
+          <span class="body">
+            One namespace replaces <code>GROQ_RATE_LIMIT</code> and <code>VM_RATE_LIMIT</code>; keys get
+            <code>ai:</code> / <code>vm:</code> prefixes. Run from <code>api/</code>:
+            <pre><code>npx wrangler kv namespace create PLU_RATE_LIMIT</code></pre>
+            Paste the returned <code>id</code> into the <code>[[kv_namespaces]]</code> block of
+            <code>api/wrangler.toml</code>. The binding name must stay
+            <code>PLU_RATE_LIMIT</code>.
+          </span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <h2>2. Cloudflare — secrets <span class="tag">you</span></h2>
+    <p class="section-note">
+      <code>wrangler secret list</code> shows names only, never values, so they cannot be copied across
+      automatically. Use the interactive prompt (not a command-line argument) so values stay out of your
+      shell history. Run each from <code>api/</code> after the first deploy.
+    </p>
+    <ul class="items">
+      <li class="item">
+        <input type="checkbox" id="cf-secrets" />
+        <label for="cf-secrets">
+          <span class="title">Set all nine secrets</span>
+          <span class="body">
+            <table>
+              <thead><tr><th>Secret</th><th>Where to get the value</th></tr></thead>
+              <tbody>
+                <tr><td>FIREBASE_API_KEY</td><td>Firebase console → Project settings → General → Web API Key</td></tr>
+                <tr><td>FIREBASE_PROJECT_ID</td><td>Same page, Project ID</td></tr>
+                <tr><td>FIREBASE_DATABASE_URL</td><td>Realtime Database → the <code>…firebasedatabase.app</code> URL</td></tr>
+                <tr><td>GROQ_API_KEY</td><td>console.groq.com → API Keys</td></tr>
+                <tr><td>HYPERBEAM_API_KEY</td><td>Hyperbeam dashboard → API keys (shared by <code>/vm</code> and <code>/net</code>)</td></tr>
+                <tr><td>GITHUB_CLIENT_ID</td><td>GitHub → Settings → Developer settings → OAuth Apps</td></tr>
+                <tr><td>GITHUB_CLIENT_SECRET</td><td>Same app → generate a new client secret if lost</td></tr>
+                <tr><td>GOOGLE_CLIENT_ID</td><td>Google Cloud → APIs &amp; Services → Credentials</td></tr>
+                <tr><td>GOOGLE_CLIENT_SECRET</td><td>Same OAuth client</td></tr>
+              </tbody>
+            </table>
+            <pre><code>npx wrangler secret put FIREBASE_API_KEY
+npx wrangler secret put FIREBASE_PROJECT_ID
+npx wrangler secret put FIREBASE_DATABASE_URL
+npx wrangler secret put GROQ_API_KEY
+npx wrangler secret put HYPERBEAM_API_KEY
+npx wrangler secret put GITHUB_CLIENT_ID
+npx wrangler secret put GITHUB_CLIENT_SECRET
+npx wrangler secret put GOOGLE_CLIENT_ID
+npx wrangler secret put GOOGLE_CLIENT_SECRET</code></pre>
+            Optional, only if you want <code>/config</code> to return them:
+            <code>FIREBASE_MESSAGING_SENDER_ID</code>, <code>FIREBASE_APP_ID</code>.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="cf-verify" />
+        <label for="cf-verify">
+          <span class="title">Verify the deployment answers on the new origin</span>
+          <span class="body">
+            <pre><code>curl -s https://api.plutoniumnet.work/ | head -5
+curl -s https://api.plutoniumnet.work/config
+curl -s -o /dev/null -w '%{http_code}\n' https://api.plutoniumnet.work/ai/models</code></pre>
+            Expect HTML, a Firebase config object, and <code>200</code>.
+            <code>/ai/chat</code> and <code>/vm/session</code> should return <code>401</code> without
+            a token — a <code>200</code> there means the token verifier is not wired up.
+          </span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <h2>3. Google Cloud — OAuth client <span class="tag">you</span></h2>
+    <p class="section-note">Safe to do before the cutover: Google accepts several redirect URIs, so the old one keeps working.</p>
+    <ul class="items">
+      <li class="item">
+        <input type="checkbox" id="gcp-redirect" />
+        <label for="gcp-redirect">
+          <span class="title">Add the new authorized redirect URI</span>
+          <span class="body">
+            APIs &amp; Services → Credentials → your <em>Web application</em> OAuth client →
+            Authorized redirect URIs → add exactly:
+            <pre><code>https://api.plutoniumnet.work/auth/oauth/callback</code></pre>
+            Leave the existing <code>https://accounting.cdn.plutoniumnet.work/auth/oauth/callback</code>
+            in place until step 6 passes. No JavaScript origin is needed — the flow is a redirect, not
+            the JS SDK.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="gcp-consent" />
+        <label for="gcp-consent">
+          <span class="title">Consent screen is published, not in testing</span>
+          <span class="body">
+            If the OAuth consent screen is in <em>Testing</em>, only listed test users can sign in.
+            Confirm it is <em>In production</em>, or that your test accounts are listed.
+          </span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <h2>4. GitHub — OAuth App <span class="tag">you</span></h2>
+    <p class="section-note">
+      This is the one genuinely coupled step.
+    </p>
+    <ul class="items">
+      <li class="item">
+        <input type="checkbox" id="gh-callback" />
+        <label for="gh-callback">
+          <span class="title">Flip the callback URL at cutover</span>
+          <span class="body">
+            Settings → Developer settings → OAuth Apps → your app → <em>Authorization callback URL</em>:
+            <pre><code>https://api.plutoniumnet.work/auth/oauth/callback</code></pre>
+            <strong>GitHub allows exactly one callback URL.</strong> The moment you save this, GitHub
+            sign-in on <code>accounting.cdn.plutoniumnet.work</code> stops working — so do it in the same
+            sitting as the client commit in step 5. Email/password and Google sign-in are unaffected.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="gh-secret" />
+        <label for="gh-secret">
+          <span class="title">Confirm the client secret is the one in the worker secrets</span>
+          <span class="body">
+            If you regenerated it during setup, re-run
+            <code>npx wrangler secret put GITHUB_CLIENT_SECRET</code>.
+          </span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 5 -->
+  <section>
+    <h2>5. Cutover <span class="tag">you + agent</span></h2>
+    <p class="section-note">
+      The client commit is the agent's; the browser verification is yours, because it needs a real
+      account and real spend.
+    </p>
+    <ul class="items">
+      <li class="item">
+        <input type="checkbox" id="cut-commit" />
+        <label for="cut-commit">
+          <span class="title">Land the client commit</span>
+          <span class="body">
+            Every call site moves to <code>api.plutoniumnet.work</code>: the store config, the AI worker
+            constant and its five call sites, the rate-limit probe in <code>account.js</code>,
+            <code>vms.js</code>, <code>net.js</code>, the inline value in <code>onboarding.html</code>,
+            and the <code>preconnect</code> hint in <code>index.html</code>. Deploy the static site as usual
+            (the FTP workflow).
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="cut-signin-email" />
+        <label for="cut-signin-email">
+          <span class="title">Sign in with email + password on production</span>
+          <span class="body">
+            Real page, real account. Session should survive a reload (it lives in
+            <code>localStorage.plu_user</code>) and the token should refresh silently after an hour.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="cut-signin-oauth" />
+        <label for="cut-signin-oauth">
+          <span class="title">Sign in with Google, then GitHub</span>
+          <span class="body">
+            Both use the popup → <code>postMessage</code> handshake. If the popup closes and nothing
+            happens, the redirect URI in the provider console does not match
+            <code>/auth/oauth/callback</code> exactly. Also try linking and unlinking a provider from the
+            account page.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="cut-firestore" />
+        <label for="cut-firestore">
+          <span class="title">Confirm user data reads and writes</span>
+          <span class="body">
+            Change a setting that persists (nav layout, theme, a game save) and reload. This is the only
+            step that proves <code>/firestore/*</code> and <code>/rtdb/*</code> are proxying correctly
+            with your token.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="cut-ai" />
+        <label for="cut-ai">
+          <span class="title">Exercise the AI worker</span>
+          <span class="body">
+            One chat message (should stream, and the quota footer should decrement), one TTS clip, one
+            transcription. Then check <code>/ai/ratelimit</code> from the account page reflects usage.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="cut-vm" />
+        <label for="cut-vm">
+          <span class="title">Start and end a VM, and a remote browser session</span>
+          <span class="body">
+            <code>/vm/session</code> create and delete, then <code>/net/session</code> from the browser
+            tab. Both hit Hyperbeam and cost credits — keep it to one each.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="cut-403" />
+        <label for="cut-403">
+          <span class="title">Confirm a signed-out request is rejected</span>
+          <span class="body">
+            In devtools, call <code>/ai/chat</code> and <code>/vm/session</code> with no token, then with
+            a garbage <code>Bearer</code> value. Both must return <code>401</code>. This is the check that
+            the old "accept any Bearer" behaviour is really gone.
+          </span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 6 -->
+  <section>
+    <h2>6. Firebase <span class="tag">you</span></h2>
+    <p class="section-note">
+      Nothing about the origin change requires a Firebase edit — the worker talks to Identity Toolkit,
+      Firestore and RTDB over REST. But the merge makes one existing assumption load-bearing.
+    </p>
+    <ul class="items">
+      <li class="item">
+        <input type="checkbox" id="fb-rules" />
+        <label for="fb-rules">
+          <span class="title">Verify Firestore rules scope every document to its owner</span>
+          <span class="body">
+            The gateway forwards whatever uid the client puts in <code>/users/{uid}/…</code> — rules are
+            the only thing stopping one signed-in user from reading another's data. Minimum shape:
+            <pre><code>match /users/{uid}/{document=**} {
+  allow read, write: if request.auth != null
+                     &amp;&amp; request.auth.uid == uid;
+}</code></pre>
+            Realtime Database needs the equivalent in its own rules tab. If the rules are currently
+            "any authenticated user", fix them before the cutover, not after.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="fb-domains" />
+        <label for="fb-domains">
+          <span class="title">Leave Authorized domains alone</span>
+          <span class="body">
+            That list governs <code>signInWithPopup</code> from the Firebase SDK, which this code does not
+            use. Adding <code>api.plutoniumnet.work</code> here would not help and is not needed.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="fb-delete" />
+        <label for="fb-delete">
+          <span class="title">Test account deletion end to end</span>
+          <span class="body">
+            <code>/auth/delete</code> purges every Firestore document for the uid <em>before</em> deleting
+            the auth user, and refuses to delete anything if a purge fails. Throwaway account only — it
+            is genuinely destructive.
+          </span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 7 -->
+  <section>
+    <h2>7. Groq, Hyperbeam, cleanup <span class="tag">you</span></h2>
+    <ul class="items">
+      <li class="item">
+        <input type="checkbox" id="keys-valid" />
+        <label for="keys-valid">
+          <span class="title">Confirm both third-party keys are live</span>
+          <span class="body">
+            A dead <code>GROQ_API_KEY</code> shows up as <code>/ai/chat</code> returning
+            <code>GROQ_API_KEY not configured</code> or a 401 from upstream; a dead Hyperbeam key fails
+            <code>/vm/session</code> and <code>/net/session</code> together.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="spend-alert" />
+        <label for="spend-alert">
+          <span class="title">Set a Hyperbeam spend alert</span>
+          <span class="body">
+            <code>/net/session</code> is still unauthenticated and unlimited after the merge — that was
+            deliberately left out of scope. An alert is the cheap guard against a surprise bill.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="clean-old-workers" />
+        <label for="clean-old-workers">
+          <span class="title">Delete the four old workers</span>
+          <span class="body">
+            Only after step 5 passes and you have watched it for a day. Run in each old directory:
+            <pre><code>npx wrangler delete --name plutonium-firebase-proxy
+npx wrangler delete --name plutonium-groq-worker
+npx wrangler delete --name plutonium-net-worker
+npx wrangler delete --name plutonium-vm-worker</code></pre>
+            Deleting a worker drops its routes; the DNS records stay and can be removed separately.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="clean-google" />
+        <label for="clean-google">
+          <span class="title">Drop the old Google redirect URI</span>
+          <span class="body">
+            Remove <code>https://accounting.cdn.plutoniumnet.work/auth/oauth/callback</code> once nothing
+            points there. Keep the GitHub callback as-is — there is only one and it now points at the new
+            host.
+          </span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 8 -->
+  <section>
+    <h2>8. Rollback <span class="tag">agent</span> <span class="tag agent">you</span></h2>
+    <p class="section-note">If something breaks at cutover, this undoes it in minutes.</p>
+    <ul class="items">
+      <li class="item">
+        <input type="checkbox" id="rb-client" />
+        <label for="rb-client">
+          <span class="title">Revert the client commit</span>
+          <span class="body">
+            The four old workers are still deployed and still routed until step 7, so reverting the
+            client commit restores the previous behaviour completely — no worker change needed.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="rb-worker" />
+        <label for="rb-worker">
+          <span class="title">Roll the worker back one version</span>
+          <span class="body">
+            From <code>api/</code>: <code>npx wrangler rollback</code>. Routes and secrets are
+            untouched.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="rb-github" />
+        <label for="rb-github">
+          <span class="title">Point the GitHub callback back</span>
+          <span class="body">
+            Restore <code>https://accounting.cdn.plutoniumnet.work/auth/oauth/callback</code> if you are
+            staying on the old setup. Google needs nothing for rollback — the old URI was never removed.
+          </span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <!-- 9 -->
+  <section>
+    <h2>9. Deliberately out of scope <span class="tag agent">agent</span></h2>
+    <p class="section-note">
+      Known weaknesses that the merge does not change. Listing them so nobody assumes the cutover fixed
+      them.
+    </p>
+    <ul class="items">
+      <li class="item">
+        <input type="checkbox" id="oos-net" />
+        <label for="oos-net">
+          <span class="title"><code>/net/*</code> stays unauthenticated</span>
+          <span class="body">
+            Still no token requirement and no rate limit on kiosk sessions, and
+            <code>DELETE /net/sessions</code> still tears down every VM on the account.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="oos-oauth" />
+        <label for="oos-oauth">
+          <span class="title">OAuth <code>state</code> is still not validated</span>
+          <span class="body">
+            The callback does not verify the state it issued, and the popup posts tokens to
+            <code>'*'</code> without the parent checking <code>event.origin</code>.
+          </span>
+        </label>
+      </li>
+      <li class="item">
+        <input type="checkbox" id="oos-cors" />
+        <label for="oos-cors">
+          <span class="title">CORS stays <code>*</code></span>
+          <span class="body">
+            Intentional in the current design; the API is called from an origin that is not on the
+            Cloudflare zone.
+          </span>
+        </label>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    Plutonium Network &middot; worker consolidation runbook. Ticks persist in
+    <code>localStorage</code> for this browser only; reset at the top of the page.
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    var KEY = 'plu_api_merge_checklist';
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('li.item input[type="checkbox"]'));
+    var countEl = document.getElementById('count');
+    var barEl = document.getElementById('bar');
+    var banner = document.getElementById('done-banner');
+
+    function load() {
+      var saved = {};
+      try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) { saved = {}; }
+      boxes.forEach(function (box) {
+        if (saved[box.id]) {
+          box.checked = true;
+          box.closest('li').classList.add('done');
+        }
+      });
+    }
+
+    function save() {
+      var state = {};
+      boxes.forEach(function (box) { if (box.checked) state[box.id] = 1; });
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {}
+    }
+
+    function render() {
+      var total = boxes.length;
+      var done = boxes.filter(function (b) { return b.checked; }).length;
+      countEl.textContent = done + ' / ' + total;
+      barEl.style.width = total ? (done / total * 100) + '%' : '0%';
+      banner.classList.toggle('show', done === total && total > 0);
+    }
+
+    boxes.forEach(function (box) {
+      box.addEventListener('change', function () {
+        box.closest('li').classList.toggle('done', box.checked);
+        save();
+        render();
+      });
+    });
+
+    document.getElementById('reset').addEventListener('click', function () {
+      boxes.forEach(function (box) {
+        box.checked = false;
+        box.closest('li').classList.remove('done');
+      });
+      try { localStorage.removeItem(KEY); } catch (_) {}
+      render();
+    });
+
+    load();
+    render();
+  })();
+</script>
+</body>
+</html>

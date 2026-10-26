@@ -1494,7 +1494,7 @@ window.accountManager = accountManager
 async function fetchAIUsage() {
   try {
     const token = (typeof PlutoniumStore !== 'undefined' && PlutoniumStore.currentUser) ? PlutoniumStore.currentUser.idToken : ''
-    const res = await fetch('https://ai.cdn.plutoniumnet.work/ratelimit', { headers: { Authorization: `Bearer ${token}` } })
+    const res = await fetch('https://api.plutoniumnet.work/ai/ratelimit', { headers: { Authorization: `Bearer ${token}` } })
     if (!res.ok) return null
     const d = await res.json()
     if (d && typeof d.remaining === 'number' && typeof d.max === 'number') return { remaining: d.remaining, max: d.max }

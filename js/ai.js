@@ -1,4 +1,4 @@
-const GROQ_WORKER = 'https://ai.cdn.plutoniumnet.work';
+const API_BASE = 'https://api.plutoniumnet.work';
 
 const STELENA_LOGO = 'img/logos/stelena.svg?v=2';
 
@@ -1082,7 +1082,7 @@ async function requestReply(userContent, opts = {}) {
 
   let streamBubble = null;
   try {
-    const res = await fetch(`${GROQ_WORKER}/chat`, {
+    const res = await fetch(`${API_BASE}/ai/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1610,7 +1610,7 @@ function speakText(text, btn) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating';
   }
 
-  fetch(`${GROQ_WORKER}/tts`, {
+  fetch(`${API_BASE}/ai/tts`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1844,7 +1844,7 @@ async function runLiveTranscribe() {
     const form = new FormData();
     form.append('file', blob, 'talk.webm');
     form.append('model', 'whisper-large-v3-turbo');
-    const res = await fetch(`${GROQ_WORKER}/transcribe`, {
+    const res = await fetch(`${API_BASE}/ai/transcribe`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${currentUser().idToken}` },
       body: form,
@@ -1864,7 +1864,7 @@ async function transcribeAndReply(blob) {
     const form = new FormData();
     form.append('file', blob, 'talk.webm');
     form.append('model', 'whisper-large-v3-turbo');
-    const res = await fetch(`${GROQ_WORKER}/transcribe`, {
+    const res = await fetch(`${API_BASE}/ai/transcribe`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${currentUser().idToken}` },
       body: form,
@@ -1897,7 +1897,7 @@ function speakReply(text) {
     .catch(() => { if (genId === talkGenId) { addSystem('Voice playback failed.'); resumeListening(); } });
 }
 async function playTts(text, onStart) {
-  const res = await fetch(`${GROQ_WORKER}/tts`, {
+  const res = await fetch(`${API_BASE}/ai/tts`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

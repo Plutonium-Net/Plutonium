@@ -29,7 +29,7 @@
 
   /* Fallback only. The live value comes from PlutoniumStore.WORKER_URL, which
    * `js/cloud-store-config.js` sets. Keep the two in step. */
-  var FALLBACK_WORKER = 'https://accounting.cdn.plutoniumnet.work';
+  var FALLBACK_WORKER = 'https://api.plutoniumnet.work';
 
   /* Which pluto:// page each feature hides. */
   var PAGE_FEATURES = {

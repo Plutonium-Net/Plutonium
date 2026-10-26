@@ -2,7 +2,7 @@ import Hyperbeam from 'https://unpkg.com/@hyperbeam/web@latest/dist/index.js';
 
 const CONTAINER_ID = 'remote-container';
 const SESSION_DURATION = 900;
-const API_ENDPOINT = 'https://vm.cdn.plutoniumnet.work/session';
+const API_ENDPOINT = 'https://api.plutoniumnet.work/vm/session';
 
 let hb = null;
 let countdownInterval = null;

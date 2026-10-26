@@ -939,7 +939,7 @@ const LEGACY_NET_MODE_KEY = 'plu_proxy_engine'
 const LEGACY_NET_MODE_MAP = { uv: 'core', sj: 'runtime', hb: 'remote' }
 // Hyperbeam sessions are opened and torn down on this worker, which is the only
 // part of the remote engine the app talks to directly.
-const REMOTE_WORKER_URL    = 'https://net.cdn.plutoniumnet.work'
+const REMOTE_WORKER_URL    = 'https://api.plutoniumnet.work/net'
 
 // Only ids the switch actually offers are accepted, so a value left behind by a
 // retired or renamed engine falls back to the default instead of a dead state.

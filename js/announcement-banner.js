@@ -58,7 +58,7 @@
         return String(PlutoniumStore.WORKER_URL).replace(/\/+$/, '');
       }
     } catch (err) { /* fall through */ }
-    return 'https://accounting.cdn.plutoniumnet.work';
+    return 'https://api.plutoniumnet.work';
   }
 
   function readCache() {

@@ -1,0 +1,25 @@
+name               = "plutonium-api"
+main               = "index.js"
+compatibility_date = "2025-06-01"
+
+# One hostname, path-prefixed routes. See api-merge-checklist.html.
+[[routes]]
+pattern   = "api.plutoniumnet.work/*"
+zone_name = "plutoniumnet.work"
+
+[vars]
+SITE_URL = "https://plutoniumnet.work"
+
+# Replace the id below with the output of:
+#   npx wrangler kv namespace create PLU_RATE_LIMIT
+# Until then `wrangler deploy` will fail and rate limiting would be inert.
+[[kv_namespaces]]
+binding = "PLU_RATE_LIMIT"
+id      = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secrets (set with `npx wrangler secret put <NAME>`):
+#   FIREBASE_API_KEY, FIREBASE_PROJECT_ID, FIREBASE_DATABASE_URL,
+#   GROQ_API_KEY, HYPERBEAM_API_KEY,
+#   GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET,
+#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+# Optional: FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID
