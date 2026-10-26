@@ -73,9 +73,9 @@ export function landingPage() {
     align-content: start;
     justify-items: start;
     /* background.png is exactly 2:1 and its Plutonium wordmark fills the lower
-       third. Under `cover` the image is max(50vw, 100svh) tall and the
-       artwork starts 34.8% of that above the bottom edge, so that band is
-       reserved: the card sits above the brand instead of on top of it. */
+       third. Under cover the image is max(50vw, 100svh) tall and the artwork
+       starts 34.8% of that above the bottom edge, so that band is reserved:
+       the card sits above the brand instead of on top of it. */
     padding:
       clamp(56px, 13vh, 140px)
       22px
