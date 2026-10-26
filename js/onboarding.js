@@ -290,14 +290,12 @@
   }
 
   const _pinGames = []
-  const _pinCloudGames = []
 
   async function buildPins() {
     if (!pinsGrid || !window.Pins) return
     pinsGrid.innerHTML = '<div class="onb-pins-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading games…</div>'
 
     try { _pinGames.push(...((await _fetchPgcdnGames()) || [])) } catch (_) {}
-    try { _pinCloudGames.push(...((await _fetchCloudGames()) || [])) } catch (_) {}
 
     renderPins('')
   }
@@ -317,14 +315,6 @@
       pinsGrid.appendChild(buildPinTile(
         { id: game.id, name: game.name, image: game.image || undefined },
         game.image ? 'https://g.cdn.plutoniumnet.work/' + game.image : ''
-      ))
-    })
-
-    _pinCloudGames.filter(game => matches(game.name)).forEach(game => {
-      const img = _cloudImgRoot(game.image)
-      pinsGrid.appendChild(buildPinTile(
-        { id: 'cloud:' + game.game_key, name: game.name, image: img || undefined, type: 'cloud' },
-        img
       ))
     })
 

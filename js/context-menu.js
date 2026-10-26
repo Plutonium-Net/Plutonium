@@ -254,7 +254,6 @@ document.addEventListener('contextmenu', e => {
   const url = pinType === 'vm' ? 'pluto://vms?autostart=1'
     : pinType === 'apps' ? 'pluto://apps'
     : pinType === 'app' ? `pluto://apps#${encodeURIComponent(pinAppId || pinId)}`
-    : pinType === 'cloud' ? `pluto://cloud#${encodeURIComponent(pinId)}`
     : `pluto://games?autostart=1#${encodeURIComponent(pinId)}`
   ContextMenu.show([
     { label: `Open ${pinName}`, icon: 'fa-solid fa-play', onClick: () => navigate(url) },

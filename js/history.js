@@ -14,7 +14,6 @@
     search: { label: 'Search',          icon: 'fa-magnifying-glass' },
     web:    { label: 'Web',             icon: 'fa-globe' },
     game:   { label: 'Game',            icon: 'fa-gamepad' },
-    cloud:  { label: 'Cloud game',      icon: 'fa-cloud' },
     media:  { label: 'Media',           icon: 'fa-clapperboard' },
     ai:     { label: 'AI chat',         icon: 'fa-robot' },
     vm:     { label: 'Virtual machine', icon: 'fa-display' },
@@ -25,7 +24,6 @@
     { key: 'search', label: 'Searches' },
     { key: 'web',    label: 'Web' },
     { key: 'game',   label: 'Games' },
-    { key: 'cloud',  label: 'Cloud' },
     { key: 'media',  label: 'Media' },
     { key: 'ai',     label: 'AI' },
     { key: 'vm',     label: 'VMs' },
@@ -67,7 +65,7 @@
           ts:     Number(e && e.ts) || 0,
         };
       }).filter(function (e) {
-        return e.type && e.title && e.ts;
+        return e.type && e.title && e.ts && e.type !== 'cloud';
       }).sort(function (a, b) {
         return b.ts - a.ts;
       });

@@ -20,7 +20,9 @@ const Pins = (() => {
   }
   function sanitize(list) {
     if (!Array.isArray(list)) return []
-    return list.filter(p => p && typeof p.id === 'string')
+    // Cloud gaming was removed; drop any pins it left in local storage so they
+    // cannot render as dead tiles.
+    return list.filter(p => p && typeof p.id === 'string' && p.type !== 'cloud')
   }
 
   function getAll() {
@@ -67,24 +69,6 @@ async function _fetchPgcdnGames() {
     .catch(() => [])
     .finally(() => { _pgcdnFetching = null })
   return _pgcdnFetching
-}
-
-let _cloudGamesCache = null
-let _cloudGamesFetching = null
-
-async function _fetchCloudGames() {
-  if (_cloudGamesCache) return _cloudGamesCache
-  if (_cloudGamesFetching) return _cloudGamesFetching
-  _cloudGamesFetching = fetch('data/cloud.json')
-    .then(r => r.json())
-    .then(games => { _cloudGamesCache = games || []; return _cloudGamesCache })
-    .catch(() => [])
-    .finally(() => { _cloudGamesFetching = null })
-  return _cloudGamesFetching
-}
-function _cloudImgRoot(img) {
-  if (!img) return ''
-  return img.replace(/^\.\.\//, '')
 }
 
 let _pickerDismiss = null
@@ -226,44 +210,6 @@ async function _openPinPicker(anchorEl) {
     if (currentSection) currentSection.items.push(item)
   })
 
-  const cloudGames = await _fetchCloudGames()
-
-  if (cloudGames.length) {
-    const cloudSep = document.createElement('div')
-    cloudSep.className = 'pin-picker__sep'
-    const cloudLabel = document.createElement('div')
-    cloudLabel.className = 'pin-picker__header'
-    cloudLabel.textContent = 'Cloud Games'
-    cloudLabel.style.padding = '6px 10px 2px'
-    startSection(cloudSep, cloudLabel)
-  }
-
-  cloudGames.forEach(game => {
-    const pinId = 'cloud:' + game.game_key
-    const imgPath = _cloudImgRoot(game.image)
-    const item = document.createElement('div')
-    item.className = 'pin-picker__item' + (pinned.has(pinId) ? ' pin-picker__item--pinned' : '')
-    item.innerHTML = `
-      <div class="pin-picker__icon">
-        <img src="${imgPath}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <i class="fa-solid fa-cloud" style="display:none"></i>
-      </div>
-      <span class="pin-picker__name">${game.name}</span>
-      ${pinned.has(pinId) ? '<i class="fa-solid fa-check pin-picker__check"></i>' : ''}
-    `
-    item.addEventListener('click', () => {
-      if (Pins.find(pinId)) {
-        Pins.remove(pinId)
-      } else {
-        Pins.add({ id: pinId, name: game.name, image: imgPath || undefined, type: 'cloud' })
-      }
-      _dismissPicker()
-    })
-    list.appendChild(item)
-    filterItems.push({ el: item, name: game.name.toLowerCase() })
-    if (currentSection) currentSection.items.push(item)
-  })
-
   picker.appendChild(list)
 
   const noResults = document.createElement('div')
@@ -366,16 +312,6 @@ function renderPins() {
       thumb.innerHTML = `<i class="${pin.icon || 'fa-solid fa-cube'}"></i>`
       if (pin.color) thumb.style.color = pin.color
       item.classList.add('apps-tile')
-    } else if (pin.type === 'cloud' && pin.image) {
-      const img = document.createElement('img')
-      img.src = pin.image
-      img.alt = ''
-      img.loading = 'lazy'
-      img.className = 'pin-thumb'
-      img.onerror = () => {
-        thumb.innerHTML = '<i class="fa-solid fa-cloud"></i>'
-      }
-      thumb.appendChild(img)
     } else if (pin.image) {
       const img = document.createElement('img')
       img.src = `https://g.cdn.plutoniumnet.work/${pin.image}`
@@ -419,7 +355,6 @@ function renderPins() {
       if (pin.type === 'vm') navigate('pluto://vms?autostart=1')
       else if (pin.type === 'apps') navigate('pluto://apps')
       else if (pin.type === 'app') navigate(`pluto://apps#${encodeURIComponent(pin.appId || pin.id)}`)
-      else if (pin.type === 'cloud') navigate(`pluto://cloud#${encodeURIComponent(pin.id)}`)
       else navigate(`pluto://games?autostart=1#${encodeURIComponent(pin.id)}`)
     })
     container.appendChild(item)
