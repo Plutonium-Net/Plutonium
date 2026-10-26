@@ -34,7 +34,6 @@
 
   var CACHE_KEY = 'plutonium-bg-v2';
   var GAMES_CACHE_KEY = 'plutonium-games-v1';
-  var CLOUD_CACHE_KEY = 'plutonium-cloud-v1';
   var LOGOS_CACHE_KEY = 'plutonium-logos-v2';
   // The daily default backgrounds are ~500 MB in total, so they live in a cache
   // of their own: clearing them can never evict the small shell/game caches.
@@ -201,7 +200,7 @@
   var bannerBar = null;
   var bannerMonthBar = null;
   var bannerMonthSegments = [];   // { track, fill } — one per month of the defaults stage
-  var STEPS = { backgrounds: 0, logos: 1, games: 2, cloud: 3, defaults: 4 };
+  var STEPS = { backgrounds: 0, logos: 1, games: 2, defaults: 3 };
   var MONTH_COUNT = 12;
 
   // Appearance lives in css/glass.css (`.plu-cache-banner`), which takes every
@@ -328,7 +327,6 @@
     // 'default backgrounds' would otherwise land on the plain backgrounds step.
     if (l.indexOf('default') !== -1) return STEPS.defaults;
     if (l.indexOf('logo') !== -1) return STEPS.logos;
-    if (l.indexOf('cloud') !== -1) return STEPS.cloud;
     if (l.indexOf('game') !== -1) return STEPS.games;
     return STEPS.backgrounds;
   }
@@ -403,12 +401,6 @@
 
   function sumBytes(lengths) {
     return lengths.reduce(function (sum, bytes) { return sum + (bytes || 0); }, 0);
-  }
-
-  function normalizeCloudImagePath(path) {
-    if (!path) return '';
-    if (/^https?:\/\//i.test(path)) return path;
-    return path.replace(/^\.\.\//, '').replace(/^\.\//, '');
   }
 
   function markStepComplete(label) {
@@ -532,58 +524,6 @@
           }
         } catch (_) { failedAssets++; }
         updateProgress(gi + 1, missing.length, bytesDone, bytesTotal, 'Caching games:');
-      }
-    } catch (_) {}
-  }
-
-  async function cacheCloudImages() {
-    if (!('caches' in window)) return;
-    try {
-      var cres = await fetch('data/cloud.json', { cache: 'no-store' });
-      if (!cres.ok) return;
-      var cfg = await cres.json();
-      var cloudUrls = [];
-      (cfg || []).forEach(function (game) {
-        var image = normalizeCloudImagePath(game.image);
-        var cover = normalizeCloudImagePath(game.cover);
-        if (image) cloudUrls.push(image);
-        if (cover && cover !== image) cloudUrls.push(cover);
-      });
-
-      var cloudCache = await caches.open(CLOUD_CACHE_KEY);
-      var cloudKeys = await cloudCache.keys();
-      var alreadyCached = new Set(cloudKeys.map(function (r) { return r.url; }));
-      var seen = new Set();
-      var missing = cloudUrls.filter(function (url) {
-        var fullUrl = new URL(url, location.href).href;
-        if (seen.has(fullUrl) || alreadyCached.has(fullUrl)) return false;
-        seen.add(fullUrl);
-        return true;
-      });
-      if (!missing.length) { markStepComplete('Caching cloud games:'); return; }
-
-      progressStarted = true;
-      revealWhenAllowed();
-      updateProgress(0, missing.length, 0, 0, 'Caching cloud games:');
-
-      var lengths = await contentLengths(missing);
-      var bytesDone = 0;
-      var bytesTotal = sumBytes(lengths);
-      updateProgress(0, missing.length, 0, bytesTotal, 'Caching cloud games:');
-
-      for (var ci = 0; ci < missing.length; ci++) {
-        try {
-          var cResp = await fetch(missing[ci], { cache: 'no-store' });
-          var len = lengths[ci] || parseInt(cResp.headers.get('content-length') || '0', 10) || 0;
-          if (cResp.ok) {
-            var cachedResp = cResp.clone();
-            await cloudCache.put(missing[ci], cachedResp);
-            bytesDone += await responseBytes(cResp, len);
-          } else {
-            failedAssets++;
-          }
-        } catch (_) { failedAssets++; }
-        updateProgress(ci + 1, missing.length, bytesDone, bytesTotal, 'Caching cloud games:');
       }
     } catch (_) {}
   }
@@ -788,7 +728,6 @@
       await runGroup('Caching backgrounds:', cacheBackgroundImages);
       await runGroup('Caching logos:', cacheLogoImages);
       await runGroup('Caching games:', cacheGameImages);
-      await runGroup('Caching cloud games:', cacheCloudImages);
       await runGroup('Caching default backgrounds:', cacheDefaultBackgrounds);
     } finally {
       finishCaching();

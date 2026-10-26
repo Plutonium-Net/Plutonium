@@ -341,7 +341,6 @@ function handlePersonalGameFetch(event) {
 const CACHE_NAMES = {
 	bg:    "plutonium-bg-v2",
 	games: "plutonium-games-v1",
-	cloud: "plutonium-cloud-v1",
 	logos: "plutonium-logos-v2",
 };
 const MANAGED_CACHE_RE = /^plutonium-(bg|games|cloud|logos)-v\d+$/;
@@ -387,20 +386,6 @@ self.addEventListener("fetch", (event) => {
 	if (url.includes('g.cdn.plutoniumnet.work/') && (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.webp') || url.endsWith('.gif') || url.endsWith('.svg'))) {
 		event.respondWith(
 			caches.open(CACHE_NAMES.games).then(function (cache) {
-				return cache.match(event.request).then(function (cached) {
-					return cached || fetch(event.request).then(function (network) {
-						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());
-						return network;
-					});
-				});
-			})
-		);
-		return;
-	}
-
-	if (url.includes('/img/cloud/')) {
-		event.respondWith(
-			caches.open(CACHE_NAMES.cloud).then(function (cache) {
 				return cache.match(event.request).then(function (cached) {
 					return cached || fetch(event.request).then(function (network) {
 						if (network.ok && event.request.method === 'GET') cache.put(event.request, network.clone());
