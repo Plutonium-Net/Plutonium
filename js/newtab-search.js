@@ -412,15 +412,6 @@
         hide();
         return;
       }
-      if (cmd === '/cg') {
-        var cgq = q.slice(3).trim();
-        var a2 = activeRow();
-        if (a2) { hide(); a2.run(); return; }
-        if (cgq) go('pluto://cloud?q=' + encodeURIComponent(cgq));
-        else go('pluto://cloud');
-        hide();
-        return;
-      }
       if (cmd === '/ai') {
         var aiq = q.slice(3).trim();
         var a3 = activeRow();
