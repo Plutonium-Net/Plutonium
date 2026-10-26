@@ -522,12 +522,13 @@ curl -s -o /dev/null -w '%{http_code}\n' https://api.plutoniumnet.work/ai/models
         <label for="clean-old-workers">
           <span class="title">Delete the four old workers</span>
           <span class="body">
-            Only after step 5 passes and you have watched it for a day. Run in each old directory:
-            <pre><code>npx wrangler delete --name plutonium-firebase-proxy
-npx wrangler delete --name plutonium-groq-worker
-npx wrangler delete --name plutonium-net-worker
-npx wrangler delete --name plutonium-vm-worker</code></pre>
-            Deleting a worker drops its routes; the DNS records stay and can be removed separately.
+            The source for all four is already gone from the repo (<code>cf-worker/</code> is deleted), and
+            they stay deployed and routed until you remove them. Do it in the dashboard, not with wrangler:
+            Workers &amp; Pages → <code>plutonium-firebase-proxy</code>, <code>plutonium-groq-worker</code>,
+            <code>plutonium-net-worker</code>, <code>plutonium-vm-worker</code> → Delete.<br />
+            Use the dashboard because <code>wrangler delete</code> needs a config in the current directory,
+            and running it next to <code>api/wrangler.toml</code> risks touching the new route. Deleting a
+            worker drops its routes; the DNS records stay and can be removed separately.
           </span>
         </label>
       </li>
@@ -556,7 +557,9 @@ npx wrangler delete --name plutonium-vm-worker</code></pre>
           <span class="title">Revert the client commit</span>
           <span class="body">
             The four old workers are still deployed and still routed until step 7, so reverting the
-            client commit restores the previous behaviour completely — no worker change needed.
+            client commit restores the previous behaviour with no worker change. Their source is no longer
+            in the repo — <code>git revert</code> the commit that deleted <code>cf-worker/</code> if you
+            need to redeploy one of them.
           </span>
         </label>
       </li>

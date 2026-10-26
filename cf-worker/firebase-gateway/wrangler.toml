@@ -1,7 +1,0 @@
-name            = "plutonium-firebase-proxy"
-main            = "index.js"
-compatibility_date = "2024-01-01"
-
-[vars]
-ALLOWED_ORIGIN = "*"
-SITE_URL       = "https://plutoniumnet.work"
