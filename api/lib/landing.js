@@ -56,7 +56,7 @@ export function landingPage() {
     position: fixed;
     inset: 0;
     z-index: -2;
-    background: #000 url("/background.png") center / cover no-repeat;
+    background: #000 url("/background.png") center bottom / cover no-repeat;
   }
   .backdrop::after {
     content: "";
@@ -83,9 +83,11 @@ export function landingPage() {
     min-height: 100svh;
     display: grid;
     place-items: center;
-    /* Extra bottom padding biases the card upward, clear of the mark baked
-       into the bottom-left of the background image. */
-    padding: clamp(96px, 15vh, 150px) 22px clamp(80px, 16vh, 160px);
+    /* background.png is exactly 2:1 and its Plutonium logotype sits in the
+       lower third. Under `cover` the image is max(50vw, 100svh) tall and the
+       artwork starts 34.8% of that above the bottom edge, so reserve that
+       band: the card sits above the brand instead of on top of it. */
+    padding: clamp(88px, 12vh, 132px) 22px calc(max(50vw, 100svh) * 0.348 + 28px);
   }
 
   .card {
