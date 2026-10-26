@@ -40,6 +40,8 @@ export function unauthorized() {
 
 export function html(body) {
   return new Response(body, {
-    headers: corsHeaders({ 'Content-Type': 'text/html;charset=UTF-8' }),
+    // no-cache, not no-store: the page stays cacheable but has to revalidate,
+    // so a deploy is never hidden behind a stale copy in someone's browser.
+    headers: corsHeaders({ 'Content-Type': 'text/html;charset=UTF-8', 'Cache-Control': 'no-cache' }),
   });
 }
