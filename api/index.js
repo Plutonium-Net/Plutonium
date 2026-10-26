@@ -27,12 +27,10 @@ export default {
     try {
       if (path === '/') return html(landingPage());
 
-      // Liveness probe, and what the landing page's status pill reads.
-      if (path === '/healthz') {
-        return json({ status: 'ok', service: 'plutonium-api', time: new Date().toISOString() }, 200, {
-          'Cache-Control': 'no-store',
-        });
-      }
+      // Health probe, and what the landing page's status card reads. Each entry
+      // is a presence check on the bindings that route group needs — no calls
+      // out to a provider, and no values leave the worker.
+      if (path === '/healthz') return healthz(env);
 
       if (
         path === '/config' ||
@@ -62,6 +60,25 @@ export default {
     }
   },
 };
+
+function healthz(env) {
+  const has = name => Boolean(env[name]);
+  const components = [
+    { name: 'API',        ok: true },
+    { name: 'Rate limit', ok: has('PLU_RATE_LIMIT') },
+    { name: 'Firebase',   ok: has('FIREBASE_API_KEY') && has('FIREBASE_PROJECT_ID') && has('FIREBASE_DATABASE_URL') },
+    { name: 'OAuth',      ok: has('GITHUB_CLIENT_ID') && has('GITHUB_CLIENT_SECRET') && has('GOOGLE_CLIENT_ID') && has('GOOGLE_CLIENT_SECRET') && has('SITE_URL') },
+    { name: 'AI',         ok: has('GROQ_API_KEY') },
+    { name: 'Sessions',   ok: has('HYPERBEAM_API_KEY') },
+  ];
+  const ok = components.every(c => c.ok);
+
+  return json(
+    { status: ok ? 'ok' : 'degraded', service: 'plutonium-api', time: new Date().toISOString(), components },
+    ok ? 200 : 503,
+    { 'Cache-Control': 'no-store' },
+  );
+}
 
 /** Collapse repeated slashes and drop a trailing one, so /ai/chat/ === /ai/chat. */
 function normalizePath(pathname) {
