@@ -920,7 +920,7 @@ html,body{height:100%;background:transparent;font-family:-apple-system,BlinkMacS
    sit to the right of it, and the whole thing is deliberately NOT a card, no
    panel, border or background, so the options read as large type floating in
    the empty band between the rail and the search box. It is centred on the
-   middle of the rail (the Cloud Gaming icon) rather than on the icon that was
+   middle of the rail (the middle of the rail) rather than on the icon that was
    clicked, so it opens in the same place every time. */
 .app-flanks .app-wheel{
   position:absolute;right:100%;top:50%;margin-right:18px;

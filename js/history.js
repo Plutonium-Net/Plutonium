@@ -243,7 +243,7 @@
     try {
       const doc = await PlutoniumStore.getDoc(DOC_NAME);
       const remote = doc && Array.isArray(doc.entries)
-        ? doc.entries.filter(function (e) { return e && e.type && e.ts && e.title; })
+        ? doc.entries.filter(function (e) { return e && e.type && e.ts && e.title && e.type !== 'cloud'; })
         : [];
       const remoteDeleted = doc && doc.deleted && typeof doc.deleted === 'object' && !Array.isArray(doc.deleted)
         ? doc.deleted

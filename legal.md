@@ -50,9 +50,9 @@ You are responsible for making sure you have the right to upload what you upload
 
 Stelena is an AI assistant. Its output can be **wrong, incomplete, or out of date**, even when it sounds confident. It is not professional advice: do not rely on it for medical, legal, financial, or safety decisions. Do not submit information you would not be comfortable having processed by a third-party AI provider, and do not submit other people's private information. See the Privacy Policy for what happens to your prompts, and for how memory works.
 
-### 8. Cloud gaming and virtual machines
+### 8. Virtual machines
 
-Cloud gaming sessions and virtual machines are temporary, run on third-party infrastructure, and may be unavailable, queued, reset, or ended at any time. Anything you do inside a remote session is visible to the operator of that infrastructure. **Do not sign in to sensitive accounts, or enter payment details, inside a remote or cloud session.**
+Virtual machines are temporary, run on third-party infrastructure, and may be unavailable, queued, reset, or ended at any time. Anything you do inside a remote session is visible to the operator of that infrastructure. **Do not sign in to sensitive accounts, or enter payment details, inside a remote session.**
 
 ### 9. Availability and changes
 
