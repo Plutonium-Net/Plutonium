@@ -53,18 +53,13 @@ export function landingPage() {
   }
 
   /* Fixed so the artwork stays put while short screens scroll; bottom-anchored
-     so the brand wordmark always sits on the bottom edge, never half-cropped. */
+     so the brand wordmark always sits on the bottom edge, never half-cropped.
+     Untinted: the image is drawn exactly as supplied. */
   .backdrop {
     position: fixed;
     inset: 0;
     z-index: -2;
     background: #000 url("/background.png") center bottom / cover no-repeat;
-  }
-  .backdrop::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(130% 95% at 50% 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%);
   }
 
   .stage {
@@ -179,6 +174,17 @@ export function landingPage() {
     line-height: 1.7;
   }
   .card__desc strong { color: rgba(245, 245, 247, 0.86); font-weight: 550; }
+
+  /* Short viewports: the reserved artwork band scales with width, so the card
+     has to get compact to stay clear of the wordmark. */
+  @media (max-height: 700px) {
+    .stage { padding-top: clamp(36px, 8vh, 70px); }
+    .card { padding: 22px; }
+    .card__title { font-size: 1.6rem; }
+    .card__mark { width: 42px; }
+    .status { margin-top: 15px; }
+    .card__desc { margin-top: 14px; font-size: 0.88rem; line-height: 1.6; }
+  }
 </style>
 </head>
 <body>
