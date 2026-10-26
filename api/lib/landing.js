@@ -282,8 +282,7 @@ export function landingPage() {
 
   <section class="card card--desc">
     <p class="card__desc">
-      Authentication, AI and remote sessions for Plutonium Network, served by a single Worker.
-      <strong>Provider keys stay server-side</strong>; AI and VM routes require a verified Firebase ID token.
+    Plutonium Network API is the gateway for our authentication, AI and remote session services. It is served on edge and protected, giving you the besty possible experience when you use our services. The API is designed to be fast, reliable and secure, so you can focus on building your applications without worrying about the underlying infrastructure.
     </p>
   </section>
 </main>
