@@ -66,7 +66,7 @@ export function landingPage() {
     display: grid;
     align-content: center;
     justify-items: center;
-    gap: clamp(10px, 1.2vh, 12px);
+    gap: clamp(8px, 1.1vh, 12px);
     /* background.png is exactly 2:1 and its Plutonium wordmark fills the lower
        third. Under cover the image is max(50vw, 100svh) tall and the artwork
        starts 34.8% of that above the bottom edge, so that band is reserved:
@@ -80,7 +80,7 @@ export function landingPage() {
 
   .card {
     width: min(100%, 1160px);
-    padding: clamp(14px, 2.6vh, 24px);
+    padding: clamp(12px, 2.2vh, 24px);
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 22px;
@@ -96,24 +96,25 @@ export function landingPage() {
   .card--title {
     display: flex;
     align-items: center;
-    gap: clamp(16px, 1.8vw, 24px);
+    justify-content: center;
+    gap: clamp(16px, 1.8vw, 26px);
   }
   .card__mark {
     flex: none;
-    width: clamp(38px, 5.2vh, 58px);
+    width: clamp(40px, 6vh, 66px);
     height: auto;
     filter: drop-shadow(0 0 20px rgba(232, 23, 93, 0.3));
   }
   .card__eyebrow {
     font-family: var(--mono);
-    font-size: clamp(0.62rem, 1.4vh, 0.72rem);
-    letter-spacing: 0.16em;
+    font-size: clamp(0.8rem, 1.9vh, 1rem);
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: rgba(232, 23, 93, 0.95);
-    margin-bottom: clamp(2px, 0.8vh, 6px);
+    margin-bottom: clamp(2px, 0.8vh, 7px);
   }
   .card__title {
-    font-size: clamp(1.4rem, 4.4vh, 2.8rem);
+    font-size: clamp(1.6rem, 6vh, 3.6rem);
     font-weight: 650;
     letter-spacing: -0.03em;
     line-height: 1.05;
@@ -211,7 +212,9 @@ export function landingPage() {
   /* ---- 3. description --------------------------------------------------- */
 
   .card__desc {
-    max-width: 68ch;
+    max-width: 62ch;
+    margin-inline: auto;
+    text-align: center;
     color: var(--muted);
     font-size: clamp(0.82rem, 1.9vh, 1rem);
     line-height: 1.7;
@@ -237,6 +240,9 @@ export function landingPage() {
       background-position: left bottom;
     }
     .stage { padding-bottom: calc(50vw * 0.348 + 8px); }
+    /* vh-driven type would run enormous on a tall phone, so scale by width. */
+    .card__title { font-size: clamp(1.7rem, 7.6vw, 2.5rem); }
+    .card__eyebrow { font-size: clamp(0.66rem, 2.9vw, 0.85rem); letter-spacing: 0.1em; }
   }
 
   /* Every size above is vh-driven, so the stack shrinks with the window and
