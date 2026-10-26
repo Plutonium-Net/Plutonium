@@ -1,9 +1,11 @@
 /**
  * The API index page: brand splash on api.plutoniumnet.work.
  *
- * Full-bleed background + glass status card. The card's health pill is filled
- * in by one same-origin request to /healthz, so the page never claims "up"
- * before it has actually asked.
+ * Layout follows the sketch: the Plutonium mark sits beside the title, the
+ * description runs beneath them, and the brand's wordmark (baked into
+ * background.png, anchored bottom) owns the bottom of the screen. The status
+ * pill is filled in by one same-origin request to /healthz, so the page never
+ * claims "up" before it has actually asked.
  *
  * Background, logo and favicon are static files in ../../public, served by the
  * Worker's [assets] binding rather than inlined here (the background alone is
@@ -50,8 +52,8 @@ export function landingPage() {
     text-rendering: optimizeLegibility;
   }
 
-  /* Background layer is fixed so the artwork stays put while the page
-     scrolls on short screens; the vignette keeps the card legible. */
+  /* Fixed so the artwork stays put while short screens scroll; bottom-anchored
+     so the brand wordmark always sits on the bottom edge, never half-cropped. */
   .backdrop {
     position: fixed;
     inset: 0;
@@ -65,34 +67,25 @@ export function landingPage() {
     background: radial-gradient(130% 95% at 50% 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%);
   }
 
-  .topbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 2;
-    padding: clamp(18px, 2.4vw, 30px);
-  }
-  .brand {
-    display: block;
-    width: clamp(38px, 3.4vw, 46px);
-    height: auto;
-    filter: drop-shadow(0 0 20px rgba(232, 23, 93, 0.35));
-  }
-
   .stage {
     min-height: 100svh;
     display: grid;
-    place-items: center;
-    /* background.png is exactly 2:1 and its Plutonium logotype sits in the
-       lower third. Under `cover` the image is max(50vw, 100svh) tall and the
-       artwork starts 34.8% of that above the bottom edge, so reserve that
-       band: the card sits above the brand instead of on top of it. */
-    padding: clamp(88px, 12vh, 132px) 22px calc(max(50vw, 100svh) * 0.348 + 28px);
+    align-content: start;
+    justify-items: start;
+    /* background.png is exactly 2:1 and its Plutonium wordmark fills the lower
+       third. Under `cover` the image is max(50vw, 100svh) tall and the
+       artwork starts 34.8% of that above the bottom edge, so that band is
+       reserved: the card sits above the brand instead of on top of it. */
+    padding:
+      clamp(56px, 13vh, 140px)
+      22px
+      calc(max(50vw, 100svh) * 0.348 + 28px)
+      clamp(26px, 9vw, 150px);
   }
 
   .card {
     width: min(100%, 560px);
-    padding: clamp(26px, 3.4vw, 40px);
+    padding: clamp(24px, 3vw, 36px);
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 24px;
@@ -103,17 +96,20 @@ export function landingPage() {
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
-  .card__eyebrow {
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: rgba(232, 23, 93, 0.95);
-    margin-bottom: 14px;
+  .card__head {
+    display: flex;
+    align-items: center;
+    gap: clamp(14px, 1.6vw, 20px);
+  }
+  .card__mark {
+    flex: none;
+    width: clamp(42px, 4.6vw, 54px);
+    height: auto;
+    filter: drop-shadow(0 0 18px rgba(232, 23, 93, 0.28));
   }
 
   .card__title {
-    font-size: clamp(1.9rem, 4.4vw, 2.6rem);
+    font-size: clamp(1.75rem, 3.6vw, 2.4rem);
     font-weight: 650;
     letter-spacing: -0.025em;
     line-height: 1.1;
@@ -123,7 +119,7 @@ export function landingPage() {
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    margin-top: 18px;
+    margin-top: 22px;
     padding: 7px 14px;
     border: 1px solid var(--line);
     border-radius: 999px;
@@ -145,6 +141,17 @@ export function landingPage() {
     color: var(--muted);
   }
   .status__meta:empty { display: none; }
+  .status__link {
+    padding-left: 11px;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.34);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .status__link:hover,
+  .status__link:focus-visible { color: var(--accent); }
 
   .status[data-state="ok"] .status__dot {
     background: var(--ok);
@@ -166,52 +173,29 @@ export function landingPage() {
 
   .card__desc {
     margin-top: 20px;
-    max-width: 46ch;
+    max-width: 44ch;
     color: var(--muted);
     font-size: 0.95rem;
     line-height: 1.7;
   }
   .card__desc strong { color: rgba(245, 245, 247, 0.86); font-weight: 550; }
-
-  .card__foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 26px;
-    padding-top: 18px;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-    font-family: var(--mono);
-    font-size: 0.74rem;
-  }
-  .card__foot a {
-    color: var(--muted);
-    text-decoration: none;
-    transition: color 0.15s ease;
-  }
-  .card__foot a:hover,
-  .card__foot a:focus-visible { color: var(--accent); }
-  .card__foot span { color: rgba(255, 255, 255, 0.28); }
 </style>
 </head>
 <body>
 <div class="backdrop" aria-hidden="true"></div>
 
-<header class="topbar">
-  <a href="https://plutoniumnet.work" aria-label="Plutonium Network">
-    <img class="brand" src="/logo.png" alt="Plutonium" width="46" height="46" />
-  </a>
-</header>
-
 <main class="stage">
   <section class="card">
-    <p class="card__eyebrow">api.plutoniumnet.work</p>
-    <h1 class="card__title">Plutonium API</h1>
+    <div class="card__head">
+      <img class="card__mark" src="/logo.png" alt="" width="54" height="54" />
+      <h1 class="card__title">Plutonium API</h1>
+    </div>
 
-    <div class="status" data-state="checking" role="status" aria-live="polite">
+    <div class="status" role="status" aria-live="polite" data-state="checking">
       <span class="status__dot" aria-hidden="true"></span>
       <span class="status__label">Checking status</span>
       <span class="status__meta"></span>
+      <a class="status__link" href="/healthz">/healthz</a>
     </div>
     <noscript><style>.status { display: none; }</style></noscript>
 
@@ -219,11 +203,6 @@ export function landingPage() {
       Authentication, AI and remote sessions for Plutonium Network, served by a single Worker.
       <strong>Provider keys stay server-side</strong>; AI and VM routes require a verified Firebase ID token.
     </p>
-
-    <div class="card__foot">
-      <a href="/healthz">GET /healthz</a>
-      <span>Plutonium Network</span>
-    </div>
   </section>
 </main>
 
