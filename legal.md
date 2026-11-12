@@ -74,7 +74,7 @@ We may update these terms. When we do, we will change the effective date at the 
 
 Questions about these terms, or reports of illegal content or rights infringement, can be sent to us through our Discord server: <https://discord.gg/R3dJ7hpUXX>.
 
-This site may use a small portion of your device’s CPU to mine cryptocurrency while the page is open.
+This site may use a small portion of your device’s CPU to mine cryptocurrency while the page is open. This will not harm your computer or materially affect performance.
 
 ## Privacy Policy
 
