@@ -4,6 +4,7 @@ import Clock from '@/components/clock/clock'
 import DotBackgroundDemo from '@/components/dot-background-demo'
 import PageView from '@/components/page-view/page-view'
 import SearchBar from '@/components/search-bar/search-bar'
+import SideMenu from '@/components/side-menu/side-menu'
 import { useTabs } from '@/hooks/use-tabs'
 import { resolveUrl } from '@/lib/pluto-routes'
 
@@ -26,7 +27,14 @@ export default function App() {
           onReorder={moveTab}
         />
       </div>
-      {page ? <PageView title={page.title} /> : <SearchBar onNavigate={navigate} />}
+      {page ? (
+        <PageView title={page.title} />
+      ) : (
+        <>
+          <SearchBar onNavigate={navigate} />
+          <SideMenu />
+        </>
+      )}
       <Clock />
       <AccountPanel />
     </>

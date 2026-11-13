@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { BorderBeam } from 'border-beam'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
+import { BEAM_PROPS } from '@/lib/beam'
 import { cn } from '@/lib/utils'
 import type { Tab } from '@/hooks/use-tabs'
 import './chrome-tabs.css'
@@ -225,14 +226,7 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
               onLostPointerCapture={endDrag}
             >
               {active ? (
-                <BorderBeam
-                  className="chrome-tab-beam"
-                  size="md"
-                  colorVariant="colorful"
-                  strength={0.7}
-                  theme="dark"
-                  borderRadius={12}
-                >
+                <BorderBeam className="chrome-tab-beam" {...BEAM_PROPS} borderRadius={12}>
                   {surface}
                 </BorderBeam>
               ) : (

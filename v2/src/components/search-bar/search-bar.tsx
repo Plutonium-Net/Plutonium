@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { BorderBeam } from 'border-beam'
 import FoldText from '@/components/fold-text/FoldText'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
+import { BEAM_PROPS } from '@/lib/beam'
 import './search-bar.css'
 
 export default function SearchBar({ onNavigate }: { onNavigate: (input: string) => boolean }) {
@@ -21,20 +22,32 @@ export default function SearchBar({ onNavigate }: { onNavigate: (input: string) 
     <div className="search-bar">
       <div className="search-bar-wordmark">
         {/* Scales with the pill: the bar is min(560px, 90vw), so this keeps the
-            wordmark at ~91% of its width on any screen. */}
-        <FoldText text="Plutonium" fontSize="min(98px, 15.7vw)" fontWeight={400} />
+            wordmark at ~80% of its width on any screen.
+            trigger="mount" rather than "scroll": the wordmark is fixed in view,
+            so a ScrollTrigger would fire on the first refresh or never. */}
+        <FoldText
+          text="Plutonium"
+          foldStyle="paper"
+          splitBy="char"
+          hinge="top"
+          trigger="mount"
+          foldAngle={92}
+          duration={0.65}
+          stagger={0.045}
+          staggerFrom="center"
+          ease="power3.out"
+          hoverRefold
+          refoldRadius={140}
+          refoldAngle={45}
+          perspective={700}
+          creaseShading={0.55}
+          fontSize="min(88px, 14.1vw)"
+          fontWeight={400}
+        />
       </div>
       {/* Always wrapped: swapping the wrapper in and out on focus would remount
           the input and drop the caret on the first click. */}
-      <BorderBeam
-        className="search-bar-beam"
-        size="md"
-        colorVariant="colorful"
-        strength={0.7}
-        theme="dark"
-        borderRadius={999}
-        active={focused}
-      >
+      <BorderBeam className="search-bar-beam" {...BEAM_PROPS} borderRadius={999} active={focused}>
         <GlassSurface
           className="search-bar-glass"
           width="100%"
