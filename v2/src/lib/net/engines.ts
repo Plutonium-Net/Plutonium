@@ -20,13 +20,16 @@ export type EngineOption = {
   logo: string
 }
 
-// Same marks the v1 engine pill uses, copied from img/3rd-party/.
+// Labels are the obfuscated spellings v1 ships with, written as code points so
+// the look-alike characters survive editing. `engineLabel` is the single source
+// for any place an engine name surfaces as text. Logos are the same marks v1's
+// engine pill uses, copied from img/3rd-party/.
 export const ENGINES: EngineOption[] = [
-  { id: 'core', label: 'Ultraviolet', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/core.png' },
-  { id: 'runtime', label: 'Scramjet V1', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/runtime.png' },
-  { id: 'runtimev2', label: 'Scramjet V2', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/runtime.png' },
+  { id: 'core', label: '\u054d\u217ctr\u0430\u2174\u0456\u043e\u217c\u0435t', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/core.png' },
+  { id: 'runtime', label: '\u054f\u0441r\u0430\u217f\u0458\u0435t V1', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/runtime.png' },
+  { id: 'runtimev2', label: '\u054f\u0441r\u0430\u217f\u0458\u0435t V2', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/runtime.png' },
   { id: 'compaxy', label: 'Compaxy', family: 'compaxy', hint: 'Host proxy', logo: '/img/3rd-party/compaxy.png' },
-  { id: 'rh', label: 'RH', family: 'rh', hint: 'Host proxy', logo: '/img/3rd-party/rh.png' },
+  { id: 'rh', label: '\u0154\u0430\u217f\u217f\u0435r\u1e23\u0435\u0430\u1e0b', family: 'rh', hint: 'Host proxy', logo: '/img/3rd-party/rh.png' },
   { id: 'remote', label: 'Hyperbeam', family: null, hint: 'Remote session', logo: '/img/3rd-party/remote.png' },
 ]
 

@@ -47,7 +47,7 @@ const ITEMS: MenuItem[] = [
   },
   {
     id: 'proxy',
-    label: 'Proxy switcher',
+    label: 'pr0xy switcher',
     panel: 'proxy',
     icon: (
       <>

@@ -2,7 +2,8 @@
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
-  margin: 0 8px 8px;
+  /* Top gap keeps the page clear of the address bar above it. */
+  margin: 8px 8px 8px;
   border-radius: 12px;
   overflow: hidden;
   background: #0a0a0a;
