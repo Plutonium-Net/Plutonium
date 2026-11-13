@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+/* The canvas is dark-only, so light-dark() in the glass resolves to its dark side. */
+:root {
+  color-scheme: dark;
+}

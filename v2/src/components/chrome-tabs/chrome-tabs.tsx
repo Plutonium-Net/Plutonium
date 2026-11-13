@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react'
+import { BorderBeam } from 'border-beam'
+import GlassSurface from '@/components/glass-surface/GlassSurface'
 import { cn } from '@/lib/utils'
 import type { Tab } from '@/hooks/use-tabs'
 import './chrome-tabs.css'
@@ -17,6 +19,7 @@ type DragState = {
   id: string
   el: HTMLDivElement
   startX: number
+  lastX: number
   grabOffsetX: number
   moved: boolean
 }
@@ -24,25 +27,10 @@ type DragState = {
 const DRAG_THRESHOLD_PX = 4
 const REORDER_TRANSITION_MS = 120
 
-/** Tab geometry is drawn once for the strip; each inactive tab references it by id. */
-function TabGeometryDefs() {
-  return (
-    <svg width="0" height="0" aria-hidden="true" focusable="false" style={{ position: 'absolute' }}>
-      <defs>
-        <symbol id="chrome-tab-geometry-left-inactive" viewBox="0 0 214 36">
-          <path d="M17 0h197v32H17c-4.5 0-8-3.5-8-8V8c0-4.5 3.5-8 8-8z" />
-        </symbol>
-        <symbol id="chrome-tab-geometry-right-inactive" viewBox="0 0 214 36">
-          <use href="#chrome-tab-geometry-left-inactive" />
-        </symbol>
-      </defs>
-    </svg>
-  )
-}
-
 export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, onReorder }: ChromeTabsProps) {
   const contentRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
+  const dragFrameRef = useRef<number | null>(null)
   const previousRectsRef = useRef<Map<string, number> | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
 
@@ -96,10 +84,21 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
   }
 
   function trackPointer(state: DragState, clientX: number) {
+    if (dragRef.current !== state) return
     const contentRect = contentRef.current?.getBoundingClientRect()
     if (!contentRect) return
     const slotLeft = contentRect.left + state.el.offsetLeft
     state.el.style.transform = `translateX(${clientX - state.grabOffsetX - slotLeft}px)`
+  }
+
+  function queueTrack(state: DragState, clientX: number) {
+    // One frame at a time, and always cancellable: a frame left in flight after
+    // the drop would re-stamp the tab at the cursor and it would hang there.
+    if (dragFrameRef.current !== null) cancelAnimationFrame(dragFrameRef.current)
+    dragFrameRef.current = requestAnimationFrame(() => {
+      dragFrameRef.current = null
+      trackPointer(state, clientX)
+    })
   }
 
   function beginDrag(event: ReactPointerEvent<HTMLDivElement>, tab: Tab) {
@@ -110,6 +109,7 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
       id: tab.id,
       el: event.currentTarget,
       startX: event.clientX,
+      lastX: event.clientX,
       grabOffsetX: event.clientX - rect.left,
       moved: false,
     }
@@ -127,6 +127,7 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
     const state = dragRef.current
     if (!state) return
     const clientX = event.clientX
+    state.lastX = clientX
 
     if (!state.moved) {
       if (Math.abs(clientX - state.startX) < DRAG_THRESHOLD_PX) return
@@ -134,22 +135,40 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
       setDraggingId(state.id)
     }
 
-    const currentIndex = tabEls().indexOf(state.el)
-    const slot = slotFor(clientX, state.el)
-    if (currentIndex !== -1 && slot !== currentIndex) {
-      captureRects()
-      onReorder(currentIndex, slot)
-    }
-
-    requestAnimationFrame(() => trackPointer(state, clientX))
+    // The tab only follows the pointer. No slot is committed while it is held
+    // down — the drop decides where it lands, like v1's Draggabilly port.
+    queueTrack(state, clientX)
   }
 
   function endDrag() {
     const state = dragRef.current
     dragRef.current = null
+    if (dragFrameRef.current !== null) {
+      cancelAnimationFrame(dragFrameRef.current)
+      dragFrameRef.current = null
+    }
     if (!state) return
     setDraggingId(null)
-    if (!state.moved) return
+
+    if (!state.moved) {
+      state.el.style.transform = ''
+      return
+    }
+
+    const from = tabEls().indexOf(state.el)
+    const to = slotFor(state.lastX, state.el)
+    // Record where every tab sits visually right now (the dragged one is under
+    // the pointer), then commit: the FLIP pass glides it into its new slot and
+    // slides the tabs it displaced over.
+    captureRects()
+
+    if (from !== -1 && to !== from) {
+      state.el.style.transform = ''
+      onReorder(from, to)
+      return
+    }
+
+    // Dropped back where it started: glide into its own slot.
     state.el.style.transition = `transform ${REORDER_TRANSITION_MS}ms ease-in-out`
     state.el.style.transform = ''
     window.setTimeout(() => {
@@ -164,11 +183,35 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
 
   return (
     <div className="chrome-tabs">
-      <TabGeometryDefs />
       <div className="chrome-tabs-content" ref={contentRef} onDoubleClick={handleStripDoubleClick}>
         {tabs.map((tab) => {
           const active = tab.id === activeId
           const dragging = tab.id === draggingId
+          const surface = (
+            <GlassSurface
+              className="chrome-tab-glass"
+              width="100%"
+              height="100%"
+              borderRadius={12}
+              backgroundOpacity={active ? 0.18 : 0.06}
+              saturation={active ? 1.35 : 1.1}
+              displace={0.4}
+            >
+              <div className="chrome-tab-inner">
+                <div className="chrome-tab-favicon" />
+                <div className="chrome-tab-title">{tab.title}</div>
+                <div
+                  className="chrome-tab-close"
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onClose(tab.id)
+                  }}
+                />
+              </div>
+            </GlassSurface>
+          )
+
           return (
             <div
               key={tab.id}
@@ -179,46 +222,22 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
               onPointerMove={moveDrag}
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
+              onLostPointerCapture={endDrag}
             >
-              <div className="chrome-tab-dividers" />
-              <div className="chrome-tab-highlight" />
-              <div className="chrome-tab-background">
-                <svg version="1.1" xmlns="http://www.w3.org/2000/svg">
-                  <g className="tab-inactive-svg">
-                    <svg width="50%" height="100%">
-                      <use
-                        href="#chrome-tab-geometry-left-inactive"
-                        width="214"
-                        height="36"
-                        className="chrome-tab-geometry"
-                      />
-                    </svg>
-                    <g transform="scale(-1,1)">
-                      <svg width="50%" height="100%" x="-100%" y="0">
-                        <use
-                          href="#chrome-tab-geometry-right-inactive"
-                          width="214"
-                          height="36"
-                          className="chrome-tab-geometry"
-                        />
-                      </svg>
-                    </g>
-                  </g>
-                </svg>
-              </div>
-              <div className="chrome-tab-content">
-                <div className="chrome-tab-favicon" />
-                <div className="chrome-tab-title">{tab.title}</div>
-                <div className="chrome-tab-drag-handle" />
-                <div
-                  className="chrome-tab-close"
-                  onPointerDown={(event) => event.stopPropagation()}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onClose(tab.id)
-                  }}
-                />
-              </div>
+              {active ? (
+                <BorderBeam
+                  className="chrome-tab-beam"
+                  size="md"
+                  colorVariant="colorful"
+                  strength={0.7}
+                  theme="dark"
+                  borderRadius={12}
+                >
+                  {surface}
+                </BorderBeam>
+              ) : (
+                surface
+              )}
             </div>
           )
         })}

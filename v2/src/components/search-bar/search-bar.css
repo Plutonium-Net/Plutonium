@@ -1,0 +1,71 @@
+@font-face {
+  font-family: 'Plutonium';
+  src: url('../../assets/fonts/plutonium.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.search-bar {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, 90vw);
+  height: 48px;
+  z-index: 10;
+}
+
+.search-bar .search-bar-wordmark {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 18px);
+  transform: translateX(-50%);
+  font-family: 'Plutonium', sans-serif;
+  line-height: 1;
+  color: #ffffff;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+}
+
+.search-bar .search-bar-beam,
+.search-bar .search-bar-glass {
+  width: 100%;
+  height: 100%;
+}
+
+.search-bar .search-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  /* The glass content box already carries 0.5rem of padding. */
+  padding: 0 10px;
+}
+
+.search-bar .search-bar-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.search-bar .search-bar-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  letter-spacing: -0.1px;
+}
+
+.search-bar .search-bar-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}

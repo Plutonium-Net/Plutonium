@@ -1,6 +1,8 @@
 import AccountPanel from '@/components/account-panel'
 import ChromeTabs from '@/components/chrome-tabs/chrome-tabs'
+import Clock from '@/components/clock/clock'
 import DotBackgroundDemo from '@/components/dot-background-demo'
+import SearchBar from '@/components/search-bar/search-bar'
 import { useTabs } from '@/hooks/use-tabs'
 
 export default function App() {
@@ -19,6 +21,8 @@ export default function App() {
           onReorder={moveTab}
         />
       </div>
+      <SearchBar />
+      <Clock />
       <AccountPanel />
     </>
   )
