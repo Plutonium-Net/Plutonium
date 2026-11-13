@@ -1,0 +1,69 @@
+.address-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 8px 0;
+  padding: 0 8px;
+  height: 38px;
+  border-radius: 996px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+}
+
+.address-bar .address-bar__btn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.address-bar .address-bar__btn svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.address-bar .address-bar__btn:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.address-bar .address-bar__btn:disabled {
+  color: rgba(255, 255, 255, 0.2);
+  cursor: default;
+}
+
+.address-bar .address-bar__form {
+  flex: 1 1 auto;
+  display: flex;
+  min-width: 0;
+}
+
+.address-bar .address-bar__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.address-bar .address-bar__input::selection {
+  background: rgba(255, 255, 255, 0.22);
+}
