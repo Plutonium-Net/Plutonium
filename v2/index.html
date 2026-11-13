@@ -7,6 +7,13 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Vendored engine globals, same order as v1: BareMux, Ultraviolet + its
+         config, Scramjet V1, then the Scramjet V2 controller wrapper. -->
+    <script src="/bridge/index.js"></script>
+    <script src="/core/bundle.js"></script>
+    <script src="/core/config.js"></script>
+    <script src="/runtime/all.js"></script>
+    <script src="/js/runtimev2.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
