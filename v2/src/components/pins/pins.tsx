@@ -4,10 +4,12 @@ import { usePins } from '@/hooks/use-pins'
 import { loadPins } from '@/lib/pins'
 import './pins.css'
 
-const MAGNIFY = 0.5
-const FALLOFF = 84
-const SPREAD = 0.6
-const LIFT = 8
+// A wide, shallow curve: neighbouring tiles share most of the growth, so the row
+// swells as one instead of one tile popping up.
+const MAGNIFY = 0.34
+const FALLOFF = 132
+const SPREAD = 0.42
+const LIFT = 6
 
 /** v1's shortcut tiles, lined up along the bottom of the home page. */
 export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
@@ -50,6 +52,8 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
       tile.style.setProperty('--pin-scale', scale.toFixed(3))
       tile.style.setProperty('--pin-shift', `${shift.toFixed(1)}px`)
       tile.style.setProperty('--pin-lift', `${lift.toFixed(1)}px`)
+      // How far the tile's top edge rose, so its name can ride up with it.
+      tile.style.setProperty('--pin-grow', `${((scale - 1) * tile.offsetHeight).toFixed(1)}px`)
 
       const distance = Math.hypot(across, down)
       if (distance < nearestDistance) {
@@ -67,6 +71,7 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
       tile.style.removeProperty('--pin-scale')
       tile.style.removeProperty('--pin-shift')
       tile.style.removeProperty('--pin-lift')
+      tile.style.removeProperty('--pin-grow')
     })
     setHovered(null)
   }
@@ -76,7 +81,7 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
   return (
     <div
       ref={rowRef}
-      className="pins"
+      className={`pins${hovered === null ? '' : ' is-tracking'}`}
       role="list"
       onPointerMove={handlePointerMove}
       onPointerLeave={resetRow}
