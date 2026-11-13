@@ -29,25 +29,31 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     const row = rowRef.current
     if (!row) return
-    const pointerX = event.clientX - row.getBoundingClientRect().left
+    const rowRect = row.getBoundingClientRect()
+    const pointerX = event.clientX - rowRect.left
+    const pointerY = event.clientY - rowRect.top
     let nearest = 0
     let nearestDistance = Number.POSITIVE_INFINITY
 
     tileRefs.current.forEach((tile, index) => {
       if (!tile) return
-      const center = tile.offsetLeft + tile.offsetWidth / 2
-      const distance = pointerX - center
-      const weight = Math.exp(-((distance / FALLOFF) ** 2))
+      const centerX = tile.offsetLeft + tile.offsetWidth / 2
+      const centerY = tile.offsetTop + tile.offsetHeight / 2
+      const across = pointerX - centerX
+      // The row wraps on narrow screens, so tiles on the other line stay small.
+      const down = pointerY - centerY
+      const weight = Math.exp(-((across / FALLOFF) ** 2)) * Math.exp(-((down / (FALLOFF * 0.8)) ** 2))
       const scale = 1 + MAGNIFY * weight
-      const shift = -Math.sign(distance) * (scale - 1) * tile.offsetWidth * SPREAD
+      const shift = -Math.sign(across) * (scale - 1) * tile.offsetWidth * SPREAD
       const lift = -weight * LIFT
 
       tile.style.setProperty('--pin-scale', scale.toFixed(3))
       tile.style.setProperty('--pin-shift', `${shift.toFixed(1)}px`)
       tile.style.setProperty('--pin-lift', `${lift.toFixed(1)}px`)
 
-      if (Math.abs(distance) < nearestDistance) {
-        nearestDistance = Math.abs(distance)
+      const distance = Math.hypot(across, down)
+      if (distance < nearestDistance) {
+        nearestDistance = distance
         nearest = index
       }
     })
