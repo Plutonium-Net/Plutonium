@@ -1,0 +1,41 @@
+{
+  "note": "Server list for the Apps section. Each server's urlTemplate builds the frame URL for an app: {url} inserts the target address as-is, and {url_enc} inserts it percent-encoded (Compaxy takes the address as a ?url= query, then redirects into /proxy/). Set \"default\" to the id selected on first load.",
+  "default": "us-east-1",
+  "servers": [
+    {
+      "id": "us-east-1",
+      "name": "US East 1",
+      "location": "Virginia, USA",
+      "flagSrc": "img/flags/us.png",
+      "urlTemplate": "https://compaxy-us-east-1.plutoniumnet.work/?url={url_enc}"
+    },
+    {
+      "id": "us-east-2",
+      "name": "US East 2",
+      "location": "Ohio, USA",
+      "flagSrc": "img/flags/us.png",
+      "urlTemplate": "https://compaxy-us-east-2.plutoniumnet.work/?url={url_enc}"
+    },
+    {
+      "id": "us-west",
+      "name": "US West",
+      "location": "Oregon, USA",
+      "flagSrc": "img/flags/us.png",
+      "urlTemplate": "https://compaxy-us-west.plutoniumnet.work/?url={url_enc}"
+    },
+    {
+      "id": "europe",
+      "name": "Europe",
+      "location": "Frankfurt, Germany",
+      "flagSrc": "img/flags/eu.png",
+      "urlTemplate": "https://compaxy-europe.plutoniumnet.work/?url={url_enc}"
+    },
+    {
+      "id": "asia",
+      "name": "Asia",
+      "location": "Singapore",
+      "flagSrc": "img/flags/sg.png",
+      "urlTemplate": "https://compaxy-asia.plutoniumnet.work/?url={url_enc}"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import AiPage from '@/components/ai-page/ai-page'
+import AppsPage from '@/components/apps-page/apps-page'
 import GamesPage from '@/components/games-page/games-page'
 import MediaPage from '@/components/media-page/media-page'
 import VmsPage from '@/components/vms-page/vms-page'
@@ -17,6 +18,10 @@ export default function PageView({ page }: { page: PlutoRoute }) {
 
   if (page.id === 'vms') {
     return <VmsPage autostart={page.params.get('autostart') === '1'} />
+  }
+
+  if (page.id === 'apps') {
+    return <AppsPage query={page.params.get('q') ?? ''} launchId={page.hash} />
   }
 
   if (page.id === 'ai') {
