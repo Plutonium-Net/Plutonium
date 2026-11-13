@@ -66,7 +66,7 @@ export default function RegionMenu() {
                       <span className="region-menu__ms">{Math.round(ping.latency || 0)}ms</span>
                     </>
                   ) : (
-                    <span className="region-menu__ms">—</span>
+                    <span className="region-menu__ms">-</span>
                   )}
                 </span>
               </button>

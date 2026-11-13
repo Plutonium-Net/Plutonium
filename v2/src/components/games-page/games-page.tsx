@@ -52,7 +52,7 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
 
   function pin(game: Game) {
     if (pinnedIds.has(game.id)) return
-    setToast(pinGame(game) ? `Pinned “${game.name}”` : 'Pins are full — unpin one from the home row first')
+    setToast(pinGame(game) ? `Pinned “${game.name}”` : 'Pins are full. Unpin one from the home row first.')
   }
 
   const results = useMemo(() => searchGames(games, search), [games, search])
