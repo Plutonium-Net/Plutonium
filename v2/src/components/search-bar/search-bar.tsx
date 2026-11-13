@@ -10,15 +10,19 @@ import { buildGroups, fetchSuggestions, suggestionRows } from '@/lib/search/smar
 import type { SmartGroup, SmartRow } from '@/lib/search/smart-search'
 import './search-bar.css'
 
-const ENTER_WINDOW_MS = 640
-
-export default function SearchBar({ onNavigate }: { onNavigate: (input: string) => boolean | Promise<boolean> }) {
+export default function SearchBar({
+  onNavigate,
+  onActiveChange,
+}: {
+  onNavigate: (input: string) => boolean | Promise<boolean>
+  /** Reports focus, so the home screen can tuck its pins away while typing. */
+  onActiveChange?: (active: boolean) => void
+}) {
   const history = useHistory()
   const inputRef = useRef<HTMLInputElement>(null)
   const [value, setValue] = useState('')
   const [focused, setFocused] = useState(false)
   const [open, setOpen] = useState(false)
-  const [entering, setEntering] = useState(false)
   const [active, setActive] = useState(0)
   const [suggestions, setSuggestions] = useState<string[]>([])
 
@@ -53,14 +57,6 @@ export default function SearchBar({ onNavigate }: { onNavigate: (input: string) 
     }
   }, [value, open])
 
-  // Every new list (each keystroke, each batch of suggestions) drops in again.
-  useEffect(() => {
-    if (!open) return
-    setEntering(true)
-    const timer = window.setTimeout(() => setEntering(false), ENTER_WINDOW_MS)
-    return () => window.clearTimeout(timer)
-  }, [open, value, suggestions])
-
   // A fresh list starts on the row that runs the query itself, like v1.
   useEffect(() => {
     setActive(rows.length ? rows.length - 1 : 0)
@@ -69,6 +65,7 @@ export default function SearchBar({ onNavigate }: { onNavigate: (input: string) 
   function openList() {
     setOpen(true)
     setFocused(true)
+    onActiveChange?.(true)
   }
 
   function closeList() {
@@ -200,6 +197,7 @@ export default function SearchBar({ onNavigate }: { onNavigate: (input: string) 
               onFocus={openList}
               onBlur={() => {
                 setFocused(false)
+                onActiveChange?.(false)
                 closeList()
               }}
               onKeyDown={handleKeyDown}
@@ -213,7 +211,6 @@ export default function SearchBar({ onNavigate }: { onNavigate: (input: string) 
         <SearchSuggest
           groups={groups}
           activeIndex={active}
-          entering={entering}
           onHover={setActive}
           onPick={(row) => void pick(row)}
         />

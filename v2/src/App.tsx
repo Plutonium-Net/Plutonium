@@ -5,6 +5,7 @@ import ChromeTabs from '@/components/chrome-tabs/chrome-tabs'
 import Clock from '@/components/clock/clock'
 import DotBackgroundDemo from '@/components/dot-background-demo'
 import HistoryPanel from '@/components/history-panel/history-panel'
+import InfoPanel from '@/components/info-panel/info-panel'
 import PageFrame from '@/components/page-frame/page-frame'
 import PageView from '@/components/page-view/page-view'
 import Pins from '@/components/pins/pins'
@@ -23,8 +24,9 @@ import './app-shell.css'
 export default function App() {
   const { tabs, activeId, addTab, selectTab, closeTab, moveTab, navigate, back, forward } = useTabs()
   const net = useNet()
-  const [panel, setPanel] = useState<'history' | 'proxy' | 'region' | null>(null)
+  const [panel, setPanel] = useState<'history' | 'info' | 'proxy' | 'region' | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+  const [searchActive, setSearchActive] = useState(false)
 
   const activeTab = tabs.find((tab) => tab.id === activeId)
   const page = activeTab ? resolveUrl(activeTab.url) : null
@@ -47,6 +49,7 @@ export default function App() {
       if (
         target.closest('.proxy-panel') ||
         target.closest('.history-panel') ||
+        target.closest('.info-panel') ||
         target.closest('.region-menu') ||
         target.closest('.side-menu')
       )
@@ -112,6 +115,10 @@ export default function App() {
             engine={net.engine}
             region={family ? net.regions[family] : ''}
             reloadToken={reloadToken}
+            status={net.status}
+            error={net.error}
+            latency={net.latency}
+            onRetry={() => setReloadToken((token) => token + 1)}
           />
           {page && <PageView title={page.title} />}
         </div>
@@ -119,14 +126,15 @@ export default function App() {
 
       {home && (
         <>
-          <SearchBar onNavigate={navigate} />
+          <SearchBar onNavigate={navigate} onActiveChange={setSearchActive} />
           <SideMenu activePanel={panel} onTogglePanel={(next) => setPanel(panel === next ? null : next)} />
-          <Pins onOpen={(href) => void navigate(href)} />
+          <Pins minimized={searchActive} onOpen={(href) => void navigate(href)} />
         </>
       )}
 
       {panel === 'proxy' && <ProxySwitcher />}
       {panel === 'region' && <RegionMenu />}
+      {panel === 'info' && <InfoPanel onClose={() => setPanel(null)} />}
       {panel === 'history' && (
         <HistoryPanel
           onNavigate={(url) => {

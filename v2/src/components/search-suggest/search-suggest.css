@@ -20,6 +20,19 @@
   /* The list dissolves at its bottom edge instead of being cut off. */
   -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 26px), transparent 100%);
   mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 26px), transparent 100%);
+  /* Opening: the list settles down into place from just above. */
+  animation: search-suggest-open 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes search-suggest-open {
+  from {
+    opacity: 0;
+    transform: translateY(-9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .search-suggest::-webkit-scrollbar {
@@ -131,10 +144,11 @@
   opacity: 1;
 }
 
-/* The entrance: each row drops in from just above itself while its text fades up. */
-.search-suggest.is-entering .search-suggest__row,
-.search-suggest.is-entering .search-suggest__header {
-  animation: search-suggest-drop 0.36s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+/* Rows arrive on mount only, so an open never flashes them in twice and typing
+   does not restart the rows that were already there. */
+.search-suggest .search-suggest__row,
+.search-suggest .search-suggest__header {
+  animation: search-suggest-drop 0.32s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 @keyframes search-suggest-drop {
@@ -151,8 +165,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .search-suggest.is-entering .search-suggest__row,
-  .search-suggest.is-entering .search-suggest__header {
+  .search-suggest,
+  .search-suggest .search-suggest__row,
+  .search-suggest .search-suggest__header {
     animation: none;
   }
 }

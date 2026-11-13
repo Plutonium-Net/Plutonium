@@ -4,7 +4,6 @@ import './search-suggest.css'
 type Props = {
   groups: SmartGroup[]
   activeIndex: number
-  entering: boolean
   onHover: (index: number) => void
   onPick: (row: SmartRow) => void
 }
@@ -14,11 +13,11 @@ type Props = {
  * and drop in one after another, so the list reads as text fading down rather
  * than a box appearing.
  */
-export default function SearchSuggest({ groups, activeIndex, entering, onHover, onPick }: Props) {
+export default function SearchSuggest({ groups, activeIndex, onHover, onPick }: Props) {
   let index = -1
 
   return (
-    <div className={`search-suggest${entering ? ' is-entering' : ''}`} role="listbox" aria-label="Search suggestions">
+    <div className="search-suggest" role="listbox" aria-label="Search suggestions">
       {groups.map((group, groupIndex) => (
         <div className="search-suggest__group" key={`${group.title}-${groupIndex}`} role="group">
           {group.title ? (

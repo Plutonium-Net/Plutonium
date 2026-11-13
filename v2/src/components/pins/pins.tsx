@@ -18,7 +18,14 @@ type Pose = { scale: number; shift: number; lift: number }
 const REST: Pose = { scale: 1, shift: 0, lift: 0 }
 
 /** v1's shortcut tiles, lined up along the bottom of the home page. */
-export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
+export default function Pins({
+  onOpen,
+  minimized = false,
+}: {
+  onOpen: (href: string) => void
+  /** Set while the search bar has focus, so the row sinks out of the way. */
+  minimized?: boolean
+}) {
   const pins = usePins()
   const rowRef = useRef<HTMLDivElement>(null)
   const tileRefs = useRef<Array<HTMLDivElement | null>>([])
@@ -156,7 +163,7 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
   return (
     <div
       ref={rowRef}
-      className="pins"
+      className={`pins${minimized ? ' is-minimized' : ''}`}
       role="list"
       onPointerMove={handlePointerMove}
       onPointerLeave={resetRow}
