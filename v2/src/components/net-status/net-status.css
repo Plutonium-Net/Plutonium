@@ -1,0 +1,40 @@
+.net-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.net-status--ok {
+  color: #5ad48a;
+}
+
+.net-status--error {
+  color: #f2857e;
+}
+
+.net-status .net-status__icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+
+.net-status--connecting .net-status__icon {
+  animation: net-status-pulse 1s ease-in-out infinite;
+}
+
+.net-status .net-status__ms {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes net-status-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
