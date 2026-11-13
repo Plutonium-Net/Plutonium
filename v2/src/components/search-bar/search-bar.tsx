@@ -5,14 +5,16 @@ import FoldText from '@/components/fold-text/FoldText'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import './search-bar.css'
 
-export default function SearchBar() {
+export default function SearchBar({ onNavigate }: { onNavigate: (input: string) => boolean }) {
   const [value, setValue] = useState('')
   const [focused, setFocused] = useState(false)
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    // Nothing to navigate to yet: v2 has no page frame or proxy engine wired up,
-    // so this only keeps the form from reloading the document.
     event.preventDefault()
+    const query = value.trim()
+    // Only `pluto://` pages resolve today; anything else stays in the box because
+    // there is no page frame or proxy engine to send it to yet.
+    if (query && onNavigate(query)) setValue('')
   }
 
   return (
