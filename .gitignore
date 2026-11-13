@@ -1,7 +1,9 @@
+node_modules/
+dist/
+
+# Freebuff workspace marker
 .freebuff/
 
-# A Firebase service-account key must never be committed. Generate it locally,
-# use it as an environment variable where it is needed, then delete the file.
+# A Firebase service-account key must never be committed.
 *service-account*.json
 *serviceAccount*.json
-api/.wrangler

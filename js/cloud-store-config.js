@@ -1,1 +1,0 @@
-PlutoniumStore.WORKER_URL = 'https://api.plutoniumnet.work';
