@@ -57,10 +57,12 @@ export default function SearchBar({
     }
   }, [value, open])
 
-  // A fresh list starts on the row that runs the query itself, like v1.
+  // A typed query starts on the row that runs it (the last one), like v1. The
+  // empty list is just the / commands, so it starts on the first command — it
+  // used to land on the last row, which highlighted `/vm` the moment you opened it.
   useEffect(() => {
-    setActive(rows.length ? rows.length - 1 : 0)
-  }, [rows])
+    setActive(value.trim() && rows.length ? rows.length - 1 : 0)
+  }, [rows, value])
 
   function openList() {
     setOpen(true)

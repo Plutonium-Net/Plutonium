@@ -69,9 +69,12 @@ export default function App() {
   }, [panel])
 
   // A panel belongs to the screen it was opened on: switching tabs, navigating or
-  // leaving the home screen closes it.
+  // leaving the home screen closes it. The search is treated the same way, or its
+  // focus flag would survive the trip and come back with the pins still tucked
+  // away and the page icons still hidden.
   useEffect(() => {
     setPanel(null)
+    setSearchActive(false)
   }, [activeId, activeTab?.url, home])
 
   // Switching engines repoints every frame, so a reload is implied.

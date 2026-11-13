@@ -8,11 +8,65 @@ import { usePins } from '@/hooks/use-pins'
 import { BEAM_PROPS } from '@/lib/beam'
 import './games-page.css'
 
+declare global {
+  interface Window {
+    Lumin?: { init: (options: Record<string, unknown>) => void }
+  }
+}
+
 type Props = {
   /** `?q=` from the route, so a `/g tiny` search lands filtered. */
   query?: string
   /** `#<gameId>` from the route: open that game straight away. */
   launchId?: string
+}
+
+/**
+ * Lumin is the second catalog, loaded the way v1 loaded it: their CDN script,
+ * then one `init` into a container. The SDK draws and plays its own games, so it
+ * owns the grid area when it is selected — our search and cards step aside.
+ */
+const LUMIN_SCRIPT = 'https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js'
+
+let luminStarted = false
+
+function loadLumin(): Promise<void> {
+  const existing = document.querySelector<HTMLScriptElement>('script[data-plu-lumin]')
+  if (window.Lumin && luminStarted) return Promise.resolve()
+
+  function start() {
+    if (luminStarted) return
+    luminStarted = true
+    window.Lumin?.init({ container: '#lumin-container', theme: 'dark', columns: 6, rows: 4 })
+  }
+
+  if (existing) {
+    return new Promise((resolve) => {
+      if (window.Lumin) {
+        start()
+        resolve()
+        return
+      }
+      existing.addEventListener('load', () => {
+        start()
+        resolve()
+      })
+      existing.addEventListener('error', () => resolve())
+    })
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = LUMIN_SCRIPT
+    script.async = true
+    script.dataset.pluLumin = '1'
+    script.addEventListener('load', () => {
+      start()
+      resolve()
+    })
+    script.addEventListener('error', () => reject(new Error('Could not reach the Lumin SDK')))
+    document.head.appendChild(script)
+  })
 }
 
 export default function GamesPage({ query = '', launchId = '' }: Props) {
@@ -22,6 +76,8 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
   const [focused, setFocused] = useState(false)
   const [playing, setPlaying] = useState<Game | null>(null)
   const [toast, setToast] = useState('')
+  const [source, setSource] = useState<'pgcdn' | 'lumin'>('pgcdn')
+  const [lumin, setLumin] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const pinned = usePins()
   const pinnedIds = useMemo(() => new Set(pinned.map((pin) => pin.id)), [pinned])
 
@@ -55,10 +111,19 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
     setToast(pinGame(game) ? `Pinned “${game.name}”` : 'Pins are full. Unpin one from the home row first.')
   }
 
+  // The SDK is only fetched when its tab is actually opened.
+  useEffect(() => {
+    if (source !== 'lumin' || lumin === 'loading' || lumin === 'ready') return
+    setLumin('loading')
+    loadLumin()
+      .then(() => setLumin('ready'))
+      .catch(() => setLumin('error'))
+  }, [source, lumin])
+
   const results = useMemo(() => searchGames(games, search), [games, search])
 
   return (
-    <div className="games-page">
+    <div className={`games-page${source === 'lumin' ? ' is-lumin' : ''}`}>
       {playing ? (
         <GamePlayer
           game={playing}
@@ -70,6 +135,27 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
         <div className="games-page__scroll">
           <header className="games-page__head">
             <h1 className="games-page__title">Games</h1>
+
+            <div className="games-page__tabs" role="tablist" aria-label="Game sources">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={source === 'pgcdn'}
+                className={`games-page__tab${source === 'pgcdn' ? ' is-active' : ''}`}
+                onClick={() => setSource('pgcdn')}
+              >
+                Plutonium-GCDN
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={source === 'lumin'}
+                className={`games-page__tab${source === 'lumin' ? ' is-active' : ''}`}
+                onClick={() => setSource('lumin')}
+              >
+                LuminSDK
+              </button>
+            </div>
 
             <div className={`games-page__search${focused ? ' is-focused' : ''}`}>
               <BorderBeam className="games-page__search-beam" {...BEAM_PROPS} borderRadius={999} active={focused}>
@@ -115,15 +201,30 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
             </div>
 
             <p className="games-page__meta">
-              {state === 'ready'
-                ? search.trim()
-                  ? `${results.length} of ${games.length}`
-                  : `${games.length} games`
-                : 'loading…'}
+              {source === 'lumin'
+                ? lumin === 'ready'
+                  ? 'LuminSDK catalog'
+                  : lumin === 'error'
+                    ? 'unavailable'
+                    : 'loading…'
+                : state === 'ready'
+                  ? search.trim()
+                    ? `${results.length} of ${games.length}`
+                    : `${games.length} games`
+                  : 'loading…'}
             </p>
           </header>
 
-          {state === 'empty' ? (
+          {source === 'lumin' ? (
+            <>
+              <div id="lumin-container" className="games-page__lumin" />
+              {lumin === 'error' && (
+                <p className="games-page__note">
+                  The Lumin SDK could not be reached. Check the connection, then open this tab again.
+                </p>
+              )}
+            </>
+          ) : state === 'empty' ? (
             <p className="games-page__note">The catalog could not be reached. Try again in a moment.</p>
           ) : results.length === 0 ? (
             <p className="games-page__note">No games match “{search.trim()}”.</p>
