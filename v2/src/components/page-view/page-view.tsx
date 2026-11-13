@@ -1,4 +1,5 @@
 import GamesPage from '@/components/games-page/games-page'
+import MediaPage from '@/components/media-page/media-page'
 import type { PlutoRoute } from '@/lib/pluto-routes'
 import './page-view.css'
 
@@ -6,6 +7,10 @@ import './page-view.css'
 export default function PageView({ page }: { page: PlutoRoute }) {
   if (page.id === 'games') {
     return <GamesPage query={page.params.get('q') ?? ''} launchId={page.hash} />
+  }
+
+  if (page.id === 'media') {
+    return <MediaPage />
   }
 
   return (
