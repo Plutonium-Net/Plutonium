@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import NetStatus from '@/components/net-status/net-status'
 import { useNet } from '@/hooks/use-net'
 import { familyFor } from '@/lib/net/engines'
 import { probeRegions } from '@/lib/net/net-store'
@@ -25,10 +26,7 @@ export default function RegionMenu() {
     <div className="region-menu">
       <div className="region-menu__head">
         <span className="region-menu__title">{family === 'wisp' ? 'Region' : 'Server'}</span>
-        <span className={`region-menu__status region-menu__status--${net.status}`}>
-          {net.status === 'ok' ? 'connected' : net.status === 'connecting' ? 'connecting' : net.status === 'error' ? 'offline' : 'idle'}
-          {net.latency ? ` · ${Math.round(net.latency)}ms` : ''}
-        </span>
+        <NetStatus status={net.status} latency={net.latency} />
       </div>
 
       {family ? (
