@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { BorderBeam } from 'border-beam'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
+import TabFavicon from '@/components/tab-favicon/tab-favicon'
 import { BEAM_PROPS } from '@/lib/beam'
 import { cn } from '@/lib/utils'
 import type { Tab } from '@/hooks/use-tabs'
@@ -199,7 +200,7 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
               displace={0.4}
             >
               <div className="chrome-tab-inner">
-                <div className="chrome-tab-favicon" />
+                <TabFavicon url={tab.url} />
                 <div className="chrome-tab-title">{tab.title}</div>
                 <div
                   className="chrome-tab-close"

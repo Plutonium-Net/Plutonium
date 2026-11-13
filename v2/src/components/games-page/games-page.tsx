@@ -1,18 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BorderBeam } from 'border-beam'
+import GamePlayer from '@/components/game-player/game-player'
+import GlassHighlight from '@/components/glass-highlight/glass-highlight'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
-import { createSaveBridge, type SaveBridge, type SaveState } from '@/lib/game-saves'
-import { gameUrl, imageUrl, loadGames, searchGames, type Game } from '@/lib/games'
+import { imageUrl, loadGames, searchGames, type Game } from '@/lib/games'
+import { bootLumin, luminImage, luminPlayUrl, luminSearch, type LuminGame } from '@/lib/lumin'
 import { pinGame } from '@/lib/pins'
 import { usePins } from '@/hooks/use-pins'
 import { BEAM_PROPS } from '@/lib/beam'
 import './games-page.css'
-
-declare global {
-  interface Window {
-    Lumin?: { init: (options: Record<string, unknown>) => void }
-  }
-}
 
 type Props = {
   /** `?q=` from the route, so a `/g tiny` search lands filtered. */
@@ -21,53 +17,7 @@ type Props = {
   launchId?: string
 }
 
-/**
- * Lumin is the second catalog, loaded the way v1 loaded it: their CDN script,
- * then one `init` into a container. The SDK draws and plays its own games, so it
- * owns the grid area when it is selected — our search and cards step aside.
- */
-const LUMIN_SCRIPT = 'https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js'
-
-let luminStarted = false
-
-function loadLumin(): Promise<void> {
-  const existing = document.querySelector<HTMLScriptElement>('script[data-plu-lumin]')
-  if (window.Lumin && luminStarted) return Promise.resolve()
-
-  function start() {
-    if (luminStarted) return
-    luminStarted = true
-    window.Lumin?.init({ container: '#lumin-container', theme: 'dark', columns: 6, rows: 4 })
-  }
-
-  if (existing) {
-    return new Promise((resolve) => {
-      if (window.Lumin) {
-        start()
-        resolve()
-        return
-      }
-      existing.addEventListener('load', () => {
-        start()
-        resolve()
-      })
-      existing.addEventListener('error', () => resolve())
-    })
-  }
-
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script')
-    script.src = LUMIN_SCRIPT
-    script.async = true
-    script.dataset.pluLumin = '1'
-    script.addEventListener('load', () => {
-      start()
-      resolve()
-    })
-    script.addEventListener('error', () => reject(new Error('Could not reach the Lumin SDK')))
-    document.head.appendChild(script)
-  })
-}
+type Source = 'pgcdn' | 'lumin'
 
 export default function GamesPage({ query = '', launchId = '' }: Props) {
   const [games, setGames] = useState<Game[]>([])
@@ -76,10 +26,20 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
   const [focused, setFocused] = useState(false)
   const [playing, setPlaying] = useState<Game | null>(null)
   const [toast, setToast] = useState('')
-  const [source, setSource] = useState<'pgcdn' | 'lumin'>('pgcdn')
-  const [lumin, setLumin] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [source, setSource] = useState<Source>('pgcdn')
   const pinned = usePins()
   const pinnedIds = useMemo(() => new Set(pinned.map((pin) => pin.id)), [pinned])
+
+  // Lumin: its own catalog, fetched through the SDK rather than a JSON file.
+  const [luminState, setLuminState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [luminError, setLuminError] = useState('')
+  const [luminGames, setLuminGames] = useState<LuminGame[]>([])
+  const [luminTotal, setLuminTotal] = useState(0)
+  const [luminPages, setLuminPages] = useState(1)
+  const [luminPage, setLuminPage] = useState(1)
+  const [luminBusy, setLuminBusy] = useState(false)
+  const [luminQuery, setLuminQuery] = useState('')
+  const [luminPlay, setLuminPlay] = useState<{ game: LuminGame; url: string | null; error: string } | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -111,50 +71,141 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
     setToast(pinGame(game) ? `Pinned “${game.name}”` : 'Pins are full. Unpin one from the home row first.')
   }
 
-  // The SDK is only fetched when its tab is actually opened.
+  // ── Lumin catalog ────────────────────────────────────────────────────────
+  // `init` authorises the page and every other call refuses to run before it, so
+  // the first fetch waits on the boot and any failure lands in `luminError`.
   useEffect(() => {
-    if (source !== 'lumin' || lumin === 'loading' || lumin === 'ready') return
-    setLumin('loading')
-    loadLumin()
-      .then(() => setLumin('ready'))
-      .catch(() => setLumin('error'))
-  }, [source, lumin])
+    if (source !== 'lumin' || luminState !== 'idle') return
+    setLuminState('loading')
+    setLuminError('')
+    bootLumin(document.querySelector('#lumin-container'))
+      .then(() => luminSearch('', 1))
+      .then((page) => {
+        setLuminGames(page.games)
+        setLuminTotal(page.total)
+        setLuminPages(page.pages)
+        setLuminPage(page.page)
+        setLuminState('ready')
+      })
+      .catch((err: unknown) => {
+        setLuminError(err instanceof Error ? err.message : 'The Lumin SDK failed to start')
+        setLuminState('error')
+      })
+  }, [source, luminState])
 
-  const results = useMemo(() => searchGames(games, search), [games, search])
+  // Typing in the same pill searches Lumin's index instead of filtering locally.
+  useEffect(() => {
+    if (source !== 'lumin' || luminState !== 'ready') return
+    const needle = search.trim()
+    if (needle === luminQuery) return
+    const timer = window.setTimeout(() => {
+      setLuminBusy(true)
+      luminSearch(needle, 1)
+        .then((page) => {
+          setLuminGames(page.games)
+          setLuminTotal(page.total)
+          setLuminPages(page.pages)
+          setLuminPage(page.page)
+          setLuminQuery(needle)
+        })
+        .catch(() => setToast('LuminSDK could not search right now'))
+        .finally(() => setLuminBusy(false))
+    }, 260)
+    return () => window.clearTimeout(timer)
+  }, [search, source, luminState, luminQuery])
+
+  function moreLumin() {
+    if (luminBusy || luminPage >= luminPages) return
+    setLuminBusy(true)
+    luminSearch(luminQuery, luminPage + 1)
+      .then((page) => {
+        setLuminGames((current) => [...current, ...page.games])
+        setLuminPage(page.page)
+        setLuminPages(page.pages)
+      })
+      .catch(() => setToast('LuminSDK could not load more games'))
+      .finally(() => setLuminBusy(false))
+  }
+
+  function playLumin(game: LuminGame) {
+    setLuminPlay({ game, url: null, error: '' })
+    luminPlayUrl(game.id)
+      .then((url) => setLuminPlay((current) => (current && current.game.id === game.id ? { ...current, url } : current)))
+      .catch((err: unknown) =>
+        setLuminPlay((current) =>
+          current && current.game.id === game.id
+            ? { ...current, error: err instanceof Error ? err.message : 'LuminSDK could not open this game' }
+            : current,
+        ),
+      )
+  }
+
+  const results = useMemo(() => searchGames(games, source === 'pgcdn' ? search : ''), [games, search, source])
+
+  if (luminPlay) {
+    return (
+      <div className="games-page">
+        <LuminPlayer
+          game={luminPlay.game}
+          url={luminPlay.url}
+          error={luminPlay.error}
+          onBack={() => setLuminPlay(null)}
+        />
+      </div>
+    )
+  }
+
+  if (playing) {
+    return (
+      <GamePlayer
+        game={playing}
+        pinned={pinnedIds.has(playing.id)}
+        onPin={() => pin(playing)}
+        onBack={() => setPlaying(null)}
+      />
+    )
+  }
 
   return (
     <div className={`games-page${source === 'lumin' ? ' is-lumin' : ''}`}>
-      {playing ? (
-        <GamePlayer
-          game={playing}
-          pinned={pinnedIds.has(playing.id)}
-          onPin={() => pin(playing)}
-          onBack={() => setPlaying(null)}
-        />
-      ) : (
+      {
         <div className="games-page__scroll">
           <header className="games-page__head">
             <h1 className="games-page__title">Games</h1>
 
-            <div className="games-page__tabs" role="tablist" aria-label="Game sources">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={source === 'pgcdn'}
-                className={`games-page__tab${source === 'pgcdn' ? ' is-active' : ''}`}
-                onClick={() => setSource('pgcdn')}
+            <div className="games-page__tabs-shell">
+              <GlassSurface
+                className="games-page__tabs-glass"
+                width="100%"
+                height="100%"
+                borderRadius={999}
+                backgroundOpacity={0.08}
+                saturation={1.25}
+                displace={0.4}
               >
-                Plutonium-GCDN
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={source === 'lumin'}
-                className={`games-page__tab${source === 'lumin' ? ' is-active' : ''}`}
-                onClick={() => setSource('lumin')}
-              >
-                LuminSDK
-              </button>
+                <div className="games-page__tabs" role="tablist" aria-label="Game sources">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={source === 'pgcdn'}
+                    className={`games-page__tab${source === 'pgcdn' ? ' is-active' : ''}`}
+                    onClick={() => setSource('pgcdn')}
+                  >
+                    {source === 'pgcdn' && <GlassHighlight radius={999} />}
+                    <span className="games-page__tab-label">Plutonium-GCDN</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={source === 'lumin'}
+                    className={`games-page__tab${source === 'lumin' ? ' is-active' : ''}`}
+                    onClick={() => setSource('lumin')}
+                  >
+                    {source === 'lumin' && <GlassHighlight radius={999} />}
+                    <span className="games-page__tab-label">LuminSDK</span>
+                  </button>
+                </div>
+              </GlassSurface>
             </div>
 
             <div className={`games-page__search${focused ? ' is-focused' : ''}`}>
@@ -202,10 +253,10 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
 
             <p className="games-page__meta">
               {source === 'lumin'
-                ? lumin === 'ready'
-                  ? 'LuminSDK catalog'
-                  : lumin === 'error'
-                    ? 'unavailable'
+                ? luminState === 'error'
+                  ? 'unavailable'
+                  : luminState === 'ready'
+                    ? `${luminGames.length} of ${luminTotal}`
                     : 'loading…'
                 : state === 'ready'
                   ? search.trim()
@@ -215,15 +266,45 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
             </p>
           </header>
 
+          {/* `init` needs a container in the DOM; our own grid is what gets drawn. */}
+          <div id="lumin-container" className="games-page__lumin" aria-hidden="true" />
+
           {source === 'lumin' ? (
-            <>
-              <div id="lumin-container" className="games-page__lumin" />
-              {lumin === 'error' && (
-                <p className="games-page__note">
-                  The Lumin SDK could not be reached. Check the connection, then open this tab again.
-                </p>
-              )}
-            </>
+            luminState === 'error' ? (
+              <div className="games-page__note games-page__note--lumin">
+                <p>LuminSDK could not start: {luminError}</p>
+                <button type="button" className="games-page__retry" onClick={() => setLuminState('idle')}>
+                  Try again
+                </button>
+              </div>
+            ) : luminState !== 'ready' ? (
+              <p className="games-page__note">Starting LuminSDK…</p>
+            ) : luminGames.length === 0 ? (
+              <p className="games-page__note">No LuminSDK games match “{search.trim()}”.</p>
+            ) : (
+              <>
+                <div className="games-page__grid">
+                  {luminGames.map((game) => (
+                    <button
+                      key={game.id}
+                      type="button"
+                      className="games-page__card"
+                      onClick={() => playLumin(game)}
+                    >
+                      <LuminCover token={game.image_token} />
+                      <span className="games-page__card-name">{game.name}</span>
+                    </button>
+                  ))}
+                </div>
+                {luminPage < luminPages && (
+                  <div className="games-page__more">
+                    <button type="button" className="games-page__retry" onClick={moreLumin} disabled={luminBusy}>
+                      {luminBusy ? 'Loading…' : 'Load more'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )
           ) : state === 'empty' ? (
             <p className="games-page__note">The catalog could not be reached. Try again in a moment.</p>
           ) : results.length === 0 ? (
@@ -231,12 +312,7 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
           ) : (
             <div className="games-page__grid">
               {results.map((game) => (
-                <button
-                  key={game.id}
-                  type="button"
-                  className="games-page__card"
-                  onClick={() => setPlaying(game)}
-                >
+                <button key={game.id} type="button" className="games-page__card" onClick={() => setPlaying(game)}>
                   <GameCover game={game} />
                   <span className="games-page__card-name">{game.name}</span>
                 </button>
@@ -244,20 +320,14 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
             </div>
           )}
         </div>
-      )}
+      }
 
       {toast && <div className="games-page__toast">{toast}</div>}
     </div>
   )
 }
 
-function PinIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M9 4h6l-1 5 3.5 3.5-4.5 1v5l-1 1-.8-6H6.5L10 9z" />
-    </svg>
-  )
-}
+
 
 /**
  * Covers come from the game CDN. The proxy service worker at scope `/` drops
@@ -285,88 +355,53 @@ function GameCover({ game }: { game: Game }) {
     }
   }, [src])
 
-  if (!url) {
-    return (
-      <span className="games-page__cover-empty">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="3" y="7" width="18" height="10" rx="3" />
-          <path d="M8 10v4M6 12h4" />
-          <path d="M16 11.5h.01M18 13.5h.01" />
-        </svg>
-      </span>
-    )
-  }
-
+  if (!url) return <EmptyCover />
   return <img className="games-page__cover" src={url} alt="" draggable={false} />
 }
 
-const SAVE_LABELS: Record<SaveState['status'], string> = {
-  signedout: 'Sign in to save',
-  loading: 'Restoring…',
-  ready: 'Cloud saves',
-  saving: 'Saving…',
-  saved: 'Saved',
-  error: 'Retry sync',
-  silent: 'No save sync',
+/** Lumin hands back cover URLs directly, so these can be plain images. */
+function LuminCover({ token }: { token: string }) {
+  const [url, setUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    setUrl(null)
+    void luminImage(token).then((next) => {
+      if (alive && next) setUrl(next)
+    })
+    return () => {
+      alive = false
+    }
+  }, [token])
+
+  if (!url) return <EmptyCover />
+  return <img className="games-page__cover" src={url} alt="" draggable={false} loading="lazy" />
 }
 
-function saveTitle(state: SaveState) {
-  if (state.detail) return state.detail
-  if (state.status === 'saved' && state.savedAt) {
-    const minutes = Math.round((Date.now() - state.savedAt) / 60000)
-    return `Saved to your account${minutes > 0 ? ` · ${minutes}m ago` : ' · just now'}`
-  }
-  return 'Cloud saves: your progress follows your account'
+function EmptyCover() {
+  return (
+    <span className="games-page__cover-empty">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="7" width="18" height="10" rx="3" />
+        <path d="M8 10v4M6 12h4" />
+        <path d="M16 11.5h.01M18 13.5h.01" />
+      </svg>
+    </span>
+  )
 }
 
-function GamePlayer({
+function LuminPlayer({
   game,
-  pinned,
-  onPin,
+  url,
+  error,
   onBack,
 }: {
-  game: Game
-  pinned: boolean
-  onPin: () => void
+  game: LuminGame
+  url: string | null
+  error: string
   onBack: () => void
 }) {
   const frameRef = useRef<HTMLIFrameElement>(null)
-  const bridgeRef = useRef<SaveBridge | null>(null)
-  const [save, setSave] = useState<SaveState>({ status: 'ready', savedAt: null })
-
-  useEffect(() => {
-    const bridge = createSaveBridge(game.id, () => frameRef.current)
-    bridgeRef.current = bridge
-    const stop = bridge.subscribe(() => setSave(bridge.getState()))
-    bridge.restore()
-    return () => {
-      stop()
-      bridge.dispose()
-      bridgeRef.current = null
-    }
-  }, [game.id])
-
-  function saveClick() {
-    const bridge = bridgeRef.current
-    if (!bridge) return
-    if (save.status === 'signedout') {
-      window.dispatchEvent(new Event('plu:open-account'))
-      return
-    }
-    bridge.saveNow()
-  }
-
-  // Leaving asks the game for a last snapshot, then gives it a moment to arrive
-  // before the frame is torn down (v1's FINAL_SAVE_GRACE).
-  function leave() {
-    const bridge = bridgeRef.current
-    if (!bridge || save.status === 'signedout' || save.status === 'silent') {
-      onBack()
-      return
-    }
-    bridge.requestSnapshot()
-    window.setTimeout(onBack, 1200)
-  }
 
   function fullscreen() {
     void frameRef.current?.requestFullscreen?.().catch(() => {})
@@ -375,84 +410,30 @@ function GamePlayer({
   return (
     <div className="games-page__player">
       <div className="games-page__bar">
-        <button type="button" className="games-page__back" onClick={leave}>
+        <button type="button" className="games-page__back" onClick={onBack}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" />
           </svg>
           All games
         </button>
         <span className="games-page__now">{game.name}</span>
-        <button
-          type="button"
-          className={`games-page__action games-page__pin-btn${pinned ? ' is-pinned' : ''}`}
-          onClick={onPin}
-          disabled={pinned}
-          title={pinned ? 'Pinned to the home row' : 'Pin to the home row'}
-        >
-          <PinIcon />
-          {pinned ? 'Pinned' : 'Pin'}
-        </button>
-        <button
-          type="button"
-          className={`games-page__action games-page__save is-${save.status}`}
-          onClick={saveClick}
-          title={saveTitle(save)}
-        >
-          <SaveIcon status={save.status} />
-          {SAVE_LABELS[save.status]}
-        </button>
         <button type="button" className="games-page__action games-page__full" onClick={fullscreen}>
           Fullscreen
         </button>
       </div>
-      <iframe
-        ref={frameRef}
-        className="games-page__frame"
-        src={gameUrl(game)}
-        title={game.name}
-        allow="autoplay; fullscreen; gamepad; pointer-lock"
-      />
+      {error ? (
+        <p className="games-page__note">{error}</p>
+      ) : url ? (
+        <iframe
+          ref={frameRef}
+          className="games-page__frame"
+          src={url}
+          title={game.name}
+          allow="autoplay; fullscreen; gamepad; pointer-lock"
+        />
+      ) : (
+        <p className="games-page__note">Opening {game.name}…</p>
+      )}
     </div>
-  )
-}
-
-function SaveIcon({ status }: { status: SaveState['status'] }) {
-  const cloud = 'M7 17.5a4 4 0 0 1-.4-8A5.5 5.5 0 0 1 17.3 9a3.8 3.8 0 0 1 .2 7.5'
-  if (status === 'signedout') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d={cloud} />
-        <path d="M4 4l16 16" />
-      </svg>
-    )
-  }
-  if (status === 'saving' || status === 'loading') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="is-spinning">
-        <path d="M12 4a8 8 0 1 0 8 8" />
-      </svg>
-    )
-  }
-  if (status === 'error' || status === 'silent') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d={cloud} />
-        <path d="M12 12v4M12 9h.01" />
-      </svg>
-    )
-  }
-  if (status === 'saved') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d={cloud} />
-        <path d="M9.2 14.4l1.9 1.9 3.7-3.7" />
-      </svg>
-    )
-  }
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d={cloud} />
-      <path d="M12 9.5v6M9.5 12.5 12 15l2.5-2.5" />
-    </svg>
   )
 }

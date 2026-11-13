@@ -39,19 +39,36 @@
   user-select: none;
 }
 
-/* Source switcher, the same job v1's source tabs did. */
+/* Source switcher: a glass pill, with the active tab lit by a glass chip. */
+.games-page .games-page__tabs-shell {
+  height: 34px;
+  width: fit-content;
+}
+
+.games-page .games-page__tabs-glass {
+  width: 100%;
+  height: 100%;
+}
+
+.games-page .games-page__tabs-glass .glass-surface__content {
+  padding: 3px;
+}
+
 .games-page .games-page__tabs {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(255, 255, 255, 0.04);
+  gap: 2px;
+  height: 100%;
 }
 
 .games-page .games-page__tab {
-  padding: 5px 14px;
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 16px;
   border: 0;
   border-radius: 999px;
   background: none;
@@ -60,28 +77,31 @@
   font-size: 11.5px;
   letter-spacing: 0.02em;
   cursor: pointer;
-  transition: color 0.16s ease, background-color 0.16s ease;
+  transition: color 0.16s ease;
+}
+
+.games-page .games-page__tab-label {
+  position: relative;
+  z-index: 1;
 }
 
 .games-page .games-page__tab:hover {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .games-page .games-page__tab.is-active {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
 }
 
-/* Lumin draws its own catalog, so our search has nothing to filter there. */
-.games-page.is-lumin .games-page__search {
+/* The SDK gets a container to boot into, but the grid on screen is ours. */
+.games-page .games-page__lumin {
   display: none;
 }
 
-.games-page .games-page__lumin {
-  width: 70%;
-  margin: 0 auto;
-  /* The SDK measures this box as it boots, so it must never start collapsed. */
-  min-height: 480px;
+.games-page .games-page__more {
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 4px;
 }
 
 /* Same pill as the home screen: real glass, a beam that lights up on focus. */
@@ -254,6 +274,35 @@
 .games-page .games-page__card:focus-visible .games-page__card-name {
   opacity: 1;
   transform: translateY(0);
+}
+
+.games-page .games-page__note--lumin {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.games-page .games-page__note--lumin p {
+  margin: 0;
+}
+
+.games-page .games-page__retry {
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.games-page .games-page__retry:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.26);
 }
 
 .games-page .games-page__note {

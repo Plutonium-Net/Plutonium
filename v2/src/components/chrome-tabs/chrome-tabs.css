@@ -76,12 +76,11 @@
 
 .chrome-tabs .chrome-tab-favicon {
   flex: 0 0 auto;
+  display: block;
   width: 16px;
   height: 16px;
-  background-size: 16px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-image: url('/favicon.png');
+  object-fit: contain;
+  border-radius: 3px;
 }
 
 .chrome-tabs .chrome-tab-title {

@@ -48,7 +48,7 @@ export default function AccountPanel({ showTrigger = true }: { showTrigger?: boo
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="fixed bottom-3 right-3 z-30 max-w-[60vw] truncate rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
+          className="fixed left-6 top-[58px] z-30 max-w-[60vw] truncate rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
       >
           {user ? user.email || 'Signed in' : 'Sign in'}
         </button>
