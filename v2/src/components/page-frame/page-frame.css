@@ -1,0 +1,31 @@
+.page-frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 8px 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.page-frame .page-frame__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #ffffff;
+}
+
+.page-frame .page-frame__loading {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
