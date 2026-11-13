@@ -84,6 +84,17 @@ async function loadGames(): Promise<GameEntry[]> {
   }
 }
 
+/**
+ * Drops a pin. The remaining ids are written back, so an empty row stays empty
+ * for the session instead of the defaults reappearing.
+ */
+export function unpin(id: string) {
+  const ids = readIds() ?? pins.map((pin) => pin.id)
+  writeIds(ids.filter((pinId) => pinId !== id))
+  pins = pins.filter((pin) => pin.id !== id)
+  emit()
+}
+
 /** Fills the row once per page load: stored ids first, else the first few games. */
 export function loadPins(): Promise<void> {
   if (ready) return Promise.resolve()
@@ -97,7 +108,9 @@ export function loadPins(): Promise<void> {
       const byId = new Map(games.map((game) => [game.id, game]))
       pins = chosen.map((id) => byId.get(id)).filter(Boolean).map((game) => pinFor(game as GameEntry))
     }
-    if (!pins.length) pins = FALLBACK_PINS
+    // Defaults only stand in when nothing was ever stored, never over an
+    // emptied row.
+    if (!pins.length && stored === null) pins = FALLBACK_PINS
     ready = true
     emit()
   })

@@ -1,32 +1,106 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { usePins } from '@/hooks/use-pins'
-import { loadPins } from '@/lib/pins'
+import { loadPins, unpin } from '@/lib/pins'
 import './pins.css'
 
-// A wide, shallow curve: neighbouring tiles share most of the growth, so the row
-// swells as one instead of one tile popping up.
-const MAGNIFY = 0.34
-const FALLOFF = 132
-const SPREAD = 0.42
-const LIFT = 6
+// A wide, shallow curve, eased per frame: neighbouring tiles share most of the
+// growth, so the row swells as one arc instead of one tile popping up.
+const MAGNIFY = 0.3
+const FALLOFF = 118
+const SPREAD = 0.38
+const ARC = 0.4
+/** Seconds for a tile to close most of the gap to its target. */
+const TAU = 0.075
+const SETTLED = 0.0015
+
+type Pose = { scale: number; shift: number; lift: number }
+const REST: Pose = { scale: 1, shift: 0, lift: 0 }
 
 /** v1's shortcut tiles, lined up along the bottom of the home page. */
 export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
   const pins = usePins()
   const rowRef = useRef<HTMLDivElement>(null)
-  const tileRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const tileRefs = useRef<Array<HTMLDivElement | null>>([])
+  const targetsRef = useRef<Pose[]>([])
+  const posesRef = useRef<Pose[]>([])
+  const frameRef = useRef<number | null>(null)
+  const lastRef = useRef(0)
+  const hoveredRef = useRef<number | null>(null)
   const [hovered, setHovered] = useState<number | null>(null)
 
   useEffect(() => {
     void loadPins()
   }, [])
 
+  useEffect(
+    () => () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current)
+    },
+    [],
+  )
+
   /**
-   * Dock magnification: every tile grows by a gaussian of its distance from the
-   * cursor and slides away from it, so the row swells around the pointer instead
-   * of one tile simply popping. Written straight to CSS variables to keep it off
-   * the render path.
+   * One eased step. Each tile chases its target pose rather than jumping to it,
+   * so a fast mouse drag reads as one continuous swell instead of a series of
+   * discrete hops, and the frame loop stops as soon as everything has settled.
+   */
+  const step = useCallback((now: number) => {
+    const elapsed = lastRef.current ? Math.min((now - lastRef.current) / 1000, 0.05) : 1 / 60
+    lastRef.current = now
+    const ease = 1 - Math.exp(-elapsed / TAU)
+    let moving = false
+
+    tileRefs.current.forEach((tile, index) => {
+      if (!tile) return
+      const target = targetsRef.current[index] ?? REST
+      const pose = posesRef.current[index] ?? { ...REST }
+
+      pose.scale += (target.scale - pose.scale) * ease
+      pose.shift += (target.shift - pose.shift) * ease
+      pose.lift += (target.lift - pose.lift) * ease
+
+      const close =
+        Math.abs(target.scale - pose.scale) < SETTLED &&
+        Math.abs(target.shift - pose.shift) < SETTLED * 100 &&
+        Math.abs(target.lift - pose.lift) < SETTLED * 100
+
+      if (close) {
+        pose.scale = target.scale
+        pose.shift = target.shift
+        pose.lift = target.lift
+      } else {
+        moving = true
+      }
+
+      posesRef.current[index] = pose
+      tile.style.setProperty('--pin-scale', pose.scale.toFixed(4))
+      tile.style.setProperty('--pin-shift', `${pose.shift.toFixed(2)}px`)
+      tile.style.setProperty('--pin-lift', `${pose.lift.toFixed(2)}px`)
+      // How far the tile's top edge rose, so its name can ride up with it.
+      const grownX = (pose.scale - 1) * (tile.offsetWidth / 2)
+      const grownY = (pose.scale - 1) * tile.offsetHeight
+      tile.style.setProperty('--pin-grow', `${grownY.toFixed(2)}px`)
+      // Where the tile's top-right corner ended up, so the unpin button rides it.
+      tile.style.setProperty('--pin-x', `${(pose.shift + grownX).toFixed(2)}px`)
+      tile.style.setProperty('--pin-y', `${(pose.lift - grownY).toFixed(2)}px`)
+    })
+
+    frameRef.current = moving ? requestAnimationFrame(step) : null
+    if (!moving) lastRef.current = 0
+  }, [])
+
+  const ensureFrame = useCallback(() => {
+    if (frameRef.current !== null) return
+    lastRef.current = 0
+    frameRef.current = requestAnimationFrame(step)
+  }, [step])
+
+  /**
+   * Dock magnification: a gaussian of each tile's distance from the cursor sets
+   * its target size and how far it slides outward; tiles rise as they grow, which
+   * is what gives the row its arc. Read straight into CSS variables, so React
+   * never re-renders while the pointer moves.
    */
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     const row = rowRef.current
@@ -46,14 +120,13 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
       const down = pointerY - centerY
       const weight = Math.exp(-((across / FALLOFF) ** 2)) * Math.exp(-((down / (FALLOFF * 0.8)) ** 2))
       const scale = 1 + MAGNIFY * weight
-      const shift = -Math.sign(across) * (scale - 1) * tile.offsetWidth * SPREAD
-      const lift = -weight * LIFT
+      const rise = (scale - 1) * tile.offsetHeight * ARC
 
-      tile.style.setProperty('--pin-scale', scale.toFixed(3))
-      tile.style.setProperty('--pin-shift', `${shift.toFixed(1)}px`)
-      tile.style.setProperty('--pin-lift', `${lift.toFixed(1)}px`)
-      // How far the tile's top edge rose, so its name can ride up with it.
-      tile.style.setProperty('--pin-grow', `${((scale - 1) * tile.offsetHeight).toFixed(1)}px`)
+      targetsRef.current[index] = {
+        scale,
+        shift: -Math.sign(across) * rise * SPREAD,
+        lift: -rise,
+      }
 
       const distance = Math.hypot(across, down)
       if (distance < nearestDistance) {
@@ -62,18 +135,20 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
       }
     })
 
-    setHovered(nearest)
+    ensureFrame()
+    if (hoveredRef.current !== nearest) {
+      hoveredRef.current = nearest
+      setHovered(nearest)
+    }
   }
 
   function resetRow() {
-    tileRefs.current.forEach((tile) => {
-      if (!tile) return
-      tile.style.removeProperty('--pin-scale')
-      tile.style.removeProperty('--pin-shift')
-      tile.style.removeProperty('--pin-lift')
-      tile.style.removeProperty('--pin-grow')
+    tileRefs.current.forEach((_tile, index) => {
+      targetsRef.current[index] = REST
     })
+    hoveredRef.current = null
     setHovered(null)
+    ensureFrame()
   }
 
   if (!pins.length) return null
@@ -81,7 +156,7 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
   return (
     <div
       ref={rowRef}
-      className={`pins${hovered === null ? '' : ' is-tracking'}`}
+      className="pins"
       role="list"
       onPointerMove={handlePointerMove}
       onPointerLeave={resetRow}
@@ -93,22 +168,33 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
       }}
     >
       {pins.map((pin, index) => (
-        <button
+        <div
           key={pin.id}
           ref={(element) => {
             tileRefs.current[index] = element
           }}
-          type="button"
-          role="listitem"
           className={`pins__pin${hovered === index ? ' is-hovered' : ''}`}
-          title={pin.name}
-          onClick={() => onOpen(pin.href)}
+          role="listitem"
         >
-          <span className="pins__title">{pin.name}</span>
-          <span className="pins__tile">
-            <PinThumb src={pin.image} />
-          </span>
-        </button>
+          <button type="button" className="pins__open" title={pin.name} onClick={() => onOpen(pin.href)}>
+            <span className="pins__title">{pin.name}</span>
+            <span className="pins__tile">
+              <PinThumb src={pin.image} />
+            </span>
+          </button>
+          <button
+            type="button"
+            className="pins__unpin"
+            aria-label={`Unpin ${pin.name}`}
+            title={`Unpin ${pin.name}`}
+            onClick={() => unpin(pin.id)}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m7 7 10 10" />
+              <path d="M17 7 7 17" />
+            </svg>
+          </button>
+        </div>
       ))}
     </div>
   )
