@@ -10,6 +10,7 @@ import PageFrame from '@/components/page-frame/page-frame'
 import PageView from '@/components/page-view/page-view'
 import Pins from '@/components/pins/pins'
 import ProxySwitcher from '@/components/proxy-switcher/proxy-switcher'
+import QuickApps from '@/components/quick-apps/quick-apps'
 import RegionMenu from '@/components/region-menu/region-menu'
 import SearchBar from '@/components/search-bar/search-bar'
 import SideMenu from '@/components/side-menu/side-menu'
@@ -127,6 +128,7 @@ export default function App() {
       {home && (
         <>
           <SearchBar onNavigate={navigate} onActiveChange={setSearchActive} />
+          <QuickApps onOpen={(href) => void navigate(href)} />
           <SideMenu activePanel={panel} onTogglePanel={(next) => setPanel(panel === next ? null : next)} />
           <Pins minimized={searchActive} onOpen={(href) => void navigate(href)} />
         </>
