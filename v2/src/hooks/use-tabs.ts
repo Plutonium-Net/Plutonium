@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { isSignedIn, onAuthChange } from '@/lib/cloud-store'
+import { resolveUrl } from '@/lib/pluto-routes'
 import { pullTabs, schedulePush, type TabRecord } from '@/lib/tab-sync'
 
 export type Tab = {
@@ -102,6 +103,19 @@ export function useTabs() {
     })
   }, [])
 
+  /** Points the active tab at a `pluto://` page. Returns false for anything else. */
+  const navigate = useCallback((input: string) => {
+    const route = resolveUrl(input)
+    if (!route) return false
+    setState((prev) => ({
+      ...prev,
+      tabs: prev.tabs.map((tab) =>
+        tab.id === prev.activeId ? { ...tab, url: route.url, title: route.title } : tab
+      ),
+    }))
+    return true
+  }, [])
+
   /** `to` is the slot in the list with the moved tab already taken out. */
   const moveTab = useCallback((from: number, to: number) => {
     setState((prev) => {
@@ -113,5 +127,5 @@ export function useTabs() {
     })
   }, [])
 
-  return { tabs, activeId, addTab, selectTab, closeTab, moveTab }
+  return { tabs, activeId, addTab, selectTab, closeTab, moveTab, navigate }
 }

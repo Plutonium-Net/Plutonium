@@ -1,0 +1,19 @@
+.page-view {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.page-view .page-view__title {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(40px, 7vw, 84px);
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
