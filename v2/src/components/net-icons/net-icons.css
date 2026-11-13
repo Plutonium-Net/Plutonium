@@ -1,0 +1,14 @@
+.net-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  display: block;
+}
+
+.net-icon--hazard {
+  color: #f2857e;
+}
+
+.net-icon--plug {
+  color: #5ad48a;
+}

@@ -28,6 +28,7 @@
 }
 
 .region-menu .region-menu__row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -46,8 +47,10 @@
   background: rgba(255, 255, 255, 0.07);
 }
 
-.region-menu .region-menu__row.is-active {
-  background: rgba(255, 255, 255, 0.12);
+/* The active row's fill is a GlassSurface behind the row, not a flat tint. */
+.region-menu .region-menu__row > *:not(.glass-highlight) {
+  position: relative;
+  z-index: 1;
 }
 
 .region-menu .region-menu__flag {
@@ -85,13 +88,25 @@
 }
 
 .region-menu .region-menu__ping {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.5);
   font-variant-numeric: tabular-nums;
 }
 
-.region-menu .region-menu__ping.is-offline {
-  color: rgba(242, 133, 126, 0.8);
+.region-menu .region-menu__ms {
+  font-size: 11px;
+}
+
+.region-menu .region-menu__row.is-offline {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.region-menu .region-menu__row.is-offline:hover {
+  background: none;
 }
 
 .region-menu .region-menu__empty {

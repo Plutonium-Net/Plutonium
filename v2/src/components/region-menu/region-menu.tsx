@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
+import GlassHighlight from '@/components/glass-highlight/glass-highlight'
 import GlassPanel from '@/components/glass-panel/glass-panel'
+import { HazardIcon, PlugIcon } from '@/components/net-icons/net-icons'
 import NetStatus from '@/components/net-status/net-status'
 import { useNet } from '@/hooks/use-net'
 import { familyFor } from '@/lib/net/engines'
@@ -34,20 +36,39 @@ export default function RegionMenu() {
         <div className="region-menu__list">
           {servers.map((server) => {
             const ping = pings?.[server.id]
-            const label = ping ? (ping.ok ? `${Math.round(ping.latency || 0)}ms` : 'offline') : '—'
+            // A dead relay cannot be connected to, so its row does not select.
+            const offline = !!ping && !ping.ok
+            const active = server.id === net.regions[family]
             return (
               <button
                 key={server.id}
                 type="button"
-                className={`region-menu__row${server.id === net.regions[family] ? ' is-active' : ''}`}
-                onClick={() => void net.setRegion(family, server.id)}
+                className={`region-menu__row${active ? ' is-active' : ''}${offline ? ' is-offline' : ''}`}
+                disabled={offline}
+                title={offline ? `${server.label} is offline` : undefined}
+                onClick={() => {
+                  if (offline) return
+                  void net.setRegion(family, server.id)
+                }}
               >
+                {active && <GlassHighlight />}
                 <img className="region-menu__flag" src={server.flag} alt="" draggable={false} />
                 <span className="region-menu__copy">
                   <span className="region-menu__name">{server.label}</span>
                   <span className="region-menu__hint">{server.location}</span>
                 </span>
-                <span className={`region-menu__ping${ping && !ping.ok ? ' is-offline' : ''}`}>{label}</span>
+                <span className="region-menu__ping">
+                  {offline ? (
+                    <HazardIcon className="region-menu__error-icon" />
+                  ) : ping ? (
+                    <>
+                      <PlugIcon className="region-menu__plug" />
+                      <span className="region-menu__ms">{Math.round(ping.latency || 0)}ms</span>
+                    </>
+                  ) : (
+                    <span className="region-menu__ms">—</span>
+                  )}
+                </span>
               </button>
             )
           })}
