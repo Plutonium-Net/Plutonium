@@ -81,6 +81,11 @@ export default function Pins({ onOpen }: { onOpen: (href: string) => void }) {
       onPointerMove={handlePointerMove}
       onPointerLeave={resetRow}
       onPointerCancel={resetRow}
+      onPointerOut={(event) => {
+        // Leaving the row (not just one tile) settles the whole dock back down.
+        const next = event.relatedTarget as Node | null
+        if (!next || !event.currentTarget.contains(next)) resetRow()
+      }}
     >
       {pins.map((pin, index) => (
         <button
