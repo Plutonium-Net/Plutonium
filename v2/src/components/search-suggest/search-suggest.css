@@ -11,6 +11,8 @@
   max-height: min(360px, 52vh);
   padding: 2px 2px 10px;
   overflow-y: auto;
+  /* A hovered row shifts 3px right; clip that so no sideways scrollbar appears. */
+  overflow-x: hidden;
   overscroll-behavior: contain;
   background: none;
   border: 0;
