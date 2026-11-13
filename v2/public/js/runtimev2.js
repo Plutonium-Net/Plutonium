@@ -167,6 +167,31 @@
     }
   }
 
+  var lastRevive = 0
+
+  /**
+   * Re-announce this controller to the worker.
+   *
+   * The routing table lives in the worker's memory, so a worker that was shut
+   * down while idle comes back with nothing to route and hands the request to
+   * the network instead. Its own revive broadcast only reaches pages it
+   * controls, and this page is controlled by the v1 worker at scope `/`, so the
+   * page announces itself again before each navigation.
+   */
+  function revive() {
+    if (!ready || !controller) return false
+    var now = Date.now()
+    if (now - lastRevive < 2000) return true
+    lastRevive = now
+    try {
+      controller.setupMessagePort()
+      return true
+    } catch (e) {
+      console.warn('[runtimev2] revive failed:', e)
+      return false
+    }
+  }
+
   /**
    * v2's equivalent of v1's encodeUrl(). The same call the controller makes for
    * itself in Frame.go(), with the frame's own context so the prefix, cookie jar
@@ -174,6 +199,7 @@
    */
   function encodeUrl(url) {
     if (!ready || !frameContext) return url
+    revive()
     try {
       return window.$scramjet.rewriteUrl(String(url), frameContext, {
         origin: new URL(location.href),
@@ -202,6 +228,7 @@
   window.PluRuntimeV2 = {
     ensure: ensure,
     setRelay: setRelay,
+    revive: revive,
     encodeUrl: encodeUrl,
     decodeUrl: decodeUrl,
     base: BASE,

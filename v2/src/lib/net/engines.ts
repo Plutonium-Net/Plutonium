@@ -139,6 +139,18 @@ async function initBridge(relayUrl: string) {
 async function ensureRuntimeV2(relayUrl: string) {
   if (!window.PluRuntimeV2) return false
   if (runtimeV2Ready) return true
+
+  // The page has to be controlled by a worker for the browser to hand its
+  // subframe navigations to the scope that owns them. v1 always runs this app
+  // under its root worker (`pwa.js` registers /sw.js at scope /), which is why
+  // v2's worker gets the /runtimev2/ requests there. Registering it here keeps
+  // that property without initialising the v1 Scramjet controller.
+  try {
+    await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+  } catch (error) {
+    console.warn('[net] root worker registration failed:', error)
+  }
+
   try {
     runtimeV2Ready = await window.PluRuntimeV2.ensure(relayUrl)
     return runtimeV2Ready

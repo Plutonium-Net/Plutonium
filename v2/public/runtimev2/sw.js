@@ -11,6 +11,9 @@
 importScripts('/runtimev2/controller.sw.js')
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.url.includes('/runtimev2/')) {
+    console.log('[runtimev2 sw]', event.request.destination, event.request.url.slice(0, 70), 'route=', typeof $scramjetController === 'undefined' ? 'no-api' : $scramjetController.shouldRoute(event))
+  }
   if (typeof $scramjetController === 'undefined') return
   if (!$scramjetController.shouldRoute(event)) return
   event.respondWith($scramjetController.route(event))
