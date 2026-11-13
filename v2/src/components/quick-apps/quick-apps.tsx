@@ -72,9 +72,9 @@ const ITEMS: AppItem[] = [
   },
 ]
 
-export default function QuickApps({ onOpen }: { onOpen: (href: string) => void }) {
+export default function QuickApps({ onOpen, hidden = false }: { onOpen: (href: string) => void; hidden?: boolean }) {
   return (
-    <nav className="quick-apps" aria-label="Pages">
+    <nav className={`quick-apps${hidden ? ' is-hidden' : ''}`} aria-label="Pages" aria-hidden={hidden || undefined}>
       {ITEMS.map((item) => (
         <button
           key={item.id}

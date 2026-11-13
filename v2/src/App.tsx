@@ -128,7 +128,7 @@ export default function App() {
       {home && (
         <>
           <SearchBar onNavigate={navigate} onActiveChange={setSearchActive} />
-          <QuickApps onOpen={(href) => void navigate(href)} />
+          <QuickApps hidden={searchActive} onOpen={(href) => void navigate(href)} />
           <SideMenu activePanel={panel} onTogglePanel={(next) => setPanel(panel === next ? null : next)} />
           <Pins minimized={searchActive} onOpen={(href) => void navigate(href)} />
         </>

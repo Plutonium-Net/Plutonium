@@ -10,6 +10,14 @@
   align-items: center;
   gap: 10px;
   z-index: 10;
+  transition: opacity 0.24s ease, transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+/* Typing: the row drops away so the dropdown has the space under the bar. */
+.quick-apps.is-hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px) scale(0.94);
+  pointer-events: none;
 }
 
 .quick-apps .quick-apps__btn {
