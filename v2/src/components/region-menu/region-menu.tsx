@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import GlassPanel from '@/components/glass-panel/glass-panel'
 import NetStatus from '@/components/net-status/net-status'
 import { useNet } from '@/hooks/use-net'
 import { familyFor } from '@/lib/net/engines'
@@ -23,7 +24,7 @@ export default function RegionMenu() {
   }, [family, pings])
 
   return (
-    <div className="region-menu">
+    <GlassPanel className="region-menu">
       <div className="region-menu__head">
         <span className="region-menu__title">{family === 'wisp' ? 'Region' : 'Server'}</span>
         <NetStatus status={net.status} latency={net.latency} />
@@ -54,6 +55,6 @@ export default function RegionMenu() {
       ) : (
         <div className="region-menu__empty">Hyperbeam runs its own session, so there is no region to pick.</div>
       )}
-    </div>
+    </GlassPanel>
   )
 }

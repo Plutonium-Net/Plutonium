@@ -1,3 +1,4 @@
+import GlassPanel from '@/components/glass-panel/glass-panel'
 import { useHistory } from '@/hooks/use-history'
 import { clearHistory, removeEntry } from '@/lib/history'
 import './history-panel.css'
@@ -15,7 +16,7 @@ export default function HistoryPanel({ onNavigate }: { onNavigate: (url: string)
   const entries = useHistory()
 
   return (
-    <div className="history-panel">
+    <GlassPanel className="history-panel">
       <div className="history-panel__head">
         <span className="history-panel__title">History</span>
         {entries.length > 0 && (
@@ -49,6 +50,6 @@ export default function HistoryPanel({ onNavigate }: { onNavigate: (url: string)
           ))}
         </div>
       )}
-    </div>
+    </GlassPanel>
   )
 }

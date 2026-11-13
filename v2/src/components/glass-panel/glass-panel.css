@@ -1,0 +1,42 @@
+.glass-panel {
+  position: relative;
+  max-height: 72vh;
+  overflow: hidden;
+  border-radius: 14px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.glass-panel .glass-panel__surface {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.glass-panel .glass-panel__body {
+  position: relative;
+  z-index: 1;
+  max-height: 72vh;
+  overflow-y: auto;
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.glass-panel .glass-panel__body::-webkit-scrollbar {
+  width: 3px;
+}
+
+.glass-panel .glass-panel__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.glass-panel .glass-panel__body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
+}
+
+.glass-panel .glass-panel__body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

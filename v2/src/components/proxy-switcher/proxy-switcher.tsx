@@ -1,3 +1,4 @@
+import GlassPanel from '@/components/glass-panel/glass-panel'
 import NetStatus from '@/components/net-status/net-status'
 import { useNet } from '@/hooks/use-net'
 import { ENGINES } from '@/lib/net/engines'
@@ -7,7 +8,7 @@ export default function ProxySwitcher() {
   const net = useNet()
 
   return (
-    <div className="proxy-panel">
+    <GlassPanel className="proxy-panel">
       <div className="proxy-panel__head">
         <span className="proxy-panel__title">Proxy</span>
         <NetStatus status={net.status} latency={net.latency} />
@@ -32,6 +33,6 @@ export default function ProxySwitcher() {
       </div>
 
       {net.error && <div className="proxy-panel__error">{net.error}</div>}
-    </div>
+    </GlassPanel>
   )
 }
