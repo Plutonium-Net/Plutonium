@@ -1,5 +1,6 @@
 import GamesPage from '@/components/games-page/games-page'
 import MediaPage from '@/components/media-page/media-page'
+import VmsPage from '@/components/vms-page/vms-page'
 import type { PlutoRoute } from '@/lib/pluto-routes'
 import './page-view.css'
 
@@ -11,6 +12,10 @@ export default function PageView({ page }: { page: PlutoRoute }) {
 
   if (page.id === 'media') {
     return <MediaPage />
+  }
+
+  if (page.id === 'vms') {
+    return <VmsPage autostart={page.params.get('autostart') === '1'} />
   }
 
   return (
