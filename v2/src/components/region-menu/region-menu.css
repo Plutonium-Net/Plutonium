@@ -90,6 +90,22 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+.region-menu .region-menu__flag {
+  width: 16px;
+  height: 12px;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  object-fit: cover;
+  opacity: 0.7;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  transition: opacity 0.16s ease;
+}
+
+.region-menu .region-menu__row:hover .region-menu__flag,
+.region-menu .region-menu__row.is-active .region-menu__flag {
+  opacity: 1;
+}
+
 .region-menu .region-menu__copy {
   display: flex;
   flex-direction: column;

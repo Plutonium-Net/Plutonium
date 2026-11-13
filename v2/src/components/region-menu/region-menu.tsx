@@ -43,6 +43,7 @@ export default function RegionMenu() {
                 className={`region-menu__row${server.id === net.regions[family] ? ' is-active' : ''}`}
                 onClick={() => void net.setRegion(family, server.id)}
               >
+                <img className="region-menu__flag" src={server.flag} alt="" draggable={false} />
                 <span className="region-menu__copy">
                   <span className="region-menu__name">{server.label}</span>
                   <span className="region-menu__hint">{server.location}</span>

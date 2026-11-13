@@ -96,6 +96,22 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+.proxy-panel .proxy-panel__logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  opacity: 0.55;
+  filter: grayscale(100%);
+  transition: opacity 0.16s ease, filter 0.16s ease;
+}
+
+.proxy-panel .proxy-panel__row:hover .proxy-panel__logo,
+.proxy-panel .proxy-panel__row.is-active .proxy-panel__logo {
+  opacity: 1;
+  filter: none;
+}
+
 .proxy-panel .proxy-panel__copy {
   display: flex;
   flex-direction: column;

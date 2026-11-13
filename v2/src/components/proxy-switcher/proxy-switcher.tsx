@@ -23,6 +23,7 @@ export default function ProxySwitcher() {
             className={`proxy-panel__row${engine.id === net.engine ? ' is-active' : ''}`}
             onClick={() => void net.setEngine(engine.id)}
           >
+            <img className="proxy-panel__logo" src={engine.logo} alt="" draggable={false} />
             <span className="proxy-panel__copy">
               <span className="proxy-panel__name">{engine.label}</span>
               <span className="proxy-panel__hint">{engine.hint}</span>
