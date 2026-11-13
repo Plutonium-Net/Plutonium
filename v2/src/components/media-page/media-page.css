@@ -527,10 +527,15 @@
 
 /* ── Player ───────────────────────────────────────────────────────────── */
 
+/* Portalled to `body`, so the tab strip, dock and pins all sit behind it. */
 .media-player {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 200;
+  background: #000;
+}
+
+.media-player:fullscreen {
   background: #000;
 }
 

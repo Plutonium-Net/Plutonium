@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { BorderBeam } from 'border-beam'
 import GlassHighlight from '@/components/glass-highlight/glass-highlight'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
@@ -143,15 +144,13 @@ export default function MediaPage() {
   }, [preview?.id, preview?.kind, season, preview?.seasons.length])
 
   useEffect(() => {
-    if (!preview && !playing) return
+    if (!preview) return
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'Escape') return
-      if (playing) setPlaying(null)
-      else setPreview(null)
+      if (event.key === 'Escape') setPreview(null)
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [preview, playing])
+  }, [preview])
 
   const adult = useMemo(() => (preview ? isAdultCert(preview.cert) : false), [preview])
   const countLabel = query.trim() ? `${items.length} results` : `${items.length} titles`
@@ -351,6 +350,10 @@ export default function MediaPage() {
                     type="button"
                     className="media-page__watch"
                     onClick={() => {
+                      // The click is the gesture browsers want before fullscreen:
+                      // take the window now so the player never shares it with the
+                      // tab strip, and the dock can leave it again.
+                      void document.documentElement.requestFullscreen?.().catch(() => {})
                       setPlaying({ item: preview, season, episode })
                       setPreview(null)
                     }}
@@ -370,57 +373,12 @@ export default function MediaPage() {
       )}
 
       {playing && (
-        <div className="media-player">
-          <iframe
-            className="media-player__frame"
-            src={vidcoreUrl(playing.item, playing.season, playing.episode)}
-            title={playing.item.name}
-            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-          />
-          <div className="media-player__dock" role="toolbar" aria-label="Player controls">
-            <GlassSurface
-              className="media-player__glass"
-              width="100%"
-              height="100%"
-              borderRadius={999}
-              backgroundOpacity={0.12}
-              saturation={1.25}
-              displace={0.45}
-            >
-              <div className="media-player__dock-inner">
-                <button type="button" className="media-player__back" onClick={() => setPlaying(null)} title="Back to media">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M15 5l-7 7 7 7" />
-                  </svg>
-                  Media
-                </button>
-                <span className="media-player__divider" />
-                <div className="media-player__identity">
-                  <span className="media-player__name">{playing.item.name}</span>
-                  <span className="media-player__sub">
-                    {playing.item.kind === 'movie'
-                      ? playing.item.year
-                      : `S${playing.season} · E${playing.episode}`}
-                  </span>
-                </div>
-                <span className="media-player__divider" />
-                <button
-                  type="button"
-                  className="media-player__fullscreen"
-                  title="Fullscreen"
-                  onClick={() => {
-                    const frame = document.querySelector<HTMLIFrameElement>('.media-player__frame')
-                    void frame?.requestFullscreen?.().catch(() => {})
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5" />
-                  </svg>
-                </button>
-              </div>
-            </GlassSurface>
-          </div>
-        </div>
+        <MediaPlayer
+          item={playing.item}
+          season={playing.season}
+          episode={playing.episode}
+          onClose={() => setPlaying(null)}
+        />
       )}
     </div>
   )
@@ -447,5 +405,84 @@ function MediaCard({ item, onOpen }: { item: MediaItem; onOpen: () => void }) {
       <span className="media-page__badge">{item.rating}</span>
       <span className="media-page__card-name">{item.name}</span>
     </button>
+  )
+}
+
+/**
+ * The watch view: a portal to `body` so the tab strip, dock and pins are all
+ * behind it, and a fullscreen request so the browser chrome goes too. The glass
+ * dock stays on top of the video for the way back.
+ */
+function MediaPlayer({
+  item,
+  season,
+  episode,
+  onClose,
+}: {
+  item: MediaDetails
+  season: number
+  episode: number
+  onClose: () => void
+}) {
+  const shellRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => {})
+    }
+  }, [onClose])
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {})
+    else void shellRef.current?.requestFullscreen?.().catch(() => {})
+  }
+
+  return createPortal(
+    <div className="media-player" ref={shellRef}>
+      <iframe
+        className="media-player__frame"
+        src={vidcoreUrl(item, season, episode)}
+        title={item.name}
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+        allowFullScreen
+      />
+      <div className="media-player__dock" role="toolbar" aria-label="Player controls">
+        <GlassSurface
+          className="media-player__glass"
+          width="100%"
+          height="100%"
+          borderRadius={999}
+          backgroundOpacity={0.12}
+          saturation={1.25}
+          displace={0.45}
+        >
+          <div className="media-player__dock-inner">
+            <button type="button" className="media-player__back" onClick={onClose} title="Back to media">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 5l-7 7 7 7" />
+              </svg>
+              Media
+            </button>
+            <span className="media-player__divider" />
+            <div className="media-player__identity">
+              <span className="media-player__name">{item.name}</span>
+              <span className="media-player__sub">{item.kind === 'movie' ? item.year : `S${season} · E${episode}`}</span>
+            </div>
+            <span className="media-player__divider" />
+            <button type="button" className="media-player__fullscreen" title="Fullscreen" onClick={toggleFullscreen}>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5" />
+              </svg>
+            </button>
+          </div>
+        </GlassSurface>
+      </div>
+    </div>,
+    document.body,
   )
 }
