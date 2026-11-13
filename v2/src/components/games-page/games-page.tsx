@@ -67,7 +67,7 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
           onBack={() => setPlaying(null)}
         />
       ) : (
-        <>
+        <div className="games-page__scroll">
           <header className="games-page__head">
             <h1 className="games-page__title">Games</h1>
 
@@ -123,28 +123,26 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
             </p>
           </header>
 
-          <div className="games-page__scroll">
-            {state === 'empty' ? (
-              <p className="games-page__note">The catalog could not be reached. Try again in a moment.</p>
-            ) : results.length === 0 ? (
-              <p className="games-page__note">No games match “{search.trim()}”.</p>
-            ) : (
-              <div className="games-page__grid">
-                {results.map((game) => (
-                  <button
-                    key={game.id}
-                    type="button"
-                    className="games-page__card"
-                    onClick={() => setPlaying(game)}
-                  >
-                    <GameCover game={game} />
-                    <span className="games-page__card-name">{game.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
+          {state === 'empty' ? (
+            <p className="games-page__note">The catalog could not be reached. Try again in a moment.</p>
+          ) : results.length === 0 ? (
+            <p className="games-page__note">No games match “{search.trim()}”.</p>
+          ) : (
+            <div className="games-page__grid">
+              {results.map((game) => (
+                <button
+                  key={game.id}
+                  type="button"
+                  className="games-page__card"
+                  onClick={() => setPlaying(game)}
+                >
+                  <GameCover game={game} />
+                  <span className="games-page__card-name">{game.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {toast && <div className="games-page__toast">{toast}</div>}
