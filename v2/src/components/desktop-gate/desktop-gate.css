@@ -1,0 +1,86 @@
+.desktop-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.62);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: desktop-gate-in 0.22s ease-out;
+}
+
+@keyframes desktop-gate-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.desktop-gate .desktop-gate__card {
+  width: min(400px, 100%);
+  max-height: none;
+}
+
+.desktop-gate .desktop-gate__card .glass-panel__body {
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+.desktop-gate .desktop-gate__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 26px 24px 24px;
+  text-align: center;
+}
+
+.desktop-gate .desktop-gate__icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.desktop-gate .desktop-gate__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.desktop-gate .desktop-gate__title {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.desktop-gate .desktop-gate__text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.desktop-gate .desktop-gate__hint {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.36);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-gate {
+    animation: none;
+  }
+}

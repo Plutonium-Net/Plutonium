@@ -3,6 +3,7 @@ import AccountCenter from '@/components/account-center/account-center'
 import AddressBar from '@/components/address-bar/address-bar'
 import ChromeTabs from '@/components/chrome-tabs/chrome-tabs'
 import Clock from '@/components/clock/clock'
+import DesktopGate from '@/components/desktop-gate/desktop-gate'
 import DotBackgroundDemo from '@/components/dot-background-demo'
 import HistoryPanel from '@/components/history-panel/history-panel'
 import FeedbackPanel from '@/components/feedback-panel/feedback-panel'
@@ -189,6 +190,7 @@ export default function App() {
 
       {!onWeb && !page && <Clock />}
       <AccountCenter showTrigger={home} />
+      <DesktopGate />
     </>
   )
 }
