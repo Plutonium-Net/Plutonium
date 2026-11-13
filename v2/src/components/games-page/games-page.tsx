@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { BorderBeam } from 'border-beam'
+import GlassSurface from '@/components/glass-surface/GlassSurface'
 import { createSaveBridge, type SaveBridge, type SaveState } from '@/lib/game-saves'
-import { gameUrl, imageUrl, loadGames, type Game } from '@/lib/games'
-import { pinsFull, pinGame } from '@/lib/pins'
+import { gameUrl, imageUrl, loadGames, searchGames, type Game } from '@/lib/games'
+import { pinGame } from '@/lib/pins'
 import { usePins } from '@/hooks/use-pins'
+import { BEAM_PROPS } from '@/lib/beam'
 import './games-page.css'
 
 type Props = {
-  /** `?q=` from the route, so a `/g mario` search lands filtered. */
+  /** `?q=` from the route, so a `/g tiny` search lands filtered. */
   query?: string
   /** `#<gameId>` from the route: open that game straight away. */
   launchId?: string
@@ -16,6 +19,7 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
   const [games, setGames] = useState<Game[]>([])
   const [state, setState] = useState<'loading' | 'ready' | 'empty'>('loading')
   const [search, setSearch] = useState(query)
+  const [focused, setFocused] = useState(false)
   const [playing, setPlaying] = useState<Game | null>(null)
   const [toast, setToast] = useState('')
   const pinned = usePins()
@@ -47,22 +51,11 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
   }, [toast])
 
   function pin(game: Game) {
-    if (pinnedIds.has(game.id)) {
-      setToast(`“${game.name}” is already pinned`)
-      return
-    }
-    if (!pinGame(game)) {
-      setToast('Pins are full — unpin one from the home row first')
-      return
-    }
-    setToast(`Pinned “${game.name}”`)
+    if (pinnedIds.has(game.id)) return
+    setToast(pinGame(game) ? `Pinned “${game.name}”` : 'Pins are full — unpin one from the home row first')
   }
 
-  const filtered = useMemo(() => {
-    const needle = search.trim().toLowerCase()
-    if (!needle) return games
-    return games.filter((game) => game.name.toLowerCase().includes(needle))
-  }, [games, search])
+  const results = useMemo(() => searchGames(games, search), [games, search])
 
   return (
     <div className="games-page">
@@ -76,57 +69,81 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
       ) : (
         <>
           <header className="games-page__head">
-            <div className="games-page__heading">
-              <h1 className="games-page__title">Games</h1>
-              <span className="games-page__count">
-                {state === 'ready' ? `${filtered.length} of ${games.length}` : 'loading…'}
-              </span>
+            <h1 className="games-page__title">Games</h1>
+
+            <div className={`games-page__search${focused ? ' is-focused' : ''}`}>
+              <BorderBeam className="games-page__search-beam" {...BEAM_PROPS} borderRadius={999} active={focused}>
+                <GlassSurface
+                  className="games-page__search-glass"
+                  width="100%"
+                  height="100%"
+                  borderRadius={999}
+                  backgroundOpacity={0.1}
+                  saturation={1.2}
+                  displace={0.5}
+                >
+                  <form className="games-page__search-inner" onSubmit={(event) => event.preventDefault()}>
+                    <svg className="games-page__search-icon" viewBox="0 0 20 20" aria-hidden="true">
+                      <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                      <line
+                        x1="13.4"
+                        y1="13.4"
+                        x2="17.5"
+                        y2="17.5"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <input
+                      className="games-page__search-input"
+                      type="text"
+                      aria-label="Search games"
+                      placeholder="Search the library."
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      onFocus={() => setFocused(true)}
+                      onBlur={() => setFocused(false)}
+                    />
+                  </form>
+                </GlassSurface>
+              </BorderBeam>
             </div>
-            <label className="games-page__search">
-              <svg viewBox="0 0 20 20" aria-hidden="true">
-                <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="1.8" />
-                <line x1="13.4" y1="13.4" x2="17.5" y2="17.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-              <input
-                type="text"
-                value={search}
-                placeholder="Search games"
-                aria-label="Search games"
-                autoComplete="off"
-                spellCheck={false}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
+
+            <p className="games-page__meta">
+              {state === 'ready'
+                ? search.trim()
+                  ? `${results.length} of ${games.length}`
+                  : `${games.length} games`
+                : 'loading…'}
+            </p>
           </header>
 
-          {state === 'empty' ? (
-            <p className="games-page__note">The catalog could not be reached. Try again in a moment.</p>
-          ) : filtered.length === 0 ? (
-            <p className="games-page__note">No games match “{search.trim()}”.</p>
-          ) : (
-            <div className="games-page__grid">
-              {filtered.map((game) => (
-                <div key={game.id} className="games-page__cell">
-                  <button type="button" className="games-page__tile" onClick={() => setPlaying(game)}>
-                    <span className="games-page__cover">
-                      <GameCover game={game} />
-                    </span>
-                    <span className="games-page__name">{game.name}</span>
-                  </button>
+          <div className="games-page__scroll">
+            {state === 'empty' ? (
+              <p className="games-page__note">The catalog could not be reached. Try again in a moment.</p>
+            ) : results.length === 0 ? (
+              <p className="games-page__note">No games match “{search.trim()}”.</p>
+            ) : (
+              <div className="games-page__grid">
+                {results.map((game) => (
                   <button
+                    key={game.id}
                     type="button"
-                    className={`games-page__pin${pinnedIds.has(game.id) ? ' is-pinned' : ''}`}
-                    aria-label={pinnedIds.has(game.id) ? `Unpin ${game.name} — pinned` : `Pin ${game.name}`}
-                    title={pinnedIds.has(game.id) ? 'Pinned to the home row' : 'Pin to the home row'}
-                    disabled={pinnedIds.has(game.id)}
-                    onClick={() => pin(game)}
+                    className="games-page__card"
+                    onClick={() => setPlaying(game)}
                   >
-                    <PinIcon />
+                    <GameCover game={game} />
+                    <span className="games-page__card-name">{game.name}</span>
                   </button>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </>
       )}
 
@@ -145,8 +162,7 @@ function PinIcon() {
 
 /**
  * Covers come from the game CDN. The proxy service worker at scope `/` drops
- * cross-origin image loads, so they are fetched and shown as blob URLs, with the
- * glyph kept until the bytes arrive.
+ * cross-origin image loads, so they are fetched and shown as blob URLs.
  */
 function GameCover({ game }: { game: Game }) {
   const [url, setUrl] = useState<string | null>(null)
@@ -172,15 +188,17 @@ function GameCover({ game }: { game: Game }) {
 
   if (!url) {
     return (
-      <svg className="games-page__glyph" viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="3" y="7" width="18" height="10" rx="3" />
-        <path d="M8 10v4M6 12h4" />
-        <path d="M16 11.5h.01M18 13.5h.01" />
-      </svg>
+      <span className="games-page__cover-empty">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="7" width="18" height="10" rx="3" />
+          <path d="M8 10v4M6 12h4" />
+          <path d="M16 11.5h.01M18 13.5h.01" />
+        </svg>
+      </span>
     )
   }
 
-  return <img className="games-page__image" src={url} alt="" draggable={false} />
+  return <img className="games-page__cover" src={url} alt="" draggable={false} />
 }
 
 const SAVE_LABELS: Record<SaveState['status'], string> = {
