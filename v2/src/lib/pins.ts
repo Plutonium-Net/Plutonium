@@ -95,6 +95,25 @@ export function unpin(id: string) {
   emit()
 }
 
+/** True when the row is full, so a game cannot be pinned without freeing a slot. */
+export function pinsFull() {
+  return pins.length >= MAX_PINS
+}
+
+/**
+ * Pins a game, e.g. from the games page. Returns false when the row is full or
+ * the game is already there — callers keep their own feedback for that.
+ */
+export function pinGame(game: GameEntry) {
+  const ids = readIds() ?? pins.map((pin) => pin.id)
+  if (ids.includes(game.id)) return true
+  if (ids.length >= MAX_PINS) return false
+  writeIds([...ids, game.id])
+  pins = [...pins, pinFor(game)]
+  emit()
+  return true
+}
+
 /** Fills the row once per page load: stored ids first, else the first few games. */
 export function loadPins(): Promise<void> {
   if (ready) return Promise.resolve()

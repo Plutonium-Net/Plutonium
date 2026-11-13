@@ -15,7 +15,9 @@ export type RegionServer = {
 const WISP_URL_TEMPLATE = 'wss://wisp-{id}.plutoniumnet.work/'
 export const WISP_REGIONS: RegionServer[] = [
   { id: 'us-east', label: 'US East', location: 'Virginia, USA', flag: '/img/flags/us.png', lat: 37.4316, lon: -78.6569 },
+  { id: 'us-east-backup', label: 'US East Backup', location: 'Ohio, USA', flag: '/img/flags/us.png', lat: 39.9612, lon: -82.9988 },
   { id: 'us-west', label: 'US West', location: 'Oregon, USA', flag: '/img/flags/us.png', lat: 43.8041, lon: -120.5542 },
+  { id: 'us-west-backup', label: 'US West Backup', location: 'Oregon, USA', flag: '/img/flags/us.png', lat: 44.0521, lon: -123.0868 },
   { id: 'europe', label: 'Europe', location: 'Frankfurt, Germany', flag: '/img/flags/eu.png', lat: 50.1109, lon: 8.6821 },
   { id: 'asia', label: 'Asia', location: 'Singapore', flag: '/img/flags/sg.png', lat: 1.3521, lon: 103.8198 },
 ]

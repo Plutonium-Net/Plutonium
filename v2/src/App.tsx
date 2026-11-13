@@ -120,7 +120,7 @@ export default function App() {
             latency={net.latency}
             onRetry={() => setReloadToken((token) => token + 1)}
           />
-          {page && <PageView title={page.title} />}
+          {page && <PageView page={page} />}
         </div>
       </div>
 
@@ -144,8 +144,8 @@ export default function App() {
         />
       )}
 
-      {!onWeb && <Clock />}
-      <AccountPanel />
+      {!onWeb && !page && <Clock />}
+      <AccountPanel showTrigger={home} />
     </>
   )
 }

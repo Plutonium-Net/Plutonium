@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAccount } from '@/hooks/use-account'
 
@@ -6,7 +6,11 @@ import { useAccount } from '@/hooks/use-account'
  * Temporary: enough account surface to exercise cloud tab sync. This is not the
  * ported v1 account dialog — no OAuth, avatars, providers or password reset.
  */
-export default function AccountPanel() {
+/**
+ * `showTrigger` keeps the corner button on the home screen only. The dialog still
+ * renders anywhere, so the games page save chip can open it.
+ */
+export default function AccountPanel({ showTrigger = true }: { showTrigger?: boolean }) {
   const { user, signIn, signUp, signOut } = useAccount()
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
@@ -14,6 +18,13 @@ export default function AccountPanel() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  // The games page's save chip points here when there is no account yet.
+  useEffect(() => {
+    const open = () => setOpen(true)
+    window.addEventListener('plu:open-account', open)
+    return () => window.removeEventListener('plu:open-account', open)
+  }, [])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -33,13 +44,15 @@ export default function AccountPanel() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-3 right-3 z-30 max-w-[60vw] truncate rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
+      {showTrigger && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="fixed bottom-3 right-3 z-30 max-w-[60vw] truncate rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
       >
-        {user ? user.email || 'Signed in' : 'Sign in'}
-      </button>
+          {user ? user.email || 'Signed in' : 'Sign in'}
+        </button>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-40 grid place-items-center bg-black/60 p-4">

@@ -12,10 +12,7 @@ const TEAM = [
     name: 'Crafted',
     role: 'Co-Owner & Project Creator',
     avatar: '/img/about-images/crafted.png',
-    links: [
-      { label: 'Portfolio', href: 'https://crafted.pages.dev' },
-      { label: 'GitHub', href: 'https://github.com/craf1ed' },
-    ],
+    links: [{ label: 'GitHub', href: 'https://github.com/craf1ed' }],
   },
   {
     name: 'Mizzery',

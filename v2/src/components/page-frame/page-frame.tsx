@@ -92,10 +92,23 @@ export default function PageFrame({
     return () => window.clearInterval(tick)
   }, [clocking, src])
 
+  // Reloads must only follow an explicit reload request. Running this whenever
+  // `visible` flipped used to fire on the same render that assigned a new `src`,
+  // reloading the frame's about:blank document and cancelling the navigation —
+  // which left proxied pages permanently blank.
+  const lastReload = useRef(reloadToken)
   useEffect(() => {
-    if (!reloadToken || !visible) return
+    if (reloadToken === lastReload.current) return
+    lastReload.current = reloadToken
+    if (!visible) return
     const frame = frameRef.current
     if (!frame) return
+    const current = frame.contentWindow?.location.href
+    if (!current || current === 'about:blank') {
+      // Nothing to reload yet: restart the pending request instead.
+      frame.src = frame.src
+      return
+    }
     try {
       frame.contentWindow?.location.reload()
     } catch {
