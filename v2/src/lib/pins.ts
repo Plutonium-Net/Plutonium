@@ -1,8 +1,10 @@
 /**
  * Pins, ported from v1's js/pins.js: the shortcut tiles that sat under the
- * search bar. v1 kept them in localStorage; here the id list is sessionStorage
- * only and the tile data comes from the same game CDN v1's pin picker read.
+ * search bar. The id list lives on the signed-in account, with sessionStorage
+ * as the in-tab cache so the row renders before the account read lands.
  */
+
+import { getPref, loadPrefs, setPref } from '@/lib/prefs'
 
 export type Pin = {
   id: string
@@ -62,6 +64,14 @@ function writeIds(ids: string[]) {
   } catch {
     /* private mode: the row still renders for this page load */
   }
+  setPref('pins', ids)
+}
+
+/** The account copy when there is one, else this tab's cache. */
+function storedIds(): string[] | null {
+  const saved = getPref<string[]>('pins')
+  if (Array.isArray(saved)) return saved.filter((id): id is string => typeof id === 'string')
+  return readIds()
 }
 
 function pinFor(game: GameEntry): Pin {
@@ -89,7 +99,7 @@ async function loadGames(): Promise<GameEntry[]> {
  * for the session instead of the defaults reappearing.
  */
 export function unpin(id: string) {
-  const ids = readIds() ?? pins.map((pin) => pin.id)
+  const ids = storedIds() ?? pins.map((pin) => pin.id)
   writeIds(ids.filter((pinId) => pinId !== id))
   pins = pins.filter((pin) => pin.id !== id)
   emit()
@@ -105,7 +115,7 @@ export function pinsFull() {
  * the game is already there — callers keep their own feedback for that.
  */
 export function pinGame(game: GameEntry) {
-  const ids = readIds() ?? pins.map((pin) => pin.id)
+  const ids = storedIds() ?? pins.map((pin) => pin.id)
   if (ids.includes(game.id)) return true
   if (ids.length >= MAX_PINS) return false
   writeIds([...ids, game.id])
@@ -119,8 +129,8 @@ export function loadPins(): Promise<void> {
   if (ready) return Promise.resolve()
   if (loading) return loading
 
-  loading = loadGames().then((games) => {
-    const stored = readIds()
+  loading = Promise.all([loadGames(), loadPrefs()]).then(([games]) => {
+    const stored = storedIds()
     if (games.length) {
       const chosen = stored ? stored.slice(0, MAX_PINS) : games.slice(0, MAX_PINS).map((game) => game.id)
       if (!stored) writeIds(chosen)

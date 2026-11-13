@@ -5,8 +5,12 @@ export type Character = {
   id: string
   name: string
   emoji: string
+  /** A logo for the orb. Falls back to `emoji` when absent. */
+  image?: string
   /** The hue its orb, glow and accents are mixed from. */
   hue: number
+  /** True for characters that should read as plain chrome, with no hue. */
+  neutral?: boolean
   vibe: string
   prompt: string
   voice: VoiceId
@@ -23,7 +27,9 @@ export const DEFAULT_CHARACTERS: Character[] = [
     id: 'stelena',
     name: 'Stelena',
     emoji: '✦',
-    hue: 337,
+    image: '/stelena.png',
+    hue: 210,
+    neutral: true,
     vibe: 'Official Plutonium AI',
     voice: 'hannah',
     builtin: true,

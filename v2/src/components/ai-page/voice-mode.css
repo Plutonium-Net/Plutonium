@@ -7,8 +7,8 @@
   align-items: center;
   padding: 20px clamp(16px, 5vw, 44px) 24px;
   background:
-    radial-gradient(circle at 50% 44%, hsl(var(--voice-hue) 72% 26% / 0.55), transparent 62%),
-    radial-gradient(circle at 50% 120%, hsl(var(--voice-hue) 80% 22% / 0.35), transparent 60%),
+    radial-gradient(circle at 50% 44%, hsl(var(--voice-hue) var(--voice-sat, 72%) 26% / 0.55), transparent 62%),
+    radial-gradient(circle at 50% 120%, hsl(var(--voice-hue) var(--voice-sat, 80%) 22% / 0.35), transparent 60%),
     #050507;
   overflow: hidden;
   animation: voice-in 0.28s ease both;
@@ -28,7 +28,7 @@
   height: min(78vmin, 720px);
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(circle, hsl(var(--voice-hue) 92% 62% / 0.24), transparent 66%);
+  background: radial-gradient(circle, hsl(var(--voice-hue) var(--voice-sat, 92%) 62% / 0.24), transparent 66%);
   filter: blur(36px);
   animation: voice-breathe 7s ease-in-out infinite;
   pointer-events: none;
@@ -78,7 +78,7 @@
 .voice-mode__vibe {
   font-size: 10.5px;
   letter-spacing: 0.04em;
-  color: hsl(var(--voice-hue) 60% 78% / 0.7);
+  color: hsl(var(--voice-hue) var(--voice-sat, 60%) 78% / 0.7);
 }
 
 .voice-mode__close {
@@ -211,7 +211,7 @@
 
 .voice-mode__toggle.is-on {
   color: #fff;
-  box-shadow: inset 0 0 0 1px hsl(var(--voice-hue) 80% 66% / 0.45);
+  box-shadow: inset 0 0 0 1px hsl(var(--voice-hue) var(--voice-sat, 80%) 66% / 0.45);
 }
 
 .voice-mode__toggle:hover {
@@ -223,4 +223,24 @@
   .voice-mode__reply {
     font-size: 13px;
   }
+}
+
+/* The avatar can be a logo instead of an emoji. */
+.voice-mode__avatar.is-logo {
+  display: grid;
+  place-items: center;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.voice-mode__avatar.is-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 6px hsl(var(--voice-hue) var(--voice-sat, 90%) 62% / 0.35));
+  user-select: none;
+  -webkit-user-drag: none;
 }

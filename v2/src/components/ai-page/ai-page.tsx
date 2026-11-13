@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import GlassHighlight from '@/components/glass-highlight/glass-highlight'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import VoiceMode from '@/components/ai-page/voice-mode'
 import LiteMarkdown from '@/components/ai-page/lite-markdown'
 import PillGlass from '@/components/glass-pill/pill-glass'
+import CharacterMark from '@/components/ai-page/character-mark'
 import { CHAT_MODELS, VOICES, streamChat, type ChatMessage, type ChatModel, type VoiceId } from '@/lib/ai'
 import {
   DEFAULT_CHARACTERS,
@@ -12,10 +12,20 @@ import {
   loadChat,
   newCharacterId,
   saveCharacters,
-  saveChat,
   type Character,
 } from '@/lib/characters'
+import {
+  deleteConversation,
+  loadConversation,
+  loadConversations,
+  newConversationId,
+  saveConversation,
+  titleFor,
+  type Conversation,
+  type ConversationSummary,
+} from '@/lib/chats'
 import { currentSession, onAuthChange, type CloudUser } from '@/lib/cloud-store'
+import { getPref, loadPrefs, setPref } from '@/lib/prefs'
 import './ai-page.css'
 
 const SUGGESTIONS: Record<string, string[]> = {
@@ -29,6 +39,9 @@ export default function AiPage() {
   const [characters, setCharacters] = useState<Character[]>(DEFAULT_CHARACTERS)
   const [activeId, setActiveId] = useState(DEFAULT_CHARACTERS[0].id)
   const [chats, setChats] = useState<Record<string, ChatMessage[]>>({})
+  const [conversations, setConversations] = useState<ConversationSummary[]>([])
+  const [openId, setOpenId] = useState(() => newConversationId())
+  const [rail, setRail] = useState<'chats' | 'characters'>('chats')
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [model, setModel] = useState<ChatModel>('openai/gpt-oss-120b')
@@ -38,21 +51,28 @@ export default function AiPage() {
   const [note, setNote] = useState('')
   const [editing, setEditing] = useState<Character | null>(null)
 
+  const prefsReady = useRef(false)
   const abortRef = useRef<AbortController | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLTextAreaElement>(null)
 
   const active = characters.find((character) => character.id === activeId) || characters[0]
-  const messages = chats[activeId] || []
+  const messages = chats[openId] || []
   const token = user?.idToken ?? null
 
   useEffect(() => onAuthChange(setUser), [])
 
-  // Characters and the open conversation both live in the account.
+  // The last model and character are account preferences, restored before the
+  // page starts writing them back.
   useEffect(() => {
     let alive = true
-    void loadCharacters().then((list) => {
-      if (alive) setCharacters(list)
+    void loadPrefs().then(() => {
+      if (!alive) return
+      const savedModel = getPref<ChatModel>('aiModel')
+      if (savedModel && CHAT_MODELS.some((entry) => entry.id === savedModel)) setModel(savedModel)
+      const savedCharacter = getPref<string>('aiCharacter')
+      if (savedCharacter) setActiveId(savedCharacter)
+      prefsReady.current = true
     })
     return () => {
       alive = false
@@ -60,24 +80,99 @@ export default function AiPage() {
   }, [])
 
   useEffect(() => {
-    if (chats[activeId]) return
+    if (prefsReady.current) setPref('aiModel', model)
+  }, [model])
+
+  useEffect(() => {
+    if (prefsReady.current) setPref('aiCharacter', activeId)
+  }, [activeId])
+
+  // Characters, saved chats and the open thread all live in the account.
+  useEffect(() => {
     let alive = true
-    void loadChat(activeId).then((list) => {
-      if (!alive || !list.length) return
-      setChats((current) => (current[activeId] ? current : { ...current, [activeId]: list }))
+    void loadCharacters().then(async (list) => {
+      if (!alive) return
+      setCharacters(list)
+      const saved = await loadConversations()
+      if (!alive) return
+      if (saved.length) {
+        setConversations(saved)
+        return
+      }
+      // Nothing in the new index yet: adopt the old one-chat-per-character docs
+      // so nobody's history disappears with the upgrade.
+      const adopted = await adoptLegacyChats(list)
+      if (alive && adopted.length) setConversations(adopted)
     })
     return () => {
       alive = false
     }
-  }, [activeId, chats])
+  }, [])
+
+  useEffect(() => {
+    if (chats[openId]) return
+    let alive = true
+    void loadConversation(openId).then((conversation) => {
+      if (!alive || !conversation) return
+      setChats((current) => (current[openId] ? current : { ...current, [openId]: conversation.messages }))
+    })
+    return () => {
+      alive = false
+    }
+  }, [openId, chats])
 
   useEffect(() => {
     const node = scrollRef.current
     if (node) node.scrollTop = node.scrollHeight
   }, [messages, activeId])
 
-  function setMessages(characterId: string, next: ChatMessage[]) {
-    setChats((current) => ({ ...current, [characterId]: next }))
+  function setMessages(conversationId: string, next: ChatMessage[]) {
+    setChats((current) => ({ ...current, [conversationId]: next }))
+  }
+
+  /** Saves the thread and moves it to the top of the history list. */
+  function persistConversation(id: string, characterId: string, next: ChatMessage[]) {
+    const existing = conversations.find((entry) => entry.id === id)
+    const conversation: Conversation = {
+      id,
+      characterId,
+      title: existing?.title || titleFor(next),
+      updatedAt: Date.now(),
+      messages: next,
+    }
+    void saveConversation(conversation).then((summary) => {
+      if (!summary) return
+      setConversations((current) =>
+        [summary, ...current.filter((entry) => entry.id !== summary.id)].sort((a, b) => b.updatedAt - a.updatedAt),
+      )
+    })
+  }
+
+  function startChat(characterId = active.id) {
+    abortRef.current?.abort()
+    setStreaming(false)
+    setActiveId(characterId)
+    setOpenId(newConversationId())
+    setNote('')
+  }
+
+  function deleteChat(conversation: ConversationSummary) {
+    setConversations((current) => current.filter((entry) => entry.id !== conversation.id))
+    setChats((current) => {
+      const next = { ...current }
+      delete next[conversation.id]
+      return next
+    })
+    if (openId === conversation.id) startChat(active.id)
+    void deleteConversation(conversation.id)
+  }
+
+  function openConversation(conversation: ConversationSummary) {
+    abortRef.current?.abort()
+    setStreaming(false)
+    setActiveId(conversation.characterId)
+    setOpenId(conversation.id)
+    setNote('')
   }
 
   function systemFor(character: Character) {
@@ -95,9 +190,11 @@ export default function AiPage() {
       return ''
     }
 
-    const history = chats[character.id] || []
+    const conversationId = openId
+    const history = chats[conversationId] || []
     const next: ChatMessage[] = [...history, { role: 'user', content: trimmed }]
-    setMessages(character.id, next)
+    setMessages(conversationId, next)
+    persistConversation(conversationId, character.id, next)
     setInput('')
     setStreaming(true)
     setNote('')
@@ -115,12 +212,12 @@ export default function AiPage() {
         onToken: (chunk) => {
           growing += chunk
           onToken?.(chunk)
-          setMessages(character.id, [...next, { role: 'assistant', content: growing }])
+          setMessages(conversationId, [...next, { role: 'assistant', content: growing }])
         },
       })
       const finished = [...next, { role: 'assistant' as const, content: growing }]
-      setMessages(character.id, finished)
-      void saveChat(character.id, finished)
+      setMessages(conversationId, finished)
+      persistConversation(conversationId, character.id, finished)
       return growing
     } catch (error) {
       if (controller.signal.aborted) return growing
@@ -138,9 +235,7 @@ export default function AiPage() {
   }
 
   function clearChat() {
-    abortRef.current?.abort()
-    setMessages(activeId, [])
-    void saveChat(activeId, [])
+    startChat()
   }
 
   function saveCharacter(character: Character) {
@@ -161,12 +256,15 @@ export default function AiPage() {
       void saveCharacters(next)
       return next
     })
+    setConversations((current) => current.filter((entry) => entry.characterId !== id))
     setChats((current) => {
       const next = { ...current }
-      delete next[id]
+      for (const [key, value] of Object.entries(next)) {
+        if (conversations.find((entry) => entry.id === key)?.characterId === id) delete next[key]
+      }
       return next
     })
-    if (activeId === id) setActiveId(DEFAULT_CHARACTERS[0].id)
+    if (activeId === id) startChat(DEFAULT_CHARACTERS[0].id)
     setEditing(null)
   }
 
@@ -178,7 +276,13 @@ export default function AiPage() {
   const suggestions = useMemo(() => SUGGESTIONS[active.id] || FALLBACK_SUGGESTIONS, [active.id])
 
   return (
-    <div className="ai-page" style={{ ['--ai-hue' as string]: active.hue }}>
+    <div
+      className="ai-page"
+      style={{
+        ['--ai-hue' as string]: active.hue,
+        ...(active.neutral ? { ['--ai-sat' as string]: '0%' } : null),
+      }}
+    >
       <aside className="ai-rail">
         <span className="ai-rail__glass" aria-hidden="true">
           <GlassSurface
@@ -193,56 +297,122 @@ export default function AiPage() {
         </span>
 
         <div className="ai-rail__head">
-          <span className="ai-rail__label">Characters</span>
-          <button
-            type="button"
-            className="ai-rail__add"
-            onClick={() => setEditing(blankCharacter())}
-            title="New character"
-            aria-label="New character"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="ai-rail__list">
-          {characters.map((character) => (
+          <div className="ai-rail__seg" role="tablist" aria-label="Rail view">
             <button
-              key={character.id}
               type="button"
-              className={`ai-char${character.id === activeId ? ' is-active' : ''}`}
-              style={{ ['--char-hue' as string]: character.hue }}
-              onClick={() => {
-                abortRef.current?.abort()
-                setActiveId(character.id)
-                setNote('')
-              }}
-              onDoubleClick={() => setEditing(character)}
+              role="tab"
+              aria-selected={rail === 'chats'}
+              className={`ai-rail__seg-btn${rail === 'chats' ? ' is-active' : ''}`}
+              onClick={() => setRail('chats')}
             >
-              {character.id === activeId && <GlassHighlight radius={14} />}
-              <span className="ai-char__orb">{character.emoji}</span>
-              <span className="ai-char__copy">
-                <span className="ai-char__name">{character.name}</span>
-                <span className="ai-char__vibe">{character.vibe}</span>
-              </span>
+              Chats
             </button>
-          ))}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={rail === 'characters'}
+              className={`ai-rail__seg-btn${rail === 'characters' ? ' is-active' : ''}`}
+              onClick={() => setRail('characters')}
+            >
+              Characters
+            </button>
+          </div>
+          {rail === 'characters' && (
+            <button
+              type="button"
+              className="ai-rail__add"
+              onClick={() => setEditing(blankCharacter())}
+              title="New character"
+              aria-label="New character"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          )}
         </div>
 
-        <button type="button" className="ai-rail__footer" onClick={() => setEditing(blankCharacter())}>
+        {rail === 'chats' ? (
+          <div className="ai-rail__list">
+            {conversations.length === 0 ? (
+              <p className="ai-rail__empty">Saved chats show up here.</p>
+            ) : (
+              conversations.map((conversation) => {
+                const owner = characters.find((character) => character.id === conversation.characterId) || active
+                return (
+                  <div
+                    key={conversation.id}
+                    className={`ai-chat-item${conversation.id === openId ? ' is-active' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      className="ai-chat-item__open"
+                      onClick={() => openConversation(conversation)}
+                    >
+                      <CharacterMark character={owner} className="ai-chat-item__orb" />
+                      <span className="ai-chat-item__copy">
+                        <span className="ai-chat-item__title">{conversation.title}</span>
+                        <span className="ai-chat-item__meta">
+                          {owner.name} · {when(conversation.updatedAt)}
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="ai-chat-item__delete"
+                      onClick={() => deleteChat(conversation)}
+                      title="Delete chat"
+                      aria-label={`Delete ${conversation.title}`}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 7h16M9 7V5h6v2M6.5 7l1 12.5h9L17.5 7M10 11v5M14 11v5" />
+                      </svg>
+                    </button>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        ) : (
+          <div className="ai-rail__list">
+            {characters.map((character) => (
+              <button
+                key={character.id}
+                type="button"
+                className={`ai-char${character.id === activeId ? ' is-active' : ''}`}
+                style={{
+                  ['--char-hue' as string]: character.hue,
+                  ...(character.neutral ? { ['--char-sat' as string]: '0%' } : null),
+                }}
+                onClick={() => startChat(character.id)}
+                onDoubleClick={() => setEditing(character)}
+              >
+                <CharacterMark character={character} className="ai-char__orb" />
+                <span className="ai-char__copy">
+                  <span className="ai-char__name">{character.name}</span>
+                  <span className="ai-char__vibe">{character.vibe}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          className="ai-rail__footer"
+          onClick={() => (rail === 'chats' ? startChat() : setEditing(blankCharacter()))}
+        >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          New character
+          {rail === 'chats' ? 'New chat' : 'New character'}
         </button>
       </aside>
 
       <section className="ai-chat">
         <header className="ai-chat__head">
           <span className="ai-chat__id">
-            <span className="ai-chat__orb">{active.emoji}</span>
+            <CharacterMark character={active} className="ai-chat__orb" />
             <span className="ai-chat__names">
               <span className="ai-chat__name">{active.name}</span>
               <span className="ai-chat__vibe">{active.vibe}</span>
@@ -308,7 +478,7 @@ export default function AiPage() {
         <div className="ai-thread" ref={scrollRef}>
           {messages.length === 0 ? (
             <div className="ai-intro">
-              <span className="ai-intro__orb">{active.emoji}</span>
+              <CharacterMark character={active} className="ai-intro__orb" />
               <h2 className="ai-intro__name">{active.name}</h2>
               <p className="ai-intro__vibe">{active.vibe}</p>
               <div className="ai-intro__chips">
@@ -323,7 +493,7 @@ export default function AiPage() {
           ) : (
             messages.map((message, index) => (
               <article key={`${message.role}-${index}`} className={`ai-msg ai-msg--${message.role}`}>
-                {message.role === 'assistant' && <span className="ai-msg__orb">{active.emoji}</span>}
+                {message.role === 'assistant' && <CharacterMark character={active} className="ai-msg__orb" />}
                 <div className="ai-msg__bubble">
                   {message.role === 'assistant' ? (
                     <>
@@ -426,6 +596,34 @@ export default function AiPage() {
   )
 }
 
+/** Adopts the old per-character chat docs into the new conversation index. */
+async function adoptLegacyChats(characters: Character[]): Promise<ConversationSummary[]> {
+  const adopted: ConversationSummary[] = []
+  for (const character of characters) {
+    const messages = await loadChat(character.id)
+    if (!messages.length) continue
+    const summary = await saveConversation({
+      id: `t_${character.id}`,
+      characterId: character.id,
+      title: titleFor(messages),
+      updatedAt: Date.now(),
+      messages,
+    })
+    if (summary) adopted.push(summary)
+  }
+  return adopted
+}
+
+function when(timestamp: number) {
+  if (!timestamp) return 'just now'
+  const minutes = Math.floor((Date.now() - timestamp) / 60_000)
+  if (minutes < 1) return 'now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
+}
+
 function blankCharacter(): Character {
   return {
     id: newCharacterId(),
@@ -481,7 +679,7 @@ function CharacterDialog({
 
         <div className="ai-dialog__body">
         <header className="ai-dialog__head">
-          <span className="ai-dialog__orb">{draft.emoji || '✦'}</span>
+          <CharacterMark character={draft} className="ai-dialog__orb" />
           <h2>{isNew ? 'New character' : draft.name}</h2>
           <button type="button" className="ai-dialog__close" onClick={onClose} aria-label="Close">
             <svg viewBox="0 0 24 24" aria-hidden="true">

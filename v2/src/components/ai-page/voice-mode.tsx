@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { VoiceRing, useMicrophone } from 'voice-ring'
 import PillGlass from '@/components/glass-pill/pill-glass'
+import CharacterMark from '@/components/ai-page/character-mark'
 import { speak, transcribe } from '@/lib/ai'
 import type { Character } from '@/lib/characters'
 import './voice-mode.css'
@@ -148,13 +149,18 @@ export default function VoiceMode({
   return (
     <div
       className="voice-mode"
-      style={{ ['--voice-hue' as string]: character.hue, ['--char-hue' as string]: character.hue, ['--ai-hue' as string]: character.hue }}
+      style={{
+        ['--voice-hue' as string]: character.hue,
+        ['--char-hue' as string]: character.hue,
+        ['--ai-hue' as string]: character.hue,
+        ...(character.neutral ? { ['--voice-sat' as string]: '0%', ['--char-sat' as string]: '0%' } : null),
+      }}
     >
       <div className="voice-mode__glow" aria-hidden="true" />
 
       <header className="voice-mode__head">
         <span className="voice-mode__who">
-          <span className="voice-mode__avatar">{character.emoji}</span>
+          <CharacterMark character={character} className="voice-mode__avatar" />
           <span className="voice-mode__copy">
             <span className="voice-mode__name">{character.name}</span>
             <span className="voice-mode__vibe">

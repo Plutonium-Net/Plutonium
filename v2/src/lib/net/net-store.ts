@@ -1,9 +1,10 @@
 /**
- * Engine + region state. Ported from v1's js/net.js, minus localStorage: the
- * choice survives a reload through sessionStorage (like the auth session) and
- * nothing is written to the device permanently.
+ * Engine + region state. Ported from v1's js/net.js. The choice is cached for
+ * the tab in sessionStorage and saved to the signed-in account, so it follows
+ * the user instead of the device.
  */
 
+import { getPref, loadPrefs, setPref } from '@/lib/prefs'
 import { ENGINES, familyFor, initEngine, retargetRuntimeV2, type EngineId } from './engines'
 import { fastest, pingAll, serversFor, wispUrl, type Ping, type RegionFamily } from './regions'
 
@@ -62,12 +63,24 @@ function setState(patch: Partial<NetSnapshot>) {
 }
 
 function persist() {
+  const choice = { engine: state.engine, regions: state.regions }
   try {
-    sessionStorage.setItem(STORE_KEY, JSON.stringify({ engine: state.engine, regions: state.regions }))
+    sessionStorage.setItem(STORE_KEY, JSON.stringify(choice))
   } catch {
     /* storage blocked: the choice just doesn't survive a reload */
   }
+  setPref('net', choice)
 }
+
+// Adopt the account's saved engine and regions before the first connect, so a
+// new device starts where the user left off.
+void loadPrefs().then(() => {
+  const saved = getPref<{ engine?: EngineId; regions?: Partial<Record<RegionFamily, string>> }>('net')
+  if (!saved) return
+  if (state.ready || state.status === 'connecting') return
+  const engine = ENGINES.some((option) => option.id === saved.engine) ? (saved.engine as EngineId) : state.engine
+  setState({ engine, regions: { ...state.regions, ...(saved.regions || {}) } })
+})
 
 export function getNet() {
   return state

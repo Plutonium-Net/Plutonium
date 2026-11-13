@@ -267,6 +267,17 @@ export async function getDoc(collection: string): Promise<Record<string, unknown
   return doc.fields ? fromFirestoreFields(doc.fields) : null
 }
 
+export async function deleteDoc(collection: string) {
+  const user = currentUser
+  if (!user) throw new Error('Not signed in')
+  const auth = await authHeader()
+  const res = await fetch(`${WORKER_URL}/firestore${docPath(collection, user.uid)}`, {
+    method: 'DELETE',
+    headers: auth,
+  })
+  if (!res.ok && res.status !== 404) throw new Error(`deleteDoc failed: ${res.status}`)
+}
+
 /** Restore the session mirrored for this tab only — never from localStorage. */
 function restoreSession() {
   try {
