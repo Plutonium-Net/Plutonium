@@ -1,0 +1,16 @@
+.pill-glass {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.pill-glass__surface {
+  width: 100%;
+  height: 100%;
+}
+
+.pill-glass__surface .glass-surface__content {
+  padding: 0;
+}
