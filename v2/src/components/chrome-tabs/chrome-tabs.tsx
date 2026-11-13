@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { cn } from '@/lib/utils'
 import type { Tab } from '@/hooks/use-tabs'
@@ -13,7 +13,16 @@ type ChromeTabsProps = {
   onReorder: (from: number, to: number) => void
 }
 
+type DragState = {
+  id: string
+  el: HTMLDivElement
+  startX: number
+  grabOffsetX: number
+  moved: boolean
+}
+
 const DRAG_THRESHOLD_PX = 4
+const REORDER_TRANSITION_MS = 120
 
 /** Tab geometry is drawn once for the strip; each inactive tab references it by id. */
 function TabGeometryDefs() {
@@ -33,13 +42,77 @@ function TabGeometryDefs() {
 
 export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, onReorder }: ChromeTabsProps) {
   const contentRef = useRef<HTMLDivElement>(null)
-  const dragRef = useRef<{ id: string; index: number; startX: number; moved: boolean } | null>(null)
-  const [drag, setDrag] = useState<{ id: string; dx: number } | null>(null)
+  const dragRef = useRef<DragState | null>(null)
+  const previousRectsRef = useRef<Map<string, number> | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
 
-  function beginDrag(event: ReactPointerEvent<HTMLDivElement>, tab: Tab, index: number) {
+  // FLIP: neighbours slide from where they were to where they now sit. The
+  // dragged tab tracks the pointer itself, so it is skipped.
+  useLayoutEffect(() => {
+    const previous = previousRectsRef.current
+    if (!previous) return
+    previousRectsRef.current = null
+
+    const tabEls = Array.from(contentRef.current?.querySelectorAll<HTMLElement>('.chrome-tab') ?? [])
+    tabEls.forEach((el) => {
+      if (dragRef.current?.el === el) return
+      const before = previous.get(el.dataset.tabId || '')
+      if (before === undefined) return
+      const delta = before - el.getBoundingClientRect().left
+      if (!delta) return
+      el.style.transition = 'none'
+      el.style.transform = `translateX(${delta}px)`
+      requestAnimationFrame(() => {
+        el.style.transition = `transform ${REORDER_TRANSITION_MS}ms ease-in-out`
+        el.style.transform = ''
+        window.setTimeout(() => {
+          el.style.transition = ''
+        }, REORDER_TRANSITION_MS + 20)
+      })
+    })
+  }, [tabs])
+
+  function tabEls() {
+    return Array.from(contentRef.current?.querySelectorAll<HTMLElement>('.chrome-tab') ?? [])
+  }
+
+  function captureRects() {
+    const rects = new Map<string, number>()
+    tabEls().forEach((el) => {
+      if (el.dataset.tabId) rects.set(el.dataset.tabId, el.getBoundingClientRect().left)
+    })
+    previousRectsRef.current = rects
+  }
+
+  /** Slot the tab lands in once lifted out: count the other tabs the pointer passed. */
+  function slotFor(clientX: number, draggedEl: HTMLElement) {
+    let slot = 0
+    tabEls().forEach((el) => {
+      if (el === draggedEl) return
+      const rect = el.getBoundingClientRect()
+      if (clientX > rect.left + rect.width / 2) slot += 1
+    })
+    return slot
+  }
+
+  function trackPointer(state: DragState, clientX: number) {
+    const contentRect = contentRef.current?.getBoundingClientRect()
+    if (!contentRect) return
+    const slotLeft = contentRect.left + state.el.offsetLeft
+    state.el.style.transform = `translateX(${clientX - state.grabOffsetX - slotLeft}px)`
+  }
+
+  function beginDrag(event: ReactPointerEvent<HTMLDivElement>, tab: Tab) {
     if (event.button !== 0) return
     if ((event.target as HTMLElement).closest('.chrome-tab-close')) return
-    dragRef.current = { id: tab.id, index, startX: event.clientX, moved: false }
+    const rect = event.currentTarget.getBoundingClientRect()
+    dragRef.current = {
+      id: tab.id,
+      el: event.currentTarget,
+      startX: event.clientX,
+      grabOffsetX: event.clientX - rect.left,
+      moved: false,
+    }
     // Capture keeps the drag alive when the pointer leaves the tab; a synthetic
     // pointer (tests, automation) has no real pointer to capture and throws.
     try {
@@ -53,28 +126,35 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
   function moveDrag(event: ReactPointerEvent<HTMLDivElement>) {
     const state = dragRef.current
     if (!state) return
-    const dx = event.clientX - state.startX
-    if (!state.moved && Math.abs(dx) < DRAG_THRESHOLD_PX) return
-    state.moved = true
-    setDrag({ id: state.id, dx })
+    const clientX = event.clientX
+
+    if (!state.moved) {
+      if (Math.abs(clientX - state.startX) < DRAG_THRESHOLD_PX) return
+      state.moved = true
+      setDraggingId(state.id)
+    }
+
+    const currentIndex = tabEls().indexOf(state.el)
+    const slot = slotFor(clientX, state.el)
+    if (currentIndex !== -1 && slot !== currentIndex) {
+      captureRects()
+      onReorder(currentIndex, slot)
+    }
+
+    requestAnimationFrame(() => trackPointer(state, clientX))
   }
 
-  function endDrag(event: ReactPointerEvent<HTMLDivElement>) {
+  function endDrag() {
     const state = dragRef.current
     dragRef.current = null
-    setDrag(null)
-    if (!state || !state.moved) return
-
-    // Count the other tabs the pointer has passed: that is the slot the tab
-    // lands in once it is lifted out of the list.
-    const tabEls = Array.from(contentRef.current?.querySelectorAll<HTMLElement>('.chrome-tab') ?? [])
-    let target = 0
-    tabEls.forEach((el, i) => {
-      if (i === state.index) return
-      const rect = el.getBoundingClientRect()
-      if (event.clientX > rect.left + rect.width / 2) target += 1
-    })
-    if (target !== state.index) onReorder(state.index, target)
+    if (!state) return
+    setDraggingId(null)
+    if (!state.moved) return
+    state.el.style.transition = `transform ${REORDER_TRANSITION_MS}ms ease-in-out`
+    state.el.style.transform = ''
+    window.setTimeout(() => {
+      state.el.style.transition = ''
+    }, REORDER_TRANSITION_MS + 20)
   }
 
   function handleStripDoubleClick(event: ReactMouseEvent<HTMLDivElement>) {
@@ -85,22 +165,17 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
   return (
     <div className="chrome-tabs">
       <TabGeometryDefs />
-      <div
-        className="chrome-tabs-content"
-        ref={contentRef}
-        onDoubleClick={handleStripDoubleClick}
-      >
-        {tabs.map((tab, index) => {
+      <div className="chrome-tabs-content" ref={contentRef} onDoubleClick={handleStripDoubleClick}>
+        {tabs.map((tab) => {
           const active = tab.id === activeId
-          const dragging = drag?.id === tab.id
+          const dragging = tab.id === draggingId
           return (
             <div
               key={tab.id}
               className={cn('chrome-tab', dragging && 'is-dragging')}
               data-active={active ? '' : undefined}
               data-tab-id={tab.id}
-              style={dragging ? { transform: `translateX(${drag.dx}px)` } : undefined}
-              onPointerDown={(event) => beginDrag(event, tab, index)}
+              onPointerDown={(event) => beginDrag(event, tab)}
               onPointerMove={moveDrag}
               onPointerUp={endDrag}
               onPointerCancel={endDrag}

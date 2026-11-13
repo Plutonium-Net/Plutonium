@@ -127,12 +127,14 @@
   display: none;
 }
 
+/* Sized to the wing geometry it replaces: full tab width, and 32px tall
+   because the unselected shape stops 4px above the bottom of the tab. */
 .chrome-tabs .chrome-tab .chrome-tab-highlight {
   position: absolute;
   top: 0;
-  bottom: 0;
-  left: var(--tab-content-margin);
-  right: var(--tab-content-margin);
+  bottom: 4px;
+  left: 0;
+  right: 0;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);

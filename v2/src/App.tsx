@@ -1,3 +1,4 @@
+import AccountPanel from '@/components/account-panel'
 import ChromeTabs from '@/components/chrome-tabs/chrome-tabs'
 import DotBackgroundDemo from '@/components/dot-background-demo'
 import { useTabs } from '@/hooks/use-tabs'
@@ -18,6 +19,7 @@ export default function App() {
           onReorder={moveTab}
         />
       </div>
+      <AccountPanel />
     </>
   )
 }

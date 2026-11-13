@@ -1,15 +1,17 @@
 /**
- * Port of the parts of v1's cloud store (js/cloud-store.js) that tab sync needs:
- * session restore, id-token refresh, and Firestore document get/set through the
- * Plutonium API worker. Sign-in, OAuth and the RTDB helpers are not ported —
- * nothing in v2 uses them yet.
+ * Plutonium account + cloud store for v2.
  *
- * The session lives in localStorage under `plu_user`, exactly as v1 writes it, so
- * a session created by v1 on this origin is picked up here unchanged.
+ * Ported from v1's js/cloud-store.js: same worker endpoints, same Firestore
+ * document encoding, same token refresh. The deliberate difference is storage:
+ * v1 mirrors the session into localStorage (`plu_user`); v2 keeps it in memory
+ * and mirrors it into sessionStorage so a reload inside the same tab survives,
+ * while nothing is written to localStorage and nothing outlives the tab.
+ *
+ * Tab content itself is never stored on the device — see lib/tab-sync.ts.
  */
 
 const WORKER_URL = 'https://api.plutoniumnet.work'
-const SESSION_KEY = 'plu_user'
+const SESSION_KEY = 'plu_session'
 const REFRESH_MARGIN_MS = 5 * 60 * 1000
 
 export type CloudUser = {
@@ -22,16 +24,26 @@ export type CloudUser = {
   expiresAt: number
 }
 
+type AuthResponse = {
+  localId: string
+  idToken: string
+  refreshToken: string
+  expiresIn: string
+  displayName?: string
+  email: string
+  photoUrl?: string
+}
+
 let currentUser: CloudUser | null = null
 let refreshTimer: number | null = null
 let authListeners: Array<(user: CloudUser | null) => void> = []
 
 function persistSession() {
   try {
-    if (currentUser) localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser))
-    else localStorage.removeItem(SESSION_KEY)
+    if (currentUser) sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser))
+    else sessionStorage.removeItem(SESSION_KEY)
   } catch {
-    /* private mode or quota: the session simply does not survive a reload */
+    /* storage blocked: the session simply stays in memory */
   }
 }
 
@@ -40,7 +52,7 @@ function notify() {
     try {
       fn(currentUser)
     } catch {
-      /* a broken listener must not break the others */
+      /* one broken listener must not break the others */
     }
   })
 }
@@ -68,22 +80,78 @@ export function onAuthChange(callback: (user: CloudUser | null) => void) {
   }
 }
 
+function authErrorMessage(data: unknown, fallback: string) {
+  const err = (data as { error?: { message?: string } | string })?.error
+  if (typeof err === 'string') return err
+  if (err?.message) return err.message
+  return fallback
+}
+
+export async function signInWithEmail(email: string, password: string) {
+  const res = await fetch(`${WORKER_URL}/auth/email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  const data = (await res.json().catch(() => ({}))) as AuthResponse & { error?: unknown }
+  if (!res.ok) throw new Error(authErrorMessage(data, 'Sign in failed'))
+
+  setUser({
+    uid: data.localId,
+    idToken: data.idToken,
+    refreshToken: data.refreshToken,
+    expiresAt: Date.now() + parseInt(data.expiresIn, 10) * 1000,
+    displayName: data.displayName || '',
+    email: data.email,
+    photoUrl: data.photoUrl || '',
+  })
+  return currentUser
+}
+
+export async function signUp(email: string, password: string, displayName = '') {
+  const res = await fetch(`${WORKER_URL}/auth/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, displayName }),
+  })
+  const data = (await res.json().catch(() => ({}))) as AuthResponse & { error?: unknown }
+  if (!res.ok) throw new Error(authErrorMessage(data, 'Sign up failed'))
+
+  setUser({
+    uid: data.localId,
+    idToken: data.idToken,
+    refreshToken: data.refreshToken,
+    expiresAt: Date.now() + parseInt(data.expiresIn, 10) * 1000,
+    displayName: data.displayName || displayName,
+    email: data.email,
+    photoUrl: '',
+  })
+  return currentUser
+}
+
+export function signOut() {
+  if (refreshTimer) window.clearTimeout(refreshTimer)
+  refreshTimer = null
+  setUser(null)
+}
+
 async function refreshIdToken() {
-  if (!currentUser?.refreshToken) return
+  const user = currentUser
+  if (!user?.refreshToken) return
   try {
     const cfgRes = await fetch(`${WORKER_URL}/config`)
     if (!cfgRes.ok) {
-      setUser(null)
+      signOut()
       return
     }
     const cfg = (await cfgRes.json()) as { apiKey?: string }
     const res = await fetch(`https://securetoken.googleapis.com/v1/token?key=${cfg.apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: currentUser.refreshToken }),
+      body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: user.refreshToken }),
     })
     if (!res.ok) {
-      setUser(null)
+      signOut()
       return
     }
     const data = (await res.json()) as { id_token: string; expires_in: string }
@@ -111,9 +179,9 @@ function scheduleRefresh() {
 }
 
 async function authHeader() {
-  if (!currentUser) throw new Error('[cloud-store] Not signed in')
+  if (!currentUser) throw new Error('Not signed in')
   if (Date.now() >= currentUser.expiresAt - 30_000) await refreshIdToken()
-  if (!currentUser) throw new Error('[cloud-store] Not signed in')
+  if (!currentUser) throw new Error('Not signed in')
   return { Authorization: `Bearer ${currentUser.idToken}` }
 }
 
@@ -171,7 +239,7 @@ function fromFirestoreValue(value: FirestoreValue): unknown {
 
 export async function setDoc(collection: string, data: Record<string, unknown>) {
   const user = currentUser
-  if (!user) throw new Error('[cloud-store] Not signed in')
+  if (!user) throw new Error('Not signed in')
   const auth = await authHeader()
   const res = await fetch(`${WORKER_URL}/firestore${docPath(collection, user.uid)}`, {
     method: 'PATCH',
@@ -180,29 +248,29 @@ export async function setDoc(collection: string, data: Record<string, unknown>) 
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(`[cloud-store] setDoc failed: ${JSON.stringify(err)}`)
+    throw new Error(`setDoc failed: ${JSON.stringify(err)}`)
   }
   return res.json()
 }
 
 export async function getDoc(collection: string): Promise<Record<string, unknown> | null> {
   const user = currentUser
-  if (!user) throw new Error('[cloud-store] Not signed in')
+  if (!user) throw new Error('Not signed in')
   const auth = await authHeader()
   const res = await fetch(`${WORKER_URL}/firestore${docPath(collection, user.uid)}`, { headers: auth })
   if (res.status === 404) return null
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(`[cloud-store] getDoc failed: ${JSON.stringify(err)}`)
+    throw new Error(`getDoc failed: ${JSON.stringify(err)}`)
   }
   const doc = (await res.json()) as { fields?: Record<string, FirestoreValue> }
   return doc.fields ? fromFirestoreFields(doc.fields) : null
 }
 
-/** v1 restores the session at module load; getDoc/setDoc depend on that. */
+/** Restore the session mirrored for this tab only — never from localStorage. */
 function restoreSession() {
   try {
-    const raw = localStorage.getItem(SESSION_KEY)
+    const raw = sessionStorage.getItem(SESSION_KEY)
     if (!raw) return
     const user = JSON.parse(raw) as CloudUser
     if (!user?.idToken) return
