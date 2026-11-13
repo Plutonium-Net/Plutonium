@@ -1,9 +1,12 @@
 import type { ReactNode } from 'react'
 import './side-menu.css'
 
+type PanelId = 'history' | 'proxy'
+
 type MenuItem = {
   id: string
   label: string
+  panel?: PanelId
   icon: ReactNode
 }
 
@@ -11,6 +14,7 @@ const ITEMS: MenuItem[] = [
   {
     id: 'history',
     label: 'History',
+    panel: 'history',
     icon: (
       <>
         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -43,6 +47,7 @@ const ITEMS: MenuItem[] = [
   {
     id: 'proxy',
     label: 'Proxy switcher',
+    panel: 'proxy',
     icon: (
       <>
         <rect width="20" height="8" x="2" y="2" rx="2" />
@@ -54,11 +59,24 @@ const ITEMS: MenuItem[] = [
   },
 ]
 
-export default function SideMenu() {
+type SideMenuProps = {
+  activePanel: PanelId | null
+  onTogglePanel: (panel: PanelId) => void
+}
+
+export default function SideMenu({ activePanel, onTogglePanel }: SideMenuProps) {
   return (
     <nav className="side-menu" aria-label="Home menu">
       {ITEMS.map((item) => (
-        <button key={item.id} className="side-menu__btn" type="button" aria-label={item.label} title={item.label}>
+        <button
+          key={item.id}
+          className={`side-menu__btn${item.panel && item.panel === activePanel ? ' is-open' : ''}`}
+          type="button"
+          aria-label={item.label}
+          title={item.label}
+          aria-pressed={item.panel ? item.panel === activePanel : undefined}
+          onClick={item.panel ? () => onTogglePanel(item.panel!) : undefined}
+        >
           <svg
             className="side-menu__icon"
             viewBox="0 0 24 24"

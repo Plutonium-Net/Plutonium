@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNet } from '@/hooks/use-net'
 import { ENGINES, familyFor } from '@/lib/net/engines'
+import { probeRegions } from '@/lib/net/net-store'
 import { serversFor } from '@/lib/net/regions'
 import './proxy-switcher.css'
 
@@ -12,8 +13,8 @@ export default function ProxySwitcher() {
 
   // Opening the panel measures regions once, so the list can show latency.
   useEffect(() => {
-    if (family && !pings) void net.probeRegions(family)
-  }, [family, pings, net])
+    if (family && !pings) void probeRegions(family)
+  }, [family, pings])
 
   return (
     <div className="proxy-panel">

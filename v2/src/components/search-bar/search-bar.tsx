@@ -6,16 +6,17 @@ import GlassSurface from '@/components/glass-surface/GlassSurface'
 import { BEAM_PROPS } from '@/lib/beam'
 import './search-bar.css'
 
-export default function SearchBar({ onNavigate }: { onNavigate: (input: string) => boolean }) {
+export default function SearchBar({ onNavigate }: { onNavigate: (input: string) => boolean | Promise<boolean> }) {
   const [value, setValue] = useState('')
   const [focused, setFocused] = useState(false)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const query = value.trim()
-    // Only `pluto://` pages resolve today; anything else stays in the box because
-    // there is no page frame or proxy engine to send it to yet.
-    if (query && onNavigate(query)) setValue('')
+    if (!query) return
+    // Clears only when the navigation was accepted, so a failed remote session
+    // leaves the query in place to retry.
+    if (await onNavigate(query)) setValue('')
   }
 
   return (
