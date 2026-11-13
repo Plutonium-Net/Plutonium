@@ -7,6 +7,7 @@ import DotBackgroundDemo from '@/components/dot-background-demo'
 import HistoryPanel from '@/components/history-panel/history-panel'
 import PageFrame from '@/components/page-frame/page-frame'
 import PageView from '@/components/page-view/page-view'
+import Pins from '@/components/pins/pins'
 import ProxySwitcher from '@/components/proxy-switcher/proxy-switcher'
 import RegionMenu from '@/components/region-menu/region-menu'
 import SearchBar from '@/components/search-bar/search-bar'
@@ -120,6 +121,7 @@ export default function App() {
         <>
           <SearchBar onNavigate={navigate} />
           <SideMenu activePanel={panel} onTogglePanel={(next) => setPanel(panel === next ? null : next)} />
+          <Pins onOpen={(href) => void navigate(href)} />
         </>
       )}
 
