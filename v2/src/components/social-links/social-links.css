@@ -1,0 +1,53 @@
+/* Bottom-right, opposite the clock, out of the pins row's way. */
+.social-links {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.social-links .social-links__btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.social-links .social-links__icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+@media (hover: hover) {
+  .social-links .social-links__btn:hover {
+    color: #ffffff;
+    transform: translateY(-2px);
+  }
+}
+
+.social-links .social-links__btn:active {
+  color: #ffffff;
+  transform: translateY(-2px) scale(0.94);
+}
+
+.social-links .social-links__btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 2px;
+}
+
+/* The pins row is centred along the bottom edge; on narrow screens it reaches
+   far enough right that the two would collide, so the links step up. */
+@media (max-width: 720px) {
+  .social-links {
+    right: 12px;
+    bottom: 96px;
+  }
+}

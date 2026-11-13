@@ -1,0 +1,57 @@
+.glass-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.44);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  animation: glass-modal-in 0.18s ease-out;
+}
+
+@keyframes glass-modal-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.glass-modal .glass-modal__panel {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: 86vh;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+}
+
+.glass-modal .glass-modal__panel .glass-panel__body {
+  display: flex;
+  flex-direction: column;
+  max-height: 86vh;
+  padding: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.glass-modal .glass-modal__inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 86vh;
+  border-radius: inherit;
+}
+
+@media (max-width: 560px) {
+  .glass-modal {
+    padding: 10px;
+  }
+
+  .glass-modal .glass-modal__panel,
+  .glass-modal .glass-modal__panel .glass-panel__body,
+  .glass-modal .glass-modal__inner {
+    max-height: 92vh;
+  }
+}

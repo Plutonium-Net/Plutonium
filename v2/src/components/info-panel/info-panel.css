@@ -115,42 +115,34 @@
   margin-left: auto;
 }
 
+/* Chips and footer links carry the same real-glass pill the AI page uses. */
 .info-panel .info-panel__link {
-  padding: 2px 7px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
+  background: none;
   color: rgba(255, 255, 255, 0.6);
   font-family: inherit;
   font-size: 10.5px;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+  transition: color 0.16s ease, filter 0.16s ease;
 }
 
 .info-panel .info-panel__link:hover {
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.26);
-  background: rgba(255, 255, 255, 0.09);
-}
-
-.info-panel .info-panel__link.is-pending {
-  color: rgba(255, 255, 255, 0.34);
-  border-color: rgba(255, 255, 255, 0.08);
-  cursor: default;
-}
-
-.info-panel .info-panel__link.is-pending:hover {
-  color: rgba(255, 255, 255, 0.34);
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  filter: brightness(1.25);
 }
 
 .info-panel .info-panel__footer-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);

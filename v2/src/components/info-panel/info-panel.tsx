@@ -1,11 +1,17 @@
 import GlassPanel from '@/components/glass-panel/glass-panel'
+import PillGlass from '@/components/glass-pill/pill-glass'
 import { engineLabel } from '@/lib/net/engines'
+import type { LegalSection } from '@/lib/legal'
 import './info-panel.css'
 
 const DISCORD = 'https://discord.gg/R3dJ7hpUXX'
 
-/** Pages that do not exist yet: rendered, but inert until they do. */
-const LINKS = ['Feedback', 'Terms of Service', 'Privacy', 'Help']
+/** The policy documents and the feedback form, opened from here. */
+const LINKS: { label: string; open: 'feedback' | LegalSection }[] = [
+  { label: 'Feedback', open: 'feedback' },
+  { label: 'Terms of Service', open: 'terms' },
+  { label: 'Privacy', open: 'privacy' },
+]
 
 const TEAM = [
   {
@@ -41,7 +47,15 @@ const THANKS = [
   { name: 'Render', sub: 'Hosting free relay servers' },
 ]
 
-export default function InfoPanel({ onClose }: { onClose: () => void }) {
+export default function InfoPanel({
+  onClose,
+  onOpenFeedback,
+  onOpenLegal,
+}: {
+  onClose: () => void
+  onOpenFeedback: () => void
+  onOpenLegal: (section: LegalSection) => void
+}) {
   return (
     <GlassPanel className="info-panel">
       <div className="info-panel__head">
@@ -72,6 +86,7 @@ export default function InfoPanel({ onClose }: { onClose: () => void }) {
             <span className="info-panel__links-inline">
               {member.links.map((link) => (
                 <a key={link.label} className="info-panel__link" href={link.href} target="_blank" rel="noopener noreferrer">
+                  <PillGlass />
                   {link.label}
                 </a>
               ))}
@@ -108,11 +123,16 @@ export default function InfoPanel({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      {/* These pages are not built yet, so they are shown but do nothing. */}
       <div className="info-panel__footer-links">
-        {LINKS.map((label) => (
-          <button key={label} type="button" className="info-panel__link is-pending" title="Coming soon" aria-disabled="true">
-            {label}
+        {LINKS.map((link) => (
+          <button
+            key={link.label}
+            type="button"
+            className="info-panel__link"
+            onClick={() => (link.open === 'feedback' ? onOpenFeedback() : onOpenLegal(link.open))}
+          >
+            <PillGlass />
+            {link.label}
           </button>
         ))}
       </div>

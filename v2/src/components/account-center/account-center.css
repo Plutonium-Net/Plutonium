@@ -1,0 +1,700 @@
+/* ── corner trigger ──────────────────────────────────────────────────── */
+
+/* Sits below the tab bar, with enough clearance that the bar never crowds it. */
+.account-corner {
+  position: fixed;
+  left: 22px;
+  top: 76px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(320px, 60vw);
+}
+
+.account-corner__greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.account-corner__hello {
+  color: rgba(255, 255, 255, 0.36);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.account-corner__name {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-trigger {
+  position: relative;
+  flex: 0 0 auto;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 15px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: rgba(255, 255, 255, 0.72);
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 0.16s ease, filter 0.16s ease;
+}
+
+.account-trigger:hover {
+  color: #fff;
+  filter: brightness(1.25);
+}
+
+/* Signed out, the trigger is the primary call to action: a wide glass button. */
+.account-trigger--signin {
+  padding: 10px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.account-trigger--signin svg {
+  width: 16px;
+  height: 16px;
+}
+
+.account-trigger svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Signed in: the trigger is the profile picture itself. */
+.account-trigger:has(.account-trigger__photo),
+.account-trigger:has(.account-trigger__initials) {
+  width: 40px;
+  height: 40px;
+  padding: 3px;
+  border-radius: 999px;
+}
+
+.account-trigger__photo {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.account-trigger__initials {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── dialog shell ────────────────────────────────────────────────────── */
+
+.glass-modal .account-center {
+  width: min(430px, 100%);
+}
+
+.account-center .account-center__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 11px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex: 0 0 auto;
+}
+
+.account-center .account-center__title {
+  flex: 1;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.account-center .account-center__close {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease;
+}
+
+.account-center .account-center__close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.account-center .account-center__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.account-center .account-center__body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.account-center .account-center__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.account-center .account-center__body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
+}
+
+.account-center .account-center__body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ── signed-out view ─────────────────────────────────────────────────── */
+
+.account-center .account-center__signin {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-center .acct-oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.account-center .acct-oauth__btn {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: rgba(255, 255, 255, 0.82);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.16s ease, filter 0.16s ease;
+}
+
+.account-center .acct-oauth__btn:hover:not(:disabled) {
+  color: #fff;
+  filter: brightness(1.25);
+}
+
+.account-center .acct-oauth__btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.account-center .acct-oauth__icon {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+}
+
+.account-center .acct-oauth__icon svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The brand marks are filled shapes; the stroke above belongs to line icons. */
+.account-center .acct-oauth__icon svg path[fill] {
+  stroke: none;
+}
+
+.account-center .acct-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 10px;
+}
+
+.account-center .acct-or::before,
+.account-center .acct-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.account-center .acct-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-center .acct-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account-center .acct-field__label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.account-center .acct-input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.account-center .acct-input:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.account-center .acct-input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.account-center .acct-input--name {
+  max-width: 190px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.account-center .acct-note {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.account-center .acct-note--ok {
+  border-color: rgba(126, 201, 134, 0.28);
+  background: rgba(126, 201, 134, 0.08);
+  color: #cfe9d2;
+}
+
+.account-center .acct-note--error {
+  border-color: rgba(242, 139, 130, 0.32);
+  background: rgba(242, 139, 130, 0.09);
+  color: #f6bdb6;
+}
+
+.account-center .acct-btn {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: rgba(255, 255, 255, 0.62);
+  font: inherit;
+  font-size: 11.5px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.16s ease, filter 0.16s ease, transform 0.16s ease;
+}
+
+.account-center .acct-btn:hover:not(:disabled) {
+  color: #fff;
+  filter: brightness(1.2);
+}
+
+.account-center .acct-btn:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.account-center .acct-btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.account-center .acct-btn--primary {
+  color: #fff;
+  font-weight: 600;
+}
+
+.account-center .acct-btn--wide {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.account-center .acct-btn--danger {
+  color: #ffc9c4;
+}
+
+.account-center .acct-btn--danger-outline {
+  width: 100%;
+  color: #f28b82;
+}
+
+.account-center .acct-signin-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.account-center .acct-link {
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.62);
+  font: inherit;
+  font-size: 10.5px;
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.account-center .acct-link:hover {
+  color: #fff;
+}
+
+.account-center .acct-link--muted {
+  color: rgba(255, 255, 255, 0.36);
+}
+
+/* ── signed-in view ──────────────────────────────────────────────────── */
+
+.account-center .acct-signed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-center .acct-profile {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.account-center .acct-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.account-center .acct-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.account-center .acct-avatar__edit {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: grid;
+  place-items: center;
+  height: 17px;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.account-center .acct-avatar:hover .acct-avatar__edit {
+  opacity: 1;
+}
+
+.account-center .acct-avatar__edit svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.account-center .acct-profile__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.account-center .acct-profile__name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.account-center .acct-profile__name-text {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-center .acct-edit {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease;
+}
+
+.account-center .acct-edit:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.account-center .acct-edit svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.account-center .acct-profile__email {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-center .acct-signout {
+  padding: 5px 10px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  font-size: 10.5px;
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.account-center .acct-signout:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.account-center .acct-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.account-center .acct-section__label {
+  color: rgba(255, 255, 255, 0.32);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.account-center .acct-section__hint {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 10.5px;
+}
+
+.account-center .acct-provider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.account-center .acct-provider__icon {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.account-center .acct-provider__icon svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.6);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The brand marks are filled, not stroked. */
+.account-center .acct-provider__icon svg path[fill]:not([fill='none']) {
+  stroke: none;
+}
+
+.account-center .acct-provider__name {
+  flex: 1;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11.5px;
+}
+
+.account-center .acct-provider__state {
+  color: rgba(255, 255, 255, 0.32);
+  font-size: 10px;
+}
+
+.account-center .acct-provider__action {
+  padding: 3px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.62);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.account-center .acct-provider__action:hover:not(:disabled) {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.account-center .acct-provider__action:disabled {
+  opacity: 0.45;
+  cursor: progress;
+}
+
+.account-center .acct-inline {
+  display: flex;
+  gap: 7px;
+}
+
+.account-center .acct-inline .acct-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-center .acct-quota {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.account-center .acct-quota__track {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.account-center .acct-quota__bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.account-center .acct-quota__text {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 10.5px;
+}
+
+.account-center .acct-danger {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+@media (max-width: 480px) {
+  .account-corner {
+    left: 14px;
+    top: 70px;
+  }
+
+  .account-center .acct-profile {
+    flex-wrap: wrap;
+  }
+
+  .account-center .acct-signout {
+    margin-left: auto;
+  }
+}

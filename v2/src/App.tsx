@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
-import AccountPanel from '@/components/account-panel'
+import AccountCenter from '@/components/account-center/account-center'
 import AddressBar from '@/components/address-bar/address-bar'
 import ChromeTabs from '@/components/chrome-tabs/chrome-tabs'
 import Clock from '@/components/clock/clock'
 import DotBackgroundDemo from '@/components/dot-background-demo'
 import HistoryPanel from '@/components/history-panel/history-panel'
+import FeedbackPanel from '@/components/feedback-panel/feedback-panel'
 import InfoPanel from '@/components/info-panel/info-panel'
+import LegalPanel from '@/components/legal-panel/legal-panel'
+import OnlineCount from '@/components/online-count/online-count'
+import type { LegalSection } from '@/lib/legal'
 import PageFrame from '@/components/page-frame/page-frame'
 import PageView from '@/components/page-view/page-view'
 import Pins from '@/components/pins/pins'
@@ -14,6 +18,7 @@ import QuickApps from '@/components/quick-apps/quick-apps'
 import RegionMenu from '@/components/region-menu/region-menu'
 import SearchBar from '@/components/search-bar/search-bar'
 import SideMenu from '@/components/side-menu/side-menu'
+import SocialLinks from '@/components/social-links/social-links'
 import { useNet } from '@/hooks/use-net'
 import { useTabs } from '@/hooks/use-tabs'
 import { familyFor } from '@/lib/net/engines'
@@ -26,6 +31,8 @@ export default function App() {
   const { tabs, activeId, addTab, selectTab, closeTab, moveTab, navigate, back, forward } = useTabs()
   const net = useNet()
   const [panel, setPanel] = useState<'history' | 'info' | 'proxy' | 'region' | null>(null)
+  const [dialog, setDialog] = useState<'feedback' | 'legal' | null>(null)
+  const [legalSection, setLegalSection] = useState<LegalSection>('terms')
   const [reloadToken, setReloadToken] = useState(0)
   const [searchActive, setSearchActive] = useState(false)
 
@@ -43,7 +50,7 @@ export default function App() {
   // Clicking the background, or Escape, dismisses an open panel. Captured so a
   // press anywhere inside the app counts, not just on elements that bubble.
   useEffect(() => {
-    if (!panel) return
+    if (!panel && !dialog) return
     function onPointerDown(event: PointerEvent) {
       const target = event.target as HTMLElement | null
       if (!target) return
@@ -52,13 +59,20 @@ export default function App() {
         target.closest('.history-panel') ||
         target.closest('.info-panel') ||
         target.closest('.region-menu') ||
-        target.closest('.side-menu')
+        target.closest('.side-menu') ||
+        target.closest('.glass-modal')
       )
         return
       setPanel(null)
     }
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setPanel(null)
+      if (event.key !== 'Escape') return
+      // The dialog sits above the panel, so it is dismissed first.
+      if (dialog) {
+        setDialog(null)
+        return
+      }
+      setPanel(null)
     }
     document.addEventListener('pointerdown', onPointerDown, true)
     document.addEventListener('keydown', onKeyDown)
@@ -66,7 +80,7 @@ export default function App() {
       document.removeEventListener('pointerdown', onPointerDown, true)
       document.removeEventListener('keydown', onKeyDown)
     }
-  }, [panel])
+  }, [panel, dialog])
 
   // A panel belongs to the screen it was opened on: switching tabs, navigating or
   // leaving the home screen closes it. The search is treated the same way, or its
@@ -131,15 +145,26 @@ export default function App() {
       {home && (
         <>
           <SearchBar onNavigate={navigate} onActiveChange={setSearchActive} />
+          <OnlineCount hidden={searchActive} />
           <QuickApps hidden={searchActive} onOpen={(href) => void navigate(href)} />
           <SideMenu activePanel={panel} onTogglePanel={(next) => setPanel(panel === next ? null : next)} />
           <Pins minimized={searchActive} onOpen={(href) => void navigate(href)} />
+          <SocialLinks />
         </>
       )}
 
       {panel === 'proxy' && <ProxySwitcher />}
       {panel === 'region' && <RegionMenu />}
-      {panel === 'info' && <InfoPanel onClose={() => setPanel(null)} />}
+      {panel === 'info' && (
+        <InfoPanel
+          onClose={() => setPanel(null)}
+          onOpenFeedback={() => setDialog('feedback')}
+          onOpenLegal={(section) => {
+            setLegalSection(section)
+            setDialog('legal')
+          }}
+        />
+      )}
       {panel === 'history' && (
         <HistoryPanel
           onNavigate={(url) => {
@@ -149,8 +174,21 @@ export default function App() {
         />
       )}
 
+      {dialog === 'feedback' && (
+        <FeedbackPanel
+          onClose={() => setDialog(null)}
+          onOpenPrivacy={() => {
+            setLegalSection('privacy')
+            setDialog('legal')
+          }}
+        />
+      )}
+      {dialog === 'legal' && (
+        <LegalPanel section={legalSection} onSectionChange={setLegalSection} onClose={() => setDialog(null)} />
+      )}
+
       {!onWeb && !page && <Clock />}
-      <AccountPanel showTrigger={home} />
+      <AccountCenter showTrigger={home} />
     </>
   )
 }

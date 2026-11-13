@@ -295,3 +295,222 @@ function restoreSession() {
 }
 
 restoreSession()
+
+/* ----------------------------------------------------------------- account */
+
+/** A sign-in method linked to the account, as the worker reports it. */
+export type AuthProvider = { providerId: string; displayName?: string; email?: string }
+
+/** POSTs to an /auth route with the current token, refreshing it if it is stale. */
+async function postAuth<T>(path: string, body: Record<string, unknown> = {}): Promise<T> {
+  if (!currentUser) throw new Error('Not signed in')
+  if (Date.now() >= currentUser.expiresAt - 30_000) await refreshIdToken()
+  if (!currentUser) throw new Error('Not signed in')
+
+  const res = await fetch(`${WORKER_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, idToken: currentUser.idToken }),
+  })
+  const data = (await res.json().catch(() => ({}))) as T & { error?: unknown }
+  if (!res.ok) throw new Error(authErrorMessage(data, 'Request failed'))
+  return data
+}
+
+export async function updateProfile(displayName: string) {
+  const data = await postAuth<{ displayName?: string }>('/auth/update', { displayName })
+  if (!currentUser) return null
+  currentUser = { ...currentUser, displayName: data.displayName || displayName }
+  persistSession()
+  notify()
+  return currentUser
+}
+
+export async function changePassword(newPassword: string) {
+  await postAuth('/auth/password', { newPassword })
+}
+
+export async function resetPassword(email: string) {
+  const res = await fetch(`${WORKER_URL}/auth/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  const data = (await res.json().catch(() => ({}))) as { error?: unknown }
+  if (!res.ok) throw new Error(authErrorMessage(data, 'Could not send the reset email'))
+}
+
+export async function deleteAccount() {
+  await postAuth('/auth/delete')
+  signOut()
+}
+
+export async function getProviders(): Promise<AuthProvider[]> {
+  if (!currentUser) return []
+  const data = await postAuth<{ providers?: AuthProvider[] }>('/auth/providers')
+  return data.providers ?? []
+}
+
+export async function unlinkProvider(providerId: string) {
+  await postAuth('/auth/unlink', { providerId })
+}
+
+export async function saveProfilePhoto(dataUrl: string) {
+  await setDoc('profile_photo', { dataUrl, lastSync: new Date() })
+}
+
+export async function loadProfilePhoto(): Promise<string> {
+  try {
+    const doc = await getDoc('profile_photo')
+    return typeof doc?.dataUrl === 'string' ? doc.dataUrl : ''
+  } catch {
+    return ''
+  }
+}
+
+/** The AI request budget left in the current window, or null when signed out. */
+export async function getAIUsage(): Promise<{ remaining: number; max: number } | null> {
+  if (!currentUser) return null
+  if (Date.now() >= currentUser.expiresAt - 30_000) await refreshIdToken()
+  if (!currentUser) return null
+  try {
+    const res = await fetch('https://api.plutoniumnet.work/ai/ratelimit', {
+      headers: { Authorization: `Bearer ${currentUser.idToken}` },
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as { remaining?: unknown; max?: unknown }
+    if (typeof data.remaining !== 'number' || typeof data.max !== 'number') return null
+    return { remaining: data.remaining, max: data.max }
+  } catch {
+    return null
+  }
+}
+
+type OAuthUser = {
+  uid: string
+  idToken: string
+  refreshToken: string
+  expiresIn: string
+  displayName?: string
+  email?: string
+  photoUrl?: string
+}
+
+/**
+ * The worker completes the provider exchange in a popup and posts the result
+ * back to this window. v1 used the same endpoints and message shape.
+ */
+export function signInWithOAuth(provider: 'google' | 'github') {
+  return new Promise<CloudUser>((resolve, reject) => {
+    const popup = window.open(
+      `${WORKER_URL}/auth/oauth/start?provider=${provider}`,
+      'plu_oauth',
+      'width=520,height=620,left=200,top=100,toolbar=0,menubar=0,location=0',
+    )
+    if (!popup) {
+      reject(new Error('The sign-in window was blocked. Allow popups for this site and try again.'))
+      return
+    }
+
+    let timer = 0
+    const stop = () => {
+      window.removeEventListener('message', onMessage)
+      window.clearInterval(timer)
+    }
+
+    function onMessage(event: MessageEvent) {
+      if (!event.data || event.data.type !== 'plu_oauth') return
+      stop()
+      let parsed: { error?: string; user?: OAuthUser }
+      try {
+        parsed = JSON.parse(String(event.data.payload))
+      } catch {
+        reject(new Error('Sign-in returned an unreadable response.'))
+        return
+      }
+      if (parsed.error) {
+        reject(new Error(parsed.error))
+        return
+      }
+      const u = parsed.user
+      if (!u?.idToken) {
+        reject(new Error('Sign-in returned no session.'))
+        return
+      }
+      setUser({
+        uid: u.uid,
+        idToken: u.idToken,
+        refreshToken: u.refreshToken,
+        expiresAt: Date.now() + parseInt(u.expiresIn, 10) * 1000,
+        displayName: u.displayName || '',
+        email: u.email || '',
+        photoUrl: u.photoUrl || '',
+      })
+      if (currentUser) resolve(currentUser)
+    }
+
+    window.addEventListener('message', onMessage)
+    timer = window.setInterval(() => {
+      if (!popup.closed) return
+      stop()
+      reject(new Error('The sign-in window was closed.'))
+    }, 500)
+  })
+}
+
+/** Links another provider to the signed-in account. */
+export function linkWithOAuth(provider: 'google' | 'github') {
+  return new Promise<void>((resolve, reject) => {
+    if (!currentUser) {
+      reject(new Error('Not signed in'))
+      return
+    }
+    const popup = window.open(
+      `${WORKER_URL}/auth/oauth/start?provider=${provider}&mode=link`,
+      'plu_oauth_link',
+      'width=520,height=620,left=200,top=100,toolbar=0,menubar=0,location=0',
+    )
+    if (!popup) {
+      reject(new Error('The sign-in window was blocked. Allow popups for this site and try again.'))
+      return
+    }
+
+    let timer = 0
+    const stop = () => {
+      window.removeEventListener('message', onMessage)
+      window.clearInterval(timer)
+    }
+
+    function onMessage(event: MessageEvent) {
+      if (!event.data || event.data.type !== 'plu_oauth_link') return
+      stop()
+      let parsed: { error?: string; link?: { providerId?: string; accessToken?: string } }
+      try {
+        parsed = JSON.parse(String(event.data.payload))
+      } catch {
+        reject(new Error('Linking returned an unreadable response.'))
+        return
+      }
+      if (parsed.error) {
+        reject(new Error(parsed.error))
+        return
+      }
+      const link = parsed.link
+      if (!link?.providerId || !link.accessToken) {
+        reject(new Error('Linking returned no credential.'))
+        return
+      }
+      void postAuth('/auth/link', { providerId: link.providerId, oauthAccessToken: link.accessToken }).then(
+        () => resolve(),
+        (error: unknown) => reject(error instanceof Error ? error : new Error('Could not link that provider')),
+      )
+    }
+
+    window.addEventListener('message', onMessage)
+    timer = window.setInterval(() => {
+      if (!popup.closed) return
+      stop()
+      reject(new Error('The linking window was closed.'))
+    }, 500)
+  })
+}
