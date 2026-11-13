@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import './side-menu.css'
 
-type PanelId = 'history' | 'proxy'
+type PanelId = 'history' | 'proxy' | 'region'
 
 type MenuItem = {
   id: string
@@ -36,6 +36,7 @@ const ITEMS: MenuItem[] = [
   {
     id: 'wisp',
     label: 'Wisp region',
+    panel: 'region',
     icon: (
       <>
         <circle cx="12" cy="12" r="10" />

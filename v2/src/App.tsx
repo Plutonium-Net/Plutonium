@@ -8,6 +8,7 @@ import HistoryPanel from '@/components/history-panel/history-panel'
 import PageFrame from '@/components/page-frame/page-frame'
 import PageView from '@/components/page-view/page-view'
 import ProxySwitcher from '@/components/proxy-switcher/proxy-switcher'
+import RegionMenu from '@/components/region-menu/region-menu'
 import SearchBar from '@/components/search-bar/search-bar'
 import SideMenu from '@/components/side-menu/side-menu'
 import { useNet } from '@/hooks/use-net'
@@ -21,7 +22,7 @@ import './app-shell.css'
 export default function App() {
   const { tabs, activeId, addTab, selectTab, closeTab, moveTab, navigate, back, forward } = useTabs()
   const net = useNet()
-  const [panel, setPanel] = useState<'history' | 'proxy' | null>(null)
+  const [panel, setPanel] = useState<'history' | 'proxy' | 'region' | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
   const activeTab = tabs.find((tab) => tab.id === activeId)
@@ -42,7 +43,13 @@ export default function App() {
     function onPointerDown(event: PointerEvent) {
       const target = event.target as HTMLElement | null
       if (!target) return
-      if (target.closest('.proxy-panel') || target.closest('.history-panel') || target.closest('.side-menu')) return
+      if (
+        target.closest('.proxy-panel') ||
+        target.closest('.history-panel') ||
+        target.closest('.region-menu') ||
+        target.closest('.side-menu')
+      )
+        return
       setPanel(null)
     }
     function onKeyDown(event: KeyboardEvent) {
@@ -117,6 +124,7 @@ export default function App() {
       )}
 
       {panel === 'proxy' && <ProxySwitcher />}
+      {panel === 'region' && <RegionMenu />}
       {panel === 'history' && (
         <HistoryPanel
           onNavigate={(url) => {

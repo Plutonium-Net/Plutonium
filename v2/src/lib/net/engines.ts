@@ -17,15 +17,17 @@ export type EngineOption = {
   label: string
   family: RegionFamily | null
   hint: string
+  logo: string
 }
 
+// Same marks the v1 engine pill uses, copied from img/3rd-party/.
 export const ENGINES: EngineOption[] = [
-  { id: 'core', label: 'Ultraviolet', family: 'wisp', hint: 'Wisp relay' },
-  { id: 'runtime', label: 'Scramjet V1', family: 'wisp', hint: 'Wisp relay' },
-  { id: 'runtimev2', label: 'Scramjet V2', family: 'wisp', hint: 'Wisp relay' },
-  { id: 'compaxy', label: 'Compaxy', family: 'compaxy', hint: 'Host proxy' },
-  { id: 'rh', label: 'RH', family: 'rh', hint: 'Host proxy' },
-  { id: 'remote', label: 'Hyperbeam', family: null, hint: 'Remote session' },
+  { id: 'core', label: 'Ultraviolet', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/core.png' },
+  { id: 'runtime', label: 'Scramjet V1', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/runtime.png' },
+  { id: 'runtimev2', label: 'Scramjet V2', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/runtime.png' },
+  { id: 'compaxy', label: 'Compaxy', family: 'compaxy', hint: 'Host proxy', logo: '/img/3rd-party/compaxy.png' },
+  { id: 'rh', label: 'RH', family: 'rh', hint: 'Host proxy', logo: '/img/3rd-party/rh.png' },
+  { id: 'remote', label: 'Hyperbeam', family: null, hint: 'Remote session', logo: '/img/3rd-party/remote.png' },
 ]
 
 export function familyFor(engine: EngineId): RegionFamily | null {

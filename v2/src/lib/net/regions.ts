@@ -9,30 +9,30 @@ export type RegionServer = {
   lat: number
   lon: number
   host?: string
+  flag: string
 }
 
 const WISP_URL_TEMPLATE = 'wss://wisp-{id}.plutoniumnet.work/'
-
 export const WISP_REGIONS: RegionServer[] = [
-  { id: 'us-east', label: 'US East', location: 'Virginia, USA', lat: 37.4316, lon: -78.6569 },
-  { id: 'us-west', label: 'US West', location: 'Oregon, USA', lat: 43.8041, lon: -120.5542 },
-  { id: 'europe', label: 'Europe', location: 'Frankfurt, Germany', lat: 50.1109, lon: 8.6821 },
-  { id: 'asia', label: 'Asia', location: 'Singapore', lat: 1.3521, lon: 103.8198 },
+  { id: 'us-east', label: 'US East', location: 'Virginia, USA', flag: '/img/flags/us.png', lat: 37.4316, lon: -78.6569 },
+  { id: 'us-west', label: 'US West', location: 'Oregon, USA', flag: '/img/flags/us.png', lat: 43.8041, lon: -120.5542 },
+  { id: 'europe', label: 'Europe', location: 'Frankfurt, Germany', flag: '/img/flags/eu.png', lat: 50.1109, lon: 8.6821 },
+  { id: 'asia', label: 'Asia', location: 'Singapore', flag: '/img/flags/sg.png', lat: 1.3521, lon: 103.8198 },
 ]
 
 export const COMPAXY_SERVERS: RegionServer[] = [
-  { id: 'us-east-1', label: 'US East 1', location: 'Virginia, USA', host: 'compaxy-us-east-1.plutoniumnet.work', lat: 37.4316, lon: -78.6569 },
-  { id: 'us-east-2', label: 'US East 2', location: 'Ohio, USA', host: 'compaxy-us-east-2.plutoniumnet.work', lat: 39.9612, lon: -82.9988 },
-  { id: 'us-west', label: 'US West', location: 'Oregon, USA', host: 'compaxy-us-west.plutoniumnet.work', lat: 43.8041, lon: -120.5542 },
-  { id: 'europe', label: 'Europe', location: 'Frankfurt, Germany', host: 'compaxy-europe.plutoniumnet.work', lat: 50.1109, lon: 8.6821 },
-  { id: 'asia', label: 'Asia', location: 'Singapore', host: 'compaxy-asia.plutoniumnet.work', lat: 1.3521, lon: 103.8198 },
+  { id: 'us-east-1', label: 'US East 1', location: 'Virginia, USA', host: 'compaxy-us-east-1.plutoniumnet.work', flag: '/img/flags/us.png', lat: 37.4316, lon: -78.6569 },
+  { id: 'us-east-2', label: 'US East 2', location: 'Ohio, USA', host: 'compaxy-us-east-2.plutoniumnet.work', flag: '/img/flags/us.png', lat: 39.9612, lon: -82.9988 },
+  { id: 'us-west', label: 'US West', location: 'Oregon, USA', host: 'compaxy-us-west.plutoniumnet.work', flag: '/img/flags/us.png', lat: 43.8041, lon: -120.5542 },
+  { id: 'europe', label: 'Europe', location: 'Frankfurt, Germany', host: 'compaxy-europe.plutoniumnet.work', flag: '/img/flags/eu.png', lat: 50.1109, lon: 8.6821 },
+  { id: 'asia', label: 'Asia', location: 'Singapore', host: 'compaxy-asia.plutoniumnet.work', flag: '/img/flags/sg.png', lat: 1.3521, lon: 103.8198 },
 ]
 
 export const RH_SERVERS: RegionServer[] = [
-  { id: 'us-east', label: 'US East', location: 'Virginia, USA', host: 'rh-us-east.plutoniumnet.work', lat: 37.4316, lon: -78.6569 },
-  { id: 'us-west', label: 'US West', location: 'Oregon, USA', host: 'rh-us-west.plutoniumnet.work', lat: 43.8041, lon: -120.5542 },
-  { id: 'europe', label: 'Europe', location: 'Frankfurt, Germany', host: 'rh-europe.plutoniumnet.work', lat: 50.1109, lon: 8.6821 },
-  { id: 'asia', label: 'Asia', location: 'Singapore', host: 'rh-asia.plutoniumnet.work', lat: 1.3521, lon: 103.8198 },
+  { id: 'us-east', label: 'US East', location: 'Virginia, USA', host: 'rh-us-east.plutoniumnet.work', flag: '/img/flags/us.png', lat: 37.4316, lon: -78.6569 },
+  { id: 'us-west', label: 'US West', location: 'Oregon, USA', host: 'rh-us-west.plutoniumnet.work', flag: '/img/flags/us.png', lat: 43.8041, lon: -120.5542 },
+  { id: 'europe', label: 'Europe', location: 'Frankfurt, Germany', host: 'rh-europe.plutoniumnet.work', flag: '/img/flags/eu.png', lat: 50.1109, lon: 8.6821 },
+  { id: 'asia', label: 'Asia', location: 'Singapore', host: 'rh-asia.plutoniumnet.work', flag: '/img/flags/sg.png', lat: 1.3521, lon: 103.8198 },
 ]
 
 export function serversFor(family: RegionFamily): RegionServer[] {
