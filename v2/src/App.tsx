@@ -28,18 +28,44 @@ export default function App() {
   const page = activeTab ? resolveUrl(activeTab.url) : null
   const onWeb = !!activeTab && isWebUrl(activeTab.url)
   const family = familyFor(net.engine)
+  const home = !onWeb && !page
 
   // Readies the selected engine (relay race + service workers) once per engine.
   useEffect(() => {
     void ensureConnected()
   }, [net.engine])
 
+  // Clicking the background, or Escape, dismisses an open panel. Captured so a
+  // press anywhere inside the app counts, not just on elements that bubble.
+  useEffect(() => {
+    if (!panel) return
+    function onPointerDown(event: PointerEvent) {
+      const target = event.target as HTMLElement | null
+      if (!target) return
+      if (target.closest('.proxy-panel') || target.closest('.history-panel') || target.closest('.side-menu')) return
+      setPanel(null)
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setPanel(null)
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [panel])
+
+  // A panel belongs to the screen it was opened on: switching tabs, navigating or
+  // leaving the home screen closes it.
+  useEffect(() => {
+    setPanel(null)
+  }, [activeId, activeTab?.url, home])
+
   // Switching engines repoints every frame, so a reload is implied.
   useEffect(() => {
     setReloadToken((token) => token + 1)
   }, [net.engine])
-
-  const home = !onWeb && !page
 
   return (
     <>
@@ -71,16 +97,15 @@ export default function App() {
         )}
 
         <div className="app-shell__stage">
-          {onWeb && activeTab ? (
-            <PageFrame
-              tab={activeTab}
-              engine={net.engine}
-              region={family ? net.regions[family] : ''}
-              reloadToken={reloadToken}
-            />
-          ) : page ? (
-            <PageView title={page.title} />
-          ) : null}
+          {/* Always mounted: Scramjet V2 binds to this iframe when it boots. */}
+          <PageFrame
+            tab={activeTab}
+            visible={onWeb}
+            engine={net.engine}
+            region={family ? net.regions[family] : ''}
+            reloadToken={reloadToken}
+          />
+          {page && <PageView title={page.title} />}
         </div>
       </div>
 

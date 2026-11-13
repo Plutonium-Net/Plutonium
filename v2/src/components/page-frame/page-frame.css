@@ -8,6 +8,10 @@
   background: #0a0a0a;
 }
 
+.page-frame.is-hidden {
+  display: none;
+}
+
 .page-frame .page-frame__frame {
   display: block;
   width: 100%;
