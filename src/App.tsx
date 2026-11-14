@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import AccountCenter from '@/components/account-center/account-center'
 import AddressBar from '@/components/address-bar/address-bar'
+import Background from '@/components/backgrounds/backgrounds'
 import ChromeTabs from '@/components/chrome-tabs/chrome-tabs'
 import Clock from '@/components/clock/clock'
+import CustomizePanel from '@/components/customize-panel/customize-panel'
 import DesktopGate from '@/components/desktop-gate/desktop-gate'
-import DotBackgroundDemo from '@/components/dot-background-demo'
 import HistoryPanel from '@/components/history-panel/history-panel'
 import FeedbackPanel from '@/components/feedback-panel/feedback-panel'
 import GlowCursor from '@/components/glow-cursor/GlowCursor'
@@ -32,7 +33,7 @@ import './app-shell.css'
 export default function App() {
   const { tabs, activeId, addTab, selectTab, closeTab, moveTab, navigate, back, forward } = useTabs()
   const net = useNet()
-  const [panel, setPanel] = useState<'history' | 'info' | 'proxy' | 'region' | null>(null)
+  const [panel, setPanel] = useState<'history' | 'info' | 'proxy' | 'region' | 'customize' | null>(null)
   const [dialog, setDialog] = useState<'feedback' | 'legal' | null>(null)
   const [legalSection, setLegalSection] = useState<LegalSection>('terms')
   const [reloadToken, setReloadToken] = useState(0)
@@ -59,6 +60,7 @@ export default function App() {
       if (
         target.closest('.proxy-panel') ||
         target.closest('.history-panel') ||
+        target.closest('.customize-panel') ||
         target.closest('.info-panel') ||
         target.closest('.region-menu') ||
         target.closest('.side-menu') ||
@@ -100,7 +102,7 @@ export default function App() {
 
   return (
     <>
-      <DotBackgroundDemo />
+      <Background />
       <div className="app-shell">
         <div className="app-shell__tabs">
           <ChromeTabs
@@ -170,6 +172,7 @@ export default function App() {
 
       {panel === 'proxy' && <ProxySwitcher />}
       {panel === 'region' && <RegionMenu />}
+      {panel === 'customize' && <CustomizePanel onClose={() => setPanel(null)} />}
       {panel === 'info' && (
         <InfoPanel
           onClose={() => setPanel(null)}

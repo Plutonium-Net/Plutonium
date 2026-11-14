@@ -1,0 +1,44 @@
+.customize-panel {
+  position: fixed;
+  right: 76px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 280px;
+  z-index: 30;
+}
+
+.customize-panel .customize-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 0 6px;
+}
+
+.customize-panel .customize-panel__title {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.customize-panel .customize-panel__close {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease;
+}
+
+.customize-panel .customize-panel__close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
