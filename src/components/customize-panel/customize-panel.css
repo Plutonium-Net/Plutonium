@@ -19,7 +19,7 @@
   font-size: 11px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--accent);
 }
 
 .customize-panel .customize-panel__close {
@@ -41,4 +41,94 @@
 .customize-panel .customize-panel__close:hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.1);
+}
+
+.customize-panel .customize-panel__label {
+  padding: 4px 8px 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.customize-panel .customize-panel__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 0 8px 10px;
+}
+
+.customize-panel .customize-panel__swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: var(--swatch);
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.customize-panel .customize-panel__swatch:hover {
+  transform: scale(1.12);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* The chosen colour wears its own light, so the pick reads before the label does. */
+.customize-panel .customize-panel__swatch.is-active {
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.35), 0 0 10px rgba(var(--accent-rgb), 0.55);
+}
+
+.customize-panel .customize-panel__swatch:focus-visible {
+  outline: 2px solid rgba(var(--accent-rgb), 0.7);
+  outline-offset: 2px;
+}
+
+.customize-panel .customize-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Same row as the pr0xy menu, with the active one lit by GlassHighlight. */
+.customize-panel .customize-panel__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+
+.customize-panel .customize-panel__row:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.customize-panel .customize-panel__row > *:not(.glass-highlight) {
+  position: relative;
+  z-index: 1;
+}
+
+.customize-panel .customize-panel__name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.customize-panel .customize-panel__row.is-active .customize-panel__name {
+  color: var(--accent);
+}
+
+.customize-panel .customize-panel__hint {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.35);
 }

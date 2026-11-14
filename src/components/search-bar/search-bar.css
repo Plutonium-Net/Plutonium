@@ -23,7 +23,7 @@
   transform: translateX(-50%);
   font-family: 'Plutonium', sans-serif;
   line-height: 1;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--accent);
   white-space: nowrap;
   user-select: none;
   pointer-events: none;
@@ -49,7 +49,12 @@
   flex: 0 0 auto;
   width: 16px;
   height: 16px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(var(--accent-rgb), 0.8);
+  transition: color 0.16s ease;
+}
+
+.search-bar:focus-within .search-bar-icon {
+  color: var(--accent);
 }
 
 .search-bar .search-bar-input {
@@ -61,6 +66,7 @@
   outline: none;
   background: transparent;
   color: #ffffff;
+  caret-color: var(--accent);
   font-family: inherit;
   font-size: 16px;
   letter-spacing: -0.1px;

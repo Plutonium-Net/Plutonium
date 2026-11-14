@@ -161,9 +161,9 @@
 
 .chrome-tabs .chrome-tabs-newtab-btn:hover {
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.35);
-  color: #fff;
-  box-shadow: 0 0 12px rgba(66, 133, 244, 0.08);
+  border-color: rgba(var(--accent-rgb), 0.55);
+  color: var(--accent);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.22);
   transform: scale(1.1);
 }
 

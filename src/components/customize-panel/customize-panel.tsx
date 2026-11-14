@@ -1,8 +1,17 @@
+import { DAILY, selectBackground, subscribeBackground, getBackgroundChoice } from '@/components/backgrounds/background-store'
+import { BACKGROUNDS } from '@/components/backgrounds/registry'
+import GlassHighlight from '@/components/glass-highlight/glass-highlight'
 import GlassPanel from '@/components/glass-panel/glass-panel'
+import { useAccent } from '@/hooks/use-accent'
+import { ACCENTS, selectAccent } from '@/lib/accent'
+import { useSyncExternalStore, type CSSProperties } from 'react'
 import './customize-panel.css'
 
-/** The appearance menu. The body is intentionally empty until its options land. */
+/** The appearance menu: which wallpaper the shell wears. */
 export default function CustomizePanel({ onClose }: { onClose: () => void }) {
+  const choice = useSyncExternalStore(subscribeBackground, getBackgroundChoice, getBackgroundChoice)
+  const accent = useAccent()
+
   return (
     <GlassPanel className="customize-panel">
       <div className="customize-panel__head">
@@ -10,6 +19,52 @@ export default function CustomizePanel({ onClose }: { onClose: () => void }) {
         <button className="customize-panel__close" type="button" aria-label="Close" onClick={onClose}>
           ×
         </button>
+      </div>
+
+      <div className="customize-panel__label">Accent</div>
+      <div className="customize-panel__swatches">
+        {ACCENTS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className={`customize-panel__swatch${option.id === accent.id ? ' is-active' : ''}`}
+            style={{ '--swatch': option.hex } as CSSProperties}
+            aria-label={option.name}
+            aria-pressed={option.id === accent.id}
+            title={option.name}
+            onClick={() => selectAccent(option.id)}
+          />
+        ))}
+      </div>
+
+      <div className="customize-panel__label">Background</div>
+      <div className="customize-panel__list">
+        <button
+          type="button"
+          className={`customize-panel__row${choice === DAILY ? ' is-active' : ''}`}
+          aria-pressed={choice === DAILY}
+          onClick={() => selectBackground(DAILY)}
+        >
+          {choice === DAILY && <GlassHighlight />}
+          <span className="customize-panel__name">Rotate daily</span>
+          <span className="customize-panel__hint">Changes at midnight</span>
+        </button>
+
+        {BACKGROUNDS.map((option) => {
+          const active = option.id === choice
+          return (
+            <button
+              key={option.id}
+              type="button"
+              className={`customize-panel__row${active ? ' is-active' : ''}`}
+              aria-pressed={active}
+              onClick={() => selectBackground(option.id)}
+            >
+              {active && <GlassHighlight />}
+              <span className="customize-panel__name">{option.name}</span>
+            </button>
+          )
+        })}
       </div>
     </GlassPanel>
   )

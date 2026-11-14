@@ -112,9 +112,9 @@
 
 .pins .pins__pin.is-hovered .pins__tile,
 .pins .pins__open:focus-visible .pins__tile {
-  border-color: rgba(255, 255, 255, 0.26);
+  border-color: rgba(var(--accent-rgb), 0.55);
   background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.38);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.38), 0 0 14px rgba(var(--accent-rgb), 0.28);
 }
 
 .pins .pins__open:active .pins__tile {

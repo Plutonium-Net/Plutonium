@@ -3,4 +3,7 @@
 /* The canvas is dark-only, so light-dark() in the glass resolves to its dark side. */
 :root {
   color-scheme: dark;
+  /* Tinted by the accent store (lib/accent.ts); these are the blue defaults. */
+  --accent: #5f8bff;
+  --accent-rgb: 95, 139, 255;
 }

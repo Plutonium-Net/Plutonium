@@ -22,6 +22,7 @@ import RegionMenu from '@/components/region-menu/region-menu'
 import SearchBar from '@/components/search-bar/search-bar'
 import SideMenu from '@/components/side-menu/side-menu'
 import SocialLinks from '@/components/social-links/social-links'
+import { useAccent } from '@/hooks/use-accent'
 import { useNet } from '@/hooks/use-net'
 import { useTabs } from '@/hooks/use-tabs'
 import { familyFor } from '@/lib/net/engines'
@@ -33,6 +34,7 @@ import './app-shell.css'
 export default function App() {
   const { tabs, activeId, addTab, selectTab, closeTab, moveTab, navigate, back, forward } = useTabs()
   const net = useNet()
+  const accent = useAccent()
   const [panel, setPanel] = useState<'history' | 'info' | 'proxy' | 'region' | 'customize' | null>(null)
   const [dialog, setDialog] = useState<'feedback' | 'legal' | null>(null)
   const [legalSection, setLegalSection] = useState<LegalSection>('terms')
@@ -152,7 +154,7 @@ export default function App() {
               background and under the home UI, and listens on window, so it never
               takes a click from the search bar or the pins. */}
           <GlowCursor
-            color="#5f8bff"
+            color={accent.hex}
             intensity={1.3}
             trailWidth={3}
             linger={1.4}

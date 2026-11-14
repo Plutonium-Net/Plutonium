@@ -16,6 +16,7 @@
   font-weight: 500;
   vertical-align: super;
   margin-left: 4px;
+  color: var(--accent);
 }
 
 @media (max-width: 980px) {

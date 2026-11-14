@@ -24,7 +24,7 @@
   font-size: 11px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--accent);
 }
 
 .proxy-panel .proxy-panel__list {

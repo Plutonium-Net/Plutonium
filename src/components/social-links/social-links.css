@@ -28,18 +28,18 @@
 
 @media (hover: hover) {
   .social-links .social-links__btn:hover {
-    color: #ffffff;
+    color: var(--accent);
     transform: translateY(-2px);
   }
 }
 
 .social-links .social-links__btn:active {
-  color: #ffffff;
+  color: var(--accent);
   transform: translateY(-2px) scale(0.94);
 }
 
 .social-links .social-links__btn:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline: 2px solid rgba(var(--accent-rgb), 0.65);
   outline-offset: 2px;
 }
 

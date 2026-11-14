@@ -21,7 +21,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--accent);
 }
 
 .info-panel .info-panel__close {
@@ -135,7 +135,7 @@
 }
 
 .info-panel .info-panel__link:hover {
-  color: #ffffff;
+  color: var(--accent);
   filter: brightness(1.25);
 }
 

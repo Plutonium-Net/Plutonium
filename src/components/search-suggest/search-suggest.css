@@ -105,7 +105,7 @@
 
 .search-suggest .search-suggest__row.is-active .search-suggest__icon,
 .search-suggest .search-suggest__row:hover .search-suggest__icon {
-  color: #ffffff;
+  color: var(--accent);
 }
 
 .search-suggest .search-suggest__copy {
