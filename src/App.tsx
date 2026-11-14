@@ -7,6 +7,7 @@ import DesktopGate from '@/components/desktop-gate/desktop-gate'
 import DotBackgroundDemo from '@/components/dot-background-demo'
 import HistoryPanel from '@/components/history-panel/history-panel'
 import FeedbackPanel from '@/components/feedback-panel/feedback-panel'
+import GlowCursor from '@/components/glow-cursor/GlowCursor'
 import InfoPanel from '@/components/info-panel/info-panel'
 import LegalPanel from '@/components/legal-panel/legal-panel'
 import OnlineCount from '@/components/online-count/online-count'
@@ -145,6 +146,19 @@ export default function App() {
 
       {home && (
         <>
+          {/* The light trail belongs to the home screen alone: it sits over the dot
+              background and under the home UI, and listens on window, so it never
+              takes a click from the search bar or the pins. */}
+          <GlowCursor
+            color="#5f8bff"
+            intensity={1.3}
+            trailWidth={3}
+            linger={1.4}
+            glow={1.2}
+            clickBurst
+            theme="dark"
+            style={{ position: 'fixed', inset: 0, zIndex: 4, pointerEvents: 'none' }}
+          />
           <SearchBar onNavigate={navigate} onActiveChange={setSearchActive} />
           <OnlineCount hidden={searchActive} />
           <QuickApps hidden={searchActive} onOpen={(href) => void navigate(href)} />
