@@ -2,10 +2,8 @@
  * Plutonium account + cloud store for v2.
  *
  * Ported from v1's js/cloud-store.js: same worker endpoints, same Firestore
- * document encoding, same token refresh. The deliberate difference is storage:
- * v1 mirrors the session into localStorage (`plu_user`); v2 keeps it in memory
- * and mirrors it into sessionStorage so a reload inside the same tab survives,
- * while nothing is written to localStorage and nothing outlives the tab.
+ * document encoding, same token refresh. The session is mirrored into
+ * localStorage so it survives reloads and is shared across tabs.
  *
  * Tab content itself is never stored on the device — see lib/tab-sync.ts.
  */
@@ -40,10 +38,39 @@ let authListeners: Array<(user: CloudUser | null) => void> = []
 
 function persistSession() {
   try {
-    if (currentUser) sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser))
-    else sessionStorage.removeItem(SESSION_KEY)
+    if (currentUser) localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser))
+    else localStorage.removeItem(SESSION_KEY)
   } catch {
     /* storage blocked: the session simply stays in memory */
+  }
+}
+
+function readStoredSession(raw: string | null): CloudUser | null {
+  if (!raw) return null
+  try {
+    const user = JSON.parse(raw) as Partial<CloudUser>
+    if (
+      typeof user.uid !== 'string' ||
+      typeof user.email !== 'string' ||
+      typeof user.displayName !== 'string' ||
+      typeof user.photoUrl !== 'string' ||
+      typeof user.idToken !== 'string' ||
+      typeof user.refreshToken !== 'string' ||
+      typeof user.expiresAt !== 'number'
+    ) {
+      return null
+    }
+    return {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoUrl: user.photoUrl,
+      idToken: user.idToken,
+      refreshToken: user.refreshToken,
+      expiresAt: user.expiresAt,
+    }
+  } catch {
+    return null
   }
 }
 
@@ -62,6 +89,10 @@ function setUser(user: CloudUser | null) {
   persistSession()
   scheduleRefresh()
   notify()
+}
+
+function isCurrentSession(user: CloudUser) {
+  return currentUser?.uid === user.uid && currentUser.refreshToken === user.refreshToken
 }
 
 export function isSignedIn() {
@@ -141,7 +172,7 @@ async function refreshIdToken() {
   try {
     const cfgRes = await fetch(`${WORKER_URL}/config`)
     if (!cfgRes.ok) {
-      signOut()
+      if (isCurrentSession(user)) signOut()
       return
     }
     const cfg = (await cfgRes.json()) as { apiKey?: string }
@@ -151,11 +182,11 @@ async function refreshIdToken() {
       body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: user.refreshToken }),
     })
     if (!res.ok) {
-      signOut()
+      if (isCurrentSession(user)) signOut()
       return
     }
     const data = (await res.json()) as { id_token: string; expires_in: string }
-    if (!currentUser) return
+    if (!isCurrentSession(user)) return
     currentUser = {
       ...currentUser,
       idToken: data.id_token,
@@ -278,13 +309,11 @@ export async function deleteDoc(collection: string) {
   if (!res.ok && res.status !== 404) throw new Error(`deleteDoc failed: ${res.status}`)
 }
 
-/** Restore the session mirrored for this tab only — never from localStorage. */
+/** Restore the session shared across tabs. */
 function restoreSession() {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY)
-    if (!raw) return
-    const user = JSON.parse(raw) as CloudUser
-    if (!user?.idToken) return
+    const user = readStoredSession(localStorage.getItem(SESSION_KEY))
+    if (!user) return
     currentUser = user
     if (Date.now() >= user.expiresAt) void refreshIdToken()
     else scheduleRefresh()
@@ -295,6 +324,14 @@ function restoreSession() {
 }
 
 restoreSession()
+
+window.addEventListener('storage', (event) => {
+  if (event.key !== SESSION_KEY && event.key !== null) return
+  currentUser = readStoredSession(event.key === null ? null : event.newValue)
+  scheduleRefresh()
+  notify()
+  if (currentUser && Date.now() >= currentUser.expiresAt) void refreshIdToken()
+})
 
 /* ----------------------------------------------------------------- account */
 
