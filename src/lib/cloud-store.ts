@@ -187,8 +187,10 @@ async function refreshIdToken() {
     }
     const data = (await res.json()) as { id_token: string; expires_in: string }
     if (!isCurrentSession(user)) return
+    const activeUser = currentUser
+    if (!activeUser) return
     currentUser = {
-      ...currentUser,
+      ...activeUser,
       idToken: data.id_token,
       expiresAt: Date.now() + parseInt(data.expires_in, 10) * 1000,
     }
