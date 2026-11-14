@@ -21,7 +21,7 @@ export type NetSnapshot = {
 }
 
 const STORE_KEY = 'plu_net'
-const DEFAULT_ENGINE: EngineId = 'core'
+const DEFAULT_ENGINE: EngineId = 'compaxy'
 
 function readPrefs() {
   const fallback = {
