@@ -37,18 +37,28 @@
   position: relative;
   display: flex;
   align-items: flex-start;
+  justify-content: center;
   gap: 6px;
   height: 100%;
   flex: 1;
   min-width: 0;
-  padding-left: 8px;
+}
+
+/* The inline + button shares the centred row with the tabs, so an equal-width
+   spacer (26px button + 6px gap) keeps the tabs themselves on centre. */
+.chrome-tabs:not(.has-centered-add) .chrome-tabs-content::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 32px;
 }
 
 .chrome-tabs .chrome-tab {
   position: relative;
   display: flex;
   height: 36px;
-  flex: 1 1 160px;
+  /* No grow: the row is centred, so tabs keep their width instead of
+     stretching to fill the strip. */
+  flex: 0 1 160px;
   min-width: 64px;
   max-width: 160px;
   z-index: 1;
