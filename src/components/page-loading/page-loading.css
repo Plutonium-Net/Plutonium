@@ -74,13 +74,6 @@
   letter-spacing: 0.06em;
 }
 
-/*
- * Branches are curved: one trunk per group of children, running from the parent's
- * dot down to the last child's dot, and a quarter-circle from that trunk into each
- * child's dot. The trunk stops half a row short of the group's bottom because the
- * last child here is a leaf; a group whose last child has children of its own
- * would need that offset tuned.
- */
 .page-loading__tree li > ul {
   position: relative;
   padding-left: 1.3em;
@@ -90,21 +83,38 @@
   padding-left: 0.75em;
 }
 
+/*
+ * Branches, in three parts, all on one x per group (the parent's dot centre):
+ * a stub from that dot down to the group, a trunk between the siblings, and a
+ * quarter-circle from the trunk into each child's dot.
+ */
 .page-loading__tree li > ul::before {
   content: "";
   position: absolute;
-  left: 0.5em;
+  left: calc(1.3em + 0.5em);
   top: -0.95em;
-  bottom: 0.95em;
+  height: 0.95em;
   border-left: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .page-loading__tree > li > ul::before {
-  left: 1.25em;
+  left: calc(0.75em + 0.5em);
 }
 
-/* The quarter-circle from the trunk into this row's dot. */
 .page-loading__tree li > ul > li::before {
+  content: "";
+  position: absolute;
+  left: 0.5em;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.page-loading__tree li > ul > li:last-child::before {
+  bottom: 0.95em;
+}
+
+.page-loading__tree li > ul > li::after {
   content: "";
   position: absolute;
   left: 0.5em;
