@@ -70,8 +70,14 @@
   font-family: inherit;
   font-size: 16px;
   letter-spacing: -0.1px;
+  /* The query and its placeholder invert whatever the pill is over, so they stay
+     legible as the wallpaper, the dot field or the wave changes underneath. */
+  mix-blend-mode: difference;
 }
 
 .search-bar .search-bar-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  /* Solid white, not a translucent white: difference only inverts fully when the
+     text itself is opaque. */
+  color: #ffffff;
+  opacity: 1;
 }

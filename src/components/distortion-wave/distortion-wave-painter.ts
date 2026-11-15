@@ -3,24 +3,31 @@
  *
  * The wave opens from the frame the search was picked in: the path starts as
  * that pill or row (a superellipse rounded to its own corners), eases into a
- * full-bleed circle, and its rim ripples and splits into chromatic bands. Every
- * colour is mixed from the accent the account is wearing, so the wave is never
- * a fixed palette. Positions are viewport (CSS) pixels; the caller has already
- * scaled the context for the device pixel ratio.
+ * full-bleed circle, and carries a lit crest on its leading edge.
  *
- * The body is deliberately dark — a tinted near-black that hides the screen
- * swap — while the accent only shows up as the thin leading rim and the bands
- * behind it. Filling the window with the accent itself reads as a flash.
+ * The body is deliberately dark — a black core that hides the screen swap, with
+ * the accent only arriving as a dark tint ring and a soft crest of light at the
+ * rim. Filling the window with the accent itself reads as a flash; painting hard
+ * concentric rings reads as a diagram. Everything here is soft bloom and low
+ * alpha so the wave looks like light rather than geometry.
+ *
+ * Positions are viewport (CSS) pixels; the caller has already scaled the context
+ * for the device pixel ratio.
  */
 
 export type WaveOrigin = { x: number; y: number; width: number; height: number }
 
 export type WavePalette = {
+  /** The body never lifts above black. */
+  light: string
   deep: string
   base: string
-  light: string
+  /** The accent itself, for the crest. */
   ice: string
-  glow: string
+  /** The accent's hue-shifted partner, for the chromatic split on the edge. */
+  ember: string
+  /** A lifted accent, for the hottest part of the crest. */
+  bloom: string
 }
 
 const TAU = Math.PI * 2
@@ -54,27 +61,29 @@ const hsl = (h: number, s: number, l: number, alpha = 1) =>
     Math.max(2, l),
   )}%, ${alpha})`
 
-/** The accent pulled apart into the bands the wave is built from. */
+/** The accent pulled apart into the tones the wave is built from. */
 export function wavePalette(rgb: [number, number, number]): WavePalette {
   const { h, s, l } = rgbToHsl(rgb)
-  // White is a valid accent, and a grey wave would lose the bands entirely, so
+  // White is a valid accent, and a grey wave would lose the crest entirely, so
   // a floor on saturation keeps some colour in the effect either way.
   const sat = Math.max(30, s)
 
   return {
-    // The body sits far below the accent in lightness; only the ice tone and the
-    // glow keep the accent's own brightness, and both are used sparingly.
-    deep: hsl(h + 8, sat * 0.42, l - 56),
-    base: hsl(h, sat * 0.5, l - 46),
-    light: hsl(h - 10, sat * 0.55, l - 34),
-    ice: hsl(h + 20, sat * 0.7, l + 2),
-    glow: hsl(h, sat, l, 0.18),
+    // The body sits far below the accent in lightness; only the crest keeps the
+    // accent's own brightness, and it is only ever a rim of light.
+    light: '#000000',
+    deep: hsl(h + 8, sat * 0.45, l - 54),
+    base: hsl(h, sat * 0.52, l - 42),
+    ice: hsl(h + 20, sat * 0.72, l + 2),
+    ember: hsl(h - 16, sat * 0.65, l - 2),
+    bloom: hsl(h + 18, sat * 0.85, l + 16),
   }
 }
 
 /**
- * Traces one wave front: a superellipse through (ax, ay) with a rim that wobbles
- * with the angle, so the edge reads as a wave rather than a circle.
+ * Traces one wave front: a superellipse through (ax, ay) whose rim swells with
+ * the angle, so the edge reads as a wave rather than a circle. The harmonics are
+ * low and few on purpose — three fast ones made the outline look chewed.
  */
 function traceShape(
   ctx: CanvasRenderingContext2D,
@@ -86,7 +95,7 @@ function traceShape(
   wobble: number,
   phase: number,
 ) {
-  const steps = 200
+  const steps = 180
   ctx.beginPath()
 
   for (let i = 0; i <= steps; i += 1) {
@@ -97,11 +106,12 @@ function traceShape(
     const vertical = Math.abs(sin) / Math.max(ay, 0.001)
     const radius = Math.pow(Math.pow(horizontal, exponent) + Math.pow(vertical, exponent), -1 / exponent)
 
-    const ripple =
-      Math.sin(theta * 3.5 + phase * 1.9) * 0.5 +
-      Math.sin(theta * 7 - phase * 1.3) * 0.32 +
-      Math.sin(theta * 13 + phase * 0.7) * 0.18
-    const distance = radius * (1 + wobble * ripple)
+    // Two slow lobes drifting around the rim, and a whisper of a third.
+    const swell =
+      Math.sin(theta * 2 + phase * 0.9) * 0.62 +
+      Math.sin(theta * 3 - phase * 0.7) * 0.26 +
+      Math.sin(theta * 5 + phase * 0.5) * 0.12
+    const distance = radius * (1 + wobble * swell)
 
     const x = cx + cos * distance
     const y = cy + sin * distance
@@ -139,7 +149,10 @@ export function paintWave(
     return
   }
 
-  const opened = 1 - Math.pow(1 - clamp01(cover), 5)
+  const progress = clamp01(cover)
+  // Gentler than an ease-out quart: a faster curve put 94% of the radius behind
+  // the crest by the halfway point, so the lit edge only existed for a flash.
+  const opened = Math.pow(progress, 0.82)
   const easedFade = fade * fade * (3 - 2 * fade)
   const alpha = 1 - easedFade
   if (alpha <= 0) return
@@ -156,12 +169,17 @@ export function paintWave(
       Math.hypot(width - cx, height - cy),
     ) + 72
 
-  const grow = 1 + 0.09 * easedFade
+  const grow = 1 + 0.06 * easedFade
   const ax = Math.max(8, lerp(Math.max(origin.width, 16) / 2, reach, opened)) * grow
   const ay = Math.max(8, lerp(Math.max(origin.height, 16) / 2, reach, opened)) * grow
-  const exponent = lerp(4.6, 2, opened)
-  const wobble = 0.006 + 0.026 * opened
-  const phase = time * 1.35
+
+  // The source is a capsule, not a superellipse, so the outline rounds off in
+  // the first third of the flight instead of staying a wide blob for the whole
+  // journey. Likewise the ripple peaks mid-flight and is gone by full cover, so
+  // the edge never looks chewed once it is edge of the screen.
+  const exponent = lerp(4.2, 2, Math.min(1, opened * 1.7))
+  const wobble = 0.016 * Math.sin(Math.PI * progress)
+  const phase = time * 1.1
   const span = Math.max(ax, ay)
 
   // The wave fades up as it leaves the source instead of popping in at full
@@ -169,83 +187,94 @@ export function paintWave(
   const enter = Math.min(1, opened * 4 + 0.12)
   const wash = alpha * enter
 
-  // The body: barely lifted at the centre, sinking to near-black at the rim, so
-  // it covers the swap without lighting the window up.
-  const body = ctx.createRadialGradient(cx, cy, 0, cx, cy, span * 1.04)
+  const shape = (scale: number, phaseShift = 0) =>
+    traceShape(ctx, cx, cy, ax * scale, ay * scale, exponent, wobble, phase + phaseShift)
+
+  // The body: black through the middle, with a dark accent tint only as it
+  // gathers towards the crest. This is what covers the screen swap.
+  const body = ctx.createRadialGradient(cx, cy, span * 0.06, cx, cy, span)
   body.addColorStop(0, palette.light)
-  body.addColorStop(0.44, palette.base)
-  body.addColorStop(1, palette.deep)
+  body.addColorStop(0.6, palette.light)
+  body.addColorStop(0.87, palette.deep)
+  body.addColorStop(1, palette.base)
 
   ctx.save()
   ctx.globalAlpha = wash
-  ctx.shadowColor = palette.glow
-  ctx.shadowBlur = 24
-  traceShape(ctx, cx, cy, ax, ay, exponent, wobble, phase)
+  shape(1)
   ctx.fillStyle = body
   ctx.fill()
   ctx.restore()
 
-  // Bands trailing the front, each a little further behind and softer, which is
-  // what sells the front as a wave instead of an expanding blob. They are the
-  // accent's one bright moment, so they stay thin and low-alpha.
-  ctx.save()
-  ctx.globalCompositeOperation = 'screen'
-  ctx.lineJoin = 'round'
-  ctx.lineCap = 'round'
-  for (let band = 1; band <= 5; band += 1) {
-    const inset = 1 - band * 0.052
-    ctx.globalAlpha = wash * Math.max(0.03, 0.14 - band * 0.022)
-    ctx.lineWidth = Math.max(1.5, span * 0.007 * (1 - band * 0.1))
-    ctx.strokeStyle = band % 2 ? palette.ice : palette.light
-    traceShape(
-      ctx,
-      cx,
-      cy,
-      ax * inset,
-      ay * inset,
-      exponent,
-      wobble * (1 + band * 0.16),
-      phase - band * 0.42,
-    )
-    ctx.stroke()
-  }
-  ctx.restore()
-
-  // Interference rings inside the wash, only once the wave is wide enough for
-  // them to read as caustics rather than as an outline of the source.
-  if (opened > 0.12) {
+  // Soft ripples inside the wash, wide and faint, so the body reads as liquid
+  // depth instead of a flat cut-out.
+  if (opened > 0.08) {
     ctx.save()
-    ctx.globalCompositeOperation = 'screen'
-    ctx.globalAlpha = wash * 0.1
-    ctx.lineWidth = 1
-    ctx.strokeStyle = palette.ice
-    for (const scale of [0.4, 0.56, 0.7, 0.82]) {
-      traceShape(ctx, cx, cy, ax * scale, ay * scale, exponent, wobble * 1.5, phase + scale * 3)
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.lineJoin = 'round'
+    for (const [scale, width, strength] of [
+      [0.94, 26, 0.05],
+      [0.82, 20, 0.036],
+      [0.66, 16, 0.024],
+    ]) {
+      ctx.globalAlpha = wash * strength
+      ctx.lineWidth = width * Math.min(1, opened + 0.2)
+      ctx.strokeStyle = palette.base
+      shape(scale, scale * 2.2)
       ctx.stroke()
     }
     ctx.restore()
   }
 
-  // The leading rim: the only place the accent is allowed to be bright.
+  // The crest: the same outline stroked at growing widths and falling alpha, so
+  // additive light piles up into a hot edge with a soft halo. Wide strokes with
+  // 'lighter' are what make it glow; a shadowBlur was the flat-looking shortcut.
   ctx.save()
-  ctx.globalCompositeOperation = 'screen'
-  ctx.globalAlpha = wash * 0.7
+  ctx.globalCompositeOperation = 'lighter'
   ctx.lineJoin = 'round'
-  ctx.strokeStyle = palette.ice
-  ctx.lineWidth = 1.8
-  ctx.shadowColor = palette.ice
-  ctx.shadowBlur = 12
-  traceShape(ctx, cx, cy, ax, ay, exponent, wobble, phase)
+  const bloomSteps = 9
+  for (let step = 0; step < bloomSteps; step += 1) {
+    const t = step / (bloomSteps - 1)
+    ctx.globalAlpha = wash * 0.11 * Math.pow(1 - t, 1.85)
+    ctx.lineWidth = 1.4 + t * t * 46
+    ctx.strokeStyle = step === 0 ? palette.bloom : palette.ice
+    shape(1 - t * 0.01)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  // The chromatic split: a warm arc just outside the crest and a cool one just
+  // inside it, which is what makes the edge look refractive rather than drawn.
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = 1.6
+  ctx.globalAlpha = wash * 0.2
+  ctx.strokeStyle = palette.ember
+  shape(1.004)
+  ctx.stroke()
+  ctx.globalAlpha = wash * 0.28
+  ctx.strokeStyle = palette.bloom
+  shape(0.996)
   ctx.stroke()
   ctx.restore()
 
-  // A faint sheen across the wave, clipped to its own edge.
+  // A crisp line at the very front, so the crest has a defined edge.
   ctx.save()
-  traceShape(ctx, cx, cy, ax, ay, exponent, wobble, phase)
+  ctx.globalCompositeOperation = 'lighter'
+  ctx.globalAlpha = wash * 0.42
+  ctx.lineWidth = 1
+  ctx.strokeStyle = palette.bloom
+  shape(1)
+  ctx.stroke()
+  ctx.restore()
+
+  // A faint cold sheen falling across the body, clipped to the wave.
+  ctx.save()
+  shape(1)
   ctx.clip()
-  const sheen = ctx.createLinearGradient(cx - ax, cy - ay, cx + ax * 0.6, cy + ay)
-  sheen.addColorStop(0, 'rgba(255, 255, 255, 0.05)')
-  sheen.addColorStop(0.45, 'rgba(255, 255, 255, 0.01)')
+  const sheen = ctx.createLinearGradient(cx - ax, cy - ay, cx + ax * 0.5, cy + ay)
+  sheen.addColorStop(0, 'rgba(255, 255, 255, 0.035)')
+  sheen.addColorStop(0.4, 'rgba(255, 255, 255, 0.008)')
   sheen.addColorStop(1, 'rgba(255, 255, 255, 0)')
   ctx.globalAlpha = wash
   ctx.fillStyle = sheen
