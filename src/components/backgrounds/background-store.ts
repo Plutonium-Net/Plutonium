@@ -11,8 +11,11 @@ import { onAuthChange } from '@/lib/cloud-store'
 import { getPref, loadPrefs, setPref } from '@/lib/prefs'
 import { BACKGROUNDS } from './registry'
 
-/** The rotating default, as opposed to any single wallpaper's id. */
+/** The rotating option, as opposed to any single wallpaper's id. */
 export const DAILY = 'daily'
+
+/** The wallpaper the shell wears until the user picks another. */
+export const DEFAULT_BACKGROUND = 'soft-aurora'
 
 const STORE_KEY = 'plu_background'
 const PREF_KEY = 'background'
@@ -22,9 +25,9 @@ const known = (id: string) => id === DAILY || BACKGROUNDS.some((option) => optio
 function readCached(): string {
   try {
     const raw = sessionStorage.getItem(STORE_KEY)
-    return raw && known(raw) ? raw : DAILY
+    return raw && known(raw) ? raw : DEFAULT_BACKGROUND
   } catch {
-    return DAILY
+    return DEFAULT_BACKGROUND
   }
 }
 

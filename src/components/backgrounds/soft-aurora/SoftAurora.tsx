@@ -7,6 +7,7 @@ export interface SoftAuroraProps {
   speed?: number;
   scale?: number;
   brightness?: number;
+  saturation?: number;
   color1?: string;
   color2?: string;
   noiseFrequency?: number;
@@ -32,6 +33,7 @@ interface Settings {
   speed: number;
   scale: number;
   brightness: number;
+  saturation: number;
   color1: number[];
   color2: number[];
   noiseFrequency: number;
@@ -77,6 +79,7 @@ uniform float uFlow;
 uniform float uHue;
 uniform float uScale;
 uniform float uBrightness;
+uniform float uSaturation;
 uniform vec3 uColor1;
 uniform vec3 uColor2;
 uniform float uNoiseFreq;
@@ -216,6 +219,7 @@ void main() {
   vec3 col = 0.99 * glow1 * gradient1 * uColor1;
   col += 0.99 * glow2 * gradient2 * uColor2;
   col *= uBrightness;
+  col = mix(vec3(dot(col, vec3(0.2126, 0.7152, 0.0722))), col, uSaturation);
 
   float grain = (fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5) / 255.0;
   if (uLightMode > 0.5) {
@@ -303,6 +307,7 @@ const SoftAurora = ({
   speed = 0.6,
   scale = 1.5,
   brightness = 1.0,
+  saturation = 1.0,
   color1 = '#f7f7f7',
   color2 = '#e100ff',
   noiseFrequency = 2.5,
@@ -332,6 +337,7 @@ const SoftAurora = ({
     speed: Math.max(0, speed),
     scale: Math.max(0.01, scale),
     brightness: Math.max(0, brightness),
+    saturation: Math.max(0, saturation),
     color1: parseColor(color1) || [0.969, 0.969, 0.969],
     color2: parseColor(color2) || [0.882, 0, 1],
     noiseFrequency: Math.max(0.01, noiseFrequency),
@@ -458,6 +464,7 @@ const SoftAurora = ({
       gl.uniform1f(u.uHue, hue);
       gl.uniform1f(u.uScale, s.scale);
       gl.uniform1f(u.uBrightness, s.brightness);
+      gl.uniform1f(u.uSaturation, s.saturation);
       gl.uniform3f(u.uColor1, s.color1[0], s.color1[1], s.color1[2]);
       gl.uniform3f(u.uColor2, s.color2[0], s.color2[1], s.color2[2]);
       gl.uniform1f(u.uNoiseFreq, s.noiseFrequency);

@@ -1,10 +1,11 @@
-/* The wave owns the whole window while a search is carried across; the screen it
-   is revealing sits underneath it, so nothing here may paint an opaque fallback
-   before the canvas does. */
+/* The wave is one composited layer: a transform (a pill-sized ellipse scaling
+   up into a circle that clears the window) and an opacity fade. Nothing here
+   repaints per frame, which is what keeps the transition smooth. */
 .distortion-wave {
   position: fixed;
   inset: 0;
   z-index: 300;
+  overflow: hidden;
   contain: layout paint;
   pointer-events: auto;
 }
@@ -14,8 +15,50 @@
   pointer-events: none;
 }
 
-.distortion-wave .distortion-wave__canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
+.distortion-wave .distortion-wave__shape {
+  position: absolute;
+  left: var(--wave-x);
+  top: var(--wave-y);
+  width: var(--wave-size);
+  height: var(--wave-size);
+  border-radius: 50%;
+  transform-origin: center;
+  transform: translate(-50%, -50%);
+  /* No will-change on purpose: the layer is window-sized, so hinting it would
+     pin a large texture in memory for no gain — transform and opacity already
+     animate on the compositor. */
+  /* A dark body that deepens into the accent towards the rim. The accent is
+     read straight from --accent-rgb, so the wave is exactly the account's
+     colour; the alpha ramp is what keeps it a deep wash instead of a flash. */
+  background-color: #05060a;
+  background-image: radial-gradient(
+    circle closest-side,
+    rgba(var(--accent-rgb), 0.06) 0%,
+    rgba(var(--accent-rgb), 0.1) 34%,
+    rgba(var(--accent-rgb), 0.17) 56%,
+    rgba(var(--accent-rgb), 0.3) 74%,
+    rgba(var(--accent-rgb), 0.52) 89%,
+    rgba(var(--accent-rgb), 0.85) 98%,
+    rgba(var(--accent-rgb), 0.35) 100%
+  );
+  animation: distortion-wave-open var(--wave-cover) cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+}
+
+.distortion-wave.is-revealing .distortion-wave__shape {
+  opacity: 0;
+  transition: opacity var(--wave-reveal) ease-out;
+}
+
+@keyframes distortion-wave-open {
+  from {
+    transform: translate(-50%, -50%) scale(var(--wave-scale-x), var(--wave-scale-y));
+    opacity: 0.35;
+  }
+  35% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1, 1);
+    opacity: 1;
+  }
 }

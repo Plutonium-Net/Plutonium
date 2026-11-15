@@ -38,7 +38,7 @@ const channels = (hex: string): [number, number, number] => {
 
 export const ACCENTS: Accent[] = PALETTE.map(([id, name, hex]) => ({ id, name, hex, rgb: channels(hex) }))
 
-export const DEFAULT_ACCENT = ACCENTS[0]
+export const DEFAULT_ACCENT = ACCENTS.find((accent) => accent.id === 'white') ?? ACCENTS[0]
 
 const STORE_KEY = 'plu_accent'
 const PREF_KEY = 'accent'

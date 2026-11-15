@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
+import SplitFlapText from '@/components/split-flap-text/SplitFlapText'
 import './quick-apps.css'
 
 type AppItem = { id: string; label: string; href: string; icon: ReactNode }
@@ -73,6 +75,15 @@ const ITEMS: AppItem[] = [
 ]
 
 export default function QuickApps({ onOpen, hidden = false }: { onOpen: (href: string) => void; hidden?: boolean }) {
+  // One board for the whole row, mounted only while something is hovered: that is
+  // what replays the flap cascade on every new hover instead of leaving a board
+  // already settled. It is centred under the row, not under each icon.
+  const [hovered, setHovered] = useState<string | null>(null)
+  const active = ITEMS.find((item) => item.id === hovered) ?? null
+
+  const label = (id: string) => setHovered((current) => (current === id ? current : id))
+  const clear = (id: string) => setHovered((current) => (current === id ? null : current))
+
   return (
     <nav className={`quick-apps${hidden ? ' is-hidden' : ''}`} aria-label="Pages" aria-hidden={hidden || undefined}>
       {ITEMS.map((item) => (
@@ -83,6 +94,10 @@ export default function QuickApps({ onOpen, hidden = false }: { onOpen: (href: s
           aria-label={item.label}
           title={item.label}
           onClick={() => onOpen(item.href)}
+          onPointerEnter={() => label(item.id)}
+          onPointerLeave={() => clear(item.id)}
+          onFocus={() => label(item.id)}
+          onBlur={() => clear(item.id)}
         >
           <svg
             className="quick-apps__icon"
@@ -98,6 +113,31 @@ export default function QuickApps({ onOpen, hidden = false }: { onOpen: (href: s
           </svg>
         </button>
       ))}
+      {active && (
+        <span className="quick-apps__label" aria-hidden="true">
+          <SplitFlapText
+            key={active.id}
+            text={active.label.toUpperCase()}
+            flipDuration={0.07}
+            stagger={0.012}
+            charset="alphanumeric"
+            flipsPerChar={3}
+            order="center"
+            align="center"
+            tileStyle="minimal"
+            tileColor="#111827"
+            textColor="currentColor"
+            glare={0}
+            depth={0.6}
+            tileRadius={8}
+            gap={1}
+            fontSize={10}
+            padTo={active.label.length}
+            loop={false}
+            intro
+          />
+        </span>
+      )}
     </nav>
   )
 }

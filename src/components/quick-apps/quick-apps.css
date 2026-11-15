@@ -40,6 +40,28 @@
   display: block;
 }
 
+/* One name, flipped in under the middle of the row. Absolute, so the icons never
+   shift while the board is mounted. */
+.quick-apps .quick-apps__label {
+  position: absolute;
+  top: calc(100% + 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--accent);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: quick-apps-label-in 0.1s linear both;
+}
+
+@keyframes quick-apps-label-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (hover: hover) {
   .quick-apps .quick-apps__btn:hover {
     color: var(--accent);
