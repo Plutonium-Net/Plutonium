@@ -1,16 +1,16 @@
 /*
- * The loading overlay: black over the whole page, monospace, white on black only.
- * The process is drawn as a tree - one dot per step on hairline branches - so the
- * screen reads the same way the startup actually runs.
+ * The loading overlay: black over the proxied frame, monospace, white on black
+ * only. The process is drawn as a tree - one dot per step, each hanging off a
+ * curved branch - so the screen reads the same way the startup actually runs.
  */
 
 .page-loading {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 2147483647;
+  z-index: 3;
   display: grid;
   place-items: center;
-  padding: 40px 24px;
+  padding: 32px 24px;
   overflow: auto;
   background: #000;
   color: #fff;
@@ -74,7 +74,15 @@
   letter-spacing: 0.06em;
 }
 
+/*
+ * Branches are curved: one trunk per group of children, running from the parent's
+ * dot down to the last child's dot, and a quarter-circle from that trunk into each
+ * child's dot. The trunk stops half a row short of the group's bottom because the
+ * last child here is a leaf; a group whose last child has children of its own
+ * would need that offset tuned.
+ */
 .page-loading__tree li > ul {
+  position: relative;
   padding-left: 1.3em;
 }
 
@@ -82,48 +90,42 @@
   padding-left: 0.75em;
 }
 
-/* Branch hairlines: one vertical guide per child, an elbow into its dot. */
-.page-loading__tree li::before {
+.page-loading__tree li > ul::before {
+  content: "";
+  position: absolute;
+  left: 0.5em;
+  top: -0.95em;
+  bottom: 0.95em;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.page-loading__tree > li > ul::before {
+  left: 1.25em;
+}
+
+/* The quarter-circle from the trunk into this row's dot. */
+.page-loading__tree li > ul > li::before {
   content: "";
   position: absolute;
   left: 0.5em;
   top: 0;
-  height: 100%;
-  border-left: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.page-loading__tree li:last-child::before {
-  height: 0.95em;
-}
-
-.page-loading__tree li::after {
-  content: "";
-  position: absolute;
-  left: 0.5em;
-  top: 0.95em;
   width: 1em;
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-/* The root dot grows a trunk down to its branches instead of hanging off one. */
-.page-loading__tree > li::before {
-  top: 0.95em;
-  height: auto;
-  bottom: 0;
-  left: 1.25em;
-}
-
-.page-loading__tree > li::after {
-  display: none;
+  height: 0.95em;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  border-bottom-left-radius: 0.95em;
+  pointer-events: none;
 }
 
 .page-loading__dot {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  background: transparent;
+  background: #000;
   transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
