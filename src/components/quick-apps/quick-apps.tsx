@@ -3,13 +3,21 @@ import type { ReactNode } from 'react'
 import SplitFlapText from '@/components/split-flap-text/SplitFlapText'
 import './quick-apps.css'
 
-type AppItem = { id: string; label: string; href: string; icon: ReactNode }
+type AppItem = {
+  id: string
+  label: string
+  /** Flip-board names for the hover label; more than one cycles like a departure board. */
+  words: string[]
+  href: string
+  icon: ReactNode
+}
 
 /** Same icon language as the side menu: 24-box, stroked, no fills. */
 const ITEMS: AppItem[] = [
   {
     id: 'games',
-    label: 'Games',
+    label: 'Browser games',
+    words: ['BROWSER GAMES'],
     href: 'pluto://games',
     icon: (
       <>
@@ -23,7 +31,8 @@ const ITEMS: AppItem[] = [
   },
   {
     id: 'ai',
-    label: 'AI',
+    label: 'Artificial intelligence',
+    words: ['ARTIFICIAL INTELLIGENCE'],
     href: 'pluto://ai',
     icon: (
       <>
@@ -37,7 +46,8 @@ const ITEMS: AppItem[] = [
   },
   {
     id: 'media',
-    label: 'Media',
+    label: 'Movies, TV and anime',
+    words: ['MOVIES', 'TV', 'ANIME'],
     href: 'pluto://media',
     icon: (
       <>
@@ -48,7 +58,8 @@ const ITEMS: AppItem[] = [
   },
   {
     id: 'vms',
-    label: 'VMs',
+    label: 'Virtual machines',
+    words: ['VIRTUAL MACHINES'],
     href: 'pluto://vms',
     icon: (
       <>
@@ -61,7 +72,8 @@ const ITEMS: AppItem[] = [
   },
   {
     id: 'apps',
-    label: 'Apps',
+    label: 'Applications',
+    words: ['APPLICATIONS'],
     href: 'pluto://apps',
     icon: (
       <>
@@ -117,9 +129,10 @@ export default function QuickApps({ onOpen, hidden = false }: { onOpen: (href: s
         <span className="quick-apps__label" aria-hidden="true">
           <SplitFlapText
             key={active.id}
-            text={active.label.toUpperCase()}
+            words={active.words}
             flipDuration={0.07}
             stagger={0.012}
+            cycleDelay={1500}
             charset="alphanumeric"
             flipsPerChar={3}
             order="center"
@@ -132,8 +145,8 @@ export default function QuickApps({ onOpen, hidden = false }: { onOpen: (href: s
             tileRadius={8}
             gap={1}
             fontSize={10}
-            padTo={active.label.length}
-            loop={false}
+            padTo={active.words.reduce((max, word) => Math.max(max, word.length), 1)}
+            loop={active.words.length > 1}
             intro
           />
         </span>
