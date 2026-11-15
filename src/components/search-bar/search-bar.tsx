@@ -14,11 +14,16 @@ export default function SearchBar({
   onNavigate,
   onActiveChange,
 }: {
-  onNavigate: (input: string) => boolean | Promise<boolean>
+  /**
+   * `origin` is the frame the pick came from — the row that was clicked, or the
+   * pill itself for a submitted query — so the transition can open from it.
+   */
+  onNavigate: (input: string, origin?: DOMRect) => boolean | Promise<boolean>
   /** Reports focus, so the home screen can tuck its pins away while typing. */
   onActiveChange?: (active: boolean) => void
 }) {
   const history = useHistory()
+  const barRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [value, setValue] = useState('')
   const [focused, setFocused] = useState(false)
@@ -74,17 +79,24 @@ export default function SearchBar({
     setOpen(false)
   }
 
-  async function pick(row: SmartRow) {
+  /** The glass pill, measured in viewport pixels; the row when there isn't one. */
+  function pillRect() {
+    const pill = barRef.current?.querySelector('.search-bar-beam') ?? barRef.current
+    return pill?.getBoundingClientRect()
+  }
+
+  async function pick(row: SmartRow, source?: HTMLElement) {
     if (row.complete !== undefined) {
       setValue(row.complete)
       inputRef.current?.focus()
       return
     }
     if (!row.navigate) return
+    const origin = source?.getBoundingClientRect() ?? pillRect()
     closeList()
     // Clears only when the navigation was accepted, so a failed remote session
     // leaves the query in place to retry.
-    if (await onNavigate(row.navigate)) setValue('')
+    if (await onNavigate(row.navigate, origin)) setValue('')
   }
 
   function move(step: number) {
@@ -122,11 +134,11 @@ export default function SearchBar({
     event.preventDefault()
     const query = value.trim()
     if (!query) return
-    if (await onNavigate(query)) setValue('')
+    if (await onNavigate(query, pillRect())) setValue('')
   }
 
   return (
-    <div className="search-bar">
+    <div className="search-bar" ref={barRef}>
       <div className="search-bar-wordmark">
         {/* Scales with the pill: the bar is min(560px, 90vw), so this keeps the
             wordmark at ~80% of its width on any screen.
@@ -214,7 +226,7 @@ export default function SearchBar({
           groups={groups}
           activeIndex={active}
           onHover={setActive}
-          onPick={(row) => void pick(row)}
+          onPick={(row, source) => void pick(row, source)}
         />
       )}
     </div>

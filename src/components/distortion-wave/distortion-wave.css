@@ -1,0 +1,21 @@
+/* The wave owns the whole window while a search is carried across; the screen it
+   is revealing sits underneath it, so nothing here may paint an opaque fallback
+   before the canvas does. */
+.distortion-wave {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  contain: layout paint;
+  pointer-events: auto;
+}
+
+/* Once the destination is committed, clicks belong to it, not to the veil. */
+.distortion-wave.is-revealing {
+  pointer-events: none;
+}
+
+.distortion-wave .distortion-wave__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

@@ -5,7 +5,8 @@ type Props = {
   groups: SmartGroup[]
   activeIndex: number
   onHover: (index: number) => void
-  onPick: (row: SmartRow) => void
+  /** `source` is the row's own element, so a transition can open from it. */
+  onPick: (row: SmartRow, source?: HTMLElement) => void
 }
 
 /**
@@ -39,7 +40,7 @@ export default function SearchSuggest({ groups, activeIndex, onHover, onPick }: 
                 // Keeps the caret in the input, so the bar never blurs mid-pick.
                 onMouseDown={(event) => event.preventDefault()}
                 onMouseEnter={() => onHover(at)}
-                onClick={() => onPick(row)}
+                onClick={(event) => onPick(row, event.currentTarget)}
               >
                 <RowIcon kind={row.icon} />
                 <span className="search-suggest__copy">

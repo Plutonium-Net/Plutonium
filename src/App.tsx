@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import AccountCenter from '@/components/account-center/account-center'
 import AddressBar from '@/components/address-bar/address-bar'
 import Background from '@/components/backgrounds/backgrounds'
@@ -6,6 +6,8 @@ import ChromeTabs from '@/components/chrome-tabs/chrome-tabs'
 import Clock from '@/components/clock/clock'
 import CustomizePanel from '@/components/customize-panel/customize-panel'
 import DesktopGate from '@/components/desktop-gate/desktop-gate'
+import DistortionWave from '@/components/distortion-wave/distortion-wave'
+import type { WaveOrigin, WavePhase } from '@/components/distortion-wave/distortion-wave'
 import HistoryPanel from '@/components/history-panel/history-panel'
 import FeedbackPanel from '@/components/feedback-panel/feedback-panel'
 import GlowCursor from '@/components/glow-cursor/GlowCursor'
@@ -40,6 +42,46 @@ export default function App() {
   const [legalSection, setLegalSection] = useState<LegalSection>('terms')
   const [reloadToken, setReloadToken] = useState(0)
   const [searchActive, setSearchActive] = useState(false)
+  const [wave, setWave] = useState<{ origin: WaveOrigin; phase: WavePhase } | null>(null)
+  const waveJob = useRef<{ input: string; resolve: (accepted: boolean) => void; accepted: boolean } | null>(null)
+
+  /**
+   * A search from the home screen is carried by the accent wave: the wave opens
+   * from the frame that was picked, the destination is committed under it, then
+   * it dissolves onto the new screen. The promise settles with the navigation
+   * result, which is what clears the query on success and keeps it on failure.
+   */
+  const searchWithWave = useCallback(
+    (input: string, origin?: DOMRect) =>
+      new Promise<boolean>((resolve) => {
+        const source: WaveOrigin = origin
+          ? { x: origin.left, y: origin.top, width: origin.width, height: origin.height }
+          : { x: window.innerWidth / 2 - 260, y: window.innerHeight / 2 - 24, width: 520, height: 48 }
+        // A second pick while one is in flight would strand the first promise.
+        waveJob.current?.resolve(false)
+        waveJob.current = { input, resolve, accepted: false }
+        setWave({ origin: source, phase: 'cover' })
+      }),
+    [],
+  )
+
+  const onWaveCovered = useCallback(() => {
+    const job = waveJob.current
+    if (!job) return
+    void navigate(job.input)
+      .catch(() => false)
+      .then((accepted) => {
+        job.accepted = accepted
+        setWave((current) => (current ? { ...current, phase: 'reveal' } : current))
+      })
+  }, [navigate])
+
+  const onWaveFinished = useCallback(() => {
+    const job = waveJob.current
+    waveJob.current = null
+    setWave(null)
+    job?.resolve(job.accepted)
+  }, [])
 
   const activeTab = tabs.find((tab) => tab.id === activeId)
   const page = activeTab ? resolveUrl(activeTab.url) : null
@@ -163,7 +205,7 @@ export default function App() {
             theme="dark"
             style={{ position: 'fixed', inset: 0, zIndex: 4, pointerEvents: 'none' }}
           />
-          <SearchBar onNavigate={navigate} onActiveChange={setSearchActive} />
+          <SearchBar onNavigate={searchWithWave} onActiveChange={setSearchActive} />
           <OnlineCount hidden={searchActive} />
           <QuickApps hidden={searchActive} onOpen={(href) => void navigate(href)} />
           <SideMenu activePanel={panel} onTogglePanel={(next) => setPanel(panel === next ? null : next)} />
@@ -210,6 +252,15 @@ export default function App() {
       {!onWeb && !page && <Clock />}
       <AccountCenter showTrigger={home} />
       <DesktopGate />
+      {/* Last and highest: it has to outlive the home screen it opens from. */}
+      {wave && (
+        <DistortionWave
+          origin={wave.origin}
+          phase={wave.phase}
+          onCovered={onWaveCovered}
+          onFinished={onWaveFinished}
+        />
+      )}
     </>
   )
 }
