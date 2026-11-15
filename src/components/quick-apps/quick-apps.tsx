@@ -47,7 +47,7 @@ const ITEMS: AppItem[] = [
   {
     id: 'media',
     label: 'Movies, TV and anime',
-    words: ['MOVIES', 'TV', 'ANIME'],
+    words: ['MOVIES, TV, ANIME'],
     href: 'pluto://media',
     icon: (
       <>
@@ -104,7 +104,6 @@ export default function QuickApps({ onOpen, hidden = false }: { onOpen: (href: s
           type="button"
           className="quick-apps__btn"
           aria-label={item.label}
-          title={item.label}
           onClick={() => onOpen(item.href)}
           onPointerEnter={() => label(item.id)}
           onPointerLeave={() => clear(item.id)}
