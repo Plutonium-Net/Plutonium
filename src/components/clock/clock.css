@@ -1,8 +1,17 @@
+@font-face {
+  font-family: 'Plutonium Clock';
+  src: url('../../assets/fonts/clock.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .clock {
   position: fixed;
   bottom: 20px;
   left: 20px;
   z-index: 5;
+  font-family: 'Plutonium Clock', sans-serif;
   font-size: 72px;
   font-weight: 200;
   color: rgba(255, 255, 255, 0.8);
