@@ -1,4 +1,3 @@
-import { createPortal } from 'react-dom'
 import type { NetStatus } from '@/lib/net/net-store'
 import './page-loading.css'
 
@@ -21,11 +20,12 @@ type NodeState = 'pending' | 'active' | 'done' | 'error'
 /**
  * The loading screen over a proxied page.
  *
- * It blacks the whole viewport out and reports the steps as a tree: every step is
- * a dot on a branch, so the shape of the tree says what has happened and where it
- * stopped. The steps are honest about what the app can actually observe: engine
- * start, the region it connects through, the request in flight, and then either
- * the frame's load event or the fact that nothing rendered.
+ * It blacks out the frame area - the proxied page, not the app chrome around it -
+ * and reports the steps as a tree: every step is a dot on a curved branch, so the
+ * shape of the tree says what has happened and where it stopped. The steps are
+ * honest about what the app can actually observe: engine start, the region it
+ * connects through, the request in flight, and then either the frame's load event
+ * or the fact that nothing rendered.
  */
 export default function PageLoading({ phase, engine, region, host, elapsed, latency, status, error, onRetry }: Props) {
   const failed = phase === 'error' || phase === 'blank'
@@ -94,9 +94,9 @@ export default function PageLoading({ phase, engine, region, host, elapsed, late
     </span>
   )
 
-  // Mounted on the body so no ancestor (a transformed or clipped shell) can trap
-  // it: the point of this screen is that the page behind it is gone.
-  return createPortal(
+  // Rendered inside .page-frame, which is the positioning box: the overlay is
+  // exactly the proxied page, so the tabs, dock and margins around it stay usable.
+  return (
     <div className={`page-loading page-loading--${phase}`} role="status" aria-live="polite">
       <div className="page-loading__panel">
         <ul className="page-loading__tree">
@@ -126,7 +126,6 @@ export default function PageLoading({ phase, engine, region, host, elapsed, late
           )}
         </div>
       </div>
-    </div>,
-    document.body,
+    </div>
   )
 }
