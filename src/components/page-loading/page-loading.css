@@ -1,11 +1,12 @@
 /*
  * The loading overlay: black over the proxied frame, monospace, white on black
- * only. The startup is drawn as a checklist that fills itself in - a box and a
- * description per step, and a line that runs down from each finished step to the
- * next box.
+ * only. The startup is drawn as a checklist that fills itself in - a round check
+ * and a description per step, and a soft line that runs down from each finished
+ * check to the next one.
  */
 
 .page-loading {
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: absolute;
   inset: 0;
   z-index: 3;
@@ -19,11 +20,11 @@
   font-size: 13px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  animation: page-loading-in 0.18s ease both;
+  animation: page-loading-in 0.22s var(--ease) both;
 }
 
 .page-loading--connected {
-  animation: page-loading-out 0.3s ease both;
+  animation: page-loading-out 0.3s var(--ease) both;
   pointer-events: none;
 }
 
@@ -85,11 +86,11 @@
 .page-loading__steps li {
   position: relative;
   display: grid;
-  grid-template-columns: 14px 1fr;
-  column-gap: 0.85em;
-  padding-bottom: 1.05rem;
-  opacity: 0.34;
-  transition: opacity 200ms ease;
+  grid-template-columns: 15px 1fr;
+  column-gap: 0.9em;
+  padding-bottom: 1.1rem;
+  opacity: 0.32;
+  transition: opacity 260ms var(--ease);
 }
 
 .page-loading__steps li:last-child {
@@ -102,18 +103,24 @@
   opacity: 1;
 }
 
-/* The line that runs down from a finished box to the next one. */
+/* The soft line that runs down from a finished check to the next one. */
 .page-loading__steps li::after {
   content: "";
   position: absolute;
-  left: 6.5px;
+  left: 6.75px;
   top: 21px;
   bottom: -4px;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.28);
+  width: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.42),
+    rgba(255, 255, 255, 0.42) 55%,
+    rgba(255, 255, 255, 0.14)
+  );
   transform: scaleY(0);
   transform-origin: top;
-  transition: transform 320ms ease;
+  transition: transform 420ms var(--ease);
 }
 
 .page-loading__steps li:last-child::after {
@@ -124,37 +131,62 @@
   transform: scaleY(1);
 }
 
+.page-loading__steps li[data-state="error"]::after {
+  transform: scaleY(0);
+}
+
 .page-loading__check {
   display: grid;
   place-items: center;
-  width: 14px;
-  height: 14px;
-  margin-top: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 3px;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
   color: #000;
   background: transparent;
-  transition: background-color 160ms ease, border-color 160ms ease;
+  transition:
+    background-color 220ms var(--ease),
+    border-color 220ms var(--ease),
+    box-shadow 300ms var(--ease),
+    transform 220ms var(--ease);
 }
 
 .page-loading__check svg {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
+}
+
+/* The tick draws itself in rather than appearing all at once. */
+.page-loading__check svg path {
+  stroke-dasharray: 18;
+  stroke-dashoffset: 18;
+  transition: stroke-dashoffset 280ms var(--ease) 40ms;
+}
+
+li[data-state="done"] > .page-loading__check svg path {
+  stroke-dashoffset: 0;
+}
+
+/* The cross is not drawn on: it shows as soon as the step fails. */
+li[data-state="error"] > .page-loading__check svg path {
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
 }
 
 li[data-state="active"] > .page-loading__check {
   border-color: #fff;
-  animation: page-loading-halo 1200ms ease-in-out infinite;
+  animation: page-loading-halo 1600ms var(--ease) infinite;
 }
 
-/* A carried-on step shows a dot while it works. */
+/* A carried-on step breathes inside its circle while it works. */
 li[data-state="active"] > .page-loading__check::after {
   content: "";
   width: 5px;
   height: 5px;
-  border-radius: 1px;
+  border-radius: 999px;
   background: #fff;
-  animation: page-loading-blink 1000ms steps(1) infinite;
+  animation: page-loading-breathe 1400ms ease-in-out infinite;
 }
 
 li[data-state="done"] > .page-loading__check {
@@ -177,7 +209,7 @@ li[data-state="error"] > .page-loading__check {
 
 .page-loading__label {
   color: rgba(255, 255, 255, 0.92);
-  transition: color 160ms ease;
+  transition: color 220ms var(--ease);
 }
 
 li[data-state="pending"] > .page-loading__body .page-loading__label {
@@ -188,6 +220,7 @@ li[data-state="pending"] > .page-loading__body .page-loading__label {
   font-size: 0.76rem;
   color: rgba(255, 255, 255, 0.42);
   overflow-wrap: anywhere;
+  transition: color 220ms var(--ease);
 }
 
 li[data-state="error"] > .page-loading__body .page-loading__label {
@@ -195,23 +228,26 @@ li[data-state="error"] > .page-loading__body .page-loading__label {
 }
 
 @keyframes page-loading-halo {
-  0%,
-  100% {
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14);
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.26);
   }
-  50% {
-    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.03);
+  70% {
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
   }
 }
 
-@keyframes page-loading-blink {
+@keyframes page-loading-breathe {
   0%,
-  49% {
-    opacity: 1;
-  }
-  50%,
   100% {
-    opacity: 0.15;
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.72);
   }
 }
 
@@ -224,6 +260,7 @@ li[data-state="error"] > .page-loading__body .page-loading__label {
   line-height: 1.65;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.04);
   overflow-wrap: anywhere;
 }
@@ -256,8 +293,11 @@ li[data-state="error"] > .page-loading__body .page-loading__label {
   cursor: pointer;
   background: #000;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+  border-radius: 999px;
+  transition:
+    color 200ms var(--ease),
+    border-color 200ms var(--ease),
+    background-color 200ms var(--ease);
 }
 
 .page-loading__retry:hover,
@@ -274,5 +314,10 @@ li[data-state="error"] > .page-loading__body .page-loading__label {
   li[data-state="active"] > .page-loading__check,
   li[data-state="active"] > .page-loading__check::after {
     animation: none;
+  }
+
+  .page-loading__check svg path {
+    transition: none;
+    stroke-dashoffset: 0;
   }
 }
