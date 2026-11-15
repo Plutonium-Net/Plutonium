@@ -1,11 +1,24 @@
+/*
+ * The loading overlay: black over the whole page, monospace, white on black only.
+ * The process is drawn as a tree - one dot per step on hairline branches - so the
+ * screen reads the same way the startup actually runs.
+ */
+
 .page-loading {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 3;
+  z-index: 2147483647;
   display: grid;
   place-items: center;
-  background: radial-gradient(ellipse at center, rgba(10, 10, 10, 0.55), rgba(10, 10, 10, 0.78));
-  animation: page-loading-in 0.2s ease both;
+  padding: 40px 24px;
+  overflow: auto;
+  background: #000;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  animation: page-loading-in 0.18s ease both;
 }
 
 .page-loading--connected {
@@ -31,145 +44,196 @@
   }
 }
 
-.page-loading .page-loading__card {
+.page-loading__panel {
+  width: min(100%, 34rem);
+}
+
+/* ---- tree ---------------------------------------------------------------- */
+
+.page-loading__tree,
+.page-loading__tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.page-loading__tree li {
   position: relative;
-  width: 288px;
-  border-radius: 16px;
-  overflow: hidden;
 }
 
-.page-loading .page-loading__glass {
-  position: absolute;
-  inset: 0;
-}
-
-.page-loading .page-loading__body {
-  position: relative;
-  z-index: 1;
-  padding: 14px 16px;
-}
-
-.page-loading .page-loading__head {
+.page-loading__row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.7em;
+  min-height: 1.9em;
+  padding-left: 1.5em;
 }
 
-.page-loading .page-loading__dot {
-  width: 7px;
-  height: 7px;
+.page-loading__tree > li > .page-loading__row {
+  padding-left: 0.95em;
+  letter-spacing: 0.06em;
+}
+
+.page-loading__tree li > ul {
+  padding-left: 1.3em;
+}
+
+.page-loading__tree > li > ul {
+  padding-left: 0.75em;
+}
+
+/* Branch hairlines: one vertical guide per child, an elbow into its dot. */
+.page-loading__tree li::before {
+  content: "";
+  position: absolute;
+  left: 0.5em;
+  top: 0;
+  height: 100%;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.page-loading__tree li:last-child::before {
+  height: 0.95em;
+}
+
+.page-loading__tree li::after {
+  content: "";
+  position: absolute;
+  left: 0.5em;
+  top: 0.95em;
+  width: 1em;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+/* The root dot grows a trunk down to its branches instead of hanging off one. */
+.page-loading__tree > li::before {
+  top: 0.95em;
+  height: auto;
+  bottom: 0;
+  left: 1.25em;
+}
+
+.page-loading__tree > li::after {
+  display: none;
+}
+
+.page-loading__dot {
   flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #8fd6ff;
-  box-shadow: 0 0 0 0 rgba(143, 214, 255, 0.55);
-  animation: page-loading-pulse 1.4s ease-out infinite;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.page-loading .page-loading__dot.is-failed {
-  background: #f2857e;
-  animation: none;
-  box-shadow: none;
+.page-loading__label {
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 160ms ease;
+  overflow-wrap: anywhere;
 }
 
-@keyframes page-loading-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(143, 214, 255, 0.5);
-  }
-  70% {
-    box-shadow: 0 0 0 7px rgba(143, 214, 255, 0);
-  }
+li[data-state="active"] > .page-loading__row .page-loading__dot {
+  background: #fff;
+  border-color: #fff;
+  animation: page-loading-halo 1200ms ease-in-out infinite;
+}
+
+li[data-state="done"] > .page-loading__row .page-loading__dot {
+  background: #fff;
+  border-color: #fff;
+}
+
+li[data-state="error"] > .page-loading__row .page-loading__dot {
+  background: #000;
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+li[data-state="active"] > .page-loading__row .page-loading__label,
+li[data-state="error"] > .page-loading__row .page-loading__label {
+  color: #fff;
+}
+
+li[data-state="done"] > .page-loading__row .page-loading__label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes page-loading-halo {
+  0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(143, 214, 255, 0);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.03);
   }
 }
 
-.page-loading .page-loading__title {
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.88);
-  letter-spacing: 0.01em;
-}
-
-.page-loading .page-loading__elapsed {
+.page-loading__elapsed {
   margin-left: auto;
+  padding-left: 1.2em;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.4);
   font-variant-numeric: tabular-nums;
 }
 
-.page-loading .page-loading__detail {
-  margin: 6px 0 10px;
-  font-size: 11px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.48);
+/* ---- note + foot --------------------------------------------------------- */
+
+.page-loading__note {
+  margin: 1.1rem 0 0;
+  padding: 0.85rem 1rem;
+  font-size: 0.78rem;
+  line-height: 1.65;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  overflow-wrap: anywhere;
 }
 
-.page-loading .page-loading__bar {
-  position: relative;
-  height: 2px;
-  border-radius: 2px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.page-loading .page-loading__bar.is-failed {
-  background: rgba(242, 133, 126, 0.35);
-}
-
-.page-loading .page-loading__bar-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 40%;
-  border-radius: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent);
-  animation: page-loading-sweep 1.1s ease-in-out infinite;
-}
-
-@keyframes page-loading-sweep {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(350%);
-  }
-}
-
-.page-loading .page-loading__foot {
+.page-loading__foot {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 0.55em;
+  margin-top: 1.35rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-.page-loading .page-loading__meta {
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
+.page-loading__meta {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.34);
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.page-loading .page-loading__retry {
+.page-loading__retry {
   margin-left: auto;
-  padding: 3px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.75);
+  padding: 4px 12px;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
-  transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
 
-.page-loading .page-loading__retry:hover {
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.12);
+.page-loading__retry:hover,
+.page-loading__retry:focus-visible {
+  color: #000;
+  background: #fff;
+  border-color: #fff;
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-loading .page-loading__dot,
-  .page-loading .page-loading__bar-fill,
-  .page-loading {
+  .page-loading,
+  .page-loading--connected,
+  li[data-state="active"] > .page-loading__row .page-loading__dot {
     animation: none;
   }
 }

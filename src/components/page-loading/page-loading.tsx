@@ -1,4 +1,4 @@
-import GlassSurface from '@/components/glass-surface/GlassSurface'
+import { createPortal } from 'react-dom'
 import type { NetStatus } from '@/lib/net/net-store'
 import './page-loading.css'
 
@@ -16,15 +16,26 @@ type Props = {
   onRetry: () => void
 }
 
+type NodeState = 'pending' | 'active' | 'done' | 'error'
+
 /**
- * The loading screen over a proxied page. The steps are honest about what the app
- * can actually observe: engine start, relay connect, the request in flight, and
- * then either the frame's load event or the fact that nothing rendered.
+ * The loading screen over a proxied page.
+ *
+ * It blacks the whole viewport out and reports the steps as a tree: every step is
+ * a dot on a branch, so the shape of the tree says what has happened and where it
+ * stopped. The steps are honest about what the app can actually observe: engine
+ * start, the region it connects through, the request in flight, and then either
+ * the frame's load event or the fact that nothing rendered.
  */
 export default function PageLoading({ phase, engine, region, host, elapsed, latency, status, error, onRetry }: Props) {
+  const failed = phase === 'error' || phase === 'blank'
+  const connected = phase === 'connected'
+
   const title =
     phase === 'starting'
-      ? 'Starting the proxy'
+      ? status === 'connecting'
+        ? 'Connecting'
+        : 'Starting the proxy'
       : phase === 'transferring'
         ? 'Transferring'
         : phase === 'rendering'
@@ -35,65 +46,87 @@ export default function PageLoading({ phase, engine, region, host, elapsed, late
               ? 'Connected'
               : phase === 'blank'
                 ? 'Nothing rendered'
-                : 'Could not load'
+                : failed
+                  ? 'Could not load'
+                  : 'Connecting'
 
-  const detail =
+  // The engine comes up first, then the relay region it picked, then the request
+  // itself, then the frame painting. Each branch is marked from that order.
+  const engineState: NodeState =
+    phase === 'starting' ? 'active' : phase === 'error' ? 'error' : 'done'
+  const regionState: NodeState =
+    phase === 'starting' || phase === 'error' ? 'pending' : 'done'
+  const requestState: NodeState =
     phase === 'starting'
-      ? status === 'connecting'
-        ? `Warming up ${engine}…`
-        : `Preparing ${engine}…`
+      ? 'pending'
       : phase === 'transferring'
-        ? `${host} · ${region}`
-        : phase === 'rendering'
-          ? `Waiting on ${host} · ${region}`
-          : phase === 'slow'
-            ? `${host} has not answered yet. Relays can be slow or blocked.`
-            : phase === 'connected'
-              ? `${host} is open`
-              : phase === 'blank'
-                ? 'The relay answered but the page came back empty.'
-                : (error ?? 'The proxy could not start.')
+        ? 'active'
+        : phase === 'error'
+          ? 'error'
+          : 'done'
+  const renderState: NodeState =
+    phase === 'rendering' || phase === 'slow'
+      ? 'active'
+      : phase === 'blank'
+        ? 'error'
+        : phase === 'connected'
+          ? 'done'
+          : 'pending'
 
-  const failed = phase === 'error' || phase === 'blank'
-  const busy = !failed && phase !== 'connected'
+  const rootState: NodeState = failed ? 'error' : connected ? 'done' : 'active'
 
-  return (
+  const note =
+    phase === 'slow'
+      ? `${host} has not answered yet. Relays can be slow or blocked.`
+      : phase === 'blank'
+        ? 'The relay answered but the page came back empty.'
+        : phase === 'error'
+          ? (error ?? 'The proxy could not start.')
+          : null
+
+  const meta = connected ? 'Connected' : failed ? 'Stopped' : latency ? `${latency}ms ping` : 'working'
+
+  const row = (state: NodeState, label: string, trailing?: string) => (
+    <span className="page-loading__row">
+      <span className="page-loading__dot" aria-hidden="true" />
+      <span className="page-loading__label">{label}</span>
+      {trailing ? <span className="page-loading__elapsed">{trailing}</span> : null}
+    </span>
+  )
+
+  // Mounted on the body so no ancestor (a transformed or clipped shell) can trap
+  // it: the point of this screen is that the page behind it is gone.
+  return createPortal(
     <div className={`page-loading page-loading--${phase}`} role="status" aria-live="polite">
-      <div className="page-loading__card">
-        <GlassSurface
-          className="page-loading__glass"
-          width="100%"
-          height="100%"
-          borderRadius={16}
-          backgroundOpacity={0.12}
-          saturation={1.25}
-          displace={0.5}
-        />
-        <div className="page-loading__body">
-          <div className="page-loading__head">
-            <span className={`page-loading__dot${failed ? ' is-failed' : ''}`} aria-hidden="true" />
-            <span className="page-loading__title">{title}</span>
-            <span className="page-loading__elapsed">{(elapsed / 1000).toFixed(1)}s</span>
-          </div>
+      <div className="page-loading__panel">
+        <ul className="page-loading__tree">
+          <li data-state={rootState}>
+            {row(rootState, title, `${(elapsed / 1000).toFixed(1)}s`)}
+            <ul>
+              <li data-state={engineState}>
+                {row(engineState, engine)}
+                <ul>
+                  <li data-state={regionState}>{row(regionState, region)}</li>
+                </ul>
+              </li>
+              <li data-state={requestState}>{row(requestState, host)}</li>
+              <li data-state={renderState}>{row(renderState, 'frame')}</li>
+            </ul>
+          </li>
+        </ul>
 
-          <p className="page-loading__detail">{detail}</p>
+        {note ? <p className="page-loading__note">{note}</p> : null}
 
-          <div className={`page-loading__bar${failed ? ' is-failed' : ''}`} aria-hidden="true">
-            {busy ? <span className="page-loading__bar-fill" /> : null}
-          </div>
-
-          <div className="page-loading__foot">
-            <span className="page-loading__meta">
-              {phase === 'connected' ? 'Connected' : failed ? 'Stopped' : latency ? `${latency}ms ping` : 'working'}
-            </span>
-            {phase !== 'connected' ? (
-              <button type="button" className="page-loading__retry" onClick={onRetry}>
-                {failed ? 'Try again' : 'Reload'}
-              </button>
-            ) : null}
-          </div>
+        <div className="page-loading__foot">
+          <span className="page-loading__meta">{meta}</span>
+          {connected ? null : (
+            <button type="button" className="page-loading__retry" onClick={onRetry}>
+              {failed ? 'Try again' : 'Reload'}
+            </button>
+          )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
