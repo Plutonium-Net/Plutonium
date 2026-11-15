@@ -156,6 +156,7 @@ export default function App() {
             onAdd={addTab}
             onClose={closeTab}
             onReorder={moveTab}
+            addCentered={home}
           />
         </div>
 

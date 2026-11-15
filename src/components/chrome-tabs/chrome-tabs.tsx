@@ -15,6 +15,8 @@ type ChromeTabsProps = {
   onAdd: () => void
   onClose: (id: string) => void
   onReorder: (from: number, to: number) => void
+  /** Home screen: the button leaves the strip and docks centred under it. */
+  addCentered?: boolean
 }
 
 type DragState = {
@@ -29,7 +31,15 @@ type DragState = {
 const DRAG_THRESHOLD_PX = 4
 const REORDER_TRANSITION_MS = 120
 
-export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, onReorder }: ChromeTabsProps) {
+export default function ChromeTabs({
+  tabs,
+  activeId,
+  onSelect,
+  onAdd,
+  onClose,
+  onReorder,
+  addCentered = false,
+}: ChromeTabsProps) {
   const contentRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const dragFrameRef = useRef<number | null>(null)
@@ -183,8 +193,23 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
     if (event.target === event.currentTarget) onAdd()
   }
 
+  const newTabButton = (
+    <button
+      className="chrome-tabs-newtab-btn"
+      id="newtab-btn"
+      title="New tab"
+      aria-label="New tab"
+      onClick={onAdd}
+    >
+      <svg className="newtab-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <line x1="9" y1="2" x2="9" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <line x1="2" y1="9" x2="16" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    </button>
+  )
+
   return (
-    <div className="chrome-tabs">
+    <div className={cn('chrome-tabs', addCentered && 'has-centered-add')}>
       <div className="chrome-tabs-content" ref={contentRef} onDoubleClick={handleStripDoubleClick}>
         {tabs.map((tab) => {
           const active = tab.id === activeId
@@ -236,19 +261,10 @@ export default function ChromeTabs({ tabs, activeId, onSelect, onAdd, onClose, o
             </div>
           )
         })}
-        <button
-          className="chrome-tabs-newtab-btn"
-          id="newtab-btn"
-          title="New tab"
-          aria-label="New tab"
-          onClick={onAdd}
-        >
-          <svg className="newtab-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <line x1="9" y1="2" x2="9" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <line x1="2" y1="9" x2="16" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
+        {!addCentered && newTabButton}
       </div>
+      {/* Home screen: the button is docked centred just below the strip instead. */}
+      {addCentered && <div className="chrome-tabs-add-dock">{newTabButton}</div>}
     </div>
   )
 }

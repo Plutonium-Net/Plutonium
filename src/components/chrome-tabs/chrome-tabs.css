@@ -14,6 +14,25 @@
   font: inherit;
 }
 
+/* The docked (home) button hangs below the strip, so the strip stops clipping
+   and the tab row does the clipping instead. */
+.chrome-tabs.has-centered-add {
+  overflow: visible;
+}
+
+.chrome-tabs.has-centered-add .chrome-tabs-content {
+  overflow: hidden;
+}
+
+.chrome-tabs .chrome-tabs-add-dock {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 30;
+  display: flex;
+}
+
 .chrome-tabs-content {
   position: relative;
   display: flex;
