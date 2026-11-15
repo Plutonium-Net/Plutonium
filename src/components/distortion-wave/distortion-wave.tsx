@@ -99,6 +99,7 @@ export default function DistortionWave({ origin, phase, onCovered, onFinished }:
         paletteRef.current,
         reduced,
       )
+
       if (cover >= 1 && !coveredRef.current) {
         coveredRef.current = true
         onCoveredRef.current()
