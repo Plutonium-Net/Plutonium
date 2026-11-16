@@ -139,6 +139,9 @@ function assemble(html, svg, xhtml, sizes) {
   const files = { 'plutonium.html': html, 'plutonium.svg': svg, 'plutonium.xhtml': xhtml }
   for (const [name, contents] of Object.entries(files)) writeFileSync(join(DOWNLOAD_DIR, name), contents)
 
+  // The page declares this as its icon, so it has to ship beside it.
+  copyFileSync(join(ROOT, 'public/icon-white.png'), join(DOWNLOAD_DIR, 'icon-white.png'))
+
   // A stable URL is friendlier to bookmark; no-cache keeps it honest across
   // deployments instead of letting a browser hold on to an older file.
   const headers = ['/index.html', ...Object.keys(files).map((name) => `/${name}`)]

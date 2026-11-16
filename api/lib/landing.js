@@ -23,8 +23,8 @@ export function landingPage() {
 <meta property="og:title" content="Plutonium API" />
 <meta property="og:description" content="Authentication, AI and remote sessions for Plutonium Network." />
 <meta property="og:image" content="/background.png" />
-<link rel="icon" type="image/png" href="/favicon.png" />
-<link rel="apple-touch-icon" href="/favicon.png" />
+<link rel="icon" type="image/png" href="/icon-white.png" />
+<link rel="apple-touch-icon" href="/icon-white.png" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -261,7 +261,7 @@ export function landingPage() {
 
 <main class="stage">
   <section class="card card--title">
-    <img class="card__mark" src="/logo.png" alt="" width="58" height="58" />
+    <img class="card__mark" src="/icon-white.png" alt="" width="58" height="58" />
     <div>
       <p class="card__eyebrow">api.plutoniumnet.work</p>
       <h1 class="card__title">Plutonium API</h1>
