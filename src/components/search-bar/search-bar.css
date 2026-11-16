@@ -35,12 +35,22 @@
 .search-bar .search-bar-wordmark .particle-text {
   position: absolute;
   left: 50%;
-  bottom: 0;
+  bottom: -182px;
   transform: translateX(-50%);
   width: min(1000px, 90vw);
-  height: min(560px, calc(50vh - 120px));
+  height: calc(50vh + 32px);
   min-height: 0;
   overflow: visible;
+}
+
+.search-bar .search-bar-wordmark {
+  z-index: 0;
+}
+
+.search-bar .search-bar-beam,
+.search-bar .search-bar-glass {
+  position: relative;
+  z-index: 1;
 }
 
 .search-bar .search-bar-beam,

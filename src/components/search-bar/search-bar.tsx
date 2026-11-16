@@ -145,8 +145,8 @@ export default function SearchBar({
           pointerRepel={90}
           repelRadius={120}
           idleDrift={0.7}
-          offsetY={90}
-          trigger="hover"
+          anchorBottom={280}
+          trigger="mount"
           fontSize="clamp(3rem, 12vw, 8rem)"
           fontWeight={800}
           fontFamily="inherit"

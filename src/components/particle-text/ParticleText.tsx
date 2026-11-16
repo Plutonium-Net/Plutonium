@@ -21,6 +21,7 @@ export interface ParticleTextProps {
   repelRadius?: number;
   idleDrift?: number;
   offsetY?: number;
+  anchorBottom?: number;
   trigger?: 'mount' | 'hover' | 'click';
   fontSize?: number | string;
   fontWeight?: number | string;
@@ -128,6 +129,7 @@ const ParticleText = ({
   repelRadius = 120,
   idleDrift = 0.7,
   offsetY = 0,
+  anchorBottom = 0,
   trigger = 'mount',
   fontSize = 'clamp(3rem, 12vw, 8rem)',
   fontWeight = 800,
@@ -160,6 +162,7 @@ const ParticleText = ({
       repelRadius,
       idleDrift,
       offsetY,
+      anchorBottom,
       trigger,
       fontSize,
       fontWeight,
@@ -652,6 +655,7 @@ const ParticleText = ({
       const imageData = offCtx.getImageData(0, 0, offscreen.width, offscreen.height);
       const targets: Target[] = [];
       const sampleStep = Math.max(2, Math.floor(s.density));
+      const verticalOffset = s.anchorBottom > 0 ? nextHeight / 2 - s.anchorBottom : s.offsetY;
 
       for (let y = 0; y < offscreen.height; y += sampleStep) {
         for (let x = 0; x < offscreen.width; x += sampleStep) {
@@ -659,7 +663,7 @@ const ParticleText = ({
           if (alpha > 40) {
             targets.push({
               x: nextWidth / 2 - offscreen.width / 2 + x,
-              y: nextHeight / 2 - offscreen.height / 2 + y + s.offsetY,
+              y: nextHeight / 2 - offscreen.height / 2 + y + verticalOffset,
               alpha: alpha / 255
             });
           }
