@@ -22,6 +22,7 @@ let deleted: Record<string, number> = {}
 const listeners = new Set<() => void>()
 let pushTimer: number | null = null
 let lastPushHash = ''
+let loading: Promise<void> | null = null
 
 function emit() {
   listeners.forEach((fn) => fn())
@@ -79,20 +80,30 @@ function schedulePush() {
   }, PUSH_DEBOUNCE_MS)
 }
 
-export async function pullHistory() {
-  if (!isSignedIn()) return
-  try {
-    const doc = await getDoc(DOC_NAME)
-    const remote = Array.isArray(doc?.entries) ? (doc.entries as HistoryEntry[]) : []
-    const remoteDeleted = doc?.deleted && typeof doc.deleted === 'object' ? (doc.deleted as Record<string, number>) : {}
-    deleted = { ...remoteDeleted, ...deleted }
-    entries = merge(remote.filter((entry) => entry && entry.type && entry.ts && entry.title))
-    lastPushHash = ''
-    emit()
-    void push()
-  } catch (error) {
-    console.warn('[history] pull failed:', error)
+export function pullHistory(): Promise<void> {
+  if (!isSignedIn()) return Promise.resolve()
+  if (loading) return loading
+
+  const run = async () => {
+    try {
+      const doc = await getDoc(DOC_NAME)
+      const remote = Array.isArray(doc?.entries) ? (doc.entries as HistoryEntry[]) : []
+      const remoteDeleted = doc?.deleted && typeof doc.deleted === 'object' ? (doc.deleted as Record<string, number>) : {}
+      deleted = { ...remoteDeleted, ...deleted }
+      entries = merge(remote.filter((entry) => entry && entry.type && entry.ts && entry.title))
+      lastPushHash = ''
+      emit()
+      void push()
+    } catch (error) {
+      console.warn('[history] pull failed:', error)
+    } finally {
+      loading = null
+    }
   }
+
+  const task = run()
+  loading = task
+  return task
 }
 
 export function recordVisit(input: { type: HistoryType; title: string; href: string; sub?: string; engine?: string }) {

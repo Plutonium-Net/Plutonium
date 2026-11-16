@@ -334,7 +334,6 @@ function restoreSession() {
     currentUser = user
     if (Date.now() >= user.expiresAt) void refreshIdToken()
     else scheduleRefresh()
-    window.setTimeout(notify, 0)
   } catch {
   }
 }
