@@ -18,7 +18,7 @@
   border: none;
   border-radius: 10px;
   background: none;
-  color: rgba(255, 255, 255, 0.55);
+  color: #ffffff;
   cursor: pointer;
   transition: color 0.2s ease, transform 0.2s ease;
 }
