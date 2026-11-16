@@ -7,8 +7,9 @@ import { BEAM_PROPS } from '@/lib/beam'
 import CopyCheck from './copy-check'
 import './download-page.css'
 
-/** The size the Pages build baked in; blank when the page is run any other way. */
+/** The sizes the Pages build baked in; blank when the page is run any other way. */
 const SIZE = typeof __PLU_SIZE__ === 'string' ? __PLU_SIZE__ : ''
+const SVG_SIZE = typeof __PLU_SVG_SIZE__ === 'string' ? __PLU_SVG_SIZE__ : ''
 
 /**
  * The download page, dressed as the home screen: the default wallpaper, the
@@ -67,9 +68,22 @@ export default function DownloadPage() {
             one HTML file. Keep it on disk and open it with a double-click.
           </p>
 
-          <a className="download-page__ghost" href="./plutonium.html">
-            Open in browser
-          </a>
+          <p className="download-page__alts">
+            <a className="download-page__ghost" href="./plutonium.html">
+              Open in browser
+            </a>
+            <span className="download-page__dot" aria-hidden="true">
+              ·
+            </span>
+            <a
+              className="download-page__ghost"
+              href="./plutonium.svg"
+              download="plutonium.svg"
+              aria-label={SVG_SIZE ? `Download the SVG version (${SVG_SIZE})` : 'Download the SVG version'}
+            >
+              SVG version{SVG_SIZE ? ` (${SVG_SIZE})` : ''}
+            </a>
+          </p>
 
           <CopyCheck />
         </div>

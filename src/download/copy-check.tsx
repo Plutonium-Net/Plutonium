@@ -17,6 +17,9 @@ const DEPTH = HISTORY.length
 
 const META_COMMIT = /<meta\s+name=["']plutonium-commit["']\s+content=["']([^"']+)["']/i
 const META_BUILT = /<meta\s+name=["']plutonium-built["']\s+content=["']([^"']+)["']/i
+// The SVG build carries the same tags inside its srcdoc, escaped as attributes.
+const SVG_COMMIT = /&lt;meta name=&quot;plutonium-commit&quot; content=&quot;([^&"]+)&quot;/
+const SVG_BUILT = /&lt;meta name=&quot;plutonium-built&quot; content=&quot;([^&"]+)&quot;/
 const IS_PLUTONIUM = /<title>\s*Plutonium/i
 // This page's own title: picking it up is a slip, not an ancient build.
 const IS_THIS_PAGE = /<title>\s*Plutonium\s*—\s*single file/i
@@ -56,8 +59,8 @@ function formatAge(iso: string) {
 
 async function inspect(file: File): Promise<Result> {
   const head = await file.slice(0, 512 * 1024).text()
-  const commit = META_COMMIT.exec(head)?.[1] ?? null
-  const iso = META_BUILT.exec(head)?.[1] ?? null
+  const commit = META_COMMIT.exec(head)?.[1] ?? SVG_COMMIT.exec(head)?.[1] ?? null
+  const iso = META_BUILT.exec(head)?.[1] ?? SVG_BUILT.exec(head)?.[1] ?? null
 
   const result: Result = {
     name: file.name,

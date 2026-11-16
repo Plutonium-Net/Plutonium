@@ -95,6 +95,23 @@
   color: rgba(255, 255, 255, 0.55);
 }
 
+.download-page .download-page__alts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.download-page .download-page__alts .download-page__ghost {
+  margin-top: 0;
+}
+
+.download-page .download-page__dot {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+}
+
 .download-page .download-page__ghost {
   display: inline-block;
   margin-top: 16px;
