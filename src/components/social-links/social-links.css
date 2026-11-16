@@ -9,6 +9,9 @@
 }
 
 .social-links .social-links__lite {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin-right: 8px;
   font-size: 11px;
   letter-spacing: 0.02em;
@@ -22,11 +25,22 @@
   .social-links .social-links__lite:hover {
     color: var(--accent);
   }
+
+  .social-links .social-links__lite:hover .social-links__lite-icon {
+    transform: translate(1px, -1px);
+  }
 }
 
 .social-links .social-links__lite:focus-visible {
   outline: 2px solid rgba(var(--accent-rgb), 0.65);
   outline-offset: 2px;
+}
+
+.social-links .social-links__lite-icon {
+  width: 12px;
+  height: 12px;
+  display: block;
+  transition: transform 0.2s ease;
 }
 
 .social-links .social-links__build {

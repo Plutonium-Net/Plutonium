@@ -50,6 +50,18 @@ export default function SocialLinks({ showLite = false }: { showLite?: boolean }
           title="Lite version: the whole app as a single downloadable file"
         >
           Lite version
+          <svg
+            className="social-links__lite-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M7 17 17 7M9 7h8v8" />
+          </svg>
         </a>
       ) : null}
       <span className="social-links__build" title={`Commit ${__PLU_COMMIT__}`}>

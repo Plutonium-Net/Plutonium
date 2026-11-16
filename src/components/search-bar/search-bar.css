@@ -21,12 +21,26 @@
   left: 50%;
   bottom: calc(100% + 18px);
   transform: translateX(-50%);
+  width: min(600px, 90vw);
+  height: 360px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   font-family: 'Plutonium', sans-serif;
   line-height: 1;
   color: var(--accent);
-  white-space: nowrap;
   user-select: none;
-  pointer-events: none;
+}
+
+.search-bar .search-bar-wordmark .particle-text {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(1000px, 90vw);
+  height: min(560px, calc(50vh - 120px));
+  min-height: 0;
+  overflow: visible;
 }
 
 .search-bar .search-bar-beam,

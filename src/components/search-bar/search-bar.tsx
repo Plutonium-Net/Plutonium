@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { BorderBeam } from 'border-beam'
-import FoldText from '@/components/fold-text/FoldText'
+import ParticleText from '@/components/particle-text/ParticleText'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import SearchSuggest from '@/components/search-suggest/search-suggest'
 import { useHistory } from '@/hooks/use-history'
@@ -128,24 +128,29 @@ export default function SearchBar({
   return (
     <div className="search-bar" ref={barRef}>
       <div className="search-bar-wordmark">
-        <FoldText
+        <ParticleText
           text="Plutonium"
-          foldStyle="paper"
-          splitBy="char"
-          hinge="top"
-          trigger="mount"
-          foldAngle={92}
-          duration={0.65}
-          stagger={0.045}
-          staggerFrom="center"
-          ease="power3.out"
-          hoverRefold
-          refoldRadius={140}
-          refoldAngle={45}
-          perspective={700}
-          creaseShading={0.55}
-          fontSize="min(88px, 14.1vw)"
-          fontWeight={400}
+          particleSize={1.8}
+          density={4}
+          color="currentColor"
+          highlightColor="#ffffff"
+          highlightMode="motion"
+          shape="square"
+          intro="spiral"
+          scatter={320}
+          gatherDuration={1300}
+          stagger={420}
+          clickBurst
+          burstStrength={1}
+          pointerRepel={90}
+          repelRadius={120}
+          idleDrift={0.7}
+          offsetY={90}
+          trigger="hover"
+          fontSize="clamp(3rem, 12vw, 8rem)"
+          fontWeight={800}
+          fontFamily="inherit"
+          glow
         />
       </div>
       <BorderBeam className="search-bar-beam" {...BEAM_PROPS} borderRadius={999} active={focused}>
