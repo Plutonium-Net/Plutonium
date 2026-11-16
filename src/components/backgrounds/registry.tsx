@@ -21,7 +21,8 @@ export const BACKGROUNDS: BackgroundOption[] = [
   { id: 'scene-autumn', name: 'Autumn', Component: scene('/img/presets/autumn.jpg', 30) },
   { id: 'scene-late-autumn', name: 'Late Autumn', Component: scene('/img/presets/late-autumn.jpg', 25) },
   { id: 'scene-winter', name: 'Snowstorm', Component: scene('/img/presets/winter.jpg', 30) },
-  { id: 'scene-marin-kitagawa', name: 'Marin Kitagawa', Component: scene('/img/presets/marin-kitagawa.png', 10) },
+  { id: 'scene-marin-kitagawa', name: 'Marin Kitagawa', Component: scene('/img/presets/marin-kitagawa.jpg', 10) },
+  { id: 'scene-orbital', name: 'Orbital', Component: scene('/img/presets/orbital.jpg', 25) },
 ]
 
 const DAY_MS = 86_400_000
