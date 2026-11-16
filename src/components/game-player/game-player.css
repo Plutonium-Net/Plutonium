@@ -14,7 +14,6 @@
   background: #000;
 }
 
-/* ── Dock ─────────────────────────────────────────────────────────────── */
 
 .game-player .game-player__dock {
   position: absolute;
@@ -32,7 +31,6 @@
   height: 100%;
 }
 
-/* The glass content box pads 0.5rem by default; the dock wants a tighter frame. */
 .game-player .game-player__glass .glass-surface__content {
   padding: 5px 6px;
 }

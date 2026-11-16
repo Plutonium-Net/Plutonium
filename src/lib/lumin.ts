@@ -1,14 +1,3 @@
-/**
- * LuminSDK, the second games source v1 shipped (`cdn.jsdelivr.net/gh/luminsdk/
- * script@latest/lumin.min.js`, then one `Lumin.init`).
- *
- * The current build of that script draws no browse UI of its own. Its grid is
- * gone and only the data API is left, so this is their documented "headless"
- * route: `search()` for the catalog, `getImageUrl()` for covers and
- * `getGameUrl()` for a one-time playable URL. `init` still has to run first,
- * because every method refuses to work before it does.
- */
-
 const LUMIN_SCRIPT = 'https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js'
 const BOOT_TIMEOUT = 15000
 const PLAY_TIMEOUT = 12000
@@ -68,7 +57,6 @@ function loadScript(): Promise<void> {
     document.head.appendChild(script)
   })
 
-  // A failed load may be retried: the next attempt gets a fresh script tag.
   scriptRequest.catch(() => {
     scriptRequest = null
   })
@@ -83,15 +71,6 @@ function withTimeout<T>(work: Promise<T>, ms: number, message: string): Promise<
   ])
 }
 
-/**
- * Loads the script and runs `init`. The container stays hidden: this build may or
- * may not draw into it, and either way our own grid is the UI.
- *
- * `init` on this origin is flaky (it intermittently rejects with "domain fetch
- * failed" before settling), so it is attempted a few times. Each attempt gets a
- * fresh child element, because a half-initialised one carries the SDK's shadow
- * root and refuses a second init.
- */
 export async function bootLumin(container: HTMLElement | null): Promise<void> {
   if (booted) return
   await loadScript()
@@ -135,7 +114,6 @@ export async function luminSearch(query: string, page = 1): Promise<LuminPage> {
   }
 }
 
-/** Covers come back as absolute URLs; a missing token just means no artwork. */
 export async function luminImage(token: string): Promise<string> {
   if (!token || !window.Lumin) return ''
   try {
@@ -146,7 +124,6 @@ export async function luminImage(token: string): Promise<string> {
   }
 }
 
-/** Playable URLs are single-use, so this is called on every play, never cached. */
 export async function luminPlayUrl(id: string): Promise<string> {
   const api = window.Lumin
   if (!api) throw new Error('LuminSDK is not ready')

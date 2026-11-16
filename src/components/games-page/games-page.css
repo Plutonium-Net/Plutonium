@@ -17,7 +17,6 @@
   overflow: hidden;
 }
 
-/* Title and search live inside the scroll area, so they ride up out of the way. */
 .games-page .games-page__head {
   display: flex;
   flex-direction: column;
@@ -26,7 +25,6 @@
   padding: 18px 20px 10px;
 }
 
-/* The wordmark face, same one the home screen's "Plutonium" uses. */
 .games-page .games-page__title {
   margin: 0;
   font-family: 'Plutonium', sans-serif;
@@ -39,7 +37,6 @@
   user-select: none;
 }
 
-/* Source switcher: a glass pill, with the active tab lit by a glass chip. */
 .games-page .games-page__tabs-shell {
   height: 34px;
   width: fit-content;
@@ -93,7 +90,6 @@
   color: #ffffff;
 }
 
-/* The SDK gets a container to boot into, but the grid on screen is ours. */
 .games-page .games-page__lumin {
   display: none;
 }
@@ -104,7 +100,6 @@
   padding: 18px 0 4px;
 }
 
-/* Same pill as the home screen: real glass, a beam that lights up on focus. */
 .games-page .games-page__search {
   width: min(560px, 84vw);
   height: 44px;
@@ -127,7 +122,6 @@
   gap: 12px;
   width: 100%;
   height: 100%;
-  /* The glass content box already carries 0.5rem of padding. */
   padding: 0 10px;
 }
 
@@ -183,7 +177,6 @@
   border-radius: 3px;
 }
 
-/* 70% of the page, 15% of breathing room either side, three big cards a row. */
 .games-page .games-page__grid {
   width: 70%;
   margin: 0 auto;
@@ -242,7 +235,6 @@
   stroke-linejoin: round;
 }
 
-/* The card is the cover; the name only appears over it on hover. */
 .games-page .games-page__card-name {
   position: absolute;
   left: 0;
@@ -312,7 +304,6 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-/* Player: the game fills the page area under a small bar. */
 .games-page .games-page__player {
   flex: 1 1 auto;
   display: flex;
@@ -381,7 +372,6 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Save chip: a quiet status line until something goes wrong. */
 .games-page .games-page__save.is-signedout,
 .games-page .games-page__save.is-error,
 .games-page .games-page__save.is-silent {

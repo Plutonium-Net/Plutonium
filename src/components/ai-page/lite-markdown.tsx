@@ -1,10 +1,5 @@
 import type { ReactNode } from 'react'
 
-/**
- * A small Markdown subset for chat replies: fenced code, headings, lists,
- * bold, italics, inline code and links. Built as React nodes, so model output
- * can never inject markup.
- */
 export default function LiteMarkdown({ text }: { text: string }) {
   return <div className="lite-md">{blocks(text)}</div>
 }

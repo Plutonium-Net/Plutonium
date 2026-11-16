@@ -115,7 +115,6 @@
   margin-left: auto;
 }
 
-/* Chips and footer links carry the same real-glass pill the AI page uses. */
 .info-panel .info-panel__link {
   position: relative;
   isolation: isolate;

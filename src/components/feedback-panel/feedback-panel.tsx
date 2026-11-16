@@ -60,7 +60,6 @@ const ICONS: Record<FeedbackType['icon'], ReactNode> = {
   ),
 }
 
-/** The browser facts a report is filed with, matching v1's diagnostics. */
 function diagnostics() {
   const diag: Record<string, string> = {}
   diag.url = location.href
@@ -72,7 +71,6 @@ function diagnostics() {
   try {
     diag.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   } catch {
-    /* some environments refuse this */
   }
   diag.online = navigator.onLine === false ? 'offline' : 'online'
   Object.keys(diag).forEach((key) => {
@@ -146,13 +144,6 @@ function Field({
   )
 }
 
-/**
- * The v1 feedback form, ported to React. Everything is filed through the
- * Discord bot's backend, which validates it, opens a thread in the staff
- * channel and answers with a reference. A signed-in report carries the account
- * token, so the bot can prove who sent it; signed out, the form still works and
- * only an email address is asked for.
- */
 export default function FeedbackPanel({ onClose, onOpenPrivacy }: { onClose: () => void; onOpenPrivacy: () => void }) {
   const { user } = useAccount()
   const [view, setView] = useState<'picker' | 'form' | 'done'>('picker')
@@ -190,8 +181,6 @@ export default function FeedbackPanel({ onClose, onOpenPrivacy }: { onClose: () 
     const localErrors: Record<string, string> = {}
     if (String(values.summary ?? '').trim().length < 3) localErrors.summary = 'Give a one-line summary (at least 3 characters).'
     if (String(values.details ?? '').trim().length < 10) localErrors.details = 'Describe it in at least 10 characters.'
-    // A signed-in reporter is reachable through their verified account, so the
-    // address is optional for them; the server applies the same rule.
     if (!user && !values.anonymous && !EMAIL_RE.test(String(values.email ?? '').trim())) {
       localErrors.email = 'Add a contact email, or tick “send anonymously”.'
     }

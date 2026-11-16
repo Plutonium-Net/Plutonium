@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import './social-links.css'
 
-/** The network's accounts, with the same Discord invite v1 used. */
 const LINKS: { id: string; label: string; href: string; icon: ReactNode }[] = [
   {
     id: 'discord',

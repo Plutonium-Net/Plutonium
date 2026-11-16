@@ -1,4 +1,3 @@
-/** Brand marks for the OAuth buttons, inlined so the dialog needs no assets. */
 export function GoogleMark() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">

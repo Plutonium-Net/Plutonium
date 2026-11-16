@@ -60,7 +60,6 @@
   }
 }
 
-/* Categories ride under the title as plain chips, so nothing competes with the grid. */
 .apps-page .apps-page__cats {
   display: flex;
   flex-wrap: wrap;
@@ -174,7 +173,6 @@
   transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
-/* Cut-out logos sit on white instead of vanishing into the dark tile. */
 .apps-page .apps-page__card.is-light {
   background: #fff;
   border-color: rgba(0, 0, 0, 0.08);
@@ -291,9 +289,7 @@
   }
 }
 
-/* ── Viewer ───────────────────────────────────────────────────────────── */
 
-/* Portalled to `body`, so the tab strip, dock and pins all sit behind it. */
 .apps-viewer {
   position: fixed;
   inset: 0;

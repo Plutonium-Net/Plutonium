@@ -225,7 +225,6 @@
   }
 }
 
-/* The avatar can be a logo instead of an emoji. */
 .voice-mode__avatar.is-logo {
   display: grid;
   place-items: center;

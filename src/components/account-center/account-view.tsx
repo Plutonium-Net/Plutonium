@@ -193,7 +193,6 @@ export default function AccountView({
       try {
         localStorage.removeItem(`plu_avatar_${user.uid}`)
       } catch {
-        /* storage blocked */
       }
       onClose()
     } catch (error) {

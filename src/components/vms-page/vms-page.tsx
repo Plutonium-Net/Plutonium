@@ -6,11 +6,6 @@ import './vms-page.css'
 
 type Phase = 'idle' | 'starting' | 'active'
 
-/**
- * `pluto://vms`, after v1: a status panel, the transport buttons and the remote
- * browser stage, all on real glass. Sessions are temporary cloud browsers that
- * the worker ends after fifteen minutes.
- */
 export default function VmsPage({ autostart = false }: { autostart?: boolean }) {
   const [user, setUser] = useState<CloudUser | null>(() => currentSession())
   const [phase, setPhase] = useState<Phase>('idle')
@@ -22,7 +17,6 @@ export default function VmsPage({ autostart = false }: { autostart?: boolean }) 
 
   useEffect(() => onAuthChange(setUser), [])
 
-  // The countdown belongs to the live session: ending clears it.
   useEffect(() => {
     if (phase !== 'active') return
     const timer = window.setInterval(() => setSecondsLeft((value) => Math.max(0, value - 1)), 1000)
@@ -59,7 +53,6 @@ export default function VmsPage({ autostart = false }: { autostart?: boolean }) 
     await endVmSession(ending?.sessionId ?? null, currentSession()?.idToken ?? null)
   }
 
-  // Time is up: the worker has already expired the machine, so just let go.
   useEffect(() => {
     if (phase === 'active' && secondsLeft === 0) void stop(true)
   }, [phase, secondsLeft])
@@ -67,8 +60,6 @@ export default function VmsPage({ autostart = false }: { autostart?: boolean }) 
   useEffect(() => {
     if (!autostart || !currentSession()) return
     void start()
-    // Only the route's `?autostart=1` should fire this, and only once.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function fullscreen() {

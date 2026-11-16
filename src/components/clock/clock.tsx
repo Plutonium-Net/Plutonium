@@ -11,11 +11,9 @@ function clockParts(now: Date) {
   }
 }
 
-/** Bottom-left clock, carried over from the news ticker. */
 export default function Clock() {
   const [now, setNow] = useState(() => new Date())
 
-  // v1 refreshes the clock every 10s rather than every second.
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), CLOCK_MS)
     return () => window.clearInterval(id)

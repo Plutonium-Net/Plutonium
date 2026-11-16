@@ -5,7 +5,6 @@ import { resetPassword, signInWithEmail, signInWithOAuth, signUp } from '@/lib/c
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-/** Firebase and worker errors are terse codes; say something readable instead. */
 function friendly(raw: string) {
   const text = raw.toLowerCase()
   if (text.includes('invalid_login_credentials') || text.includes('email_not_found') || text.includes('invalid password')) {

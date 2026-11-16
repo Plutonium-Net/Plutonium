@@ -1,9 +1,3 @@
-/**
- * Engine + region state. Ported from v1's js/net.js. The choice is cached for
- * the tab in sessionStorage and saved to the signed-in account, so it follows
- * the user instead of the device.
- */
-
 import { getPref, loadPrefs, setPref } from '@/lib/prefs'
 import { ENGINES, familyFor, initEngine, retargetRuntimeV2, type EngineId } from './engines'
 import { fastest, pingAll, serversFor, wispUrl, type Ping, type RegionFamily } from './regions'
@@ -67,13 +61,10 @@ function persist() {
   try {
     sessionStorage.setItem(STORE_KEY, JSON.stringify(choice))
   } catch {
-    /* storage blocked: the choice just doesn't survive a reload */
   }
   setPref('net', choice)
 }
 
-// Adopt the account's saved engine and regions before the first connect, so a
-// new device starts where the user left off.
 void loadPrefs().then(() => {
   const saved = getPref<{ engine?: EngineId; regions?: Partial<Record<RegionFamily, string>> }>('net')
   if (!saved) return
@@ -98,7 +89,6 @@ async function connect() {
   setState({ status: 'connecting', error: null })
 
   if (!family) {
-    // Hyperbeam opens a session per navigation, nothing to warm up here.
     setState({ status: 'ok', ready: true, latency: null })
     return
   }
@@ -129,7 +119,6 @@ async function connect() {
   persist()
 }
 
-/** Idempotent: several callers can ask for a live stack at once. */
 export function ensureConnected() {
   if (state.ready && state.status === 'ok') return Promise.resolve()
   if (!connecting) {
@@ -154,7 +143,6 @@ export async function setRegion(family: RegionFamily, regionId: string) {
 
   if (familyFor(state.engine) !== family) return
 
-  // Scramjet V2 keeps its controller and swaps the relay underneath it.
   if (state.engine === 'runtimev2') {
     await retargetRuntimeV2(wispUrl(regionId))
     setState({ status: 'ok', ready: true })

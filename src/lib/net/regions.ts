@@ -1,5 +1,3 @@
-/** Relay + host regions, ported from v1's js/net.js. */
-
 export type RegionFamily = 'wisp' | 'compaxy' | 'rh'
 
 export type RegionServer = {
@@ -55,7 +53,6 @@ export type Ping = { ok: boolean; latency: number | null }
 
 const PING_TIMEOUT_MS = 8000
 
-/** Wisp relays answer a websocket upgrade; the open event is the measurement. */
 async function pingWisp(region: RegionServer, timeoutMs: number): Promise<Ping> {
   return new Promise((resolve) => {
     const startedAt = performance.now()
@@ -68,7 +65,6 @@ async function pingWisp(region: RegionServer, timeoutMs: number): Promise<Ping> 
       try {
         if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) socket.close()
       } catch {
-        /* already closed */
       }
       resolve(result)
     }
@@ -91,7 +87,6 @@ async function pingWisp(region: RegionServer, timeoutMs: number): Promise<Ping> 
   })
 }
 
-/** Compaxy and RH answer with a page, so an opaque request is the probe. */
 async function pingHost(region: RegionServer, timeoutMs: number): Promise<Ping> {
   if (!region.host) return { ok: false, latency: null }
   const startedAt = performance.now()
@@ -111,7 +106,6 @@ export function pingRegion(family: RegionFamily, region: RegionServer, timeoutMs
   return family === 'wisp' ? pingWisp(region, timeoutMs) : pingHost(region, timeoutMs)
 }
 
-/** Pings every region of a family; unreachable rows come back `ok: false`. */
 export async function pingAll(family: RegionFamily, timeoutMs = PING_TIMEOUT_MS) {
   const servers = serversFor(family)
   const results = await Promise.all(servers.map((server) => pingRegion(family, server, timeoutMs)))
@@ -122,7 +116,6 @@ export async function pingAll(family: RegionFamily, timeoutMs = PING_TIMEOUT_MS)
   return map
 }
 
-/** Fastest region that actually answered; unreachable rows never win. */
 export function fastest(pings: Record<string, Ping>, preferredId?: string | null) {
   if (preferredId && pings[preferredId]?.ok) return preferredId
   const reachable = Object.entries(pings)

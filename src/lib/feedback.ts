@@ -1,12 +1,3 @@
-/**
- * The feedback catalog, carried over from v1's js/feedback.js.
- *
- * The ids, select options and required fields are re-checked by the bot, so the
- * two lists have to stay in step: a drift shows up as a 422 on submit rather
- * than as a silently wrong report. `GET /feedback/types` on the bot returns the
- * same catalog for diffing.
- */
-
 export const ENDPOINT = 'https://stelena.plutoniumnet.work/feedback'
 
 export const AREAS = [
@@ -41,9 +32,6 @@ export type FeedbackType = {
 
 export const TYPES: FeedbackType[] = [
   {
-    // Slowness is folded in here on purpose: a performance complaint needs the
-    // same description, area and severity a bug does, and a separate tile only
-    // made people guess which one to pick.
     id: 'bug',
     label: 'Report a bug',
     icon: 'bug',

@@ -45,19 +45,12 @@ export default function App() {
   const [wave, setWave] = useState<{ origin: WaveOrigin; phase: WavePhase } | null>(null)
   const waveJob = useRef<{ input: string; resolve: (accepted: boolean) => void; accepted: boolean } | null>(null)
 
-  /**
-   * A search from the home screen is carried by the accent wave: the wave opens
-   * from the frame that was picked, the destination is committed under it, then
-   * it dissolves onto the new screen. The promise settles with the navigation
-   * result, which is what clears the query on success and keeps it on failure.
-   */
   const searchWithWave = useCallback(
     (input: string, origin?: DOMRect) =>
       new Promise<boolean>((resolve) => {
         const source: WaveOrigin = origin
           ? { x: origin.left, y: origin.top, width: origin.width, height: origin.height }
           : { x: window.innerWidth / 2 - 260, y: window.innerHeight / 2 - 24, width: 520, height: 48 }
-        // A second pick while one is in flight would strand the first promise.
         waveJob.current?.resolve(false)
         waveJob.current = { input, resolve, accepted: false }
         setWave({ origin: source, phase: 'cover' })
@@ -89,13 +82,10 @@ export default function App() {
   const family = familyFor(net.engine)
   const home = !onWeb && !page
 
-  // Readies the selected engine (relay race + service workers) once per engine.
   useEffect(() => {
     void ensureConnected()
   }, [net.engine])
 
-  // Clicking the background, or Escape, dismisses an open panel. Captured so a
-  // press anywhere inside the app counts, not just on elements that bubble.
   useEffect(() => {
     if (!panel && !dialog) return
     function onPointerDown(event: PointerEvent) {
@@ -115,7 +105,6 @@ export default function App() {
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key !== 'Escape') return
-      // The dialog sits above the panel, so it is dismissed first.
       if (dialog) {
         setDialog(null)
         return
@@ -130,16 +119,11 @@ export default function App() {
     }
   }, [panel, dialog])
 
-  // A panel belongs to the screen it was opened on: switching tabs, navigating or
-  // leaving the home screen closes it. The search is treated the same way, or its
-  // focus flag would survive the trip and come back with the pins still tucked
-  // away and the page icons still hidden.
   useEffect(() => {
     setPanel(null)
     setSearchActive(false)
   }, [activeId, activeTab?.url, home])
 
-  // Switching engines repoints every frame, so a reload is implied.
   useEffect(() => {
     setReloadToken((token) => token + 1)
   }, [net.engine])
@@ -175,7 +159,6 @@ export default function App() {
         )}
 
         <div className="app-shell__stage">
-          {/* Always mounted: Scramjet V2 binds to this iframe when it boots. */}
           <PageFrame
             tab={activeTab}
             visible={onWeb}
@@ -193,9 +176,6 @@ export default function App() {
 
       {home && (
         <>
-          {/* The light trail belongs to the home screen alone: it sits over the dot
-              background and under the home UI, and listens on window, so it never
-              takes a click from the search bar or the pins. */}
           <GlowCursor
             color={accent.hex}
             intensity={1.3}
@@ -253,7 +233,6 @@ export default function App() {
       {!onWeb && !page && <Clock />}
       <AccountCenter showTrigger={home} />
       <DesktopGate />
-      {/* Last and highest: it has to outlive the home screen it opens from. */}
       {wave && (
         <DistortionWave
           origin={wave.origin}

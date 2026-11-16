@@ -1,21 +1,3 @@
-/**
- * Cloud saves for games, ported from v1's `games.js` save sync.
- *
- * The game page loads PluStore (`g.cdn.plutoniumnet.work/js/plustore.js`), which
- * serialises the whole save into one text document and talks to its host over
- * postMessage: it is the only party that can reach local storage inside its own
- * origin, and this shell is the only party that can reach the network:
- *
- *   game  -> shell   { plu: true, type: 'plu_text_ready' }
- *                    { plu: true, type: 'plu_text_data', doc }
- *   shell -> game    { plu: true, type: 'plu_text_restore', doc }
- *                    { plu: true, type: 'plu_text_request' }
- *
- * Each game's document is one cloud record keyed by its id (`game_saves/<id>`),
- * so what is stored is exactly what the game wrote. Nothing is written to the
- * device: the record lives in the signed-in user's account.
- */
-
 import { getDoc, isSignedIn, onAuthChange, setDoc } from './cloud-store'
 
 export const SAVE_DOC_PREFIX = 'game_saves/'
@@ -23,9 +5,7 @@ export const SAVE_DOC_PREFIX = 'game_saves/'
 const WRITE_DELAY = 1200
 const RETRY_DELAY = 15000
 const MAX_CHARS = 900_000
-/** A document with no blocks has never saved anything worth keeping. */
 const SAVE_BLOCK = /^@/m
-/** How long a launched game gets to announce its save store. */
 const READY_TIMEOUT = 12000
 
 export type SaveStatus = 'signedout' | 'loading' | 'ready' | 'saving' | 'saved' | 'error' | 'silent'
@@ -39,11 +19,8 @@ export type SaveState = {
 type HostMessage = { plu?: boolean; type?: string; doc?: unknown }
 
 export type SaveBridge = {
-  /** Pull the cloud document and hand it to the game once it is listening. */
   restore(): void
-  /** Ask the game to post its current document (used when closing). */
   requestSnapshot(): void
-  /** Flush any queued document immediately. */
   saveNow(): void
   getState(): SaveState
   subscribe(listener: () => void): () => void
@@ -74,7 +51,6 @@ export function createSaveBridge(gameId: string, getFrame: () => HTMLIFrameEleme
     try {
       win.postMessage({ plu: true, ...message }, '*')
     } catch {
-      /* the frame went away mid-post */
     }
   }
 
@@ -181,8 +157,6 @@ export function createSaveBridge(gameId: string, getFrame: () => HTMLIFrameEleme
     else setState({ status: 'signedout' })
   })
 
-  // Silence means the page is not running PluStore at all, which is a fault to
-  // report rather than a game with nothing to save.
   readyTimer = window.setTimeout(() => {
     readyTimer = null
     if (state.status === 'saved' || state.status === 'saving') return
@@ -206,8 +180,6 @@ export function createSaveBridge(gameId: string, getFrame: () => HTMLIFrameEleme
       }
     },
     dispose() {
-      // A snapshot that landed moments before the frame was torn down still goes
-      // out: the write is in flight, so nothing waits on the debounce any more.
       flush()
       disposed = true
       window.removeEventListener('message', onMessage)

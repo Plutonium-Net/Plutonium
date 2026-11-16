@@ -77,7 +77,6 @@
   border-radius: 2px;
 }
 
-/* ── category picker ─────────────────────────────────────────────────── */
 
 .feedback-panel .feedback-panel__cards {
   display: flex;
@@ -159,7 +158,6 @@
   stroke-linejoin: round;
 }
 
-/* ── form ────────────────────────────────────────────────────────────── */
 
 .feedback-panel .feedback-panel__form {
   display: flex;
@@ -350,7 +348,6 @@
   font-weight: 600;
 }
 
-/* ── buttons ─────────────────────────────────────────────────────────── */
 
 .feedback-panel .feedback-panel__actions {
   display: flex;
@@ -401,7 +398,6 @@
   cursor: progress;
 }
 
-/* ── success ─────────────────────────────────────────────────────────── */
 
 .feedback-panel .feedback-panel__done {
   display: flex;

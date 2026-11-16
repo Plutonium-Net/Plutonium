@@ -14,8 +14,6 @@
   font: inherit;
 }
 
-/* The docked (home) button hangs below the strip, so the strip stops clipping
-   and the tab row does the clipping instead. */
 .chrome-tabs.has-centered-add {
   overflow: visible;
 }
@@ -44,8 +42,6 @@
   min-width: 0;
 }
 
-/* The inline + button shares the centred row with the tabs, so an equal-width
-   spacer (26px button + 6px gap) keeps the tabs themselves on centre. */
 .chrome-tabs:not(.has-centered-add) .chrome-tabs-content::before {
   content: '';
   flex: 0 0 auto;
@@ -56,8 +52,6 @@
   position: relative;
   display: flex;
   height: 36px;
-  /* No grow: the row is centred, so tabs keep their width instead of
-     stretching to fill the strip. */
   flex: 0 1 160px;
   min-width: 64px;
   max-width: 160px;
@@ -89,8 +83,6 @@
   height: 100%;
 }
 
-/* The selected tab reads a touch lighter: white tint over the backdrop instead
-   of the glass component's dark (black) tint. */
 .chrome-tabs .chrome-tab[data-active] .chrome-tab-glass {
   background-color: rgba(255, 255, 255, 0.06);
 }
@@ -112,8 +104,6 @@
   border-radius: 3px;
 }
 
-/* Centred in the tab, so the fade runs off both ends of the title rather than
-   just the right one. */
 .chrome-tabs .chrome-tab-title {
   flex: 1 1 auto;
   min-width: 0;

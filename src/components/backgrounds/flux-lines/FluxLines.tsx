@@ -519,9 +519,6 @@ const FluxLines = ({
       gl.deleteProgram(program.program);
       gl.deleteBuffer(buffer);
       gl.deleteVertexArray(vao);
-      // Released only once the canvas has actually left the page. StrictMode tears
-      // effects down and sets them up again on the same element in development, and
-      // losing the context there would hand the second mount a dead one.
       const context = gl.getExtension('WEBGL_lose_context');
       if (context) {
         requestAnimationFrame(() => {

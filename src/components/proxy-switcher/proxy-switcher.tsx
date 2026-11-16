@@ -11,15 +11,12 @@ import './proxy-switcher.css'
 export default function ProxySwitcher() {
   const net = useNet()
 
-  // An engine that rides a region family is only usable while that family has a
-  // server answering, so the menu measures all three families once on open.
   useEffect(() => {
     if (!net.pings.wisp) void probeRegions('wisp')
     if (!net.pings.compaxy) void probeRegions('compaxy')
     if (!net.pings.rh) void probeRegions('rh')
   }, [net.pings])
 
-  /** null while the family has not been measured yet. */
   function availability(engine: EngineOption): boolean | null {
     if (!engine.family) return true
     const measured = net.pings[engine.family]

@@ -15,7 +15,6 @@ type ChromeTabsProps = {
   onAdd: () => void
   onClose: (id: string) => void
   onReorder: (from: number, to: number) => void
-  /** Home screen: the button leaves the strip and docks centred under it. */
   addCentered?: boolean
 }
 
@@ -46,8 +45,6 @@ export default function ChromeTabs({
   const previousRectsRef = useRef<Map<string, number> | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
 
-  // FLIP: neighbours slide from where they were to where they now sit. The
-  // dragged tab tracks the pointer itself, so it is skipped.
   useLayoutEffect(() => {
     const previous = previousRectsRef.current
     if (!previous) return
@@ -84,7 +81,6 @@ export default function ChromeTabs({
     previousRectsRef.current = rects
   }
 
-  /** Slot the tab lands in once lifted out: count the other tabs the pointer passed. */
   function slotFor(clientX: number, draggedEl: HTMLElement) {
     let slot = 0
     tabEls().forEach((el) => {
@@ -104,8 +100,6 @@ export default function ChromeTabs({
   }
 
   function queueTrack(state: DragState, clientX: number) {
-    // One frame at a time, and always cancellable: a frame left in flight after
-    // the drop would re-stamp the tab at the cursor and it would hang there.
     if (dragFrameRef.current !== null) cancelAnimationFrame(dragFrameRef.current)
     dragFrameRef.current = requestAnimationFrame(() => {
       dragFrameRef.current = null
@@ -125,12 +119,9 @@ export default function ChromeTabs({
       grabOffsetX: event.clientX - rect.left,
       moved: false,
     }
-    // Capture keeps the drag alive when the pointer leaves the tab; a synthetic
-    // pointer (tests, automation) has no real pointer to capture and throws.
     try {
       event.currentTarget.setPointerCapture(event.pointerId)
     } catch {
-      /* no capturable pointer */
     }
     onSelect(tab.id)
   }
@@ -147,8 +138,6 @@ export default function ChromeTabs({
       setDraggingId(state.id)
     }
 
-    // The tab only follows the pointer. No slot is committed while it is held
-    // down; the drop decides where it lands, like v1's Draggabilly port.
     queueTrack(state, clientX)
   }
 
@@ -169,9 +158,6 @@ export default function ChromeTabs({
 
     const from = tabEls().indexOf(state.el)
     const to = slotFor(state.lastX, state.el)
-    // Record where every tab sits visually right now (the dragged one is under
-    // the pointer), then commit: the FLIP pass glides it into its new slot and
-    // slides the tabs it displaced over.
     captureRects()
 
     if (from !== -1 && to !== from) {
@@ -180,7 +166,6 @@ export default function ChromeTabs({
       return
     }
 
-    // Dropped back where it started: glide into its own slot.
     state.el.style.transition = `transform ${REORDER_TRANSITION_MS}ms ease-in-out`
     state.el.style.transform = ''
     window.setTimeout(() => {
@@ -189,7 +174,6 @@ export default function ChromeTabs({
   }
 
   function handleStripDoubleClick(event: ReactMouseEvent<HTMLDivElement>) {
-    // Only empty strip space adds a tab; a double click on a tab belongs to it.
     if (event.target === event.currentTarget) onAdd()
   }
 
@@ -263,7 +247,6 @@ export default function ChromeTabs({
         })}
         {!addCentered && newTabButton}
       </div>
-      {/* Home screen: the button is docked centred just below the strip instead. */}
       {addCentered && <div className="chrome-tabs-add-dock">{newTabButton}</div>}
     </div>
   )

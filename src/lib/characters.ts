@@ -5,11 +5,8 @@ export type Character = {
   id: string
   name: string
   emoji: string
-  /** A logo for the orb. Falls back to `emoji` when absent. */
   image?: string
-  /** The hue its orb, glow and accents are mixed from. */
   hue: number
-  /** True for characters that should read as plain chrome, with no hue. */
   neutral?: boolean
   vibe: string
   prompt: string
@@ -17,11 +14,6 @@ export type Character = {
   builtin?: boolean
 }
 
-/**
- * Stelena is Plutonium's official assistant, and the only character that ships
- * with the build; anything else in the rail was made by the user. The prompt is
- * v1's, kept word for word so the assistant sounds the same in both apps.
- */
 export const DEFAULT_CHARACTERS: Character[] = [
   {
     id: 'stelena',
@@ -152,7 +144,6 @@ export function newCharacterId() {
   return `c_${Math.random().toString(36).slice(2, 9)}`
 }
 
-/** Characters live in the account; without one the session keeps the defaults. */
 export async function loadCharacters(): Promise<Character[]> {
   try {
     const doc = await getDoc(CHARACTERS_DOC)
@@ -170,7 +161,6 @@ export async function saveCharacters(list: Character[]) {
   try {
     await setDoc(CHARACTERS_DOC, { items: custom })
   } catch {
-    /* signed out: the session list still works */
   }
 }
 
@@ -192,6 +182,5 @@ export async function saveChat(characterId: string, messages: ChatMessage[]) {
   try {
     await setDoc(`${CHATS_DOC}/${characterId}`, { messages: trimmed })
   } catch {
-    /* signed out: nothing to persist */
   }
 }

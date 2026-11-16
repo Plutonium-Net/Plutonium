@@ -3,11 +3,6 @@ import { isWebUrl } from '@/lib/net/url'
 
 const PLUTONIUM = '/icon-white.png'
 
-/**
- * The icon a tab shows, taken from the site itself. In-browser pages keep the
- * Plutonium mark; web tabs try their own `/favicon.ico` first and fall back to
- * the icon service for sites that declare theirs elsewhere.
- */
 function candidates(url: string) {
   if (!isWebUrl(url)) return [PLUTONIUM]
   try {
@@ -25,7 +20,6 @@ function candidates(url: string) {
 export default function TabFavicon({ url }: { url: string }) {
   const [index, setIndex] = useState(0)
 
-  // A tab that navigates gets a fresh set of candidates from its first try.
   useEffect(() => {
     setIndex(0)
   }, [url])

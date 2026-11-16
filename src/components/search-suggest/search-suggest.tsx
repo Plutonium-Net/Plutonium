@@ -5,15 +5,9 @@ type Props = {
   groups: SmartGroup[]
   activeIndex: number
   onHover: (index: number) => void
-  /** `source` is the row's own element, so a transition can open from it. */
   onPick: (row: SmartRow, source?: HTMLElement) => void
 }
 
-/**
- * v1's search dropdown, minus the panel: the rows sit straight on the background
- * and drop in one after another, so the list reads as text fading down rather
- * than a box appearing.
- */
 export default function SearchSuggest({ groups, activeIndex, onHover, onPick }: Props) {
   let index = -1
 
@@ -37,7 +31,6 @@ export default function SearchSuggest({ groups, activeIndex, onHover, onPick }: 
                 aria-selected={at === activeIndex}
                 className={`search-suggest__row${at === activeIndex ? ' is-active' : ''}`}
                 style={{ animationDelay: `${at * 22}ms` }}
-                // Keeps the caret in the input, so the bar never blurs mid-pick.
                 onMouseDown={(event) => event.preventDefault()}
                 onMouseEnter={() => onHover(at)}
                 onClick={(event) => onPick(row, event.currentTarget)}
@@ -65,7 +58,6 @@ const ICONS: Record<string, string[]> = {
   trend: ['m3.5 16.5 6-6 4 4 7-7', 'M14 7.5h6.5V14'],
   clock: ['M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Z', 'M12 7.5v5l3 2'],
   app: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M14 14h6v6h-6z'],
-  // Slash commands read as terminal lines rather than a literal "/".
   command: ['M4.5 5h15a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z', 'm7.5 10 2 2-2 2', 'M12.8 14h3.7'],
 }
 

@@ -1,6 +1,5 @@
 import './net-icons.css'
 
-/** Same inline stroke geometry the side menu draws with, at a menu size. */
 const base = {
   className: 'net-icon',
   viewBox: '0 0 24 24',
@@ -31,7 +30,6 @@ export function HazardIcon({ className = '' }: { className?: string }) {
   )
 }
 
-/** A plug standing on its pins: the server is up and can be connected to. */
 export function PlugIcon({ className = '' }: { className?: string }) {
   return (
     <svg {...base} className={`net-icon net-icon--plug ${className}`}>

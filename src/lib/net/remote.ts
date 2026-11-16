@@ -1,5 +1,3 @@
-/** Hyperbeam (`remote`) hands the page to a worker that returns an embed URL. */
-
 const REMOTE_WORKER_URL = 'https://api.plutoniumnet.work/net'
 
 export type RemoteSession = {
@@ -49,6 +47,5 @@ export async function endRemoteSession(sessionId: string | null) {
       body: JSON.stringify({ session_id: sessionId }),
     })
   } catch {
-    /* the worker expires sessions on its own */
   }
 }

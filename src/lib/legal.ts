@@ -1,9 +1,3 @@
-/**
- * The policy document, carried over from v1 unchanged. `legal.md` is the v1
- * file copied verbatim, kept as prose so it can be edited without touching JSX;
- * the two sections are split out of it here.
- */
-
 import source from './legal.md?raw'
 
 export type LegalSection = 'terms' | 'privacy'

@@ -75,7 +75,6 @@
   border-color: rgba(255, 255, 255, 0.35);
 }
 
-/* The chosen colour wears its own light, so the pick reads before the label does. */
 .customize-panel .customize-panel__swatch.is-active {
   border-color: rgba(255, 255, 255, 0.75);
   box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.35), 0 0 10px rgba(var(--accent-rgb), 0.55);
@@ -92,7 +91,6 @@
   gap: 2px;
 }
 
-/* Same row as the pr0xy menu, with the active one lit by GlassHighlight. */
 .customize-panel .customize-panel__row {
   position: relative;
   display: flex;

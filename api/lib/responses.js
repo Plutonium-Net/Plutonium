@@ -1,11 +1,3 @@
-/**
- * Shared response helpers.
- *
- * The API is served from api.plutoniumnet.work while the site itself is hosted
- * elsewhere, so every response is cross-origin. The policy is intentionally
- * open (`*`) exactly as the four workers it replaces were.
- */
-
 const CORS_METHODS = 'GET, POST, PUT, PATCH, DELETE, OPTIONS';
 const CORS_HEADERS = 'Content-Type, Authorization, X-Groq-Key';
 
@@ -40,8 +32,6 @@ export function unauthorized() {
 
 export function html(body) {
   return new Response(body, {
-    // no-cache, not no-store: the page stays cacheable but has to revalidate,
-    // so a deploy is never hidden behind a stale copy in someone's browser.
     headers: corsHeaders({ 'Content-Type': 'text/html;charset=UTF-8', 'Cache-Control': 'no-cache' }),
   });
 }

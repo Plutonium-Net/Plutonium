@@ -1,5 +1,3 @@
-/** Globals exposed by the vendored engine scripts in public/ (same as v1). */
-
 type UvConfig = {
   prefix: string
   encodeUrl: (url: string) => string

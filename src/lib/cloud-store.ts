@@ -1,13 +1,3 @@
-/**
- * Plutonium account + cloud store for v2.
- *
- * Ported from v1's js/cloud-store.js: same worker endpoints, same Firestore
- * document encoding, same token refresh. The session is mirrored into
- * localStorage so it survives reloads and is shared across tabs.
- *
- * Tab content itself is never stored on the device; see lib/tab-sync.ts.
- */
-
 const WORKER_URL = 'https://api.plutoniumnet.work'
 const SESSION_KEY = 'plu_session'
 const REFRESH_MARGIN_MS = 5 * 60 * 1000
@@ -41,7 +31,6 @@ function persistSession() {
     if (currentUser) localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser))
     else localStorage.removeItem(SESSION_KEY)
   } catch {
-    /* storage blocked: the session simply stays in memory */
   }
 }
 
@@ -79,7 +68,6 @@ function notify() {
     try {
       fn(currentUser)
     } catch {
-      /* one broken listener must not break the others */
     }
   })
 }
@@ -311,7 +299,6 @@ export async function deleteDoc(collection: string) {
   if (!res.ok && res.status !== 404) throw new Error(`deleteDoc failed: ${res.status}`)
 }
 
-/** Restore the session shared across tabs. */
 function restoreSession() {
   try {
     const user = readStoredSession(localStorage.getItem(SESSION_KEY))
@@ -321,7 +308,6 @@ function restoreSession() {
     else scheduleRefresh()
     window.setTimeout(notify, 0)
   } catch {
-    /* corrupt session: stay signed out */
   }
 }
 
@@ -335,12 +321,9 @@ window.addEventListener('storage', (event) => {
   if (currentUser && Date.now() >= currentUser.expiresAt) void refreshIdToken()
 })
 
-/* ----------------------------------------------------------------- account */
 
-/** A sign-in method linked to the account, as the worker reports it. */
 export type AuthProvider = { providerId: string; displayName?: string; email?: string }
 
-/** POSTs to an /auth route with the current token, refreshing it if it is stale. */
 async function postAuth<T>(path: string, body: Record<string, unknown> = {}): Promise<T> {
   if (!currentUser) throw new Error('Not signed in')
   if (Date.now() >= currentUser.expiresAt - 30_000) await refreshIdToken()
@@ -407,7 +390,6 @@ export async function loadProfilePhoto(): Promise<string> {
   }
 }
 
-/** The AI request budget left in the current window, or null when signed out. */
 export async function getAIUsage(): Promise<{ remaining: number; max: number } | null> {
   if (!currentUser) return null
   if (Date.now() >= currentUser.expiresAt - 30_000) await refreshIdToken()
@@ -435,10 +417,6 @@ type OAuthUser = {
   photoUrl?: string
 }
 
-/**
- * The worker completes the provider exchange in a popup and posts the result
- * back to this window. v1 used the same endpoints and message shape.
- */
 export function signInWithOAuth(provider: 'google' | 'github') {
   return new Promise<CloudUser>((resolve, reject) => {
     const popup = window.open(
@@ -497,7 +475,6 @@ export function signInWithOAuth(provider: 'google' | 'github') {
   })
 }
 
-/** Links another provider to the signed-in account. */
 export function linkWithOAuth(provider: 'google' | 'github') {
   return new Promise<void>((resolve, reject) => {
     if (!currentUser) {

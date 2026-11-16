@@ -1,13 +1,3 @@
-/**
- * AI routes: /ai/chat, /ai/models, /ai/tts, /ai/transcribe, /ai/ratelimit.
- *
- * Ported from cf-worker/groq-worker. Behaviour is unchanged except that every
- * route which spends the shared Groq key now requires a real Firebase ID token
- * and is quota'd on the verified uid. Previously the worker accepted any
- * `Bearer <anything>` and keyed the quota on a slice of that string, so callers
- * could mint unlimited quota by inventing tokens.
- */
-
 import { json, fail, unauthorized } from '../lib/responses.js';
 import { verifyIdToken } from '../lib/token.js';
 import { checkRateLimit, peekRateLimit } from '../lib/ratelimit.js';
@@ -151,7 +141,6 @@ async function handleChat(request, env) {
           encoder.encode(`event: rl\ndata: ${JSON.stringify({ remaining: remaining ?? null })}\n\n`)
         );
       } catch (_) {
-        // The client hung up mid-stream; nothing left to report.
       } finally {
         try { await writer.close(); } catch (_) {}
       }

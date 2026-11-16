@@ -9,10 +9,6 @@ const LABELS: Record<Status, string> = {
   error: 'offline',
 }
 
-/**
- * The panel status readout: a link while the stack is up and a hazard triangle
- * when it is not.
- */
 export default function NetStatus({ status, latency }: { status: Status; latency: number | null }) {
   return (
     <span className={`net-status net-status--${status}`} role="status" aria-label={LABELS[status]} title={LABELS[status]}>

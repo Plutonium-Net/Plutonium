@@ -1,15 +1,5 @@
-/**
- * The Apps catalog, ported from v1's js/apps.js.
- *
- * v1 read `data/apps.json` and `data/app-servers.json` straight from the site.
- * Same files, same shape: each app is opened in a frame built from the chosen
- * server's `urlTemplate`, where `{url}` inserts the address and `{url_enc}`
- * inserts it percent-encoded.
- */
-
 import { embedded } from '@/lib/embedded'
 
-/** Art that is a cut-out logo rather than a filled tile, so it needs a light card. */
 export const LIGHT_ART = new Set(['duckduckgo', 'twitch', 'youtube', 'pinterest'])
 
 export type AppEntry = {
@@ -44,7 +34,6 @@ let serversCache: AppServers | null = null
 
 export async function loadApps(): Promise<AppEntry[]> {
   if (appsCache) return appsCache
-  // The single-file build carries its catalog in the page; nothing to fetch.
   const built = embedded()?.apps
   if (built?.length) {
     appsCache = built
@@ -77,14 +66,12 @@ export async function loadServers(): Promise<AppServers> {
   return serversCache
 }
 
-/** Cover art for an app id, e.g. `/img/apps/youtube.png`. */
 export function artFor(app: AppEntry) {
   const built = embedded()?.art
   if (built?.[app.id]) return built[app.id]
   return `${ART_BASE}${app.id}.png`
 }
 
-/** The frame URL for one app through one server. */
 export function frameUrl(server: AppServer | null, rawUrl: string) {
   const template = server?.urlTemplate || '{url}'
   return template.replace(/\{url_enc\}/g, encodeURIComponent(rawUrl)).replace(/\{url\}/g, rawUrl)

@@ -1,10 +1,5 @@
 import type { ReactNode } from 'react'
 
-/**
- * The legal text arrived from v1 as Markdown, so this is the subset of it the
- * documents actually use: headings, paragraphs, lists, blockquotes, tables,
- * bold, italics, inline code and links. Built as React nodes, never as markup.
- */
 
 const INLINE =
   /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)\s]+\)|<https?:\/\/[^>\s]+>|\*[^*\n]+\*|https?:\/\/[^\s<)]+)/g

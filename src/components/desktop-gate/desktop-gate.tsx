@@ -2,12 +2,6 @@ import { useEffect, useState } from 'react'
 import GlassPanel from '@/components/glass-panel/glass-panel'
 import './desktop-gate.css'
 
-/**
- * V2's layout is built for a mouse and a wide window (tabs, a proxied frame and
- * floating panels), so anything smaller is told plainly rather than shown a
- * broken home screen. A pointer that is both coarse and hover-less means a
- * phone or tablet; a narrow window means the same thing in practice.
- */
 
 const WIDE = '(min-width: 900px)'
 const FINE = '(hover: hover) and (pointer: fine)'

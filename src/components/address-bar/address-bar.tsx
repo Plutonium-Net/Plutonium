@@ -16,7 +16,6 @@ export default function AddressBar({ url, canBack, canForward, onBack, onForward
   const [value, setValue] = useState(url)
   const [focused, setFocused] = useState(false)
 
-  // Follow the tab unless the user is mid-edit.
   useEffect(() => {
     if (!focused) setValue(url)
   }, [url, focused])

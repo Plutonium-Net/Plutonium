@@ -35,7 +35,6 @@
   text-align: center;
 }
 
-/* The wordmark face the other pages use. */
 .vms-page .vms-page__title {
   margin: 0;
   font-family: 'Plutonium', sans-serif;
@@ -55,9 +54,7 @@
   color: rgba(255, 255, 255, 0.44);
 }
 
-/* ── Stage ────────────────────────────────────────────────────────────── */
 
-/* Stage, controls and footnote share one column so their edges line up. */
 .vms-page .vms-page__stack {
   width: min(960px, 62vw);
   margin: 0 auto;
@@ -145,7 +142,6 @@
   background: #000;
 }
 
-/* ── Controls under the stage ─────────────────────────────────────────── */
 
 .vms-page .vms-controls-shell {
   width: 100%;

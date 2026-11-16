@@ -1,13 +1,3 @@
-/**
- * The smart search list behind the search bar, ported from v1's
- * js/newtab-search.js: apps, live suggestions, history matches and one row that
- * always runs the raw query, plus the `/` commands.
- *
- * Suggestions are fetched from Wikipedia's OpenSearch API because Google's
- * suggest endpoint sends no CORS headers, so the browser cannot read it
- * directly. v1 got around that by routing the request through the UV prefix.
- */
-
 import type { HistoryEntry } from '@/lib/history'
 
 export type RowIcon = 'app' | 'clock' | 'command' | 'search' | 'trend'
@@ -17,15 +7,12 @@ export type SmartRow = {
   label: string
   sub?: string
   icon: RowIcon
-  /** Runs when the row is chosen. */
   navigate?: string
-  /** Fills the input instead of navigating (command completions). */
   complete?: string
 }
 
 export type SmartGroup = { title: string; rows: SmartRow[] }
 
-/** The `pluto://` pages the bar can jump to, matching v1's app shortcuts. */
 const PLUTO_APPS = [
   { id: 'games', title: 'Games', sub: 'Play hundreds of browser games instantly' },
   { id: 'ai', title: 'AI', sub: 'Chat with Stelena AI' },
@@ -41,8 +28,6 @@ const COMMANDS = [
   { cmd: '/vm', usage: '/vm', sub: 'launch a virtual machine' },
 ]
 
-// Ask for a few extra, since the API echoes the query back and that row is
-// dropped, leaving five to show.
 const SUGGEST_FETCH = 8
 const SUGGEST_SHOW = 5
 const HISTORY_LIMIT = 5
@@ -56,7 +41,6 @@ function hostOf(url: string) {
   }
 }
 
-/** Grouped rows that do not need a network round trip. */
 export function buildGroups(query: string, history: HistoryEntry[]): SmartGroup[] {
   const trimmed = query.trim()
 
@@ -238,7 +222,6 @@ function buildCommands(query: string): SmartGroup[] {
   ]
 }
 
-/** Live query suggestions, best effort: an offline list is just empty. */
 export async function fetchSuggestions(query: string, signal: AbortSignal): Promise<string[]> {
   const url =
     'https://en.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=' +

@@ -6,7 +6,6 @@ import './legal-panel.css'
 
 const DISCORD = 'https://discord.gg/R3dJ7hpUXX'
 
-/** The v1 policy page, as a glass dialog with the same two documents. */
 export default function LegalPanel({
   section,
   onSectionChange,

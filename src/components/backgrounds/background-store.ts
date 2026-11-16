@@ -1,20 +1,9 @@
-/**
- * Which wallpaper the shell wears.
- *
- * Daily rotation is the default and needs no storage. Picking one by hand is a
- * preference: it is cached for the tab in sessionStorage so it survives a reload
- * while signed out, and saved to the signed-in account through lib/prefs, which
- * is what carries it to other devices.
- */
-
 import { onAuthChange } from '@/lib/cloud-store'
 import { getPref, loadPrefs, setPref } from '@/lib/prefs'
 import { BACKGROUNDS } from './registry'
 
-/** The rotating option, as opposed to any single wallpaper's id. */
 export const DAILY = 'daily'
 
-/** The wallpaper the shell wears until the user picks another. */
 export const DEFAULT_BACKGROUND = 'soft-aurora'
 
 const STORE_KEY = 'plu_background'
@@ -53,20 +42,17 @@ export function subscribeBackground(listener: () => void) {
   return () => listeners.delete(listener)
 }
 
-/** Picks a wallpaper to keep, or hands the shell back to the daily rotation. */
 export function selectBackground(id: string) {
   if (!known(id) || id === choice) return
   choice = id
   try {
     sessionStorage.setItem(STORE_KEY, id)
   } catch {
-    /* storage blocked: the choice still holds for this page load */
   }
   setPref(PREF_KEY, id)
   emit()
 }
 
-// The account copy wins once it arrives, including right after a fresh sign-in.
 void loadPrefs().then(() => adopt(getPref<string>(PREF_KEY)))
 onAuthChange((user) => {
   if (!user) return

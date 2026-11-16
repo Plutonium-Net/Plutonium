@@ -1,10 +1,3 @@
-/*
- * The loading overlay: black over the proxied frame, monospace, white on black
- * only. The startup is drawn as a checklist that fills itself in - a round check
- * and a description per step, and a soft line that runs down from each finished
- * check to the next one.
- */
-
 .page-loading {
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: absolute;
@@ -50,7 +43,6 @@
   width: min(100%, 32rem);
 }
 
-/* ---- head ---------------------------------------------------------------- */
 
 .page-loading__head {
   display: flex;
@@ -75,7 +67,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- checklist ----------------------------------------------------------- */
 
 .page-loading__steps {
   list-style: none;
@@ -103,7 +94,6 @@
   opacity: 1;
 }
 
-/* The soft line that runs down from a finished check to the next one. */
 .page-loading__steps li::after {
   content: "";
   position: absolute;
@@ -157,7 +147,6 @@
   height: 10px;
 }
 
-/* The tick draws itself in rather than appearing all at once. */
 .page-loading__check svg path {
   stroke-dasharray: 18;
   stroke-dashoffset: 18;
@@ -168,7 +157,6 @@ li[data-state="done"] > .page-loading__check svg path {
   stroke-dashoffset: 0;
 }
 
-/* The cross is not drawn on: it shows as soon as the step fails. */
 li[data-state="error"] > .page-loading__check svg path {
   stroke-dasharray: none;
   stroke-dashoffset: 0;
@@ -179,7 +167,6 @@ li[data-state="active"] > .page-loading__check {
   animation: page-loading-halo 1600ms var(--ease) infinite;
 }
 
-/* A carried-on step breathes inside its circle while it works. */
 li[data-state="active"] > .page-loading__check::after {
   content: "";
   width: 5px;
@@ -251,7 +238,6 @@ li[data-state="error"] > .page-loading__body .page-loading__label {
   }
 }
 
-/* ---- note + foot --------------------------------------------------------- */
 
 .page-loading__note {
   margin: 1.1rem 0 0;

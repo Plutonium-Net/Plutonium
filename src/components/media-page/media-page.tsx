@@ -47,9 +47,6 @@ export default function MediaPage() {
 
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  // ── Catalog ──────────────────────────────────────────────────────────────
-  // Typing re-runs the search, the section switch starts it over: both funnel
-  // through the same effect so a slow response cannot land after a newer one.
   useEffect(() => {
     let alive = true
     setStatus('loading')
@@ -83,7 +80,6 @@ export default function MediaPage() {
     }
   }, [kind, query])
 
-  // ── Endless rows ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (query.trim() || !hasMore || busy) return
     const node = sentinelRef.current
@@ -107,7 +103,6 @@ export default function MediaPage() {
     return () => observer.disconnect()
   }, [kind, page, hasMore, busy, query])
 
-  // ── Preview ──────────────────────────────────────────────────────────────
   function openPreview(item: MediaItem) {
     setPreviewBusy(true)
     setSeason(1)
@@ -124,7 +119,6 @@ export default function MediaPage() {
       .finally(() => setPreviewBusy(false))
   }
 
-  // Episodes follow the chosen season.
   useEffect(() => {
     if (!preview || preview.kind === 'movie' || !preview.seasons.length) return
     let alive = true
@@ -159,7 +153,6 @@ export default function MediaPage() {
     <div className="media-page">
       <div className="media-page__scroll">
         <header className="media-page__head">
-          {/* The word changes with the section, so it gets a small swap. */}
           <h1 className="media-page__title" key={kind}>
             {KIND_WORD[kind]}
           </h1>
@@ -350,9 +343,6 @@ export default function MediaPage() {
                     type="button"
                     className="media-page__watch"
                     onClick={() => {
-                      // The click is the gesture browsers want before fullscreen:
-                      // take the window now so the player never shares it with the
-                      // tab strip, and the dock can leave it again.
                       void document.documentElement.requestFullscreen?.().catch(() => {})
                       setPlaying({ item: preview, season, episode })
                       setPreview(null)
@@ -408,11 +398,6 @@ function MediaCard({ item, onOpen }: { item: MediaItem; onOpen: () => void }) {
   )
 }
 
-/**
- * The watch view: a portal to `body` so the tab strip, dock and pins are all
- * behind it, and a fullscreen request so the browser chrome goes too. The glass
- * dock stays on top of the video for the way back.
- */
 function MediaPlayer({
   item,
   season,

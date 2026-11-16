@@ -1,15 +1,3 @@
-/**
- * Plutonium API, one Worker replacing four:
- *
- *   accounting.cdn…  firebase-gateway  → /config, /auth/*, /firestore/*, /rtdb/*
- *   ai.cdn…          groq-worker       → /ai/*
- *   vm.cdn…          vm-worker         → /vm/*
- *   net.cdn…         net-worker        → /net/*
- *
- * Every route keeps the path it had inside its old worker; only the origin
- * changed, so the handlers ported with their logic intact.
- */
-
 import { preflight, fail, html, json } from './lib/responses.js';
 import { landingPage } from './lib/landing.js';
 import * as gateway from './routes/gateway.js';
@@ -27,9 +15,6 @@ export default {
     try {
       if (path === '/') return html(landingPage());
 
-      // Health probe, and what the landing page's status card reads. Each entry
-      // is a presence check on the bindings that route group needs: no calls
-      // out to a provider, and no values leave the worker.
       if (path === '/healthz') return healthz(env);
 
       if (
@@ -80,7 +65,6 @@ function healthz(env) {
   );
 }
 
-/** Collapse repeated slashes and drop a trailing one, so /ai/chat/ === /ai/chat. */
 function normalizePath(pathname) {
   const collapsed = String(pathname).replace(/\/{2,}/g, '/').replace(/\/+$/, '');
   return collapsed || '/';

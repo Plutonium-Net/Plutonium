@@ -1,6 +1,3 @@
-/* ── corner trigger ──────────────────────────────────────────────────── */
-
-/* Sits below the tab bar, with enough clearance that the bar never crowds it. */
 .account-corner {
   position: fixed;
   left: 22px;
@@ -59,7 +56,6 @@
   filter: brightness(1.25);
 }
 
-/* Signed out, the trigger is the primary call to action: a wide glass button. */
 .account-trigger--signin {
   padding: 10px 20px;
   font-size: 13.5px;
@@ -82,7 +78,6 @@
   stroke-linejoin: round;
 }
 
-/* Signed in: the trigger is the profile picture itself. */
 .account-trigger:has(.account-trigger__photo),
 .account-trigger:has(.account-trigger__initials) {
   width: 40px;
@@ -113,7 +108,6 @@
   letter-spacing: 0.02em;
 }
 
-/* ── dialog shell ────────────────────────────────────────────────────── */
 
 .glass-modal .account-center {
   width: min(430px, 100%);
@@ -184,7 +178,6 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* ── signed-out view ─────────────────────────────────────────────────── */
 
 .account-center .account-center__signin {
   display: flex;
@@ -243,7 +236,6 @@
   stroke-linejoin: round;
 }
 
-/* The brand marks are filled shapes; the stroke above belongs to line icons. */
 .account-center .acct-oauth__icon svg path[fill] {
   stroke: none;
 }
@@ -409,7 +401,6 @@
   color: rgba(255, 255, 255, 0.36);
 }
 
-/* ── signed-in view ──────────────────────────────────────────────────── */
 
 .account-center .acct-signed {
   display: flex;
@@ -600,7 +591,6 @@
   stroke-linejoin: round;
 }
 
-/* The brand marks are filled, not stroked. */
 .account-center .acct-provider__icon svg path[fill]:not([fill='none']) {
   stroke: none;
 }

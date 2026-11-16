@@ -6,13 +6,11 @@ import './quick-apps.css'
 type AppItem = {
   id: string
   label: string
-  /** Flip-board names for the hover label; more than one cycles like a departure board. */
   words: string[]
   href: string
   icon: ReactNode
 }
 
-/** Same icon language as the side menu: 24-box, stroked, no fills. */
 const ITEMS: AppItem[] = [
   {
     id: 'games',
@@ -87,9 +85,6 @@ const ITEMS: AppItem[] = [
 ]
 
 export default function QuickApps({ onOpen, hidden = false }: { onOpen: (href: string) => void; hidden?: boolean }) {
-  // One board for the whole row, mounted only while something is hovered: that is
-  // what replays the flap cascade on every new hover instead of leaving a board
-  // already settled. It is centred under the row, not under each icon.
   const [hovered, setHovered] = useState<string | null>(null)
   const active = ITEMS.find((item) => item.id === hovered) ?? null
 

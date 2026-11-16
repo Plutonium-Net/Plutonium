@@ -1,13 +1,3 @@
-/**
- * The accent colour the whole shell is tinted with.
- *
- * The chosen preset is published as two CSS variables on the document
- * (`--accent` and `--accent-rgb`), so every surface (text, borders, glows)
- * follows it without re-rendering, and handed to the WebGL layers and the cursor
- * as a plain hex. The choice lives on the signed-in account through lib/prefs,
- * with sessionStorage as the tab-local copy while signed out.
- */
-
 import { onAuthChange } from './cloud-store'
 import { getPref, loadPrefs, setPref } from './prefs'
 
@@ -96,13 +86,11 @@ export function selectAccent(id: string) {
   try {
     sessionStorage.setItem(STORE_KEY, accent.id)
   } catch {
-    /* storage blocked: the colour still holds for this page load */
   }
   setPref(PREF_KEY, accent.id)
   emit()
 }
 
-// The account copy wins once it arrives, including right after a fresh sign-in.
 void loadPrefs().then(() => adopt(getPref<string>(PREF_KEY)))
 onAuthChange((user) => {
   if (!user) return

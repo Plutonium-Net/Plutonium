@@ -2,12 +2,6 @@ import type { PointerEvent, ReactNode } from 'react'
 import GlassPanel from '@/components/glass-panel/glass-panel'
 import './modal.css'
 
-/**
- * A centred dialog on the same GlassPanel the side panels use, so a modal is
- * real refracted glass rather than a flat dark card. Escape is handled by the
- * app shell, which knows which surface is on top; here a press on the scrim
- * closes, and a press inside the glass does not.
- */
 export default function Modal({
   className = '',
   label,

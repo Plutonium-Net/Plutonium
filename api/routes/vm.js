@@ -1,11 +1,3 @@
-/**
- * VM routes: /vm/session, /vm/stats.
- *
- * Ported from cf-worker/vm-worker. Create is limited to two sessions per 15
- * minutes per verified uid; deletes are never limited. The Bearer token is now
- * actually verified, so the quota can no longer be reset by inventing one.
- */
-
 import { json, fail, unauthorized } from '../lib/responses.js';
 import { verifyIdToken } from '../lib/token.js';
 import { checkRateLimit } from '../lib/ratelimit.js';

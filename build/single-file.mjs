@@ -1,11 +1,3 @@
-/**
- * The single-file inliner, shared by the lite build and the download page.
- *
- * Both targets ship one HTML file with no siblings: the entry chunk, the
- * stylesheet and every asset have to ride inside the page, and runtime `/img/…`
- * references are rewritten to data URIs because nothing sits beside the file.
- */
-
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 
@@ -24,7 +16,6 @@ const extOf = (file) => file.split('.').pop()?.toLowerCase() ?? ''
 const dataUri = (file) =>
   `data:${MIME[extOf(file)] ?? 'application/octet-stream'};base64,${readFileSync(file).toString('base64')}`
 
-/** Every image under `public/img`, keyed by the URL the app asks for it by. */
 export function collectImages(publicDir, dir = join(publicDir, 'img'), out = {}) {
   if (!existsSync(dir)) return out
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -38,7 +29,6 @@ export function collectImages(publicDir, dir = join(publicDir, 'img'), out = {})
   return out
 }
 
-/** The handful of marks kept at the public root, e.g. `/icon-white.png`. */
 export function collectRootImages(publicDir, out = {}) {
   for (const entry of readdirSync(publicDir, { withFileTypes: true })) {
     if (!entry.isFile() || !MIME[extOf(entry.name)]) continue
@@ -47,18 +37,14 @@ export function collectRootImages(publicDir, out = {}) {
   return out
 }
 
-/** The catalogs the app would otherwise fetch from `/data`, plus its tile art. */
 export function catalogPayload(publicDir, images) {
   const apps = JSON.parse(readFileSync(join(publicDir, 'data', 'apps.json'), 'utf8'))
   const raw = JSON.parse(readFileSync(join(publicDir, 'data', 'app-servers.json'), 'utf8'))
 
-  // `flagSrc` lives inside the injected JSON, where the bundle's string-literal
-  // rewrite cannot reach it, so the flags are swapped here instead.
   const servers = {
     defaultId: raw.default || raw.servers?.[0]?.id || '',
     servers: (raw.servers || []).map((server) => ({
       ...server,
-      // The catalog writes these without the leading slash.
       flagSrc: images[server.flagSrc] ?? images[`/${server.flagSrc}`] ?? server.flagSrc,
     })),
   }
@@ -72,15 +58,6 @@ export function catalogPayload(publicDir, images) {
   return { apps, servers, art }
 }
 
-/**
- * @param images        URL -> data URI, used to rewrite the bundle's literals.
- * @param payload       Value for `window.__PLU_EMBED__`; omit when unused.
- * @param stripEngineTags  Drop the vendored proxy <script> tags (no workers here).
- * @param meta          Build stamp written into the head, read back by the
- *                      download page when someone uploads an old copy.
- * @param inlineFavicon  Rewrite the `<link rel="icon">` href to a data URI, so
- *                      the tab keeps its mark when the page opens from disk.
- */
 export function singleFile({
   images = {},
   payload = null,
@@ -116,8 +93,6 @@ export function singleFile({
       let html = String(htmlFile.source)
 
       if (meta) {
-        // First thing in the head, so a copy check can read it without pulling
-        // the whole page into memory.
         const stamp = [
           `<meta name="plutonium-commit" content="${String(meta.commit).replace(/"/g, '&quot;')}">`,
           `<meta name="plutonium-built" content="${String(meta.builtAt).replace(/"/g, '&quot;')}">`,
@@ -126,7 +101,6 @@ export function singleFile({
       }
 
       if (stripEngineTags) {
-        // The engine bundles are separate files; here their tags would only 404.
         html = html.replace(/\s*<!-- Vendored engine globals[\s\S]*?-->/, '')
         html = html.replace(
           /\s*<script[^>]+src="[^"]*(?:bridge\/index|core\/bundle|core\/config|runtime\/all|js\/runtimev2)\.js"[^>]*><\/script>/g,
@@ -135,8 +109,6 @@ export function singleFile({
       }
 
       if (inlineFavicon) {
-        // There is no `/icon-white.png` beside a file on disk: the icon is
-        // part of the page like every other image here.
         html = html.replace(/<link\b[^>]*>/gi, (tag) =>
           /\brel=["'](?:icon|shortcut icon|apple-touch-icon)["']/i.test(tag)
             ? tag.replace(/(\bhref=["'])([^"']+)(["'])/i, (match, pre, href, post) => {

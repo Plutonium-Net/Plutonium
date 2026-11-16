@@ -1,13 +1,3 @@
-/**
- * The six browsing engines, ported from v1's js/net.js.
- *
- * `core` (Ultraviolet) and `runtime` (Scramjet V1) are wisp-relay engines that
- * rewrite URLs locally and ship traffic through BareMux. `runtimev2` speaks to
- * the same relay through its own controller. `compaxy` and `rh` are host proxies
- * with the frame pointed at their regional host via `?url=`. `remote`
- * (Hyperbeam) hands the page to a worker session instead (see remote.ts).
- */
-
 import { embedded } from '@/lib/embedded'
 import { hostFor, wispUrl, type RegionFamily } from './regions'
 
@@ -21,10 +11,6 @@ export type EngineOption = {
   logo: string
 }
 
-// Labels are the obfuscated spellings v1 ships with, written as code points so
-// the look-alike characters survive editing. `engineLabel` is the single source
-// for any place an engine name surfaces as text. Logos are the same marks v1's
-// engine pill uses, copied from img/3rd-party/.
 const ALL_ENGINES: EngineOption[] = [
   { id: 'compaxy', label: 'Compaxy', family: 'compaxy', hint: 'AIO Proxy', logo: '/img/3rd-party/compaxy.png' },
   { id: 'core', label: '\u054d\u217ctr\u0430\u2174\u0456\u043e\u217c\u0435t', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/core.png' },
@@ -34,11 +20,6 @@ const ALL_ENGINES: EngineOption[] = [
   { id: 'remote', label: 'Hyperbeam', family: null, hint: 'Remote session', logo: '/img/3rd-party/remote.png' },
 ]
 
-/**
- * A single-file build has no engine bundles beside it, so the three service
- * worker engines could never start: that build lists the host proxies only.
- * The normal build is unaffected, since `embedded()` is undefined there.
- */
 export const ENGINES: EngineOption[] = embedded()
   ? ALL_ENGINES.filter((option) => option.family !== 'wisp')
   : ALL_ENGINES
@@ -82,14 +63,12 @@ async function initRuntime() {
   try {
     await navigator.serviceWorker.register('/sw.js', { scope: '/' })
 
-    // A stale $scramjet database from an older build breaks the controller.
     await new Promise<void>((resolve) => {
       const req = indexedDB.open('$scramjet')
       req.onupgradeneeded = () => {
         try {
           req.transaction?.abort()
         } catch {
-          /* nothing to abort */
         }
       }
       req.onsuccess = () => {
@@ -155,11 +134,6 @@ async function ensureRuntimeV2(relayUrl: string) {
   if (!window.PluRuntimeV2) return false
   if (runtimeV2Ready) return true
 
-  // The page has to be controlled by a worker for the browser to hand its
-  // subframe navigations to the scope that owns them. v1 always runs this app
-  // under its root worker (`pwa.js` registers /sw.js at scope /), which is why
-  // v2's worker gets the /runtimev2/ requests there. Registering it here keeps
-  // that property without initialising the v1 Scramjet controller.
   try {
     await navigator.serviceWorker.register('/sw.js', { scope: '/' })
   } catch (error) {
@@ -176,7 +150,6 @@ async function ensureRuntimeV2(relayUrl: string) {
   }
 }
 
-/** Swaps the relay under a live Scramjet V2 controller without a full reload. */
 export async function retargetRuntimeV2(relayUrl: string) {
   if (!runtimeV2Ready || !window.PluRuntimeV2) return
   try {
@@ -186,7 +159,6 @@ export async function retargetRuntimeV2(relayUrl: string) {
   }
 }
 
-/** Readies whatever the engine needs. Host engines and Hyperbeam need nothing local. */
 export async function initEngine(engine: EngineId, relayUrl: string) {
   if (engine === 'core') {
     const [uv] = await Promise.all([initCore(), initRuntime()])
@@ -209,7 +181,6 @@ export function isEngineReady(engine: EngineId) {
   return true
 }
 
-/** The frame URL for a real URL under the given engine. */
 export function encodeUrl(engine: EngineId, url: string, region: string) {
   const family = familyFor(engine)
   if (family === 'compaxy' || family === 'rh') {
@@ -225,7 +196,6 @@ export function encodeUrl(engine: EngineId, url: string, region: string) {
   return url
 }
 
-/** Unwraps a frame URL back to the real target, whichever form the frame is on. */
 export function decodeUrl(engine: EngineId, frameUrl: string) {
   const family = familyFor(engine)
   if (family === 'compaxy' || family === 'rh') {
@@ -236,7 +206,6 @@ export function decodeUrl(engine: EngineId, frameUrl: string) {
       const viaPath = absolute.pathname.match(/^\/[0-9a-f]{32}\/(.+)$/i)
       if (family === 'rh' && viaPath) return decodeURIComponent(viaPath[1]) + absolute.search + absolute.hash
     } catch {
-      /* not a proxy URL */
     }
     return frameUrl
   }
@@ -245,7 +214,6 @@ export function decodeUrl(engine: EngineId, frameUrl: string) {
     try {
       if (runtimeController && frameUrl.includes('/runtime/service/')) return runtimeController.decodeUrl(frameUrl)
     } catch {
-      /* not a proxy URL */
     }
     return frameUrl
   }
@@ -259,7 +227,6 @@ export function decodeUrl(engine: EngineId, frameUrl: string) {
         return config.decodeUrl(encoded)
       }
     } catch {
-      /* not a proxy URL */
     }
   }
   return frameUrl

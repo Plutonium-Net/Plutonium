@@ -1,15 +1,6 @@
 import { useState } from 'react'
 import './copy-check.css'
 
-/**
- * Upload a copy of the single file and see how far behind it is.
- *
- * The lite build writes `<meta name="plutonium-commit">` and
- * `<meta name="plutonium-built">` as the first things in its head, so reading a
- * slice of the file is enough; no need to pull 3 MB into memory. The page
- * carries this branch's commit history, so the copy is placed in it rather
- * than looked up: no network, and it works for a private repository.
- */
 
 const CURRENT_SHORT = __PLU_COMMIT__
 const HISTORY: [string, string][] = __PLU_HISTORY__
@@ -17,11 +8,9 @@ const DEPTH = HISTORY.length
 
 const META_COMMIT = /<meta\s+name=["']plutonium-commit["']\s+content=["']([^"']+)["']/i
 const META_BUILT = /<meta\s+name=["']plutonium-built["']\s+content=["']([^"']+)["']/i
-// The SVG build carries the same tags inside its srcdoc, escaped as attributes.
 const SVG_COMMIT = /&lt;meta name=&quot;plutonium-commit&quot; content=&quot;([^&"]+)&quot;/
 const SVG_BUILT = /&lt;meta name=&quot;plutonium-built&quot; content=&quot;([^&"]+)&quot;/
 const IS_PLUTONIUM = /<title>\s*Plutonium/i
-// This page's own title: picking it up is a slip, not an ancient build.
 const IS_THIS_PAGE = /<title>\s*Plutonium\s+single file/i
 
 type Verdict = 'same' | 'behind' | 'newer' | 'unknown' | 'unstamped' | 'invalid' | 'page'
@@ -78,9 +67,6 @@ async function inspect(file: File): Promise<Result> {
     return result
   }
 
-  // Newest first: the index of an older commit is how many builds came after
-  // it. A copy from another branch is absent, and the build date decides
-  // whether it is newer or simply outside this history.
   const index = HISTORY.findIndex(([sha]) => commit === sha || commit.startsWith(sha))
 
   if (index === 0) {

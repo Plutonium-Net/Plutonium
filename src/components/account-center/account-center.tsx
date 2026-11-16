@@ -20,12 +20,6 @@ function initials(name: string) {
   )
 }
 
-/**
- * The account centre: a corner trigger (a profile picture when signed in, a
- * sign-in button when not) and one glass dialog behind it. Other screens open
- * the dialog through `plu:open-account`, which is how the games, VM and AI
- * pages ask for a session.
- */
 export default function AccountCenter({ showTrigger = true }: { showTrigger?: boolean }) {
   const { user } = useAccount()
   const [open, setOpen] = useState(false)
@@ -38,7 +32,6 @@ export default function AccountCenter({ showTrigger = true }: { showTrigger?: bo
     return () => window.removeEventListener('plu:open-account', openDialog)
   }, [])
 
-  // Escape closes this dialog before the app shell closes a panel behind it.
   useEffect(() => {
     if (!open) return
     function onKeyDown(event: KeyboardEvent) {
@@ -50,8 +43,6 @@ export default function AccountCenter({ showTrigger = true }: { showTrigger?: bo
     return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [open])
 
-  // The uploaded photo is cached per account so the corner picture paints at
-  // once, then the cloud copy replaces it.
   useEffect(() => {
     if (!user) {
       setPhoto('')
@@ -71,7 +62,6 @@ export default function AccountCenter({ showTrigger = true }: { showTrigger?: bo
       try {
         localStorage.setItem(`${AVATAR_KEY}${user.uid}`, remote)
       } catch {
-        /* storage blocked: the picture still shows for this session */
       }
     })
     return () => {
@@ -104,10 +94,8 @@ export default function AccountCenter({ showTrigger = true }: { showTrigger?: bo
       try {
         localStorage.setItem(`${AVATAR_KEY}${user.uid}`, dataUrl)
       } catch {
-        /* storage blocked */
       }
       void saveProfilePhoto(dataUrl).catch(() => {
-        /* the picture stays local if the cloud write fails */
       })
     }
     image.onerror = () => URL.revokeObjectURL(url)

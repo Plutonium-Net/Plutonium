@@ -1,12 +1,3 @@
-/**
- * Saved AI conversations.
- *
- * Each conversation is its own document (`ai_conversations/<id>`), and a small
- * index document lists them so the rail can show history without knowing every
- * id ahead of time. Everything lives on the signed-in account; signed out the
- * calls fail quietly and the page keeps its in-memory copy.
- */
-
 import type { ChatMessage } from '@/lib/ai'
 import { deleteDoc, getDoc, setDoc } from '@/lib/cloud-store'
 
@@ -30,7 +21,6 @@ export function newConversationId() {
   return `t_${Math.random().toString(36).slice(2, 9)}`
 }
 
-/** The first thing the user said, trimmed to a menu-sized line. */
 export function titleFor(messages: ChatMessage[]) {
   const first = messages.find((message) => message.role === 'user' && message.content.trim())
   if (!first) return 'New chat'
@@ -76,7 +66,6 @@ export async function loadConversation(id: string): Promise<Conversation | null>
   }
 }
 
-/** Writes the conversation and refreshes its place in the index. */
 export async function saveConversation(conversation: Conversation): Promise<ConversationSummary | null> {
   const summary: ConversationSummary = {
     id: conversation.id,
@@ -95,12 +84,10 @@ export async function saveConversation(conversation: Conversation): Promise<Conv
     const items = (await loadConversations()).filter((entry) => entry.id !== summary.id)
     await setDoc(INDEX_DOC, { items: [summary, ...items].slice(0, MAX_CONVERSATIONS) })
   } catch {
-    /* the conversation is saved even if the index write fails */
   }
   return summary
 }
 
-/** Removes a thread and its index entry. */
 export async function deleteConversation(id: string) {
   try {
     await deleteDoc(`${DOC_PREFIX}/${id}`)
@@ -111,6 +98,5 @@ export async function deleteConversation(id: string) {
     const items = (await loadConversations()).filter((entry) => entry.id !== id)
     await setDoc(INDEX_DOC, { items })
   } catch {
-    /* the thread is gone even if the index rewrite fails */
   }
 }

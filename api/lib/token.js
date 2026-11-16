@@ -1,20 +1,3 @@
-/**
- * Firebase ID token verification.
- *
- * The workers this replaces only checked that an `Authorization` header started
- * with "Bearer " (see groq-worker, vm-worker). That let anyone mint their own
- * quota by sending `Bearer anything`. This module actually validates the JWT:
- *
- *   - signature against Google's rotating RSA public keys for the
- *     `securetoken@system.gserviceaccount.com` service account
- *   - `aud` === Firebase project id
- *   - `iss` === https://securetoken.google.com/<project id>
- *   - `exp` / `iat` sanity, and a non-empty `sub` (the Firebase uid)
- *
- * Keys are cached per isolate for as long as Google's Cache-Control allows, so
- * the steady-state cost of verification is one WebCrypto verify.
- */
-
 const JWK_URL = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 const DEFAULT_TTL_MS = 60 * 60 * 1000;
 const CLOCK_SKEW_SECS = 60;
@@ -22,10 +5,6 @@ const CLOCK_SKEW_SECS = 60;
 let keyCache = { keys: null, expiresAt: 0 };
 let inFlight = null;
 
-/**
- * Read and verify the bearer token on a request.
- * @returns {Promise<{uid: string, email: string, name: string, picture: string, exp: number}|null>}
- */
 export async function verifyIdToken(request, env) {
   const header = request.headers.get('Authorization') || '';
   if (!header.startsWith('Bearer ')) return null;
@@ -34,7 +13,6 @@ export async function verifyIdToken(request, env) {
   return verifyToken(token, env);
 }
 
-/** Verify a raw JWT string. Exported so it can be exercised directly. */
 export async function verifyToken(token, env) {
   const parts = String(token).split('.');
   if (parts.length !== 3) return null;
@@ -118,7 +96,6 @@ async function refreshKeys() {
       if (jwk && typeof jwk.kid === 'string') keys[jwk.kid] = jwk;
     }
 
-    // Never hold keys longer than Google says, and never shorter than a minute.
     let ttlMs = DEFAULT_TTL_MS;
     const cacheControl = res.headers.get('Cache-Control') || '';
     const maxAge = cacheControl.match(/max-age=(\d+)/i);
@@ -137,7 +114,6 @@ async function refreshKeys() {
   return inFlight;
 }
 
-/** Test seam: forget cached keys. */
 export function resetKeyCache() {
   keyCache = { keys: null, expiresAt: 0 };
   inFlight = null;

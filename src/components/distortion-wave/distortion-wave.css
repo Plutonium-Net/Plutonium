@@ -1,6 +1,3 @@
-/* The wave is one composited layer: a transform (a pill-sized ellipse scaling
-   up into a circle that clears the window) and an opacity fade. Nothing here
-   repaints per frame, which is what keeps the transition smooth. */
 .distortion-wave {
   position: fixed;
   inset: 0;
@@ -10,7 +7,6 @@
   pointer-events: auto;
 }
 
-/* Once the destination is committed, clicks belong to it, not to the veil. */
 .distortion-wave.is-revealing {
   pointer-events: none;
 }
@@ -24,12 +20,6 @@
   border-radius: 50%;
   transform-origin: center;
   transform: translate(-50%, -50%);
-  /* No will-change on purpose: the layer is window-sized, so hinting it would
-     pin a large texture in memory for no gain: transform and opacity already
-     animate on the compositor. */
-  /* A dark body that deepens into the accent towards the rim. The accent is
-     read straight from --accent-rgb, so the wave is exactly the account's
-     colour; the alpha ramp is what keeps it a deep wash instead of a flash. */
   background-color: #05060a;
   background-image: radial-gradient(
     circle closest-side,

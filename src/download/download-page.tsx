@@ -7,12 +7,10 @@ import { BEAM_PROPS } from '@/lib/beam'
 import CopyCheck from './copy-check'
 import './download-page.css'
 
-/** The sizes the Pages build baked in; blank when the page is run any other way. */
 const SIZE = typeof __PLU_SIZE__ === 'string' ? __PLU_SIZE__ : ''
 const SVG_SIZE = typeof __PLU_SVG_SIZE__ === 'string' ? __PLU_SVG_SIZE__ : ''
 const XHTML_SIZE = typeof __PLU_XHTML_SIZE__ === 'string' ? __PLU_XHTML_SIZE__ : ''
 
-/** The same build, three ways. The first is the one to hand most people. */
 const FILES = [
   { file: 'plutonium.html', label: 'HTML', size: SIZE, primary: true },
   { file: 'plutonium.svg', label: 'SVG', size: SVG_SIZE },
@@ -26,7 +24,6 @@ type DownloadButtonProps = {
   primary?: boolean
 }
 
-/** The search pill, holding a download instead of a query. */
 function DownloadButton({ file, label, size, primary = false }: DownloadButtonProps) {
   const glass = (
     <GlassSurface
@@ -77,11 +74,6 @@ function DownloadButton({ file, label, size, primary = false }: DownloadButtonPr
   )
 }
 
-/**
- * The download page, dressed as the home screen: the default wallpaper, the
- * wordmark, the clock and the accounts, with the search pill replaced by the
- * two files the page hands over.
- */
 export default function DownloadPage() {
   return (
     <>

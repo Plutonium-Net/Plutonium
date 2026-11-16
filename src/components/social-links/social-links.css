@@ -1,4 +1,3 @@
-/* Bottom-right, opposite the clock, out of the pins row's way. */
 .social-links {
   position: fixed;
   right: 20px;
@@ -9,7 +8,6 @@
   gap: 4px;
 }
 
-/* The single-file build's download page, sitting before the stamp. */
 .social-links .social-links__lite {
   margin-right: 8px;
   font-size: 11px;
@@ -31,7 +29,6 @@
   outline-offset: 2px;
 }
 
-/* The commit the page was built from, sitting just before the accounts. */
 .social-links .social-links__build {
   margin-right: 6px;
   font-size: 11px;
@@ -76,8 +73,6 @@
   outline-offset: 2px;
 }
 
-/* The pins row is centred along the bottom edge; on narrow screens it reaches
-   far enough right that the two would collide, so the links step up. */
 @media (max-width: 720px) {
   .social-links {
     right: 12px;

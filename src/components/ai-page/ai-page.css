@@ -10,7 +10,6 @@
   --ai-hue: 268;
 }
 
-/* ── Character rail ───────────────────────────────────────────────────── */
 
 .ai-page .ai-rail {
   position: relative;
@@ -263,10 +262,6 @@
   background: rgba(255, 255, 255, 0.045);
 }
 
-/*
- * The active row is painted, not glassed: a per-row glass filter is re-rendered
- * on every hue change and heats the machine for very little visual gain.
- */
 .ai-page .ai-char.is-active,
 .ai-page .ai-char.is-active:hover {
   background:
@@ -350,7 +345,6 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* ── Chat pane ────────────────────────────────────────────────────────── */
 
 .ai-page .ai-chat {
   flex: 1 1 auto;
@@ -493,7 +487,6 @@
   color: rgba(255, 255, 255, 0.36);
 }
 
-/* ── Thread ───────────────────────────────────────────────────────────── */
 
 .ai-page .ai-thread {
   flex: 1 1 auto;
@@ -634,7 +627,6 @@
   }
 }
 
-/* ── Markdown ─────────────────────────────────────────────────────────── */
 
 .ai-page .lite-md > *:first-child {
   margin-top: 0;
@@ -716,7 +708,6 @@
   text-underline-offset: 2px;
 }
 
-/* ── Composer ─────────────────────────────────────────────────────────── */
 
 .ai-page .ai-chat__note {
   margin: 0 12px 6px;
@@ -832,7 +823,6 @@
   background: currentColor;
 }
 
-/* ── Character dialog ─────────────────────────────────────────────────── */
 
 .ai-dialog {
   position: fixed;
@@ -880,7 +870,6 @@
   padding: 0;
 }
 
-/* A hint of the character's colour over the glass, under the form. */
 .ai-dialog__panel::before {
   content: '';
   position: absolute;
@@ -1101,7 +1090,6 @@
   }
 }
 
-/* A character with its own logo: the artwork replaces the tinted orb. */
 .ai-page .is-logo {
   padding: 0;
   background: none;

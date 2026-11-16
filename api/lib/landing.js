@@ -1,16 +1,3 @@
-/**
- * The API index page: brand splash on api.plutoniumnet.work.
- *
- * Three stacked cards (title, detailed status, description), left-aligned
- * above the brand wordmark that is baked into background.png (anchored bottom).
- * The status card is filled from one same-origin request to /healthz, which
- * reports each subsystem, so the page never claims "up" before it has asked.
- *
- * Background, logo and favicon are static files in ../../public, served by the
- * Worker's [assets] binding rather than inlined here (the background alone is
- * 414 KB, which has no place in a Worker bundle).
- */
-
 export function landingPage() {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -51,9 +38,6 @@ export function landingPage() {
     text-rendering: optimizeLegibility;
   }
 
-  /* Fixed so the artwork stays put while short screens scroll; bottom-anchored
-     so the brand wordmark always sits on the bottom edge, never half-cropped.
-     Untinted: the image is drawn exactly as supplied. */
   .backdrop {
     position: fixed;
     inset: 0;
@@ -67,10 +51,6 @@ export function landingPage() {
     align-content: center;
     justify-items: center;
     gap: clamp(8px, 1.1vh, 12px);
-    /* background.png is exactly 2:1 and its Plutonium wordmark fills the lower
-       third. Under cover the image is max(50vw, 100svh) tall and the artwork
-       starts 34.8% of that above the bottom edge, so that band is reserved:
-       the cards sit above the brand instead of on top of it. */
     padding:
       clamp(34px, 7vh, 92px)
       clamp(18px, 2vw, 28px)
@@ -91,7 +71,6 @@ export function landingPage() {
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
-  /* ---- 1. title ---------------------------------------------------------- */
 
   .card--title {
     display: flex;
@@ -120,7 +99,6 @@ export function landingPage() {
     line-height: 1.05;
   }
 
-  /* ---- 2. status -------------------------------------------------------- */
 
   .status__head {
     display: flex;
@@ -209,7 +187,6 @@ export function landingPage() {
     color: rgba(255, 255, 255, 0.3);
   }
 
-  /* ---- 3. description --------------------------------------------------- */
 
   .card__desc {
     max-width: 62ch;
@@ -221,9 +198,6 @@ export function landingPage() {
   }
   .card__desc strong { color: rgba(245, 245, 247, 0.88); font-weight: 550; }
 
-  /* Short, wide windows (a 768p laptop minus browser chrome): cover would blow
-     the artwork up to nearly half the height, so scale the image by height
-     instead and reserve the correspondingly smaller band. */
   @media (max-height: 700px) {
     .backdrop {
       background-size: auto 72%;
@@ -232,22 +206,16 @@ export function landingPage() {
     .stage { padding-bottom: calc(72vh * 0.348 + 8px); }
   }
 
-  /* Portrait phones: cover would blow the wordmark up to a third of the screen
-     and crop it, so size the image by width instead and reserve 17.4vw. */
   @media (max-width: 700px) {
     .backdrop {
       background-size: 100% auto;
       background-position: left bottom;
     }
     .stage { padding-bottom: calc(50vw * 0.348 + 8px); }
-    /* vh-driven type would run enormous on a tall phone, so scale by width. */
     .card__title { font-size: clamp(1.7rem, 7.6vw, 2.5rem); }
     .card__eyebrow { font-size: clamp(0.66rem, 2.9vw, 0.85rem); letter-spacing: 0.1em; }
   }
 
-  /* Every size above is vh-driven, so the stack shrinks with the window and
-     keeps clear of the artwork band without a stack of breakpoints. Wide
-     screens get a third column so the checks take two rows, not three. */
   @media (min-width: 860px) {
     .checks { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }

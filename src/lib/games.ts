@@ -1,8 +1,3 @@
-/**
- * The game catalog, from the same CDN v1's games page reads. One fetch per page
- * load, shared by the games page and the pins row.
- */
-
 export const GAME_CDN = 'https://g.cdn.plutoniumnet.work'
 
 export type Game = {
@@ -25,13 +20,6 @@ export function gameUrl(game: Game) {
   return `${GAME_CDN}/${game.path}`
 }
 
-/**
- * Game search. A plain `includes` puts "Tiny Fishing" below "Big Flappy Tower
- * Tiny Square" whenever the match sits deeper in the name, so names are ranked
- * instead: exact, then prefix, then a word start, then any substring (earlier and
- * denser wins), then multi-word, then near-misses: a skipped letter or one typo
- * still finds "Backrooms" from "backroms".
- */
 export function searchGames(games: Game[], query: string): Game[] {
   const needle = query.trim().toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ')
   if (!needle) return games
@@ -64,11 +52,9 @@ function scoreName(name: string, needle: string) {
     return 560 - Math.min(120, compact.length - needle.length)
   }
 
-  // Letters in order but with gaps: "bckrms" -> "Backrooms".
   const skips = subsequenceGaps(compact, needle)
   if (skips !== null) return 400 - Math.min(140, skips * 6)
 
-  // One typo per word: "backroms", "cooke clicker".
   if (needle.length >= 4) {
     const target = words.find((word) => Math.abs(word.length - needle.length) <= 1)
     if (target && withinOneEdit(target, needle)) return 300
@@ -78,7 +64,6 @@ function scoreName(name: string, needle: string) {
   return 0
 }
 
-/** Null when the letters are not all there in order; otherwise the gaps skipped. */
 function subsequenceGaps(haystack: string, needle: string) {
   let index = -1
   let gaps = 0
@@ -91,7 +76,6 @@ function subsequenceGaps(haystack: string, needle: string) {
   return gaps
 }
 
-/** Levenshtein distance <= 1, without building the full matrix. */
 function withinOneEdit(a: string, b: string) {
   if (a === b) return true
   const [short, long] = a.length <= b.length ? [a, b] : [b, a]

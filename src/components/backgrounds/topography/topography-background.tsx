@@ -2,7 +2,6 @@ import { useAccent } from '@/hooks/use-accent'
 import Topography from './Topography'
 import './topography-background.css'
 
-/** Topography worn as a wallpaper: full-bleed, with no pointer work of its own. */
 export default function TopographyBackground() {
   const accent = useAccent()
 

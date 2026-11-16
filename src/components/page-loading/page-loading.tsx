@@ -33,15 +33,6 @@ function CrossMark() {
   )
 }
 
-/**
- * The loading screen over a proxied page.
- *
- * It blacks out the frame area - the proxied page, not the app chrome around it -
- * and reports the startup as a checklist that builds itself: each finished step
- * runs a line down to the next box, which is how the work actually happens. The
- * steps are honest about what the app can observe: engine start, the relay region,
- * the request in flight, and then either the frame's load event or nothing.
- */
 export default function PageLoading({ phase, engine, region, host, elapsed, latency, status, error, onRetry }: Props) {
   const failed = phase === 'error' || phase === 'blank'
   const connected = phase === 'connected'
@@ -65,8 +56,6 @@ export default function PageLoading({ phase, engine, region, host, elapsed, late
                   ? 'Could not load'
                   : 'Connecting'
 
-  // The engine comes up first, then the relay region it picked, then the request
-  // itself, then the frame painting. Each box is filled from that order.
   const steps: { key: string; label: string; desc: string; state: StepState }[] = [
     {
       key: 'engine',
@@ -119,8 +108,6 @@ export default function PageLoading({ phase, engine, region, host, elapsed, late
 
   const meta = connected ? 'Connected' : failed ? 'Stopped' : latency ? `${latency}ms ping` : 'working'
 
-  // Rendered inside .page-frame, which is the positioning box: the overlay is
-  // exactly the proxied page, so the tabs, dock and margins around it stay usable.
   return (
     <div className={`page-loading page-loading--${phase}`} role="status" aria-live="polite">
       <div className="page-loading__panel">

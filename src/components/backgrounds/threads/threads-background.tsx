@@ -2,7 +2,6 @@ import { useAccent } from '@/hooks/use-accent'
 import Threads from './Threads'
 import './threads-background.css'
 
-/** Threads worn as a wallpaper: full-bleed, still, and out of the cursor's way. */
 export default function ThreadsBackground() {
   const accent = useAccent()
 

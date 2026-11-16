@@ -6,7 +6,6 @@ import './info-panel.css'
 
 const DISCORD = 'https://discord.gg/R3dJ7hpUXX'
 
-/** The policy documents and the feedback form, opened from here. */
 const LINKS: { label: string; open: 'feedback' | LegalSection }[] = [
   { label: 'Feedback', open: 'feedback' },
   { label: 'Terms of Service', open: 'terms' },
@@ -33,7 +32,6 @@ const TEAM = [
 
 const TECHNOLOGY = [
   { name: engineLabel('core'), sub: 'Browsing technology' },
-  // v1 lists the pair together: "Տсrаⅿјеt V1 and V2".
   { name: `${engineLabel('runtime')} and V2`, sub: 'Browsing technology' },
   { name: engineLabel('rh'), sub: 'Browsing technology' },
   { name: engineLabel('remote'), sub: 'Browsing technology' },

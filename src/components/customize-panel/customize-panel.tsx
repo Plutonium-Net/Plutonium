@@ -7,7 +7,6 @@ import { ACCENTS, selectAccent } from '@/lib/accent'
 import { useSyncExternalStore, type CSSProperties } from 'react'
 import './customize-panel.css'
 
-/** The appearance menu: which wallpaper the shell wears. */
 export default function CustomizePanel({ onClose }: { onClose: () => void }) {
   const choice = useSyncExternalStore(subscribeBackground, getBackgroundChoice, getBackgroundChoice)
   const accent = useAccent()

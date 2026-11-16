@@ -62,8 +62,6 @@ export default function AiPage() {
 
   useEffect(() => onAuthChange(setUser), [])
 
-  // The last model and character are account preferences, restored before the
-  // page starts writing them back.
   useEffect(() => {
     let alive = true
     void loadPrefs().then(() => {
@@ -87,7 +85,6 @@ export default function AiPage() {
     if (prefsReady.current) setPref('aiCharacter', activeId)
   }, [activeId])
 
-  // Characters, saved chats and the open thread all live in the account.
   useEffect(() => {
     let alive = true
     void loadCharacters().then(async (list) => {
@@ -99,8 +96,6 @@ export default function AiPage() {
         setConversations(saved)
         return
       }
-      // Nothing in the new index yet: adopt the old one-chat-per-character docs
-      // so nobody's history disappears with the upgrade.
       const adopted = await adoptLegacyChats(list)
       if (alive && adopted.length) setConversations(adopted)
     })
@@ -130,7 +125,6 @@ export default function AiPage() {
     setChats((current) => ({ ...current, [conversationId]: next }))
   }
 
-  /** Saves the thread and moves it to the top of the history list. */
   function persistConversation(id: string, characterId: string, next: ChatMessage[]) {
     const existing = conversations.find((entry) => entry.id === id)
     const conversation: Conversation = {
@@ -179,7 +173,6 @@ export default function AiPage() {
     return `${character.prompt}\n\nKeep replies tight and readable in a chat window. Today is ${new Date().toDateString()}.`
   }
 
-  /** One exchange: appends the user turn, streams the reply, then persists. */
   async function ask(text: string, onToken?: (token: string) => void): Promise<string> {
     const trimmed = text.trim()
     if (!trimmed) return ''
@@ -596,7 +589,6 @@ export default function AiPage() {
   )
 }
 
-/** Adopts the old per-character chat docs into the new conversation index. */
 async function adoptLegacyChats(characters: Character[]): Promise<ConversationSummary[]> {
   const adopted: ConversationSummary[] = []
   for (const character of characters) {

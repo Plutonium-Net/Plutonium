@@ -4,26 +4,21 @@ import { usePins } from '@/hooks/use-pins'
 import { loadPins, unpin } from '@/lib/pins'
 import './pins.css'
 
-// A wide, shallow curve, eased per frame: neighbouring tiles share most of the
-// growth, so the row swells as one arc instead of one tile popping up.
 const MAGNIFY = 0.3
 const FALLOFF = 118
 const SPREAD = 0.38
 const ARC = 0.4
-/** Seconds for a tile to close most of the gap to its target. */
 const TAU = 0.075
 const SETTLED = 0.0015
 
 type Pose = { scale: number; shift: number; lift: number }
 const REST: Pose = { scale: 1, shift: 0, lift: 0 }
 
-/** v1's shortcut tiles, lined up along the bottom of the home page. */
 export default function Pins({
   onOpen,
   minimized = false,
 }: {
   onOpen: (href: string) => void
-  /** Set while the search bar has focus, so the row sinks out of the way. */
   minimized?: boolean
 }) {
   const pins = usePins()
@@ -47,11 +42,6 @@ export default function Pins({
     [],
   )
 
-  /**
-   * One eased step. Each tile chases its target pose rather than jumping to it,
-   * so a fast mouse drag reads as one continuous swell instead of a series of
-   * discrete hops, and the frame loop stops as soon as everything has settled.
-   */
   const step = useCallback((now: number) => {
     const elapsed = lastRef.current ? Math.min((now - lastRef.current) / 1000, 0.05) : 1 / 60
     lastRef.current = now
@@ -84,11 +74,9 @@ export default function Pins({
       tile.style.setProperty('--pin-scale', pose.scale.toFixed(4))
       tile.style.setProperty('--pin-shift', `${pose.shift.toFixed(2)}px`)
       tile.style.setProperty('--pin-lift', `${pose.lift.toFixed(2)}px`)
-      // How far the tile's top edge rose, so its name can ride up with it.
       const grownX = (pose.scale - 1) * (tile.offsetWidth / 2)
       const grownY = (pose.scale - 1) * tile.offsetHeight
       tile.style.setProperty('--pin-grow', `${grownY.toFixed(2)}px`)
-      // Where the tile's top-right corner ended up, so the unpin button rides it.
       tile.style.setProperty('--pin-x', `${(pose.shift + grownX).toFixed(2)}px`)
       tile.style.setProperty('--pin-y', `${(pose.lift - grownY).toFixed(2)}px`)
     })
@@ -103,12 +91,6 @@ export default function Pins({
     frameRef.current = requestAnimationFrame(step)
   }, [step])
 
-  /**
-   * Dock magnification: a gaussian of each tile's distance from the cursor sets
-   * its target size and how far it slides outward; tiles rise as they grow, which
-   * is what gives the row its arc. Read straight into CSS variables, so React
-   * never re-renders while the pointer moves.
-   */
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     const row = rowRef.current
     if (!row) return
@@ -123,7 +105,6 @@ export default function Pins({
       const centerX = tile.offsetLeft + tile.offsetWidth / 2
       const centerY = tile.offsetTop + tile.offsetHeight / 2
       const across = pointerX - centerX
-      // The row wraps on narrow screens, so tiles on the other line stay small.
       const down = pointerY - centerY
       const weight = Math.exp(-((across / FALLOFF) ** 2)) * Math.exp(-((down / (FALLOFF * 0.8)) ** 2))
       const scale = 1 + MAGNIFY * weight
@@ -169,7 +150,6 @@ export default function Pins({
       onPointerLeave={resetRow}
       onPointerCancel={resetRow}
       onPointerOut={(event) => {
-        // Leaving the row (not just one tile) settles the whole dock back down.
         const next = event.relatedTarget as Node | null
         if (!next || !event.currentTarget.contains(next)) resetRow()
       }}
@@ -207,11 +187,6 @@ export default function Pins({
   )
 }
 
-/**
- * The proxy service worker answers requests at scope `/`, and it drops
- * cross-origin image loads. Fetching the thumbnail and handing the tile a blob
- * URL sidesteps that, and the glyph shows until the bytes arrive.
- */
 function PinThumb({ src }: { src?: string }) {
   const [url, setUrl] = useState<string | null>(null)
 
@@ -228,7 +203,6 @@ function PinThumb({ src }: { src?: string }) {
         setUrl(objectUrl)
       })
       .catch(() => {
-        /* the glyph stays */
       })
 
     return () => {

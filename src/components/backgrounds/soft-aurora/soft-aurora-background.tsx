@@ -2,7 +2,6 @@ import { useAccent } from '@/hooks/use-accent'
 import SoftAurora from './SoftAurora'
 import './soft-aurora-background.css'
 
-/** SoftAurora worn as a wallpaper: full-bleed, with the cursor drift switched off. */
 export default function SoftAuroraBackground() {
   const accent = useAccent()
 

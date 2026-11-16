@@ -19,20 +19,11 @@ type PageFrameProps = {
   onRetry: () => void
 }
 
-/** How long each step is allowed before the screen admits it is waiting. */
 const TRANSFERRING_AFTER = 800
 const RENDERING_AFTER = 5000
 const SLOW_AFTER = 14000
 const CONNECTED_HOLD = 900
 
-/**
- * One iframe for the whole app, always mounted.
- *
- * Scramjet V2's controller binds to this exact element when it boots (`createFrame`
- * looks up `#page-frame`), so it must never be remounted: no `key` on the node and
- * no conditional rendering. v1 keeps the same element hidden until it is needed,
- * and reloads by re-assigning `src` rather than by replacing the frame.
- */
 export default function PageFrame({
   tab,
   visible,
@@ -59,12 +50,10 @@ export default function PageFrame({
     }
   })()
 
-  // The stack failed: say so instead of pretending the page is coming.
   useEffect(() => {
     if (visible && status === 'error') setPhase('error')
   }, [status, visible])
 
-  // Walk the steps on a timer; the frame's load event ends them early.
   useEffect(() => {
     if (!visible || !tab || src === 'about:blank' || status === 'error') {
       if (!visible) setPhase('idle')
@@ -82,7 +71,6 @@ export default function PageFrame({
     return () => timers.forEach((timer) => window.clearTimeout(timer))
   }, [src, visible, tab, status])
 
-  // Elapsed counter for the card, only while something is on screen.
   const clocking = phase !== 'idle' && phase !== 'connected'
   useEffect(() => {
     if (!clocking) return
@@ -92,10 +80,6 @@ export default function PageFrame({
     return () => window.clearInterval(tick)
   }, [clocking, src])
 
-  // Reloads must only follow an explicit reload request. Running this whenever
-  // `visible` flipped used to fire on the same render that assigned a new `src`,
-  // reloading the frame's about:blank document and cancelling the navigation,
-  // which left proxied pages permanently blank.
   const lastReload = useRef(reloadToken)
   useEffect(() => {
     if (reloadToken === lastReload.current) return
@@ -105,7 +89,6 @@ export default function PageFrame({
     if (!frame) return
     const current = frame.contentWindow?.location.href
     if (!current || current === 'about:blank') {
-      // Nothing to reload yet: restart the pending request instead.
       frame.src = frame.src
       return
     }
@@ -116,10 +99,6 @@ export default function PageFrame({
     }
   }, [reloadToken, visible])
 
-  /**
-   * A relay that answers with nothing leaves the frame on an empty document, and
-   * the load event still fires, so the load is checked, not just counted.
-   */
   function handleLoad() {
     const frame = frameRef.current
     if (!frame || !visible || src === 'about:blank') return
@@ -131,7 +110,6 @@ export default function PageFrame({
       doc = null
     }
 
-    // Cross-origin embeds (Hyperbeam) legitimately have no readable document.
     const blank = !!doc && !(doc.body?.textContent || '').trim() && (doc.body?.childElementCount ?? 0) === 0
 
     setPhase(blank ? 'blank' : 'connected')

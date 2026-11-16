@@ -1,11 +1,3 @@
-/**
- * Browsing history, ported from v1's js/history.js.
- *
- * Same entry shape and same Firestore document (`history/_default`), but the
- * device copy is gone: entries live in memory and are pulled from the account on
- * sign-in, pushed back on a debounce. Nothing is written to localStorage.
- */
-
 import { getDoc, isSignedIn, onAuthChange, setDoc } from './cloud-store'
 
 export type HistoryType = 'web' | 'search'

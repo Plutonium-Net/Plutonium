@@ -1,15 +1,3 @@
-/**
- * Tab sync, ported from v1 (js/account.js: _getTabsSnapshot / pushTabs / pullTabs
- * / scheduleTabSync, and js/navigation.js: restoreTabs).
- *
- * v1 also mirrors this into localStorage under `plu_tabs`. v2 does not: the
- * Firestore document is the only place tabs live, so nothing tab-related is
- * written to the device.
- *
- * The document shape is v1's, so both apps read and write the same record:
- * `tabs/_default` holding `{ list: [{ url, title, active }], lastSync }`.
- */
-
 import { getDoc, isSignedIn, setDoc } from './cloud-store'
 
 export type TabRecord = {
@@ -35,7 +23,6 @@ function normalise(raw: unknown): TabRecord[] | null {
 let lastPushedHash = ''
 let pushTimer: number | null = null
 
-/** Record what the remote already holds, so a pull is not echoed straight back. */
 export function markSynced(records: TabRecord[]) {
   lastPushedHash = JSON.stringify(records)
 }
@@ -52,7 +39,6 @@ export async function pushTabs(records: TabRecord[]) {
   }
 }
 
-/** v1 debounces a tab push by 1.5s after the last change. */
 export function schedulePush(records: TabRecord[]) {
   if (pushTimer) window.clearTimeout(pushTimer)
   pushTimer = window.setTimeout(() => {

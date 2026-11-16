@@ -1,9 +1,3 @@
-/**
- * The AI worker behind `pluto://ai`, ported from v1's `js/ai.js`: `/ai/chat`
- * streams OpenAI-style SSE deltas, `/ai/transcribe` takes recorded audio, and
- * `/ai/tts` returns a wav for a voice. All three want the user's bearer token.
- */
-
 const AI_API = 'https://api.plutoniumnet.work'
 
 export const CHAT_MODELS = [
@@ -39,11 +33,6 @@ type ChatOptions = {
   onToken: (token: string) => void
 }
 
-/**
- * Streams a reply, calling `onToken` as text arrives. The worker answers with
- * SSE when it can, and falls back to a plain JSON body for short replies, so
- * both paths end with the same concatenated string.
- */
 export async function streamChat({ token, model, system, messages, signal, onToken }: ChatOptions): Promise<string> {
   const response = await fetch(`${AI_API}/ai/chat`, {
     method: 'POST',
@@ -116,7 +105,6 @@ export async function transcribe(blob: Blob, token: string): Promise<string> {
   return (data.text || '').trim()
 }
 
-/** Generates speech and plays it; resolves when playback finishes. */
 export async function speak(text: string, voice: VoiceId, token: string, signal?: AbortSignal): Promise<void> {
   const clean = text
     .replace(/```[\s\S]*?```/g, '')

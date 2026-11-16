@@ -29,11 +29,6 @@ function elapsedLabel(seconds: number) {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-/**
- * Fullscreen player for the GCDN catalog, after v1's `#game-viewer`: the game
- * fills the screen, and a floating glass dock carries identity, transport, the
- * save chip and the way out. The dock stays put.
- */
 export default function GamePlayer({
   game,
   pinned,
@@ -52,7 +47,6 @@ export default function GamePlayer({
   const [seconds, setSeconds] = useState(0)
   const [cover, setCover] = useState<string | null>(null)
 
-  // ── Cloud save bridge ────────────────────────────────────────────────────
   useEffect(() => {
     const bridge = createSaveBridge(game.id, () => frameRef.current)
     bridgeRef.current = bridge
@@ -65,7 +59,6 @@ export default function GamePlayer({
     }
   }, [game.id])
 
-  // Cover for the dock's identity block (blob, like the grid tiles).
   useEffect(() => {
     const src = imageUrl(game)
     if (!src) return
@@ -85,14 +78,12 @@ export default function GamePlayer({
     }
   }, [game])
 
-  // ── Session timer ────────────────────────────────────────────────────────
   useEffect(() => {
     setSeconds(0)
     const id = window.setInterval(() => setSeconds((value) => value + 1), 1000)
     return () => window.clearInterval(id)
   }, [game.id, bumped])
 
-  // ── Actions ──────────────────────────────────────────────────────────────
   function saveClick() {
     const bridge = bridgeRef.current
     if (!bridge) return
@@ -103,8 +94,6 @@ export default function GamePlayer({
     bridge.saveNow()
   }
 
-  // Leaving asks the game for a last snapshot, then gives it a moment to arrive
-  // before the frame is torn down (v1's FINAL_SAVE_GRACE).
   function leave() {
     const bridge = bridgeRef.current
     if (!bridge || save.status === 'signedout' || save.status === 'silent') {

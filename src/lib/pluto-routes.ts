@@ -1,4 +1,3 @@
-/** The in-browser pages a tab can point at. Keys are the `pluto://` host. */
 const PLUTO_PAGES: Record<string, string> = {
   games: 'Games',
   apps: 'Apps',
@@ -10,15 +9,11 @@ const PLUTO_PAGES: Record<string, string> = {
 export type PlutoRoute = {
   id: string
   title: string
-  /** The full `pluto://` URL, query and hash included. */
   url: string
-  /** `?…` search params, e.g. `q` for a games search or `autostart=1`. */
   params: URLSearchParams
-  /** `#…`, which is how a game id is passed. */
   hash: string
 }
 
-/** Resolves `pluto://games?q=mario#id` to a page, keeping its route suffix. */
 export function resolveUrl(input: string): PlutoRoute | null {
   const raw = input.trim()
   const match = /^pluto:\/\/([^/?#]*)/i.exec(raw)

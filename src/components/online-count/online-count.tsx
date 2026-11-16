@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react'
 import './online-count.css'
 
-/**
- * The v1 users-online readout, ported from js/online-count.js: the same public
- * endpoint, the same 30s poll (paused while the tab is hidden) and the same
- * "--" when the service does not answer.
- */
 
 const ENDPOINT = 'https://stelena.plutoniumnet.work/online'
 const POLL_MS = 30_000

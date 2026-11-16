@@ -1,5 +1,3 @@
-/** TMDB catalog behind the media page, ported from v1's `js/stream.js`. */
-
 const TMDB_KEY = 'f53c43c1f2028398bcebdf4a5d1e28bd'
 const TMDB_BASE = 'https://api.themoviedb.org/3'
 const TMDB_IMAGE = 'https://image.tmdb.org/t/p/w500'
@@ -78,7 +76,6 @@ export function posterUrl(item: Pick<MediaItem, 'posterPath'>) {
   return item.posterPath ? `${TMDB_IMAGE}${item.posterPath}` : null
 }
 
-/** Popular rows for the section, one TMDB page at a time. */
 export async function loadCatalog(kind: MediaKind, page: number): Promise<MediaItem[]> {
   const path =
     kind === 'anime'
@@ -90,7 +87,6 @@ export async function loadCatalog(kind: MediaKind, page: number): Promise<MediaI
   return (data.results || []).map((raw) => formatItem(raw, kind))
 }
 
-/** Search inside the section that is open, like v1's tabs do. */
 export async function searchCatalog(kind: MediaKind, query: string): Promise<MediaItem[]> {
   const endpoint = kind === 'movie' ? 'movie' : 'tv'
   const data = await tmdb<TmdbPage>(`/search/${endpoint}?query=${encodeURIComponent(query)}`)
@@ -118,7 +114,6 @@ function tvCert(detail: { content_ratings?: { results?: { iso_3166_1: string; ra
   return ratings.map((entry) => entry.rating).find(Boolean) || 'NR'
 }
 
-/** The preview's data: overview, certification, runtime and (for series) seasons. */
 export async function loadDetails(item: MediaItem): Promise<MediaDetails> {
   if (item.kind === 'movie') {
     const detail = await tmdb<{
@@ -189,11 +184,6 @@ export function isAdultCert(cert: string) {
   return ADULT_CERTS.has(cert.toUpperCase().trim())
 }
 
-/**
- * VidCore's documented embed endpoints take TMDB ids straight, with the season
- * and episode in the path for series. Autoplay is safe here: the player only
- * opens from a click, which is the gesture browsers want for playback.
- */
 export function vidcoreUrl(item: MediaItem, season?: number, episode?: number) {
   const base =
     item.kind === 'movie'
@@ -202,7 +192,6 @@ export function vidcoreUrl(item: MediaItem, season?: number, episode?: number) {
   return `${base}?autoplay=true`
 }
 
-/** The word the hero title swaps to as the section changes. */
 export const KIND_WORD: Record<MediaKind, string> = {
   movie: 'Cinema',
   tv: 'Television',

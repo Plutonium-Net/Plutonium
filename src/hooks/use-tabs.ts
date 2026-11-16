@@ -12,7 +12,6 @@ export type Tab = {
   id: string
   title: string
   url: string
-  /** Only Hyperbeam needs one: its frame URL comes from a worker session. */
   frameUrl?: string
   entries: string[]
   index: number
@@ -36,7 +35,6 @@ function createTab(record?: TabRecord): Tab {
   }
 }
 
-/** v1's snapshot shape: one record per tab, the active one flagged. */
 function toRecords(tabs: Tab[], activeId: string): TabRecord[] {
   return tabs.map((tab) => ({ url: tab.url, title: tab.title, active: tab.id === activeId }))
 }
@@ -52,7 +50,6 @@ async function remoteFrameUrl(url: string) {
 }
 
 export function useTabs() {
-  // Nothing is restored from the device: a tab list only ever arrives from the cloud.
   const [state, setState] = useState<TabsState>(freshState)
   const [signedIn, setSignedIn] = useState(isSignedIn)
   const [syncReady, setSyncReady] = useState(false)
@@ -64,8 +61,6 @@ export function useTabs() {
 
   useEffect(() => onAuthChange((user) => setSignedIn(!!user)), [])
 
-  // Adopt the remote list when a session appears; pushes wait for it to settle
-  // so fresh local tabs can never overwrite another device's list.
   useEffect(() => {
     if (!signedIn) {
       setSyncReady(false)
@@ -113,22 +108,18 @@ export function useTabs() {
       if (index === -1) return prev
 
       const remaining = prev.tabs.filter((tab) => tab.id !== id)
-      // Closing the last tab leaves a fresh one behind, never an empty window.
       if (remaining.length === 0) {
         const replacement = createTab()
         return { tabs: [replacement], activeId: replacement.id }
       }
 
-      // A closed background tab keeps the current selection.
       if (prev.activeId !== id) return { ...prev, tabs: remaining }
 
-      // A closed active tab hands over to its neighbour, preferring the right.
       const neighbour = remaining[Math.min(index, remaining.length - 1)]
       return { tabs: remaining, activeId: neighbour.id }
     })
   }, [])
 
-  /** Commits a URL to one tab and extends its own back/forward list. */
   const applyUrl = useCallback((tabId: string, url: string, title: string, frameUrl?: string) => {
     setState((prev) => ({
       ...prev,
@@ -140,7 +131,6 @@ export function useTabs() {
     }))
   }, [])
 
-  /** Points the active tab at a `pluto://` page or a web URL. */
   const navigate = useCallback(
     async (input: string) => {
       const current = stateRef.current
@@ -221,7 +211,6 @@ export function useTabs() {
     [goTo],
   )
 
-  /** `to` is the slot in the list with the moved tab already taken out. */
   const moveTab = useCallback((from: number, to: number) => {
     setState((prev) => {
       if (from === to || from < 0 || from >= prev.tabs.length) return prev

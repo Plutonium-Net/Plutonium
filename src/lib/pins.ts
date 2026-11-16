@@ -1,15 +1,8 @@
-/**
- * Pins, ported from v1's js/pins.js: the shortcut tiles that sat under the
- * search bar. The id list lives on the signed-in account, with sessionStorage
- * as the in-tab cache so the row renders before the account read lands.
- */
-
 import { getPref, loadPrefs, setPref } from '@/lib/prefs'
 
 export type Pin = {
   id: string
   name: string
-  /** Absolute thumbnail URL, when the pin has one. */
   image?: string
   href: string
 }
@@ -19,7 +12,6 @@ const MAX_PINS = 6
 const GAMES_CDN = 'https://g.cdn.plutoniumnet.work/'
 const GAMES_CONFIG = `${GAMES_CDN}config.json`
 
-/** Shown when the CDN cannot be reached, so the row is never blank. */
 const FALLBACK_PINS: Pin[] = [
   { id: 'games', name: 'Games', href: 'pluto://games' },
   { id: 'apps', name: 'Apps', href: 'pluto://apps' },
@@ -62,12 +54,10 @@ function writeIds(ids: string[]) {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
   } catch {
-    /* private mode: the row still renders for this page load */
   }
   setPref('pins', ids)
 }
 
-/** The account copy when there is one, else this tab's cache. */
 function storedIds(): string[] | null {
   const saved = getPref<string[]>('pins')
   if (Array.isArray(saved)) return saved.filter((id): id is string => typeof id === 'string')
@@ -94,10 +84,6 @@ async function loadGames(): Promise<GameEntry[]> {
   }
 }
 
-/**
- * Drops a pin. The remaining ids are written back, so an empty row stays empty
- * for the session instead of the defaults reappearing.
- */
 export function unpin(id: string) {
   const ids = storedIds() ?? pins.map((pin) => pin.id)
   writeIds(ids.filter((pinId) => pinId !== id))
@@ -105,15 +91,10 @@ export function unpin(id: string) {
   emit()
 }
 
-/** True when the row is full, so a game cannot be pinned without freeing a slot. */
 export function pinsFull() {
   return pins.length >= MAX_PINS
 }
 
-/**
- * Pins a game, e.g. from the games page. Returns false when the row is full or
- * the game is already there; callers keep their own feedback for that.
- */
 export function pinGame(game: GameEntry) {
   const ids = storedIds() ?? pins.map((pin) => pin.id)
   if (ids.includes(game.id)) return true
@@ -124,7 +105,6 @@ export function pinGame(game: GameEntry) {
   return true
 }
 
-/** Fills the row once per page load: stored ids first, else the first few games. */
 export function loadPins(): Promise<void> {
   if (ready) return Promise.resolve()
   if (loading) return loading
@@ -137,8 +117,6 @@ export function loadPins(): Promise<void> {
       const byId = new Map(games.map((game) => [game.id, game]))
       pins = chosen.map((id) => byId.get(id)).filter(Boolean).map((game) => pinFor(game as GameEntry))
     }
-    // Defaults only stand in when nothing was ever stored, never over an
-    // emptied row.
     if (!pins.length && stored === null) pins = FALLBACK_PINS
     ready = true
     emit()

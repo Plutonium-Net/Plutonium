@@ -2,7 +2,6 @@ import { useAccent } from '@/hooks/use-accent'
 import FluxLines from './FluxLines'
 import './flux-lines-background.css'
 
-/** FluxLines worn as a wallpaper: full-bleed, with the cursor magnet switched off. */
 export default function FluxLinesBackground() {
   const accent = useAccent()
 

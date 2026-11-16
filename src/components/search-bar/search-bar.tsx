@@ -14,12 +14,7 @@ export default function SearchBar({
   onNavigate,
   onActiveChange,
 }: {
-  /**
-   * `origin` is the frame the pick came from: the row that was clicked, or the
-   * pill itself for a submitted query. The transition opens from it.
-   */
   onNavigate: (input: string, origin?: DOMRect) => boolean | Promise<boolean>
-  /** Reports focus, so the home screen can tuck its pins away while typing. */
   onActiveChange?: (active: boolean) => void
 }) {
   const history = useHistory()
@@ -43,7 +38,6 @@ export default function SearchBar({
 
   const rows = useMemo(() => groups.flatMap((group) => group.rows), [groups])
 
-  // Suggestions trail the typing by a beat, and go quiet for slash commands.
   useEffect(() => {
     const query = value.trim()
     if (!open || !query || query.startsWith('/')) {
@@ -62,9 +56,6 @@ export default function SearchBar({
     }
   }, [value, open])
 
-  // A typed query starts on the row that runs it (the last one), like v1. The
-  // empty list is just the / commands, so it starts on the first command; it
-  // used to land on the last row, which highlighted `/vm` the moment you opened it.
   useEffect(() => {
     setActive(value.trim() && rows.length ? rows.length - 1 : 0)
   }, [rows, value])
@@ -79,7 +70,6 @@ export default function SearchBar({
     setOpen(false)
   }
 
-  /** The glass pill, measured in viewport pixels; the row when there isn't one. */
   function pillRect() {
     const pill = barRef.current?.querySelector('.search-bar-beam') ?? barRef.current
     return pill?.getBoundingClientRect()
@@ -94,8 +84,6 @@ export default function SearchBar({
     if (!row.navigate) return
     const origin = source?.getBoundingClientRect() ?? pillRect()
     closeList()
-    // Clears only when the navigation was accepted, so a failed remote session
-    // leaves the query in place to retry.
     if (await onNavigate(row.navigate, origin)) setValue('')
   }
 
@@ -140,10 +128,6 @@ export default function SearchBar({
   return (
     <div className="search-bar" ref={barRef}>
       <div className="search-bar-wordmark">
-        {/* Scales with the pill: the bar is min(560px, 90vw), so this keeps the
-            wordmark at ~80% of its width on any screen.
-            trigger="mount" rather than "scroll": the wordmark is fixed in view,
-            so a ScrollTrigger would fire on the first refresh or never. */}
         <FoldText
           text="Plutonium"
           foldStyle="paper"
@@ -164,8 +148,6 @@ export default function SearchBar({
           fontWeight={400}
         />
       </div>
-      {/* Always wrapped: swapping the wrapper in and out on focus would remount
-          the input and drop the caret on the first click. */}
       <BorderBeam className="search-bar-beam" {...BEAM_PROPS} borderRadius={999} active={focused}>
         <GlassSurface
           className="search-bar-glass"
@@ -205,7 +187,6 @@ export default function SearchBar({
               value={value}
               onChange={(event) => {
                 setValue(event.target.value)
-                // Typing reopens the list even after Escape dismissed it.
                 setOpen(true)
               }}
               onFocus={openList}
@@ -220,7 +201,6 @@ export default function SearchBar({
         </GlassSurface>
       </BorderBeam>
 
-      {/* Outside the glass: the dropdown draws no surface of its own. */}
       {open && rows.length > 0 && (
         <SearchSuggest
           groups={groups}

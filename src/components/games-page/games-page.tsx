@@ -11,9 +11,7 @@ import { BEAM_PROPS } from '@/lib/beam'
 import './games-page.css'
 
 type Props = {
-  /** `?q=` from the route, so a `/g tiny` search lands filtered. */
   query?: string
-  /** `#<gameId>` from the route: open that game straight away. */
   launchId?: string
 }
 
@@ -30,7 +28,6 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
   const pinned = usePins()
   const pinnedIds = useMemo(() => new Set(pinned.map((pin) => pin.id)), [pinned])
 
-  // Lumin: its own catalog, fetched through the SDK rather than a JSON file.
   const [luminState, setLuminState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [luminError, setLuminError] = useState('')
   const [luminGames, setLuminGames] = useState<LuminGame[]>([])
@@ -53,7 +50,6 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
     }
   }, [])
 
-  // A pin or a `/g` pick carries the game id, so it opens without a second click.
   useEffect(() => {
     if (!launchId || !games.length) return
     const game = games.find((item) => item.id === launchId)
@@ -71,9 +67,6 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
     setToast(pinGame(game) ? `Pinned “${game.name}”` : 'Pins are full. Unpin one from the home row first.')
   }
 
-  // ── Lumin catalog ────────────────────────────────────────────────────────
-  // `init` authorises the page and every other call refuses to run before it, so
-  // the first fetch waits on the boot and any failure lands in `luminError`.
   useEffect(() => {
     if (source !== 'lumin' || luminState !== 'idle') return
     setLuminState('loading')
@@ -93,7 +86,6 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
       })
   }, [source, luminState])
 
-  // Typing in the same pill searches Lumin's index instead of filtering locally.
   useEffect(() => {
     if (source !== 'lumin' || luminState !== 'ready') return
     const needle = search.trim()
@@ -266,7 +258,6 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
             </p>
           </header>
 
-          {/* `init` needs a container in the DOM; our own grid is what gets drawn. */}
           <div id="lumin-container" className="games-page__lumin" aria-hidden="true" />
 
           {source === 'lumin' ? (
@@ -329,10 +320,6 @@ export default function GamesPage({ query = '', launchId = '' }: Props) {
 
 
 
-/**
- * Covers come from the game CDN. The proxy service worker at scope `/` drops
- * cross-origin image loads, so they are fetched and shown as blob URLs.
- */
 function GameCover({ game }: { game: Game }) {
   const [url, setUrl] = useState<string | null>(null)
   const src = imageUrl(game)
@@ -359,7 +346,6 @@ function GameCover({ game }: { game: Game }) {
   return <img className="games-page__cover" src={url} alt="" draggable={false} />
 }
 
-/** Lumin hands back cover URLs directly, so these can be plain images. */
 function LuminCover({ token }: { token: string }) {
   const [url, setUrl] = useState<string | null>(null)
 

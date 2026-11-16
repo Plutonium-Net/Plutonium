@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState, useRef, useId, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import './GlassSurface.css';
 

@@ -9,18 +9,12 @@ import { probeRegions } from '@/lib/net/net-store'
 import { serversFor } from '@/lib/net/regions'
 import './region-menu.css'
 
-/**
- * The globe menu: a region picker of its own, so the proxy switcher only lists
- * engines. Whichever family the current engine belongs to decides whether these
- * rows are wisp relays, Compaxy hosts or RH hosts.
- */
 export default function RegionMenu() {
   const net = useNet()
   const family = familyFor(net.engine)
   const servers = family ? serversFor(family) : []
   const pings = family ? net.pings[family] : undefined
 
-  // Opening the menu measures the regions once, so the list can show latency.
   useEffect(() => {
     if (family && !pings) void probeRegions(family)
   }, [family, pings])
@@ -36,7 +30,6 @@ export default function RegionMenu() {
         <div className="region-menu__list">
           {servers.map((server) => {
             const ping = pings?.[server.id]
-            // A dead relay cannot be connected to, so its row does not select.
             const offline = !!ping && !ping.ok
             const active = server.id === net.regions[family]
             return (
