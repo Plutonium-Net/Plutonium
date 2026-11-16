@@ -184,6 +184,7 @@ export default function TransferOverlay() {
   const entries = useSyncExternalStore(subscribeTransfers, getTransfers, getTransfers)
   const streamRef = useRef<HTMLPreElement>(null)
   const [typed, setTyped] = useState(0)
+  const [pinned, setPinned] = useState(true)
   const typedRef = useRef(0)
 
   const title = '$ Downloading User Data'
@@ -228,8 +229,24 @@ export default function TransferOverlay() {
 
   useEffect(() => {
     const stream = streamRef.current
+    if (!stream) return
+
+    function onScroll() {
+      const el = streamRef.current
+      if (!el) return
+      const distance = el.scrollHeight - el.scrollTop - el.clientHeight
+      setPinned(distance <= 24)
+    }
+
+    stream.addEventListener('scroll', onScroll, { passive: true })
+    return () => stream.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    if (!pinned) return
+    const stream = streamRef.current
     if (stream) stream.scrollTop = stream.scrollHeight
-  }, [typed])
+  }, [typed, pinned])
 
   useEffect(() => {
     if (phase === 'gone') return
@@ -249,10 +266,10 @@ export default function TransferOverlay() {
   }, [phase])
 
   useEffect(() => {
-    if (phase !== 'live' || pending || !caughtUp) return
+    if (phase !== 'live' || pending || !caughtUp || !pinned) return
     const timer = window.setTimeout(() => setPhase('leaving'), 900)
     return () => window.clearTimeout(timer)
-  }, [phase, pending, caughtUp])
+  }, [phase, pending, caughtUp, pinned])
 
   useEffect(() => {
     if (phase !== 'leaving') return
