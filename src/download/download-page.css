@@ -45,6 +45,19 @@
   transition: transform 0.2s ease;
 }
 
+/* The SVG file sits directly under the HTML one, same size, less glow. */
+.download-page .download-page__action + .download-page__action {
+  margin-top: 10px;
+}
+
+.download-page .download-page__action:not(.is-primary) .download-page__action-inner {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.download-page .download-page__action:not(.is-primary) .download-page__size {
+  color: rgba(255, 255, 255, 0.4);
+}
+
 .download-page .download-page__action:hover {
   transform: translateY(-2px);
 }
@@ -93,23 +106,6 @@
   font-size: 14px;
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.55);
-}
-
-.download-page .download-page__alts {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin: 16px 0 0;
-}
-
-.download-page .download-page__alts .download-page__ghost {
-  margin-top: 0;
-}
-
-.download-page .download-page__dot {
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 13px;
 }
 
 .download-page .download-page__ghost {
