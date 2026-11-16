@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
+import { commitSha } from './scripts/build-info.mjs'
 
 /**
  * The single-file build: one `dist-single/index.html` that opens from disk.
@@ -166,6 +167,7 @@ export default defineConfig({
   // No sibling files: fonts, catalogs and art all ride inside the page.
   publicDir: false,
   base: './',
+  define: { __PLU_COMMIT__: JSON.stringify(commitSha()) },
   plugins: [
     react(),
     tailwindcss(),

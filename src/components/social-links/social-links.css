@@ -9,6 +9,17 @@
   gap: 4px;
 }
 
+/* The commit the page was built from, sitting just before the accounts. */
+.social-links .social-links__build {
+  margin-right: 6px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.32);
+  white-space: nowrap;
+  user-select: text;
+}
+
 .social-links .social-links__btn {
   display: grid;
   place-items: center;

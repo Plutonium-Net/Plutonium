@@ -42,6 +42,9 @@ const LINKS: { id: string; label: string; href: string; icon: ReactNode }[] = [
 export default function SocialLinks() {
   return (
     <nav className="social-links" aria-label="Plutonium on social media">
+      <span className="social-links__build" title={`Commit ${__PLU_COMMIT__}`}>
+        Build: {__PLU_COMMIT__}
+      </span>
       {LINKS.map((link) => (
         <a
           key={link.id}

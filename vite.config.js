@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
+import { commitSha } from './scripts/build-info.mjs'
 
 /**
  * Scramjet V2 reaches the relay through libcurl, whose wasm build wants
@@ -22,6 +23,8 @@ const isolationHeaders = {
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // The build stamp on the home screen; the value is this build's commit.
+  define: { __PLU_COMMIT__: JSON.stringify(commitSha()) },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
