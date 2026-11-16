@@ -38,6 +38,7 @@ export default defineConfig({
       images,
       payload: catalogPayload(PUBLIC_DIR, images),
       stripEngineTags: true,
+      inlineFavicon: true,
       meta: { commit: commitFull(), builtAt: builtAt() },
     }),
   ],

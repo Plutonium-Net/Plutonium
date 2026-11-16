@@ -78,8 +78,16 @@ export function catalogPayload(publicDir, images) {
  * @param stripEngineTags  Drop the vendored proxy <script> tags (no workers here).
  * @param meta          Build stamp written into the head, read back by the
  *                      download page when someone uploads an old copy.
+ * @param inlineFavicon  Rewrite the `<link rel="icon">` href to a data URI, so
+ *                      the tab keeps its mark when the page opens from disk.
  */
-export function singleFile({ images = {}, payload = null, stripEngineTags = false, meta = null } = {}) {
+export function singleFile({
+  images = {},
+  payload = null,
+  stripEngineTags = false,
+  meta = null,
+  inlineFavicon = false,
+} = {}) {
   function inlineImages(code) {
     let next = code
     for (const [url, uri] of Object.entries(images)) {
@@ -123,6 +131,19 @@ export function singleFile({ images = {}, payload = null, stripEngineTags = fals
         html = html.replace(
           /\s*<script[^>]+src="[^"]*(?:bridge\/index|core\/bundle|core\/config|runtime\/all|js\/runtimev2)\.js"[^>]*><\/script>/g,
           '',
+        )
+      }
+
+      if (inlineFavicon) {
+        // There is no `/icon-white.png` beside a file on disk: the icon is
+        // part of the page like every other image here.
+        html = html.replace(/<link\b[^>]*>/gi, (tag) =>
+          /\brel=["'](?:icon|shortcut icon|apple-touch-icon)["']/i.test(tag)
+            ? tag.replace(/(\bhref=["'])([^"']+)(["'])/i, (match, pre, href, post) => {
+                const uri = images[href] ?? images[`/${href.replace(/^\.?\//, '')}`]
+                return uri ? `${pre}${uri}${post}` : match
+              })
+            : tag,
         )
       }
 
