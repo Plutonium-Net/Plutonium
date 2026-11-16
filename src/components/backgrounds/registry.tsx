@@ -8,7 +8,6 @@ export type BackgroundOption = {
   Component: ComponentType
 }
 
-/** Wraps a scene image as a background component. `dim` is the % of black over it. */
 function scene(src: string, dim: number) {
   return function SceneBackground() {
     return <ImageBackground src={src} dim={dim} />

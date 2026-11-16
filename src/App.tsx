@@ -24,6 +24,7 @@ import RegionMenu from '@/components/region-menu/region-menu'
 import SearchBar from '@/components/search-bar/search-bar'
 import SideMenu from '@/components/side-menu/side-menu'
 import SocialLinks from '@/components/social-links/social-links'
+import TransferOverlay from '@/components/transfer-overlay/transfer-overlay'
 import { useAccent } from '@/hooks/use-accent'
 import { useNet } from '@/hooks/use-net'
 import { useTabs } from '@/hooks/use-tabs'
@@ -233,6 +234,7 @@ export default function App() {
       {!onWeb && !page && <Clock />}
       <AccountCenter showTrigger={home} />
       <DesktopGate />
+      <TransferOverlay />
       {wave && (
         <DistortionWave
           origin={wave.origin}

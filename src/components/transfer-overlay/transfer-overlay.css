@@ -1,0 +1,114 @@
+.transfer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 26px 32px 32px;
+  background: #000;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  overflow: hidden;
+}
+
+.transfer-overlay__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.transfer-overlay__title {
+  color: #fff;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.transfer-overlay__close {
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.transfer-overlay__close:hover {
+  border-color: #fff;
+}
+
+.transfer-overlay__log {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.transfer-overlay__empty {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+}
+
+.transfer-overlay__entry {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.transfer-overlay__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.transfer-overlay__method {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.transfer-overlay__path {
+  color: rgba(255, 255, 255, 0.62);
+  word-break: break-all;
+}
+
+.transfer-overlay__timing {
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+}
+
+.transfer-overlay__label {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.transfer-overlay__body {
+  margin: 6px 0 0;
+  max-height: 320px;
+  overflow: auto;
+  color: #fff;
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .transfer-overlay {
+    padding: 18px 16px 22px;
+  }
+}

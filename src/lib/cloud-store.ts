@@ -1,3 +1,5 @@
+import { beginTransfer, endTransfer, failTransfer } from './transfer-log'
+
 const WORKER_URL = 'https://api.plutoniumnet.work'
 const SESSION_KEY = 'plu_session'
 const REFRESH_MARGIN_MS = 5 * 60 * 1000
@@ -258,15 +260,37 @@ function fromFirestoreValue(value: FirestoreValue): unknown {
   return undefined
 }
 
+async function firestoreFetch(path: string, init: RequestInit, requestBody: string | null) {
+  const id = beginTransfer(init.method || 'GET', path, requestBody)
+  try {
+    const res = await fetch(`${WORKER_URL}/firestore${path}`, init)
+    let body = ''
+    try {
+      body = await res.clone().text()
+    } catch {
+    }
+    endTransfer(id, res.status, body)
+    return res
+  } catch (error) {
+    failTransfer(id, error instanceof Error ? error.message : String(error))
+    throw error
+  }
+}
+
 export async function setDoc(collection: string, data: Record<string, unknown>) {
   const user = currentUser
   if (!user) throw new Error('Not signed in')
   const auth = await authHeader()
-  const res = await fetch(`${WORKER_URL}/firestore${docPath(collection, user.uid)}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...auth },
-    body: JSON.stringify({ fields: toFirestoreFields(data) }),
-  })
+  const body = JSON.stringify({ fields: toFirestoreFields(data) })
+  const res = await firestoreFetch(
+    docPath(collection, user.uid),
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...auth },
+      body,
+    },
+    body,
+  )
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(`setDoc failed: ${JSON.stringify(err)}`)
@@ -278,7 +302,7 @@ export async function getDoc(collection: string): Promise<Record<string, unknown
   const user = currentUser
   if (!user) throw new Error('Not signed in')
   const auth = await authHeader()
-  const res = await fetch(`${WORKER_URL}/firestore${docPath(collection, user.uid)}`, { headers: auth })
+  const res = await firestoreFetch(docPath(collection, user.uid), { headers: auth }, null)
   if (res.status === 404) return null
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
@@ -292,10 +316,14 @@ export async function deleteDoc(collection: string) {
   const user = currentUser
   if (!user) throw new Error('Not signed in')
   const auth = await authHeader()
-  const res = await fetch(`${WORKER_URL}/firestore${docPath(collection, user.uid)}`, {
-    method: 'DELETE',
-    headers: auth,
-  })
+  const res = await firestoreFetch(
+    docPath(collection, user.uid),
+    {
+      method: 'DELETE',
+      headers: auth,
+    },
+    null,
+  )
   if (!res.ok && res.status !== 404) throw new Error(`deleteDoc failed: ${res.status}`)
 }
 
