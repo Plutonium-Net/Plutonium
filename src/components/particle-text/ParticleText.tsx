@@ -16,9 +16,11 @@ export interface ParticleTextProps {
   gatherDuration?: number;
   stagger?: number;
   clickBurst?: boolean;
+  burstStrength?: number;
   pointerRepel?: number;
   repelRadius?: number;
   idleDrift?: number;
+  offsetY?: number;
   trigger?: 'mount' | 'hover' | 'click';
   fontSize?: number | string;
   fontWeight?: number | string;
