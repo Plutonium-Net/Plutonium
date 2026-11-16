@@ -44,13 +44,15 @@ async function download() {
   await build({ root: ROOT, configFile: join(ROOT, 'vite.config.single.js') })
   const html = readFileSync(join(SINGLE_DIR, 'index.html'), 'utf8')
   const svg = toSvg(html)
+  const xhtml = toXhtml(html)
 
-  const sizes = { html: formatSize(html), svg: formatSize(svg) }
+  const sizes = { html: formatSize(html), svg: formatSize(svg), xhtml: formatSize(xhtml) }
   process.env.PLU_SIZE = sizes.html
   process.env.PLU_SVG_SIZE = sizes.svg
+  process.env.PLU_XHTML_SIZE = sizes.xhtml
   await build({ root: ROOT, configFile: join(ROOT, 'vite.config.download.js') })
 
-  assemble(html, svg, sizes)
+  assemble(html, svg, xhtml, sizes)
 }
 
 /** Git may be absent in some build images; the log degrades rather than fails. */
@@ -67,56 +69,86 @@ function formatSize(contents) {
 }
 
 /**
- * The same page as a single SVG.
+ * Escape the HTML so it can ride inside an XML attribute.
  *
- * An SVG is an XML document, so the HTML cannot just be pasted in: its scripts
- * would be parsed as XML. It rides in an `iframe srcdoc` instead — the iframe
- * still parses HTML leniently, keeps this file's origin (so storage and canvas
- * work), and fills the viewport the way the page expects.
+ * XML allows no control characters at all, and the bundle carries a couple of
+ * raw U+001F separators from deduplicated string literals. Their `\u001f`
+ * escapes are the same value to JavaScript, and legal here.
  *
- * Only the attribute characters need escaping, plus newlines: an XML parser
- * folds literal line breaks in attribute values into spaces, and the bundled
- * JavaScript may need them.
+ * Newlines become character references because an XML parser folds literal
+ * line breaks in attribute values into spaces, and the bundled JavaScript may
+ * need them.
  */
-function toSvg(html) {
-  // XML allows no control characters at all, and the bundle carries a couple of
-  // raw U+001F separators from deduplicated string literals. Their `\u001f`
-  // escapes are the same value to JavaScript, and legal here.
-  const escaped = html
+function escapeForAttribute(html) {
+  return html
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, (ch) => `\\u${ch.charCodeAt(0).toString(16).padStart(4, '0')}`)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/"/g, '&quot;')
     .replace(/\r/g, '&#13;')
     .replace(/\n/g, '&#10;')
+}
 
+/**
+ * The app inside an iframe whose document is the attribute.
+ *
+ * XML documents cannot hold HTML markup directly — the HTML parser's leniency
+ * is exactly what a React bundle needs — so the markup rides in `srcdoc`. The
+ * iframe keeps the wrapper's origin, so storage and canvas behave normally,
+ * and it fills the viewport the page expects.
+ */
+function frame(escaped) {
+  return `<iframe xmlns="http://www.w3.org/1999/xhtml" title="Plutonium" width="100%" height="100%" style="border:0;display:block" srcdoc="${escaped}"></iframe>`
+}
+
+/** The same page as a single SVG. */
+function toSvg(html) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
   <title>Plutonium</title>
   <desc>The whole app in one file that happens to be an SVG: the page rides in an iframe's srcdoc.</desc>
   <foreignObject x="0" y="0" width="100%" height="100%">
-    <iframe xmlns="http://www.w3.org/1999/xhtml" title="Plutonium" width="100%" height="100%" style="border:0;display:block" srcdoc="${escaped}"/>
+    ${frame(escapeForAttribute(html))}
   </foreignObject>
 </svg>
 `
 }
 
-function assemble(html, svg, sizes) {
+/** The same page as a single XHTML document. */
+function toXhtml(html) {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Plutonium</title>
+    <style>html, body { margin: 0; height: 100%; background: #000; } iframe { display: block; width: 100%; height: 100%; border: 0; }</style>
+  </head>
+  <body>
+    ${frame(escapeForAttribute(html))}
+  </body>
+</html>
+`
+}
+
+function assemble(html, svg, xhtml, sizes) {
   rmSync(DOWNLOAD_DIR, { recursive: true, force: true })
   mkdirSync(DOWNLOAD_DIR, { recursive: true })
 
   // The entry is `download.html`; Pages serves the directory's index.html.
   copyFileSync(join(PAGE_DIR, 'download.html'), join(DOWNLOAD_DIR, 'index.html'))
-  writeFileSync(join(DOWNLOAD_DIR, 'plutonium.html'), html)
-  writeFileSync(join(DOWNLOAD_DIR, 'plutonium.svg'), svg)
+  const files = { 'plutonium.html': html, 'plutonium.svg': svg, 'plutonium.xhtml': xhtml }
+  for (const [name, contents] of Object.entries(files)) writeFileSync(join(DOWNLOAD_DIR, name), contents)
 
   // A stable URL is friendlier to bookmark; no-cache keeps it honest across
   // deployments instead of letting a browser hold on to an older file.
+  const headers = ['/index.html', ...Object.keys(files).map((name) => `/${name}`)]
   writeFileSync(
     join(DOWNLOAD_DIR, '_headers'),
-    ['/index.html', '  Cache-Control: no-cache', '', '/plutonium.html', '  Cache-Control: no-cache', '', '/plutonium.svg', '  Cache-Control: no-cache', ''].join('\n'),
+    headers.map((path) => `${path}\n  Cache-Control: no-cache`).join('\n\n') + '\n',
   )
 
   const sha = process.env.CF_PAGES_COMMIT_SHA || git(['rev-parse', 'HEAD'], 'unknown')
-  console.log(`[pages] download page ready: dist-download (commit ${sha.slice(0, 7)}, html ${sizes.html}, svg ${sizes.svg})`)
+  console.log(
+    `[pages] download page ready: dist-download (commit ${sha.slice(0, 7)}, html ${sizes.html}, svg ${sizes.svg}, xhtml ${sizes.xhtml})`,
+  )
 }

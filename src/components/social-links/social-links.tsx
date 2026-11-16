@@ -39,9 +39,20 @@ const LINKS: { id: string; label: string; href: string; icon: ReactNode }[] = [
   },
 ]
 
-export default function SocialLinks() {
+export default function SocialLinks({ showLite = false }: { showLite?: boolean }) {
   return (
     <nav className="social-links" aria-label="Plutonium on social media">
+      {showLite ? (
+        <a
+          className="social-links__lite"
+          href="https://lite.plutoniumnet.work"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Lite version — the whole app as a single downloadable file"
+        >
+          Lite version
+        </a>
+      ) : null}
       <span className="social-links__build" title={`Commit ${__PLU_COMMIT__}`}>
         Build: {__PLU_COMMIT__}
       </span>

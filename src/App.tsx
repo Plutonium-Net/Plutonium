@@ -211,7 +211,7 @@ export default function App() {
           <QuickApps hidden={searchActive} onOpen={(href) => void navigate(href)} />
           <SideMenu activePanel={panel} onTogglePanel={(next) => setPanel(panel === next ? null : next)} />
           <Pins minimized={searchActive} onOpen={(href) => void navigate(href)} />
-          <SocialLinks />
+          <SocialLinks showLite />
         </>
       )}
 

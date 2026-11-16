@@ -9,6 +9,28 @@
   gap: 4px;
 }
 
+/* The single-file build's download page, sitting before the stamp. */
+.social-links .social-links__lite {
+  margin-right: 8px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.42);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .social-links .social-links__lite:hover {
+    color: var(--accent);
+  }
+}
+
+.social-links .social-links__lite:focus-visible {
+  outline: 2px solid rgba(var(--accent-rgb), 0.65);
+  outline-offset: 2px;
+}
+
 /* The commit the page was built from, sitting just before the accounts. */
 .social-links .social-links__build {
   margin-right: 6px;

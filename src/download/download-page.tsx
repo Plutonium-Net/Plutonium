@@ -10,6 +10,14 @@ import './download-page.css'
 /** The sizes the Pages build baked in; blank when the page is run any other way. */
 const SIZE = typeof __PLU_SIZE__ === 'string' ? __PLU_SIZE__ : ''
 const SVG_SIZE = typeof __PLU_SVG_SIZE__ === 'string' ? __PLU_SVG_SIZE__ : ''
+const XHTML_SIZE = typeof __PLU_XHTML_SIZE__ === 'string' ? __PLU_XHTML_SIZE__ : ''
+
+/** The same build, three ways. The first is the one to hand most people. */
+const FILES = [
+  { file: 'plutonium.html', label: 'HTML', size: SIZE, primary: true },
+  { file: 'plutonium.svg', label: 'SVG', size: SVG_SIZE },
+  { file: 'plutonium.xhtml', label: 'XHTML', size: XHTML_SIZE },
+]
 
 type DownloadButtonProps = {
   file: string
@@ -83,8 +91,9 @@ export default function DownloadPage() {
         <div className="download-page__inner">
           <h1 className="download-page__mark">Plutonium</h1>
 
-          <DownloadButton file="plutonium.html" label="HTML" size={SIZE} primary />
-          <DownloadButton file="plutonium.svg" label="SVG" size={SVG_SIZE} />
+          {FILES.map((entry) => (
+            <DownloadButton key={entry.file} {...entry} />
+          ))}
 
           <p className="download-page__lede">
             The shell, the game library, media, Stelena AI, the app catalog and the Compaxy browser, in

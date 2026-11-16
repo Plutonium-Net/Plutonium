@@ -25,6 +25,7 @@ export default defineConfig({
     __PLU_HISTORY__: JSON.stringify(history()),
     __PLU_SIZE__: JSON.stringify(process.env.PLU_SIZE || ''),
     __PLU_SVG_SIZE__: JSON.stringify(process.env.PLU_SVG_SIZE || ''),
+    __PLU_XHTML_SIZE__: JSON.stringify(process.env.PLU_XHTML_SIZE || ''),
   },
   plugins: [
     react(),
