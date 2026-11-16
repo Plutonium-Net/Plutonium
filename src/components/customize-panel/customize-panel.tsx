@@ -1,4 +1,4 @@
-import { DAILY, selectBackground, subscribeBackground, getBackgroundChoice } from '@/components/backgrounds/background-store'
+import { selectBackground, subscribeBackground, getBackgroundChoice } from '@/components/backgrounds/background-store'
 import { BACKGROUNDS } from '@/components/backgrounds/registry'
 import GlassHighlight from '@/components/glass-highlight/glass-highlight'
 import GlassPanel from '@/components/glass-panel/glass-panel'
@@ -38,17 +38,6 @@ export default function CustomizePanel({ onClose }: { onClose: () => void }) {
 
       <div className="customize-panel__label">Background</div>
       <div className="customize-panel__list">
-        <button
-          type="button"
-          className={`customize-panel__row${choice === DAILY ? ' is-active' : ''}`}
-          aria-pressed={choice === DAILY}
-          onClick={() => selectBackground(DAILY)}
-        >
-          {choice === DAILY && <GlassHighlight />}
-          <span className="customize-panel__name">Rotate daily</span>
-          <span className="customize-panel__hint">Changes at midnight</span>
-        </button>
-
         {BACKGROUNDS.map((option) => {
           const active = option.id === choice
           return (
