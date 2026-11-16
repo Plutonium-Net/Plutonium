@@ -122,7 +122,7 @@ export async function pingAll(family: RegionFamily, timeoutMs = PING_TIMEOUT_MS)
   return map
 }
 
-/** Fastest region that actually answered — unreachable rows never win. */
+/** Fastest region that actually answered; unreachable rows never win. */
 export function fastest(pings: Record<string, Ping>, preferredId?: string | null) {
   if (preferredId && pings[preferredId]?.ok) return preferredId
   const reachable = Object.entries(pings)

@@ -29,7 +29,7 @@ export function gameUrl(game: Game) {
  * Game search. A plain `includes` puts "Tiny Fishing" below "Big Flappy Tower
  * Tiny Square" whenever the match sits deeper in the name, so names are ranked
  * instead: exact, then prefix, then a word start, then any substring (earlier and
- * denser wins), then multi-word, then near-misses — a skipped letter or one typo
+ * denser wins), then multi-word, then near-misses: a skipped letter or one typo
  * still finds "Backrooms" from "backroms".
  */
 export function searchGames(games: Game[], query: string): Game[] {

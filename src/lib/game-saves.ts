@@ -3,7 +3,7 @@
  *
  * The game page loads PluStore (`g.cdn.plutoniumnet.work/js/plustore.js`), which
  * serialises the whole save into one text document and talks to its host over
- * postMessage — it is the only party that can reach local storage inside its own
+ * postMessage: it is the only party that can reach local storage inside its own
  * origin, and this shell is the only party that can reach the network:
  *
  *   game  -> shell   { plu: true, type: 'plu_text_ready' }

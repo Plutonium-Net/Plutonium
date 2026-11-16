@@ -2,8 +2,8 @@
  * LuminSDK, the second games source v1 shipped (`cdn.jsdelivr.net/gh/luminsdk/
  * script@latest/lumin.min.js`, then one `Lumin.init`).
  *
- * The current build of that script draws no browse UI of its own — its grid is
- * gone and only the data API is left — so this is their documented "headless"
+ * The current build of that script draws no browse UI of its own. Its grid is
+ * gone and only the data API is left, so this is their documented "headless"
  * route: `search()` for the catalog, `getImageUrl()` for covers and
  * `getGameUrl()` for a one-time playable URL. `init` still has to run first,
  * because every method refuses to work before it does.

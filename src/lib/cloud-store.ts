@@ -5,7 +5,7 @@
  * document encoding, same token refresh. The session is mirrored into
  * localStorage so it survives reloads and is shared across tabs.
  *
- * Tab content itself is never stored on the device — see lib/tab-sync.ts.
+ * Tab content itself is never stored on the device; see lib/tab-sync.ts.
  */
 
 const WORKER_URL = 'https://api.plutoniumnet.work'

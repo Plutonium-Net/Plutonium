@@ -1,4 +1,4 @@
-/* Scramjet V2 service worker — the runtimev2 engine.
+/* Scramjet V2 service worker, the runtimev2 engine.
  *
  * It lives at /runtimev2/ so its scope stays inside this engine's own prefix.
  * The app's v1 worker at /sw.js owns scope /, and the two coexist because a

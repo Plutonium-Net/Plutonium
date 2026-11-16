@@ -27,7 +27,7 @@ type Props = {
  * the search pill (or the row that was picked), covers the window while the
  * destination is committed underneath, then fades onto it.
  *
- * It is one element moving on the compositor — a transform and an opacity fade,
+ * It is one element moving on the compositor: a transform and an opacity fade,
  * nothing repainted per frame. The colour comes straight from `--accent-rgb`,
  * the same variable the rest of the shell is tinted with, so the wave can never
  * drift away from the account's accent.

@@ -29,7 +29,7 @@ const CONNECTED_HOLD = 900
  * One iframe for the whole app, always mounted.
  *
  * Scramjet V2's controller binds to this exact element when it boots (`createFrame`
- * looks up `#page-frame`), so it must never be remounted — no `key` on the node and
+ * looks up `#page-frame`), so it must never be remounted: no `key` on the node and
  * no conditional rendering. v1 keeps the same element hidden until it is needed,
  * and reloads by re-assigning `src` rather than by replacing the frame.
  */
@@ -94,7 +94,7 @@ export default function PageFrame({
 
   // Reloads must only follow an explicit reload request. Running this whenever
   // `visible` flipped used to fire on the same render that assigned a new `src`,
-  // reloading the frame's about:blank document and cancelling the navigation —
+  // reloading the frame's about:blank document and cancelling the navigation,
   // which left proxied pages permanently blank.
   const lastReload = useRef(reloadToken)
   useEffect(() => {
@@ -118,7 +118,7 @@ export default function PageFrame({
 
   /**
    * A relay that answers with nothing leaves the frame on an empty document, and
-   * the load event still fires — so the load is checked, not just counted.
+   * the load event still fires, so the load is checked, not just counted.
    */
   function handleLoad() {
     const frame = frameRef.current

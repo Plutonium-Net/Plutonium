@@ -6,7 +6,7 @@ import './copy-check.css'
  *
  * The lite build writes `<meta name="plutonium-commit">` and
  * `<meta name="plutonium-built">` as the first things in its head, so reading a
- * slice of the file is enough — no need to pull 3 MB into memory. The page
+ * slice of the file is enough; no need to pull 3 MB into memory. The page
  * carries this branch's commit history, so the copy is placed in it rather
  * than looked up: no network, and it works for a private repository.
  */
@@ -22,7 +22,7 @@ const SVG_COMMIT = /&lt;meta name=&quot;plutonium-commit&quot; content=&quot;([^
 const SVG_BUILT = /&lt;meta name=&quot;plutonium-built&quot; content=&quot;([^&"]+)&quot;/
 const IS_PLUTONIUM = /<title>\s*Plutonium/i
 // This page's own title: picking it up is a slip, not an ancient build.
-const IS_THIS_PAGE = /<title>\s*Plutonium\s*—\s*single file/i
+const IS_THIS_PAGE = /<title>\s*Plutonium\s+single file/i
 
 type Verdict = 'same' | 'behind' | 'newer' | 'unknown' | 'unstamped' | 'invalid' | 'page'
 
@@ -98,7 +98,7 @@ async function inspect(file: File): Promise<Result> {
 function verdictText(result: Result) {
   switch (result.verdict) {
     case 'same':
-      return 'Up to date — this is the current build.'
+      return 'Up to date: this is the current build.'
     case 'behind':
       return result.commits
         ? `${result.commits} commit${result.commits === 1 ? '' : 's'} behind the current build (${CURRENT_SHORT}).`
@@ -106,13 +106,13 @@ function verdictText(result: Result) {
     case 'newer':
       return `Newer than this page's build (${CURRENT_SHORT}).`
     case 'unstamped':
-      return 'No build stamp in this copy, so its age is unknown — it predates build stamps.'
+      return 'No build stamp in this copy, so its age is unknown. It predates build stamps.'
     case 'invalid':
       return "That doesn't look like a Plutonium single file."
     case 'page':
-      return 'That is the download page itself — choose the plutonium.html file you saved.'
+      return 'That is the download page itself. Choose the plutonium.html file you saved.'
     default:
-      return `Not in this build's history — another branch, or older than the last ${DEPTH} builds.`
+      return `Not in this build's history: another branch, or older than the last ${DEPTH} builds.`
   }
 }
 

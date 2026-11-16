@@ -37,7 +37,7 @@ export function builtAt() {
  * Newest-first `[sha, iso]` pairs of this branch.
  *
  * The download page bakes this in so an uploaded copy can be placed in the
- * history without asking GitHub — which answers quickly for a public repo and
+ * history without asking GitHub, which answers quickly for a public repo and
  * not at all for this one.
  */
 export function history(limit = 500) {

@@ -3,7 +3,7 @@
  *
  * Ported from cf-worker/net-worker with behaviour deliberately unchanged: no
  * authentication and no rate limit. That is a known weakness, not an oversight
- * — adding auth here would change what the browser feature does, so it stays a
+ * since adding auth here would change what the browser feature does, so it stays a
  * separate decision. See api-merge-checklist.html, section 9.
  */
 

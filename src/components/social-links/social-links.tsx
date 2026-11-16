@@ -48,7 +48,7 @@ export default function SocialLinks({ showLite = false }: { showLite?: boolean }
           href="https://lite.plutoniumnet.work"
           target="_blank"
           rel="noopener noreferrer"
-          title="Lite version — the whole app as a single downloadable file"
+          title="Lite version: the whole app as a single downloadable file"
         >
           Lite version
         </a>

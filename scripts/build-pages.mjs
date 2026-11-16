@@ -28,7 +28,7 @@ const TARGETS = ['site', 'download']
 const target = (process.argv[2] || process.env.PLU_BUILD_TARGET || 'site').trim().toLowerCase()
 
 if (!TARGETS.includes(target)) {
-  console.error(`[pages] unknown target "${target}" — expected one of: ${TARGETS.join(', ')}`)
+  console.error(`[pages] unknown target "${target}", expected one of: ${TARGETS.join(', ')}`)
   process.exit(1)
 }
 
@@ -92,8 +92,8 @@ function escapeForAttribute(html) {
 /**
  * The app inside an iframe whose document is the attribute.
  *
- * XML documents cannot hold HTML markup directly — the HTML parser's leniency
- * is exactly what a React bundle needs — so the markup rides in `srcdoc`. The
+ * XML documents cannot hold HTML markup directly. The HTML parser's leniency
+ * is exactly what a React bundle needs, so the markup rides in `srcdoc`. The
  * iframe keeps the wrapper's origin, so storage and canvas behave normally,
  * and it fills the viewport the page expects.
  */

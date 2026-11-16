@@ -6,7 +6,7 @@ import { commitSha } from './scripts/build-info.mjs'
 
 /**
  * Scramjet V2 reaches the relay through libcurl, whose wasm build wants
- * SharedArrayBuffer — and that only exists on a cross-origin isolated page, so
+ * SharedArrayBuffer, and that only exists on a cross-origin isolated page, so
  * COOP/COEP would be the obvious headers to send here.
  *
  * They cannot be sent, though. COEP also refuses to embed any document that does

@@ -1,7 +1,7 @@
 /**
  * The API index page: brand splash on api.plutoniumnet.work.
  *
- * Three stacked cards — title, detailed status, description — left-aligned
+ * Three stacked cards (title, detailed status, description), left-aligned
  * above the brand wordmark that is baked into background.png (anchored bottom).
  * The status card is filled from one same-origin request to /healthz, which
  * reports each subsystem, so the page never claims "up" before it has asked.

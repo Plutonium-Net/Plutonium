@@ -1,4 +1,4 @@
-/* Scramjet V2 — the `runtimev2` browsing engine.
+/* Scramjet V2, the `runtimev2` browsing engine.
  *
  * v2 is not shaped like v1. There is no encodeUrl/decodeUrl pair on a global
  * controller: a `Controller` owns the service-worker channel and a `Frame` owns
@@ -56,7 +56,7 @@
   /**
    * The worker has to be *active* before the controller hands it a port: a
    * message posted to an installing worker is silently dropped, and the worker
-   * then never learns this controller's prefix — every proxied request would
+   * then never learns this controller's prefix, so every proxied request would
    * miss the controller and go to the static host instead.
    *
    * navigator.serviceWorker.ready is no help here. This page sits outside the
@@ -99,7 +99,7 @@
 
   // One frame for the app's single proxied iframe. The worker routes by prefix
   // and the page looks the frame up by the same prefix, so the element itself
-  // only has to exist — net.js keeps pointing its src at rewritten URLs.
+  // only has to exist; net.js keeps pointing its src at rewritten URLs.
   function createFrame() {
     var element = document.getElementById('page-frame')
     if (!element) throw new Error('no #page-frame to proxy into')

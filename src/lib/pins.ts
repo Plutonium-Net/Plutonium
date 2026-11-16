@@ -112,7 +112,7 @@ export function pinsFull() {
 
 /**
  * Pins a game, e.g. from the games page. Returns false when the row is full or
- * the game is already there — callers keep their own feedback for that.
+ * the game is already there; callers keep their own feedback for that.
  */
 export function pinGame(game: GameEntry) {
   const ids = storedIds() ?? pins.map((pin) => pin.id)

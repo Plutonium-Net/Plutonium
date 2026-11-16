@@ -5,8 +5,8 @@
  * `<scope>:<uid>`. Raises and limits are supplied by the caller so the policy
  * lives next to the route that owns it:
  *
- *   ai  — 100 messages per 12 hours  (unchanged from groq-worker)
- *   vm  — 2 session creates per 15 minutes (unchanged from vm-worker)
+ *   ai    100 messages per 12 hours  (unchanged from groq-worker)
+ *   vm    2 session creates per 15 minutes (unchanged from vm-worker)
  *
  * KV is eventually consistent, so this is a speed bump rather than an exact
  * quota: a burst of concurrent requests can overshoot by a few. It is still a

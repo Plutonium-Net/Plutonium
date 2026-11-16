@@ -15,7 +15,7 @@ import { builtAt, commitFull, commitSha } from './scripts/build-info.mjs'
  * disk.
  *
  * A page on `file://` cannot register a service worker, and a worker can never
- * be a data: or blob: URL — so the three relay engines (Ultraviolet, Scramjet
+ * be a data: or blob: URL, so the three relay engines (Ultraviolet, Scramjet
  * V1, Scramjet V2) are absent from this target: `src/lib/net/engines.ts` lists
  * only the host proxies when `window.__PLU_EMBED__` is present. Everything else
  * (shell, games, media, AI, apps) ships inside the page.

@@ -2,7 +2,7 @@
  * The accent colour the whole shell is tinted with.
  *
  * The chosen preset is published as two CSS variables on the document
- * (`--accent` and `--accent-rgb`), so every surface — text, borders, glows —
+ * (`--accent` and `--accent-rgb`), so every surface (text, borders, glows)
  * follows it without re-rendering, and handed to the WebGL layers and the cursor
  * as a plain hex. The choice lives on the signed-in account through lib/prefs,
  * with sessionStorage as the tab-local copy while signed out.

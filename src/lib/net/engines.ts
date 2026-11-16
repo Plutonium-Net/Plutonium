@@ -4,7 +4,7 @@
  * `core` (Ultraviolet) and `runtime` (Scramjet V1) are wisp-relay engines that
  * rewrite URLs locally and ship traffic through BareMux. `runtimev2` speaks to
  * the same relay through its own controller. `compaxy` and `rh` are host proxies
- * — the frame just points at their regional host with `?url=`. `remote`
+ * with the frame pointed at their regional host via `?url=`. `remote`
  * (Hyperbeam) hands the page to a worker session instead (see remote.ts).
  */
 
@@ -37,7 +37,7 @@ const ALL_ENGINES: EngineOption[] = [
 /**
  * A single-file build has no engine bundles beside it, so the three service
  * worker engines could never start: that build lists the host proxies only.
- * The normal build is unaffected — `embedded()` is undefined there.
+ * The normal build is unaffected, since `embedded()` is undefined there.
  */
 export const ENGINES: EngineOption[] = embedded()
   ? ALL_ENGINES.filter((option) => option.family !== 'wisp')

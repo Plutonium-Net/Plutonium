@@ -148,7 +148,7 @@ export default function ChromeTabs({
     }
 
     // The tab only follows the pointer. No slot is committed while it is held
-    // down — the drop decides where it lands, like v1's Draggabilly port.
+    // down; the drop decides where it lands, like v1's Draggabilly port.
     queueTrack(state, clientX)
   }
 

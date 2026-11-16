@@ -15,8 +15,8 @@ export default function SearchBar({
   onActiveChange,
 }: {
   /**
-   * `origin` is the frame the pick came from — the row that was clicked, or the
-   * pill itself for a submitted query — so the transition can open from it.
+   * `origin` is the frame the pick came from: the row that was clicked, or the
+   * pill itself for a submitted query. The transition opens from it.
    */
   onNavigate: (input: string, origin?: DOMRect) => boolean | Promise<boolean>
   /** Reports focus, so the home screen can tuck its pins away while typing. */
@@ -63,7 +63,7 @@ export default function SearchBar({
   }, [value, open])
 
   // A typed query starts on the row that runs it (the last one), like v1. The
-  // empty list is just the / commands, so it starts on the first command — it
+  // empty list is just the / commands, so it starts on the first command; it
   // used to land on the last row, which highlighted `/vm` the moment you opened it.
   useEffect(() => {
     setActive(value.trim() && rows.length ? rows.length - 1 : 0)

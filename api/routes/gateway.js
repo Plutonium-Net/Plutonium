@@ -2,7 +2,7 @@
  * Firebase gateway routes: /config, /auth/*, /firestore/*, /rtdb/*.
  *
  * Ported from cf-worker/firebase-gateway with the same behaviour. The only
- * intentional difference is that the orphaned /vm/session handler is gone —
+ * intentional difference is that the orphaned /vm/session handler is gone:
  * nothing called it, and it duplicated /vm/session with no rate limit.
  *
  * Firestore and RTDB are deliberately thin proxies: the caller's own ID token

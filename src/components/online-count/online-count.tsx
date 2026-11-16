@@ -4,7 +4,7 @@ import './online-count.css'
 /**
  * The v1 users-online readout, ported from js/online-count.js: the same public
  * endpoint, the same 30s poll (paused while the tab is hidden) and the same
- * "—" when the service does not answer.
+ * "--" when the service does not answer.
  */
 
 const ENDPOINT = 'https://stelena.plutoniumnet.work/online'
@@ -68,7 +68,7 @@ export default function OnlineCount({ hidden = false }: { hidden?: boolean }) {
     >
       <span className="online-count__dot" aria-hidden="true" />
       <span className="online-count__label">Users Online:</span>
-      <span className="online-count__value">{count === null ? '—' : count.toLocaleString('en-US')}</span>
+      <span className="online-count__value">{count === null ? '--' : count.toLocaleString('en-US')}</span>
     </div>
   )
 }

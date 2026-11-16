@@ -25,7 +25,7 @@
   transform-origin: center;
   transform: translate(-50%, -50%);
   /* No will-change on purpose: the layer is window-sized, so hinting it would
-     pin a large texture in memory for no gain — transform and opacity already
+     pin a large texture in memory for no gain: transform and opacity already
      animate on the compositor. */
   /* A dark body that deepens into the accent towards the rim. The accent is
      read straight from --accent-rgb, so the wave is exactly the account's

@@ -1,5 +1,5 @@
 /**
- * Plutonium API — one Worker replacing four:
+ * Plutonium API, one Worker replacing four:
  *
  *   accounting.cdn…  firebase-gateway  → /config, /auth/*, /firestore/*, /rtdb/*
  *   ai.cdn…          groq-worker       → /ai/*
@@ -28,7 +28,7 @@ export default {
       if (path === '/') return html(landingPage());
 
       // Health probe, and what the landing page's status card reads. Each entry
-      // is a presence check on the bindings that route group needs — no calls
+      // is a presence check on the bindings that route group needs: no calls
       // out to a provider, and no values leave the worker.
       if (path === '/healthz') return healthz(env);
 
