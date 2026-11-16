@@ -8,7 +8,7 @@ import {
   collectRootImages,
   singleFile,
 } from './build/single-file.mjs'
-import { commitSha } from './scripts/build-info.mjs'
+import { builtAt, commitFull, commitSha } from './scripts/build-info.mjs'
 
 /**
  * The single-file ("lite") build: one `dist-single/index.html` that opens from
@@ -38,6 +38,7 @@ export default defineConfig({
       images,
       payload: catalogPayload(PUBLIC_DIR, images),
       stripEngineTags: true,
+      meta: { commit: commitFull(), builtAt: builtAt() },
     }),
   ],
   resolve: {

@@ -6,17 +6,23 @@
   font-display: swap;
 }
 
-/* Sits where the search bar sits on the home screen. */
+/* The column sits where the search bar sits on the home screen, and scrolls
+   rather than clipping once a check result is open. */
 .download-page {
   position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
   z-index: 10;
-  width: min(560px, 90vw);
+  display: grid;
+  place-items: center;
+  padding: 32px 20px 104px;
+  overflow-y: auto;
   text-align: center;
   color: #ffffff;
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.download-page .download-page__inner {
+  width: min(560px, 90vw);
 }
 
 /* The same wordmark, size and accent as the search bar's. */

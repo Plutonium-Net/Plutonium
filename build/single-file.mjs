@@ -76,8 +76,10 @@ export function catalogPayload(publicDir, images) {
  * @param images        URL -> data URI, used to rewrite the bundle's literals.
  * @param payload       Value for `window.__PLU_EMBED__`; omit when unused.
  * @param stripEngineTags  Drop the vendored proxy <script> tags (no workers here).
+ * @param meta          Build stamp written into the head, read back by the
+ *                      download page when someone uploads an old copy.
  */
-export function singleFile({ images = {}, payload = null, stripEngineTags = false } = {}) {
+export function singleFile({ images = {}, payload = null, stripEngineTags = false, meta = null } = {}) {
   function inlineImages(code) {
     let next = code
     for (const [url, uri] of Object.entries(images)) {
@@ -104,6 +106,16 @@ export function singleFile({ images = {}, payload = null, stripEngineTags = fals
       if (!htmlFile) throw new Error('single-file: no HTML entry in the bundle')
 
       let html = String(htmlFile.source)
+
+      if (meta) {
+        // First thing in the head, so a copy check can read it without pulling
+        // the whole page into memory.
+        const stamp = [
+          `<meta name="plutonium-commit" content="${String(meta.commit).replace(/"/g, '&quot;')}">`,
+          `<meta name="plutonium-built" content="${String(meta.builtAt).replace(/"/g, '&quot;')}">`,
+        ].join('\n    ')
+        html = html.replace(/<head[^>]*>/i, (tag) => `${tag}\n    ${stamp}`)
+      }
 
       if (stripEngineTags) {
         // The engine bundles are separate files; here their tags would only 404.

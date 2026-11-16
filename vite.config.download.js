@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 import { collectImages, collectRootImages, singleFile } from './build/single-file.mjs'
-import { commitSha } from './scripts/build-info.mjs'
+import { commitSha, history } from './scripts/build-info.mjs'
 
 /**
  * The download page: the home screen's wallpaper, wordmark, clock and accounts,
@@ -22,6 +22,7 @@ export default defineConfig({
   base: './',
   define: {
     __PLU_COMMIT__: JSON.stringify(commitSha()),
+    __PLU_HISTORY__: JSON.stringify(history()),
     __PLU_SIZE__: JSON.stringify(process.env.PLU_SIZE || ''),
   },
   plugins: [
