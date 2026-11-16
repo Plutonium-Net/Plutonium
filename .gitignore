@@ -2,6 +2,7 @@ node_modules/
 dist/
 dist-single/
 dist-download/
+dist-download-page/
 
 # Freebuff workspace marker
 .freebuff/
