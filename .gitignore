@@ -1,5 +1,7 @@
 node_modules/
 dist/
+dist-single/
+dist-download/
 
 # Freebuff workspace marker
 .freebuff/

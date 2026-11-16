@@ -7,6 +7,8 @@
  * inserts it percent-encoded.
  */
 
+import { embedded } from '@/lib/embedded'
+
 /** Art that is a cut-out logo rather than a filled tile, so it needs a light card. */
 export const LIGHT_ART = new Set(['duckduckgo', 'twitch', 'youtube', 'pinterest'])
 
@@ -42,6 +44,12 @@ let serversCache: AppServers | null = null
 
 export async function loadApps(): Promise<AppEntry[]> {
   if (appsCache) return appsCache
+  // The single-file build carries its catalog in the page; nothing to fetch.
+  const built = embedded()?.apps
+  if (built?.length) {
+    appsCache = built
+    return appsCache
+  }
   const response = await fetch(APPS_URL)
   if (!response.ok) throw new Error(`apps.json: ${response.status}`)
   const data = (await response.json()) as AppEntry[]
@@ -53,6 +61,11 @@ export async function loadApps(): Promise<AppEntry[]> {
 
 export async function loadServers(): Promise<AppServers> {
   if (serversCache) return serversCache
+  const built = embedded()?.servers
+  if (built?.servers?.length) {
+    serversCache = built
+    return serversCache
+  }
   const response = await fetch(SERVERS_URL)
   if (!response.ok) throw new Error(`app-servers.json: ${response.status}`)
   const data = (await response.json()) as { default?: string; servers?: AppServer[] }
@@ -66,6 +79,8 @@ export async function loadServers(): Promise<AppServers> {
 
 /** Cover art for an app id, e.g. `/img/apps/youtube.png`. */
 export function artFor(app: AppEntry) {
+  const built = embedded()?.art
+  if (built?.[app.id]) return built[app.id]
   return `${ART_BASE}${app.id}.png`
 }
 

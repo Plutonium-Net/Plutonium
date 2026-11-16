@@ -8,6 +8,7 @@
  * (Hyperbeam) hands the page to a worker session instead (see remote.ts).
  */
 
+import { embedded } from '@/lib/embedded'
 import { hostFor, wispUrl, type RegionFamily } from './regions'
 
 export type EngineId = 'core' | 'runtime' | 'runtimev2' | 'compaxy' | 'rh' | 'remote'
@@ -24,7 +25,7 @@ export type EngineOption = {
 // the look-alike characters survive editing. `engineLabel` is the single source
 // for any place an engine name surfaces as text. Logos are the same marks v1's
 // engine pill uses, copied from img/3rd-party/.
-export const ENGINES: EngineOption[] = [
+const ALL_ENGINES: EngineOption[] = [
   { id: 'compaxy', label: 'Compaxy', family: 'compaxy', hint: 'AIO Proxy', logo: '/img/3rd-party/compaxy.png' },
   { id: 'core', label: '\u054d\u217ctr\u0430\u2174\u0456\u043e\u217c\u0435t', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/core.png' },
   { id: 'runtime', label: '\u054f\u0441r\u0430\u217f\u0458\u0435t V1', family: 'wisp', hint: 'Wisp relay', logo: '/img/3rd-party/runtime.png' },
@@ -32,6 +33,15 @@ export const ENGINES: EngineOption[] = [
   { id: 'rh', label: '\u0154\u0430\u217f\u217f\u0435r\u1e23\u0435\u0430\u1e0b', family: 'rh', hint: 'Host proxy', logo: '/img/3rd-party/rh.png' },
   { id: 'remote', label: 'Hyperbeam', family: null, hint: 'Remote session', logo: '/img/3rd-party/remote.png' },
 ]
+
+/**
+ * A single-file build has no engine bundles beside it, so the three service
+ * worker engines could never start: that build lists the host proxies only.
+ * The normal build is unaffected — `embedded()` is undefined there.
+ */
+export const ENGINES: EngineOption[] = embedded()
+  ? ALL_ENGINES.filter((option) => option.family !== 'wisp')
+  : ALL_ENGINES
 
 export function familyFor(engine: EngineId): RegionFamily | null {
   return ENGINES.find((option) => option.id === engine)?.family ?? null
