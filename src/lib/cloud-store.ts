@@ -213,7 +213,7 @@ function docPath(collection: string, uid: string) {
   return `/users/${uid}/${path}`
 }
 
-type FirestoreValue = Record<string, unknown>
+export type FirestoreValue = Record<string, unknown>
 
 function toFirestoreFields(obj: Record<string, unknown>) {
   const fields: Record<string, FirestoreValue> = {}
@@ -236,7 +236,7 @@ function toFirestoreValue(value: unknown): FirestoreValue {
   return { stringValue: String(value) }
 }
 
-function fromFirestoreFields(fields: Record<string, FirestoreValue>): Record<string, unknown> {
+export function fromFirestoreFields(fields: Record<string, FirestoreValue>): Record<string, unknown> {
   const obj: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(fields)) obj[key] = fromFirestoreValue(value)
   return obj
