@@ -114,3 +114,101 @@
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.4);
 }
+
+.region-menu .region-menu__custom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.region-menu .region-menu__custom-label {
+  padding: 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.region-menu .region-menu__field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.region-menu .region-menu__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.92);
+  font: inherit;
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.region-menu .region-menu__input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.region-menu .region-menu__input:focus {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.region-menu .region-menu__apply {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background-color 0.16s ease, opacity 0.16s ease;
+}
+
+.region-menu .region-menu__apply:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.region-menu .region-menu__apply:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.region-menu .region-menu__notice {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+
+.region-menu .region-menu__notice.is-error {
+  color: #f2857e;
+}
+
+.region-menu .region-menu__clear {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.region-menu .region-menu__clear:hover {
+  text-decoration: underline;
+}

@@ -1,5 +1,14 @@
 import { useSyncExternalStore } from 'react'
-import { ensureConnected, getNet, probeRegions, setEngine, setRegion, subscribeNet } from '@/lib/net/net-store'
+import {
+  ensureConnected,
+  getNet,
+  probeCustomWisp,
+  probeRegions,
+  setCustomWisp,
+  setEngine,
+  setRegion,
+  subscribeNet,
+} from '@/lib/net/net-store'
 
 export function useNet() {
   const net = useSyncExternalStore(subscribeNet, getNet, getNet)
@@ -7,7 +16,9 @@ export function useNet() {
     ...net,
     setEngine,
     setRegion,
+    setCustomWisp,
     probeRegions,
+    probeCustomWisp,
     ensureConnected,
   }
 }

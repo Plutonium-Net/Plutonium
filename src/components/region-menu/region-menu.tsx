@@ -1,12 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import GlassHighlight from '@/components/glass-highlight/glass-highlight'
 import GlassPanel from '@/components/glass-panel/glass-panel'
 import { HazardIcon, PlugIcon } from '@/components/net-icons/net-icons'
 import NetStatus from '@/components/net-status/net-status'
 import { useNet } from '@/hooks/use-net'
 import { familyFor } from '@/lib/net/engines'
-import { probeRegions } from '@/lib/net/net-store'
-import { serversFor } from '@/lib/net/regions'
+import { probeCustomWisp, probeRegions } from '@/lib/net/net-store'
+import { normalizeWispUrl, serversFor } from '@/lib/net/regions'
 import './region-menu.css'
 
 export default function RegionMenu() {
@@ -14,10 +14,33 @@ export default function RegionMenu() {
   const family = familyFor(net.engine)
   const servers = family ? serversFor(family) : []
   const pings = family ? net.pings[family] : undefined
+  const customPing = net.pings.wisp?.custom
+  const [draft, setDraft] = useState(net.customWisp ?? '')
+  const [invalid, setInvalid] = useState(false)
 
   useEffect(() => {
     if (family && !pings) void probeRegions(family)
   }, [family, pings])
+
+  useEffect(() => {
+    setDraft(net.customWisp ?? '')
+  }, [net.customWisp])
+
+  useEffect(() => {
+    if (family === 'wisp' && net.customWisp) void probeCustomWisp()
+  }, [family, net.customWisp])
+
+  function applyCustom(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const url = normalizeWispUrl(draft)
+    if (!url) {
+      setInvalid(true)
+      return
+    }
+    setInvalid(false)
+    setDraft(url)
+    void net.setCustomWisp(url)
+  }
 
   return (
     <GlassPanel className="region-menu">
@@ -68,6 +91,63 @@ export default function RegionMenu() {
         </div>
       ) : (
         <div className="region-menu__empty">Hyperbeam runs its own session, so there is no region to pick.</div>
+      )}
+
+      {family === 'wisp' && (
+        <form className="region-menu__custom" onSubmit={applyCustom}>
+          <span className="region-menu__custom-label">Custom Wisp server</span>
+          <div className="region-menu__field">
+            <input
+              className="region-menu__input"
+              type="text"
+              inputMode="url"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="wss://wisp.example.com/"
+              aria-label="Custom Wisp server URL"
+              value={draft}
+              onChange={(event) => {
+                setDraft(event.target.value)
+                setInvalid(false)
+              }}
+            />
+            <button className="region-menu__apply" type="submit" disabled={!draft.trim()}>
+              {net.useCustom ? 'Update' : 'Use'}
+            </button>
+          </div>
+
+          {invalid ? (
+            <div className="region-menu__notice is-error">Enter a ws:// or wss:// URL</div>
+          ) : net.customWisp ? (
+            <div className="region-menu__notice">
+              {net.useCustom ? (
+                <>
+                  <PlugIcon className="region-menu__plug" />
+                  <span>{customPing?.ok ? `${Math.round(customPing.latency || 0)}ms` : 'custom relay'}</span>
+                  <button
+                    type="button"
+                    className="region-menu__clear"
+                    onClick={() => {
+                      setDraft('')
+                      void net.setCustomWisp(null)
+                    }}
+                  >
+                    Reset
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span>Saved</span>
+                  <button type="button" className="region-menu__clear" onClick={() => void net.setCustomWisp(net.customWisp)}>
+                    Use it
+                  </button>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="region-menu__notice">Saved to your account and used by every Wisp proxy.</div>
+          )}
+        </form>
       )}
     </GlassPanel>
   )

@@ -45,6 +45,22 @@ export function wispUrl(regionId: string) {
   return WISP_URL_TEMPLATE.replace('{id}', regionId)
 }
 
+export function normalizeWispUrl(raw: string): string | null {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  const withScheme = /^wss?:\/\//i.test(trimmed) ? trimmed : `wss://${trimmed}`
+  let parsed: URL
+  try {
+    parsed = new URL(withScheme)
+  } catch {
+    return null
+  }
+  if (parsed.protocol !== 'wss:' && parsed.protocol !== 'ws:') return null
+  if (!parsed.hostname) return null
+  const path = parsed.pathname.endsWith('/') ? parsed.pathname : `${parsed.pathname}/`
+  return `${parsed.protocol}//${parsed.host}${path}${parsed.search}`
+}
+
 export function hostFor(family: RegionFamily, regionId: string) {
   return serversFor(family).find((server) => server.id === regionId)?.host || ''
 }
@@ -53,7 +69,7 @@ export type Ping = { ok: boolean; latency: number | null }
 
 const PING_TIMEOUT_MS = 8000
 
-async function pingWisp(region: RegionServer, timeoutMs: number): Promise<Ping> {
+export async function pingWispUrl(url: string, timeoutMs = PING_TIMEOUT_MS): Promise<Ping> {
   return new Promise((resolve) => {
     const startedAt = performance.now()
     let settled = false
@@ -70,7 +86,7 @@ async function pingWisp(region: RegionServer, timeoutMs: number): Promise<Ping> 
     }
 
     try {
-      socket = new WebSocket(wispUrl(region.id))
+      socket = new WebSocket(url)
       socket.binaryType = 'arraybuffer'
       const timer = window.setTimeout(() => finish({ ok: false, latency: null }), timeoutMs)
       socket.addEventListener('open', () => {
@@ -85,6 +101,10 @@ async function pingWisp(region: RegionServer, timeoutMs: number): Promise<Ping> 
       finish({ ok: false, latency: null })
     }
   })
+}
+
+async function pingWisp(region: RegionServer, timeoutMs: number): Promise<Ping> {
+  return pingWispUrl(wispUrl(region.id), timeoutMs)
 }
 
 async function pingHost(region: RegionServer, timeoutMs: number): Promise<Ping> {
