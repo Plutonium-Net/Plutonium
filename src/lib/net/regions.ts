@@ -24,6 +24,7 @@ export const WISP_REGIONS: RegionServer[] = [
 ]
 
 export const COMPAXY_SERVERS: RegionServer[] = [
+  { id: 'serverless', label: 'Serverless', location: 'Cloudflare edge', host: 'compaxy.plutoniumnet.work', recommended: true, flag: '/img/flags/cf.png', lat: 0, lon: 0 },
   { id: 'us-east-1', label: 'US East 1', location: 'Virginia, USA', host: 'compaxy-us-east-1.plutoniumnet.work', flag: '/img/flags/us.png', lat: 37.4316, lon: -78.6569 },
   { id: 'us-east-2', label: 'US East 2', location: 'Ohio, USA', host: 'compaxy-us-east-2.plutoniumnet.work', flag: '/img/flags/us.png', lat: 39.9612, lon: -82.9988 },
   { id: 'us-west', label: 'US West', location: 'Oregon, USA', host: 'compaxy-us-west.plutoniumnet.work', flag: '/img/flags/us.png', lat: 43.8041, lon: -120.5542 },
