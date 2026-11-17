@@ -30,6 +30,7 @@
   line-height: 1;
   color: var(--accent);
   user-select: none;
+  pointer-events: none;
 }
 
 .search-bar .search-bar-wordmark .particle-text {
@@ -41,6 +42,7 @@
   height: calc(50vh + 32px);
   min-height: 0;
   overflow: visible;
+  pointer-events: auto;
 }
 
 .search-bar .search-bar-wordmark {
