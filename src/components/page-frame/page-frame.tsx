@@ -12,11 +12,20 @@ type PageFrameProps = {
   visible: boolean
   engine: EngineId
   region: string
+  customRelay?: string | null
   reloadToken: number
   status: NetStatus
   error: string | null
   latency: number | null
   onRetry: () => void
+}
+
+function relayLabel(relay: string) {
+  try {
+    return new URL(relay).hostname
+  } catch {
+    return relay
+  }
 }
 
 const TRANSFERRING_AFTER = 800
@@ -29,6 +38,7 @@ export default function PageFrame({
   visible,
   engine,
   region,
+  customRelay,
   reloadToken,
   status,
   error,
@@ -41,7 +51,12 @@ export default function PageFrame({
 
   const src = tab && visible ? (engine === 'remote' ? tab.frameUrl || tab.url : encodeUrl(engine, tab.url, region)) : 'about:blank'
   const family = familyFor(engine)
-  const regionLabel = family ? (serversFor(family).find((server) => server.id === region)?.label ?? region) : 'remote session'
+  const regionLabel =
+    family === 'wisp' && customRelay
+      ? relayLabel(customRelay)
+      : family
+        ? (serversFor(family).find((server) => server.id === region)?.label ?? region)
+        : 'remote session'
   const target = (() => {
     try {
       return new URL(tab?.url || '').hostname.replace(/^www\./, '')

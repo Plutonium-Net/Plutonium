@@ -165,6 +165,7 @@ export default function App() {
             visible={onWeb}
             engine={net.engine}
             region={family ? net.regions[family] : ''}
+            customRelay={family === 'wisp' && net.useCustom ? net.customWisp : null}
             reloadToken={reloadToken}
             status={net.status}
             error={net.error}
