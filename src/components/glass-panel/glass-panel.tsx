@@ -2,9 +2,15 @@ import type { ReactNode } from 'react'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import './glass-panel.css'
 
-export default function GlassPanel({ className = '', children }: { className?: string; children: ReactNode }) {
+type GlassPanelProps = {
+  className?: string
+  tint?: boolean
+  children: ReactNode
+}
+
+export default function GlassPanel({ className = '', tint = false, children }: GlassPanelProps) {
   return (
-    <div className={`glass-panel${className ? ` ${className}` : ''}`}>
+    <div className={`glass-panel${tint ? ' glass-panel--tint' : ''}${className ? ` ${className}` : ''}`}>
       <GlassSurface
         className="glass-panel__surface"
         width="100%"
@@ -14,6 +20,7 @@ export default function GlassPanel({ className = '', children }: { className?: s
         saturation={1.2}
         displace={0.5}
       />
+      {tint && <span className="glass-panel__tint" aria-hidden="true" />}
       <div className="glass-panel__body">{children}</div>
     </div>
   )

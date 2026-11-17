@@ -1,0 +1,50 @@
+.side-panel-host {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  /* scale around the panel's own right edge, 76px in from the viewport edge */
+  transform-origin: calc(100% - 76px) center;
+}
+
+.side-panel-host > * {
+  pointer-events: auto;
+}
+
+.side-panel-host.is-open {
+  animation: side-panel-in 260ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+.side-panel-host.is-closing {
+  animation: side-panel-out 170ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes side-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes side-panel-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(18px) scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-panel-host {
+    animation: none !important;
+  }
+}

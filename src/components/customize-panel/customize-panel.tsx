@@ -12,7 +12,7 @@ export default function CustomizePanel({ onClose }: { onClose: () => void }) {
   const accent = useAccent()
 
   return (
-    <GlassPanel className="customize-panel">
+    <GlassPanel className="customize-panel" tint>
       <div className="customize-panel__head">
         <span className="customize-panel__title">Customize</span>
         <button className="customize-panel__close" type="button" aria-label="Close" onClick={onClose}>

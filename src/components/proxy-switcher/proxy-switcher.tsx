@@ -25,7 +25,7 @@ export default function ProxySwitcher() {
   }
 
   return (
-    <GlassPanel className="proxy-panel">
+    <GlassPanel className="proxy-panel" tint>
       <div className="proxy-panel__head">
         <span className="proxy-panel__title">pr0xy</span>
         <NetStatus status={net.status} latency={net.latency} />

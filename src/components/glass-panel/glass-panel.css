@@ -14,6 +14,15 @@
   pointer-events: none;
 }
 
+.glass-panel .glass-panel__tint {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: rgba(10, 10, 14, 0.3);
+  pointer-events: none;
+}
+
 .glass-panel .glass-panel__body {
   position: relative;
   z-index: 1;

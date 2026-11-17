@@ -24,20 +24,8 @@ const ITEMS: MenuItem[] = [
     ),
   },
   {
-    id: 'wisp',
-    label: 'Wisp region',
-    panel: 'region',
-    icon: (
-      <>
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-        <path d="M2 12h20" />
-      </>
-    ),
-  },
-  {
     id: 'proxy',
-    label: 'pr0xy switcher',
+    label: 'Proxy engine',
     panel: 'proxy',
     icon: (
       <>
@@ -45,6 +33,18 @@ const ITEMS: MenuItem[] = [
         <rect width="20" height="8" x="2" y="14" rx="2" />
         <path d="M6 6h.01" />
         <path d="M6 18h.01" />
+      </>
+    ),
+  },
+  {
+    id: 'wisp',
+    label: 'Proxy region',
+    panel: 'region',
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+        <path d="M2 12h20" />
       </>
     ),
   },
@@ -61,7 +61,7 @@ const ITEMS: MenuItem[] = [
   },
   {
     id: 'info',
-    label: 'Info',
+    label: 'About',
     panel: 'info',
     icon: (
       <>

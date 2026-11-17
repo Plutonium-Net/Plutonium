@@ -23,6 +23,7 @@ import QuickApps from '@/components/quick-apps/quick-apps'
 import RegionMenu from '@/components/region-menu/region-menu'
 import SearchBar from '@/components/search-bar/search-bar'
 import SideMenu from '@/components/side-menu/side-menu'
+import SidePanelHost from '@/components/side-panel-host/side-panel-host'
 import SocialLinks from '@/components/social-links/social-links'
 import TransferOverlay from '@/components/transfer-overlay/transfer-overlay'
 import { useAccent } from '@/hooks/use-accent'
@@ -197,27 +198,32 @@ export default function App() {
         </>
       )}
 
-      {panel === 'proxy' && <ProxySwitcher />}
-      {panel === 'region' && <RegionMenu />}
-      {panel === 'customize' && <CustomizePanel onClose={() => setPanel(null)} />}
-      {panel === 'info' && (
-        <InfoPanel
-          onClose={() => setPanel(null)}
-          onOpenFeedback={() => setDialog('feedback')}
-          onOpenLegal={(section) => {
-            setLegalSection(section)
-            setDialog('legal')
-          }}
-        />
-      )}
-      {panel === 'history' && (
-        <HistoryPanel
-          onNavigate={(url) => {
-            setPanel(null)
-            void navigate(url)
-          }}
-        />
-      )}
+      <SidePanelHost panel={panel}>
+        {(id) => {
+          if (id === 'proxy') return <ProxySwitcher />
+          if (id === 'region') return <RegionMenu />
+          if (id === 'customize') return <CustomizePanel onClose={() => setPanel(null)} />
+          if (id === 'info')
+            return (
+              <InfoPanel
+                onClose={() => setPanel(null)}
+                onOpenFeedback={() => setDialog('feedback')}
+                onOpenLegal={(section) => {
+                  setLegalSection(section)
+                  setDialog('legal')
+                }}
+              />
+            )
+          return (
+            <HistoryPanel
+              onNavigate={(url) => {
+                setPanel(null)
+                void navigate(url)
+              }}
+            />
+          )
+        }}
+      </SidePanelHost>
 
       {dialog === 'feedback' && (
         <FeedbackPanel

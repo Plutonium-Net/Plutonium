@@ -43,7 +43,7 @@ export default function RegionMenu() {
   }
 
   return (
-    <GlassPanel className="region-menu">
+    <GlassPanel className="region-menu" tint>
       <div className="region-menu__head">
         <span className="region-menu__title">{family === 'wisp' ? 'Region' : 'Server'}</span>
         <NetStatus status={net.status} latency={net.latency} />
@@ -70,7 +70,10 @@ export default function RegionMenu() {
                 {active && <GlassHighlight />}
                 <img className="region-menu__flag" src={server.flag} alt="" draggable={false} />
                 <span className="region-menu__copy">
-                  <span className="region-menu__name">{server.label}</span>
+                  <span className="region-menu__name-row">
+                    <span className="region-menu__name">{server.label}</span>
+                    {server.recommended && <span className="region-menu__tag">Recommended</span>}
+                  </span>
                   <span className="region-menu__hint">{server.location}</span>
                 </span>
                 <span className="region-menu__ping">

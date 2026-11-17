@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { currentSession, fromFirestoreFields, type FirestoreValue } from '@/lib/cloud-store'
+import { getPref, loadPrefs, setPref } from '@/lib/prefs'
 import { getTransfers, subscribeTransfers, type TransferEntry } from '@/lib/transfer-log'
 import './transfer-overlay.css'
 
@@ -9,6 +10,25 @@ const MAX_ITEMS = 12
 const KEY_COLUMN = 18
 const TYPE_INTERVAL_MS = 30
 const TYPE_CATCHUP_TICKS = 50
+const HOLD_MS = 3000
+const SKIP_PREF = 'skipUserData'
+const SKIP_KEY = 'plu_skip_user_data'
+
+function storedSkip() {
+  try {
+    return localStorage.getItem(SKIP_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function rememberSkip() {
+  try {
+    localStorage.setItem(SKIP_KEY, '1')
+  } catch {
+  }
+  setPref(SKIP_PREF, true)
+}
 
 type Field = { depth: number; key: string; value: string }
 
@@ -181,6 +201,9 @@ function downloadLog(text: string) {
 export default function TransferOverlay() {
   const [signedIn] = useState(() => currentSession() !== null)
   const [phase, setPhase] = useState<'live' | 'leaving' | 'gone'>('live')
+  const [skip, setSkip] = useState(storedSkip)
+  const [holdProgress, setHoldProgress] = useState(0)
+  const holdStart = useRef<number | null>(null)
   const entries = useSyncExternalStore(subscribeTransfers, getTransfers, getTransfers)
   const streamRef = useRef<HTMLPreElement>(null)
   const [typed, setTyped] = useState(0)
@@ -194,6 +217,81 @@ export default function TransferOverlay() {
 
   const fullRef = useRef(full)
   fullRef.current = full
+
+  useEffect(() => {
+    if (!signedIn) return
+
+    let alive = true
+    void loadPrefs().then(() => {
+      if (!alive || !getPref<boolean>(SKIP_PREF)) return
+      rememberSkip()
+      setSkip(true)
+    })
+
+    return () => {
+      alive = false
+    }
+  }, [signedIn])
+
+  const skipNow = useCallback(() => {
+    holdStart.current = null
+    setHoldProgress(1)
+    rememberSkip()
+    setSkip(true)
+  }, [])
+
+  useEffect(() => {
+    if (phase !== 'live' || skip) return
+
+    let frame = 0
+
+    const stop = (reset: boolean) => {
+      holdStart.current = null
+      window.cancelAnimationFrame(frame)
+      if (reset) setHoldProgress(0)
+    }
+
+    const loop = (now: number) => {
+      if (holdStart.current === null) return
+      const progress = Math.min(1, (now - holdStart.current) / HOLD_MS)
+      setHoldProgress(progress)
+      if (progress >= 1) {
+        skipNow()
+        return
+      }
+      frame = window.requestAnimationFrame(loop)
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 's' && event.key !== 'S') return
+      if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return
+      if (holdStart.current !== null) return
+      holdStart.current = performance.now()
+      frame = window.requestAnimationFrame(loop)
+    }
+
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key !== 's' && event.key !== 'S') return
+      stop(true)
+    }
+
+    const onBlur = () => stop(true)
+
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', onBlur)
+      window.cancelAnimationFrame(frame)
+    }
+  }, [phase, skip, skipNow])
+
+  useEffect(() => {
+    if (!skip) return
+    setPhase((current) => (current === 'live' ? 'leaving' : current))
+  }, [skip])
 
   useEffect(() => {
     if (phase === 'gone') return
@@ -273,27 +371,51 @@ export default function TransferOverlay() {
 
   useEffect(() => {
     if (phase !== 'leaving') return
-    const timer = window.setTimeout(() => setPhase('gone'), 2150)
+    const timer = window.setTimeout(() => setPhase('gone'), skip ? 260 : 2150)
     return () => window.clearTimeout(timer)
-  }, [phase])
+  }, [phase, skip])
 
   if (!signedIn || phase === 'gone') return null
 
   return (
     <div
-      className={`transfer-overlay${phase === 'leaving' ? ' transfer-overlay--leaving' : ''}`}
+      className={`transfer-overlay${phase === 'leaving' ? ' transfer-overlay--leaving' : ''}${skip ? ' transfer-overlay--quick' : ''}`}
       role="region"
-      aria-label="Downloading user data"
+      aria-label={skip ? 'Loading' : 'Downloading user data'}
     >
-      <div className="transfer-overlay__screen">
-        <div className="transfer-overlay__panel">
-          <p className="transfer-overlay__title">{titleShown}</p>
-          <pre className="transfer-overlay__stream" ref={streamRef}>
-            {bodyShown}
+      {skip ? (
+        <div className="transfer-overlay__screen">
+          <p className="transfer-overlay__loading">
+            Loading
             <span className="transfer-overlay__caret" aria-hidden="true" />
-          </pre>
+          </p>
         </div>
-      </div>
+      ) : (
+        <div className="transfer-overlay__screen">
+          <div className="transfer-overlay__panel">
+            <p className="transfer-overlay__title">{titleShown}</p>
+            <pre className="transfer-overlay__stream" ref={streamRef}>
+              {bodyShown}
+              <span className="transfer-overlay__caret" aria-hidden="true" />
+            </pre>
+            <div className="transfer-overlay__hint">
+              <span className="transfer-overlay__key" aria-hidden="true">
+                S
+              </span>
+              <span className="transfer-overlay__hint-copy">
+                press and hold S (3 sec) to skip this screen: it stays cloud synced with your account and
+                next time just says Loading and opens instantly
+              </span>
+              <span className="transfer-overlay__hold" aria-hidden="true">
+                <span
+                  className="transfer-overlay__hold-fill"
+                  style={{ transform: `scaleX(${holdProgress})` }}
+                />
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

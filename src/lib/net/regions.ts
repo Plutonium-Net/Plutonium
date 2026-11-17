@@ -7,11 +7,14 @@ export type RegionServer = {
   lat: number
   lon: number
   host?: string
+  url?: string
+  recommended?: boolean
   flag: string
 }
 
 const WISP_URL_TEMPLATE = 'wss://wisp-{id}.plutoniumnet.work/'
 export const WISP_REGIONS: RegionServer[] = [
+  { id: 'serverless', label: 'Serverless', location: 'Cloudflare edge', url: 'wss://wisp.plutoniumnet.work/', recommended: true, flag: '/img/flags/cf.png', lat: 0, lon: 0 },
   { id: 'us-east', label: 'US East', location: 'Virginia, USA', flag: '/img/flags/us.png', lat: 37.4316, lon: -78.6569 },
   { id: 'us-east-backup', label: 'US East Backup', location: 'Ohio, USA', flag: '/img/flags/us.png', lat: 39.9612, lon: -82.9988 },
   { id: 'us-west', label: 'US West', location: 'Oregon, USA', flag: '/img/flags/us.png', lat: 43.8041, lon: -120.5542 },
@@ -42,6 +45,8 @@ export function serversFor(family: RegionFamily): RegionServer[] {
 }
 
 export function wispUrl(regionId: string) {
+  const server = WISP_REGIONS.find((region) => region.id === regionId)
+  if (server?.url) return server.url
   return WISP_URL_TEMPLATE.replace('{id}', regionId)
 }
 

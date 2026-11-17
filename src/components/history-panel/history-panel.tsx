@@ -16,7 +16,7 @@ export default function HistoryPanel({ onNavigate }: { onNavigate: (url: string)
   const entries = useHistory()
 
   return (
-    <GlassPanel className="history-panel">
+    <GlassPanel className="history-panel" tint>
       <div className="history-panel__head">
         <span className="history-panel__title">History</span>
         {entries.length > 0 && (

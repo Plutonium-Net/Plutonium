@@ -55,7 +55,7 @@ export default function InfoPanel({
   onOpenLegal: (section: LegalSection) => void
 }) {
   return (
-    <GlassPanel className="info-panel">
+    <GlassPanel className="info-panel" tint>
       <div className="info-panel__head">
         <span className="info-panel__title">About &amp; Credits</span>
         <button className="info-panel__close" type="button" aria-label="Close" onClick={onClose}>
