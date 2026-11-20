@@ -14,6 +14,20 @@
   pointer-events: auto;
 }
 
+.app-shell .app-shell__tabs-blur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.app-shell .app-shell__tabs .chrome-tabs {
+  z-index: 2;
+}
+
 .app-shell .app-shell__stage {
   position: relative;
   flex: 1 1 auto;

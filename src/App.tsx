@@ -11,6 +11,7 @@ import type { WaveOrigin, WavePhase } from '@/components/distortion-wave/distort
 import HistoryPanel from '@/components/history-panel/history-panel'
 import FeedbackPanel from '@/components/feedback-panel/feedback-panel'
 import GlowCursor from '@/components/glow-cursor/GlowCursor'
+import GradualBlur from '@/components/gradual-blur/gradual-blur'
 import InfoPanel from '@/components/info-panel/info-panel'
 import LegalPanel from '@/components/legal-panel/legal-panel'
 import OnlineCount from '@/components/online-count/online-count'
@@ -144,6 +145,20 @@ export default function App() {
             onReorder={moveTab}
             addCentered={home}
           />
+          <div className="app-shell__tabs-blur">
+            {/* Ramp hugs the top of the viewport and eases downward behind the tab bar. */}
+            <GradualBlur
+              position="top"
+              height="6rem"
+              strength={3}
+              layers={10}
+              curve="linear"
+              exponential
+              tint="transparent"
+              hoverIntensity={1}
+              autoHide={false}
+            />
+          </div>
         </div>
 
         {onWeb && activeTab && (

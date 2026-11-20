@@ -14,3 +14,13 @@ directory = "./public"
 [[kv_namespaces]]
 binding = "PLU_RATE_LIMIT"
 id      = "3f3c1c815b5b4c069bb13afb1d4bbb5a"
+
+# One object per online game room, addressed by room code.
+[[durable_objects.bindings]]
+name       = "GAME_ROOM"
+class_name = "GameRoom"
+
+# SQLite-backed classes are the only kind available on the Workers Free plan.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameRoom"]

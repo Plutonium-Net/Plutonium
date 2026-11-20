@@ -4,6 +4,9 @@ dist-single/
 dist-download/
 dist-download-page/
 
+# Local wrangler dev state (Durable Object / KV data)
+api/.wrangler/
+
 # Freebuff workspace marker
 .freebuff/
 

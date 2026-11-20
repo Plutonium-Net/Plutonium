@@ -15,6 +15,7 @@ export type SmartGroup = { title: string; rows: SmartRow[] }
 
 const PLUTO_APPS = [
   { id: 'games', title: 'Games', sub: 'Play hundreds of browser games instantly' },
+  { id: 'playables', title: 'Playables', sub: 'Small, instant things to play' },
   { id: 'ai', title: 'AI', sub: 'Chat with Stelena AI' },
   { id: 'media', title: 'Media', sub: 'Movies, TV and anime' },
   { id: 'vms', title: 'VMs', sub: 'Remote virtual machines' },

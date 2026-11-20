@@ -1,5 +1,6 @@
 const PLUTO_PAGES: Record<string, string> = {
   games: 'Games',
+  playables: 'Playables',
   apps: 'Apps',
   ai: 'AI',
   vms: 'VMs',

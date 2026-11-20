@@ -82,6 +82,18 @@ const ITEMS: AppItem[] = [
       </>
     ),
   },
+  {
+    id: 'playables',
+    label: 'Playables',
+    words: ['PLAYABLES'],
+    href: 'pluto://playables',
+    icon: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="4.5" />
+        <path d="M8.5 8.5h.01M15.5 15.5h.01M15.5 8.5h.01M8.5 15.5h.01" />
+      </>
+    ),
+  },
 ]
 
 export default function QuickApps({ onOpen, hidden = false }: { onOpen: (href: string) => void; hidden?: boolean }) {

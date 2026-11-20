@@ -4,6 +4,7 @@ import * as gateway from './routes/gateway.js';
 import * as ai from './routes/ai.js';
 import * as vm from './routes/vm.js';
 import * as net from './routes/net.js';
+import * as rooms from './routes/rooms.js';
 
 export default {
   async fetch(request, env) {
@@ -38,6 +39,10 @@ export default {
         return await net.handle(request, env, url, path.slice(4) || '/');
       }
 
+      if (path === '/rooms' || path.startsWith('/rooms/')) {
+        return await rooms.handle(request, env, url, path.slice(6) || '/');
+      }
+
       return fail('Not found', 404);
     } catch (err) {
       console.error('[api]', err);
@@ -45,6 +50,9 @@ export default {
     }
   },
 };
+
+// Durable Object class, exported from the entrypoint as wrangler requires.
+export { GameRoom } from './game-room.js';
 
 function healthz(env) {
   const has = name => Boolean(env[name]);
@@ -55,6 +63,7 @@ function healthz(env) {
     { name: 'OAuth',      ok: has('GITHUB_CLIENT_ID') && has('GITHUB_CLIENT_SECRET') && has('GOOGLE_CLIENT_ID') && has('GOOGLE_CLIENT_SECRET') && has('SITE_URL') },
     { name: 'AI',         ok: has('GROQ_API_KEY') },
     { name: 'Sessions',   ok: has('HYPERBEAM_API_KEY') },
+    { name: 'Rooms',      ok: has('GAME_ROOM') },
   ];
   const ok = components.every(c => c.ok);
 
