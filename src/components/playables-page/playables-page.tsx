@@ -231,13 +231,24 @@ export default function PlayablesPage({ query = '' }: { query?: string }) {
                 className="playables-page__card"
                 onClick={() => setActiveId(playable.id)}
               >
-                <span className="playables-page__card-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">{playable.icon}</svg>
-                </span>
-                <span className="playables-page__card-name">{playable.name}</span>
-                <span className="playables-page__card-desc">{playable.description}</span>
-                <span className="playables-page__card-meta">
-                  {playable.category} · {playable.players}
+                <GlassSurface
+                  className="playables-page__card-glass"
+                  width="100%"
+                  height="100%"
+                  borderRadius={14}
+                  backgroundOpacity={0.1}
+                  saturation={1.2}
+                  displace={0.5}
+                />
+                <span className="playables-page__card-body">
+                  <span className="playables-page__card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">{playable.icon}</svg>
+                  </span>
+                  <span className="playables-page__card-name">{playable.name}</span>
+                  <span className="playables-page__card-desc">{playable.description}</span>
+                  <span className="playables-page__card-meta">
+                    {playable.category} · {playable.players}
+                  </span>
                 </span>
               </button>
             ))}

@@ -8,6 +8,7 @@ import { checkRateLimit } from '../lib/ratelimit.js';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_LENGTH = 5;
 const CODE_RE = /^[A-HJ-NP-Z2-9]{5}$/;
+const GAMES = ['chess', 'checkers', 'connect4'];
 const MAX_ROOMS = 20;
 const WINDOW_SECS = 3600;
 const INTERNAL = 'https://room.internal';
@@ -17,11 +18,14 @@ export async function handle(request, env, url, path) {
 
   if (path === '/create' && request.method === 'POST') return createRoom(request, env);
 
-  const [rawCode, action] = path.replace(/^\//, '').split('/');
+  // /rooms/<game>/<code>[/ws] - the game picks which rules the room runs.
+  const [game, rawCode, action] = path.replace(/^\//, '').split('/');
+  if (!GAMES.includes(String(game))) return fail('Not found', 404);
+
   const code = String(rawCode || '').toUpperCase();
   if (!CODE_RE.test(code)) return fail('Not found', 404);
 
-  const room = env.GAME_ROOM.get(env.GAME_ROOM.idFromName(`chess:${code}`));
+  const room = env.GAME_ROOM.get(env.GAME_ROOM.idFromName(`${game}:${code}`));
 
   if (action === 'ws') {
     if (request.headers.get('Upgrade') !== 'websocket') return fail('Expected a websocket upgrade', 426);
@@ -41,6 +45,9 @@ async function createRoom(request, env) {
   const player = await playerFromRequest(request, env);
   if (!player) return unauthorized();
 
+  const body = await request.json().catch(() => null);
+  const game = GAMES.includes(body?.game) ? body.game : 'chess';
+
   const limit = await checkRateLimit(env, {
     scope: 'rooms',
     uid: player.uid,
@@ -58,13 +65,14 @@ async function createRoom(request, env) {
   }
 
   const code = randomCode();
-  const res = await env.GAME_ROOM.get(env.GAME_ROOM.idFromName(`chess:${code}`)).fetch(`${INTERNAL}/rooms/${code}/create`, {
-    method: 'POST',
-  });
-  const body = await res.json().catch(() => null);
-  if (!res.ok) return fail(body?.error || 'Could not create room', res.status);
+  const res = await env.GAME_ROOM.get(env.GAME_ROOM.idFromName(`${game}:${code}`)).fetch(
+    `${INTERNAL}/rooms/${code}/create?game=${game}`,
+    { method: 'POST' }
+  );
+  const room = await res.json().catch(() => null);
+  if (!res.ok) return fail(room?.error || 'Could not create room', res.status);
 
-  return json({ code, room: body }, 201, { 'Cache-Control': 'no-store' });
+  return json({ code, game, room }, 201, { 'Cache-Control': 'no-store' });
 }
 
 function randomCode() {

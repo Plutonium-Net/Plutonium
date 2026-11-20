@@ -9,6 +9,7 @@ import {
   rankOf,
   statusOf,
   type ChessState,
+  type ChessStatus,
   type Color,
   type PieceType,
 } from '@/lib/playables/chess'
@@ -126,7 +127,7 @@ export default function ChessGame() {
   const online = mode === 'online'
   const board = online && room ? room.state : game
   const moves = useMemo(() => legalMoves(board), [board])
-  const status = online && room ? room.status : statusOf(board, moves)
+  const status: ChessStatus = online && room ? (room.status as ChessStatus) : statusOf(board, moves)
   const reason = status === 'draw' ? drawReason(board) : null
   const finished = status === 'checkmate' || status === 'stalemate' || status === 'draw'
 
@@ -188,7 +189,7 @@ export default function ChessGame() {
     setBusy(true)
     setNotice(null)
 
-    link.current = joinRoom(code, user.idToken, {
+    link.current = joinRoom<ChessState>(code, 'chess', user.idToken, {
       onOpen: () => setBusy(false),
       onSeat: (assigned, snapshot) => {
         setBusy(false)
@@ -237,7 +238,7 @@ export default function ChessGame() {
     setBusy(true)
     setNotice(null)
     try {
-      connect(await createRoom(user.idToken))
+      connect(await createRoom(user.idToken, 'chess'))
     } catch (error) {
       setBusy(false)
       setNotice(error instanceof Error ? error.message : 'Could not create a room')
@@ -255,7 +256,7 @@ export default function ChessGame() {
 
   function commit(from: number, to: number, promotion?: PieceType) {
     if (online) {
-      link.current?.play(from, to, promotion)
+      link.current?.move({ from, to, promotion })
       setSelected(null)
       setPromoting(null)
       return

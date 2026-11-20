@@ -318,7 +318,9 @@
   animation: chess-dot-in 0.16s ease-out;
 }
 
-.chess .chess__modes {
+.chess .chess__modes,
+.checkers .checkers__modes,
+.c4 .c4__modes {
   display: flex;
   gap: 4px;
   padding: 3px;
@@ -327,7 +329,9 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-.chess .chess__mode {
+.chess .chess__mode,
+.checkers .checkers__mode,
+.c4 .c4__mode {
   padding: 5px 15px;
   border: 0;
   border-radius: 999px;
@@ -339,16 +343,22 @@
   transition: background-color 0.16s ease, color 0.16s ease;
 }
 
-.chess .chess__mode:hover {
+.chess .chess__mode:hover,
+.checkers .checkers__mode:hover,
+.c4 .c4__mode:hover {
   color: rgba(255, 255, 255, 0.82);
 }
 
-.chess .chess__mode.is-active {
+.chess .chess__mode.is-active,
+.checkers .checkers__mode.is-active,
+.c4 .c4__mode.is-active {
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
 }
 
-.chess .chess__note {
+.chess .chess__note,
+.checkers .checkers__note,
+.c4 .c4__note {
   max-width: 46ch;
   margin: 0;
   font-size: 11.5px;
@@ -357,7 +367,9 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-.chess .chess__join {
+.chess .chess__join,
+.checkers .checkers__join,
+.c4 .c4__join {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -365,12 +377,16 @@
   gap: 8px;
 }
 
-.chess .chess__join-row {
+.chess .chess__join-row,
+.checkers .checkers__join-row,
+.c4 .c4__join-row {
   display: flex;
   gap: 6px;
 }
 
-.chess .chess__join-input {
+.chess .chess__join-input,
+.checkers .checkers__join-input,
+.c4 .c4__join-input {
   width: 92px;
   padding: 6px 10px;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -384,12 +400,16 @@
   text-transform: uppercase;
 }
 
-.chess .chess__join-input:focus {
+.chess .chess__join-input:focus,
+.checkers .checkers__join-input:focus,
+.c4 .c4__join-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.36);
 }
 
-.chess .chess__room {
+.chess .chess__room,
+.checkers .checkers__room,
+.c4 .c4__room {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -399,7 +419,9 @@
   color: rgba(255, 255, 255, 0.55);
 }
 
-.chess .chess__code {
+.chess .chess__code,
+.checkers .checkers__code,
+.c4 .c4__code {
   padding: 3px 9px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
