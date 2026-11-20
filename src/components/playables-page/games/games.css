@@ -621,6 +621,7 @@
 /* Checkers */
 
 .checkers .checkers__board {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   width: min(500px, 84vw);
@@ -635,8 +636,15 @@
   position: relative;
   display: grid;
   place-items: center;
+  min-width: 0;
+  min-height: 0;
   padding: 0;
   border: 0;
+  border-radius: 0;
+  aspect-ratio: 1 / 1;
+  overflow: visible;
+  appearance: none;
+  font: inherit;
   cursor: pointer;
 }
 
@@ -649,41 +657,159 @@
   background: #2a3241;
 }
 
+.checkers .checkers__square.is-last {
+  box-shadow: inset 0 0 0 999px rgba(86, 160, 255, 0.24);
+  animation: chess-last-in 0.24s ease-out;
+}
+
 .checkers .checkers__square.is-selected {
-  box-shadow: inset 0 0 0 3px rgba(255, 214, 120, 0.85);
+  box-shadow: inset 0 0 0 999px rgba(255, 214, 120, 0.2), inset 0 0 0 3px rgba(255, 214, 120, 0.85);
 }
 
 .checkers .checkers__square.is-target {
   box-shadow: inset 0 0 0 3px rgba(120, 190, 255, 0.6);
 }
 
+.checkers .checkers__square.is-target.is-step {
+  box-shadow: inset 0 0 0 999px rgba(120, 190, 255, 0.14), inset 0 0 0 2px rgba(120, 190, 255, 0.45);
+}
+
 .checkers .checkers__piece {
-  display: grid;
-  place-items: center;
-  width: 68%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  font-size: clamp(11px, 2vw, 16px);
-  color: rgba(255, 255, 255, 0.9);
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 76%;
+  height: 76%;
+  overflow: visible;
   pointer-events: none;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 3px rgba(255, 255, 255, 0.12);
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
+  transition: transform 0.16s ease;
+}
+
+.checkers .checkers__piece .checkers__body {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 9;
 }
 
 .checkers .checkers__piece.is-r {
-  background: radial-gradient(circle at 35% 30%, #ef6a5c, #b12f24);
+  color: #cb4433;
 }
 
 .checkers .checkers__piece.is-b {
-  background: radial-gradient(circle at 35% 30%, #3b4453, #111620);
+  color: #3a4353;
+}
+
+.checkers .checkers__piece.is-b .checkers__body {
+  stroke: rgba(255, 255, 255, 0.42);
+}
+
+.checkers .checkers__square:hover .checkers__piece {
+  transform: scale(1.05);
+}
+
+.checkers .checkers__piece.is-sliding {
+  z-index: 3;
+  animation: chess-slide 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.checkers .checkers__piece.is-kinged {
+  animation:
+    chess-slide 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    chess-promote-glow 0.8s ease-out;
 }
 
 .checkers .checkers__dot {
   position: absolute;
+  z-index: 2;
   width: 20%;
   height: 20%;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.5);
   pointer-events: none;
+}
+
+.checkers .checkers__burst,
+.checkers .checkers__crown {
+  position: absolute;
+  width: 12.5%;
+  height: 12.5%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.checkers .checkers__burst::before {
+  content: '';
+  position: absolute;
+  inset: -6%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 246, 222, 0.92), rgba(255, 176, 96, 0.68) 40%, rgba(255, 92, 40, 0) 70%);
+  animation: chess-core 0.24s ease-out forwards;
+}
+
+.checkers .checkers__flash {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 226, 180, 1);
+  box-shadow: 0 0 18px rgba(255, 120, 60, 0.95), inset 0 0 12px rgba(255, 160, 90, 0.7);
+  animation: chess-flash 0.34s ease-out forwards;
+}
+
+.checkers .checkers__spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14%;
+  height: 14%;
+  margin: -7% 0 0 -7%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3e0 30%, #ff9a54 70%, #ff5b2b 100%);
+  box-shadow: 0 0 8px rgba(255, 120, 60, 0.95);
+  animation: chess-spark 0.5s cubic-bezier(0.25, 0.8, 0.4, 1) forwards;
+}
+
+.checkers .checkers__spark:nth-child(2n) {
+  --reach: 500%;
+}
+
+.checkers .checkers__spark:nth-child(3n) {
+  --reach: 760%;
+}
+
+.checkers .checkers__crown::before {
+  content: '';
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 232, 168, 0.95);
+  box-shadow: 0 0 22px rgba(255, 196, 90, 0.85), inset 0 0 14px rgba(255, 210, 120, 0.55);
+  animation: chess-crown 0.62s cubic-bezier(0.18, 0.8, 0.3, 1) forwards;
+}
+
+.checkers .checkers__ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9%;
+  height: 9%;
+  margin: -4.5% 0 0 -4.5%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fffdf2 30%, #ffd479 70%, rgba(255, 170, 60, 0) 100%);
+  box-shadow: 0 0 10px rgba(255, 200, 100, 0.9);
+  animation: chess-ray 0.62s cubic-bezier(0.2, 0.75, 0.35, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkers .checkers__piece,
+  .checkers .checkers__square,
+  .checkers .checkers__burst::before,
+  .checkers .checkers__flash,
+  .checkers .checkers__spark,
+  .checkers .checkers__crown::before,
+  .checkers .checkers__ray {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* Connect 4 */
