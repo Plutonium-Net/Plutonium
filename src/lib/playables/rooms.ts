@@ -22,7 +22,14 @@ export type RoomSnapshot = {
   seats: RoomSeat[]
 }
 
-export type MoveEcho = { from: number; to: number; seat: number; ply: number }
+export type MoveEcho = {
+  from: number
+  to: number
+  seat: number
+  ply: number
+  captured?: number | null
+  promotion?: 'q' | 'r' | 'b' | 'n' | null
+}
 
 export async function createRoom(idToken: string): Promise<string> {
   const res = await fetch(`${API}/rooms/create`, {

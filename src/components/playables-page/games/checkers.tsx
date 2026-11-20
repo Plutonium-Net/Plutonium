@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { play as playSound } from '@/lib/playables/sound'
 
 type Color = 'r' | 'b'
 type Cell = { color: Color; king: boolean } | null
@@ -91,7 +92,13 @@ export default function CheckersGame() {
     setSelected(keepTurn ? move.to : null)
     setChain(keepTurn ? move.to : null)
     setTurn(nextTurn)
-    if (!keepTurn && movesFor(next, nextTurn, null).length === 0) setWinner(turn)
+
+    playSound(move.capture != null ? 'capture' : 'move')
+    if (nowKing && !wasKing) playSound('promote')
+    if (!keepTurn && movesFor(next, nextTurn, null).length === 0) {
+      setWinner(turn)
+      playSound('win')
+    }
   }
 
   function onSquare(sq: number) {

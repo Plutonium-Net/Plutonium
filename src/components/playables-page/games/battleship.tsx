@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { play } from '@/lib/playables/sound'
 
 const SIZE = 10
 
@@ -80,6 +81,7 @@ export default function BattleshipGame() {
     if (!cells || cells.some((target) => ownCells.has(target))) return
     setFleets(fleets.map((entry, index) => (index === active ? [...entry, { name: nextShip.name, cells }] : entry)))
     setMessage('')
+    play('select')
   }
 
   function shuffle() {
@@ -115,9 +117,13 @@ export default function BattleshipGame() {
     const destroyed = sunkShips(enemyFleet, nextShots[enemy])
     setMessage(hitShip && destroyed.includes(hitShip) ? `Hit — ${hitShip.name} sunk.` : hitShip ? 'Hit.' : 'Miss.')
 
+    if (hitShip && destroyed.includes(hitShip)) play('sink')
+    else play(hitShip ? 'hit' : 'miss')
+
     if (enemyFleet.every((ship) => destroyed.includes(ship))) {
       setWinner(active)
       setPhase('done')
+      play('win')
       return
     }
     setAwaitingPass(true)

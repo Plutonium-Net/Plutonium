@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { play } from '@/lib/playables/sound'
 
 const COLS = 7
 const ROWS = 6
@@ -51,10 +52,15 @@ export default function Connect4Game() {
       next[cell] = turn
       setBoard(next)
       setLast(cell)
+      play('drop')
       const line = winningLine(next, cell, turn)
-      if (line) setResult({ winner: turn, line })
-      else if (next.every(Boolean)) setResult({ winner: 'draw', line: [] })
-      else setTurn(turn === 'r' ? 'y' : 'r')
+      if (line) {
+        setResult({ winner: turn, line })
+        play('win')
+      } else if (next.every(Boolean)) {
+        setResult({ winner: 'draw', line: [] })
+        play('draw')
+      } else setTurn(turn === 'r' ? 'y' : 'r')
       return
     }
   }

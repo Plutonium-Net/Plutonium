@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { play } from '@/lib/playables/sound'
 
 const SIZE = 9
 const MINES = 10
@@ -85,6 +86,7 @@ export default function MinesweeperGame() {
       const next = board.map((entry) => ({ ...entry, open: entry.mine ? true : entry.open }))
       setCells(next)
       setStatus('lost')
+      play('boom')
       return
     }
 
@@ -92,6 +94,8 @@ export default function MinesweeperGame() {
     const remaining = next.filter((entry) => !entry.mine && !entry.open).length
     setCells(next)
     setStatus(remaining === 0 ? 'won' : 'playing')
+    if (remaining === 0) play('win')
+    else play('reveal')
     if (status === 'idle') setSeconds(0)
   }
 
@@ -101,6 +105,7 @@ export default function MinesweeperGame() {
     if (cell.open) return
     const next = cells.map((entry, index) => (index === sq ? { ...entry, flag: !entry.flag } : entry))
     setCells(next)
+    play('flag')
   }
 
   function click(sq: number) {

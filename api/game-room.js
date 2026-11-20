@@ -170,6 +170,14 @@ export class GameRoom {
     );
     if (!move) return this.#error(ws, 'illegal-move', 'That move is not legal');
 
+    // Where the capture happened: en passant lands on an empty square, with
+    // the taken pawn behind it, so tell the client which square to blow up.
+    const captured = move.capture
+      ? move.enPassant
+        ? to + (COLORS[seat] === 'w' ? 8 : -8)
+        : to
+      : null;
+
     this.state = applyMove(this.state, move);
     this.ply += 1;
 
@@ -189,7 +197,7 @@ export class GameRoom {
     this.#broadcast({
       type: 'state',
       room: this.#snapshot(),
-      last: { from, to, seat, ply: this.ply },
+      last: { from, to, seat, ply: this.ply, captured, promotion: move.promotion ?? null },
     });
   }
 

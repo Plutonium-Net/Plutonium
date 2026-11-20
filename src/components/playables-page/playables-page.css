@@ -8,7 +8,9 @@
 
 .playables-page {
   position: relative;
-  z-index: 8;
+  /* Above the shell's fixed top blur ramp, which is nested in the tab bar's
+     z-index 10 layer and would otherwise blur this page's own top bars. */
+  z-index: 11;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
@@ -250,8 +252,44 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
-.playables-page .playables-page__players {
+.playables-page .playables-page__sound {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.68);
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.playables-page .playables-page__sound svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.playables-page .playables-page__sound:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.playables-page .playables-page__sound.is-off {
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.playables-page .playables-page__players {
+  margin-left: 8px;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;

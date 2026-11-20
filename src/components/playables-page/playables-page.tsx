@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { BorderBeam } from 'border-beam'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import { BEAM_PROPS } from '@/lib/beam'
+import { play, useMuted } from '@/lib/playables/sound'
 import BattleshipGame from './games/battleship'
 import CheckersGame from './games/checkers'
 import ChessGame from './games/chess'
@@ -119,6 +120,7 @@ export default function PlayablesPage({ query = '' }: { query?: string }) {
   const [search, setSearch] = useState(query)
   const [focused, setFocused] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [muted, toggleMuted] = useMuted()
 
   const trimmed = search.trim()
   const results = useMemo(() => {
@@ -142,6 +144,22 @@ export default function PlayablesPage({ query = '' }: { query?: string }) {
             All playables
           </button>
           <span className="playables-page__now">{active.name}</span>
+          <button
+            type="button"
+            className={`playables-page__sound${muted ? ' is-off' : ''}`}
+            aria-label={muted ? 'Turn sound effects on' : 'Turn sound effects off'}
+            aria-pressed={!muted}
+            title={muted ? 'Sound off' : 'Sound on'}
+            onClick={() => {
+              toggleMuted()
+              if (muted) play('select')
+            }}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9.5h3l4-3.5v12l-4-3.5H4z" />
+              {muted ? <path d="M15 9l5 6M20 9l-5 6" /> : <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />}
+            </svg>
+          </button>
           <span className="playables-page__players">{active.players}</span>
         </div>
         <div className="playables-page__stage">{GAMES[active.id]()}</div>

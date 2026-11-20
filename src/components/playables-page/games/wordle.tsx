@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { play } from '@/lib/playables/sound'
 
 const ROWS = 6
 const LENGTH = 5
@@ -133,25 +134,39 @@ export default function WordleGame() {
     if (status !== 'playing') return
     if (draft.length !== LENGTH) {
       setMessage('Not enough letters')
+      play('error')
       return
     }
     if (!WORDS.includes(draft)) {
       setMessage('Not in word list')
+      play('error')
       return
     }
     const next = [...guesses, { word: draft, marks: score(draft, answer) }]
     setGuesses(next)
     setDraft('')
     setMessage('')
-    if (draft === answer) setStatus('won')
-    else if (next.length === ROWS) setStatus('lost')
+    if (draft === answer) {
+      setStatus('won')
+      play('win')
+    } else if (next.length === ROWS) {
+      setStatus('lost')
+      play('draw')
+    } else {
+      play('move')
+    }
   }
 
   function press(key: string) {
     if (status !== 'playing') return
     if (key === 'enter') submit()
-    else if (key === 'backspace') setDraft((value) => value.slice(0, -1))
-    else if (/^[a-z]$/.test(key) && draft.length < LENGTH) setDraft((value) => value + key)
+    else if (key === 'backspace') {
+      play('key')
+      setDraft((value) => value.slice(0, -1))
+    } else if (/^[a-z]$/.test(key) && draft.length < LENGTH) {
+      play('key')
+      setDraft((value) => value + key)
+    }
   }
 
   useEffect(() => {
