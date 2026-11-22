@@ -14,6 +14,7 @@ export type SinkMeta = { name: string; size: number; type: string };
 
 type WritableLike = {
   write(chunk: Uint8Array): Promise<void>;
+  close(): Promise<void>;
   abort(reason?: unknown): Promise<void>;
 };
 
