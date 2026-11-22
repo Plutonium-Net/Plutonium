@@ -211,29 +211,31 @@ async function installationToken() {
 }
 
 async function publish(token, files) {
+  const repoPath = `/repos/${REPO}`
+
   const blobs = []
   for (const file of files) {
-    const blob = await api(token, 'POST', '/git/blobs', {
+    const blob = await api(token, 'POST', `${repoPath}/git/blobs`, {
       content: file.content.toString('base64'),
       encoding: 'base64',
     })
     blobs.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha })
   }
 
-  const tree = await api(token, 'POST', '/git/trees', { tree: blobs })
+  const tree = await api(token, 'POST', `${repoPath}/git/trees`, { tree: blobs })
   // Parentless commit: republishing replaces history instead of stacking 13 MB
   // blobs on top of each other.
-  const commit = await api(token, 'POST', '/git/commits', {
+  const commit = await api(token, 'POST', `${repoPath}/git/commits`, {
     message: `Publish single-file assets (${new Date().toISOString()})`,
     tree: tree.sha,
     parents: [],
   })
 
   try {
-    await api(token, 'PATCH', `/git/refs/heads/${BRANCH}`, { sha: commit.sha, force: true })
+    await api(token, 'PATCH', `${repoPath}/git/refs/heads/${BRANCH}`, { sha: commit.sha, force: true })
   } catch (error) {
     if (!/-> (404|422)\b/.test(error.message)) throw error
-    await api(token, 'POST', '/git/refs', { ref: `refs/heads/${BRANCH}`, sha: commit.sha })
+    await api(token, 'POST', `${repoPath}/git/refs`, { ref: `refs/heads/${BRANCH}`, sha: commit.sha })
   }
 
   return commit.sha
