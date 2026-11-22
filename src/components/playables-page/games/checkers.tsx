@@ -181,7 +181,7 @@ export default function CheckersGame() {
         setBusy(false)
         setSeat(assigned)
         setRoom(snapshot)
-        if (assigned === null) setNotice('This room is full — you are watching as a spectator.')
+        if (assigned === null) setNotice('This room is full. You are watching as a spectator.')
       },
       onSnapshot: (snapshot, echo) => {
         setRoom(snapshot)
@@ -290,9 +290,9 @@ export default function CheckersGame() {
   if (won) {
     label = `${won === 'r' ? 'Red' : 'Black'} wins`
   } else if (reason === 'threefold') {
-    label = 'Draw — threefold repetition'
+    label = 'Draw · threefold repetition'
   } else if (reason === 'forty-move') {
-    label = 'Draw — 40 moves without a capture'
+    label = 'Draw · 40 moves without a capture'
   } else if (online && room) {
     if (myColor === null) label = `${side} to move · spectating`
     else if (board.turn === myColor) label = board.chain !== null ? 'Your move · keep jumping' : 'Your move'

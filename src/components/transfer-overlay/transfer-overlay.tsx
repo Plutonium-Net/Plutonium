@@ -33,7 +33,7 @@ function rememberSkip() {
 type Field = { depth: number; key: string; value: string }
 
 function formatValue(value: unknown): string {
-  if (value === null || value === undefined) return '—'
+  if (value === null || value === undefined) return '-'
   if (typeof value === 'string') return value.length > MAX_VALUE ? `${value.slice(0, MAX_VALUE)}…` : value
   if (typeof value === 'number') return String(value)
   if (typeof value === 'boolean') return value ? 'yes' : 'no'
@@ -56,7 +56,7 @@ function addFields(source: Record<string, unknown>, depth: number, out: Field[])
     }
 
     if (depth >= MAX_DEPTH) {
-      out.push({ depth, key, value: JSON.stringify(value) ?? '—' })
+      out.push({ depth, key, value: JSON.stringify(value) ?? '-' })
       continue
     }
 

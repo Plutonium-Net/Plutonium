@@ -320,7 +320,8 @@
 
 .chess .chess__modes,
 .checkers .checkers__modes,
-.c4 .c4__modes {
+.c4 .c4__modes,
+.bs .bs__modes {
   display: flex;
   gap: 4px;
   padding: 3px;
@@ -331,7 +332,8 @@
 
 .chess .chess__mode,
 .checkers .checkers__mode,
-.c4 .c4__mode {
+.c4 .c4__mode,
+.bs .bs__mode {
   padding: 5px 15px;
   border: 0;
   border-radius: 999px;
@@ -345,20 +347,23 @@
 
 .chess .chess__mode:hover,
 .checkers .checkers__mode:hover,
-.c4 .c4__mode:hover {
+.c4 .c4__mode:hover,
+.bs .bs__mode:hover {
   color: rgba(255, 255, 255, 0.82);
 }
 
 .chess .chess__mode.is-active,
 .checkers .checkers__mode.is-active,
-.c4 .c4__mode.is-active {
+.c4 .c4__mode.is-active,
+.bs .bs__mode.is-active {
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
 }
 
 .chess .chess__note,
 .checkers .checkers__note,
-.c4 .c4__note {
+.c4 .c4__note,
+.bs .bs__note {
   max-width: 46ch;
   margin: 0;
   font-size: 11.5px;
@@ -369,7 +374,8 @@
 
 .chess .chess__join,
 .checkers .checkers__join,
-.c4 .c4__join {
+.c4 .c4__join,
+.bs .bs__join {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -379,14 +385,16 @@
 
 .chess .chess__join-row,
 .checkers .checkers__join-row,
-.c4 .c4__join-row {
+.c4 .c4__join-row,
+.bs .bs__join-row {
   display: flex;
   gap: 6px;
 }
 
 .chess .chess__join-input,
 .checkers .checkers__join-input,
-.c4 .c4__join-input {
+.c4 .c4__join-input,
+.bs .bs__join-input {
   width: 92px;
   padding: 6px 10px;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -402,14 +410,16 @@
 
 .chess .chess__join-input:focus,
 .checkers .checkers__join-input:focus,
-.c4 .c4__join-input:focus {
+.c4 .c4__join-input:focus,
+.bs .bs__join-input:focus {
   outline: none;
   border-color: rgba(255, 255, 255, 0.36);
 }
 
 .chess .chess__room,
 .checkers .checkers__room,
-.c4 .c4__room {
+.c4 .c4__room,
+.bs .bs__room {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -421,7 +431,8 @@
 
 .chess .chess__code,
 .checkers .checkers__code,
-.c4 .c4__code {
+.c4 .c4__code,
+.bs .bs__code {
   padding: 3px 9px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
@@ -837,18 +848,21 @@
 /* Connect 4 */
 
 .c4 .c4__board {
-  padding: 10px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(180deg, #1e3a5f, #16293f);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #35383c;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: chess-board-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .c4 .c4__grid {
   position: relative;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-rows: repeat(6, minmax(0, 1fr));
   width: min(430px, 80vw);
 }
 
@@ -856,44 +870,63 @@
   aspect-ratio: 1;
   padding: 0;
   border: 0;
-  border-radius: 50%;
-  background: rgba(6, 12, 22, 0.72);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
+  border-radius: 0;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: filter 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.c4 .c4__cell.is-light {
+  background: linear-gradient(160deg, #74777c, #62656a);
+}
+
+.c4 .c4__cell.is-dark {
+  background: linear-gradient(160deg, #4b4e53, #3d4045);
 }
 
 .c4 .c4__cell:hover {
-  background: rgba(6, 12, 22, 0.55);
+  filter: brightness(1.07);
 }
 
 .c4 .c4__cell.is-win {
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 0 0 999px rgba(255, 214, 120, 0.2);
 }
 
 .c4 .c4__disc {
   place-self: center;
-  width: 82%;
+  width: 80%;
   aspect-ratio: 1;
   border-radius: 50%;
   pointer-events: none;
-  box-shadow: inset 0 -2px 6px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.16s ease;
 }
 
 .c4 .c4__disc.is-r {
-  background: radial-gradient(circle at 35% 30%, #ff7d63, #c8362b);
+  background: radial-gradient(circle at 34% 28%, #ffffff, #eef1f6 38%, #c9d1dd 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(22, 32, 46, 0.9),
+    inset 0 -3px 6px rgba(22, 32, 46, 0.18),
+    0 3px 6px rgba(0, 0, 0, 0.42);
 }
 
 .c4 .c4__disc.is-y {
-  background: radial-gradient(circle at 35% 30%, #ffe07a, #d3a125);
+  background: radial-gradient(circle at 34% 28%, #464b54, #191b1f 62%, #0b0d10 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(226, 232, 240, 0.5),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.5),
+    0 3px 6px rgba(0, 0, 0, 0.5);
 }
 
 .c4 .c4__disc.is-last {
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+  box-shadow:
+    inset 0 0 0 2px rgba(86, 160, 255, 0.95),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(86, 160, 255, 0.45);
 }
 
 .c4 .c4__disc.is-win {
-  box-shadow: inset 0 0 0 3px #ffffff, 0 0 14px rgba(255, 255, 255, 0.5);
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 214, 120, 0.98),
+    0 0 18px rgba(255, 196, 90, 0.6);
 }
 
 /* Battleship */
@@ -901,28 +934,39 @@
 .bs .bs__board {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
-  gap: 3px;
-  width: min(430px, 84vw);
-  padding: 9px;
+  width: min(430px, 86vw);
+  aspect-ratio: 1;
+  overflow: hidden;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(9, 18, 31, 0.85);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #35383c;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: chess-board-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .bs .bs__cell {
   aspect-ratio: 1;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.045);
+  border: 0;
+  border-radius: 0;
   cursor: pointer;
   display: grid;
   place-items: center;
+  transition: filter 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.bs .bs__cell.is-light {
+  background: linear-gradient(160deg, #74777c, #62656a);
+}
+
+.bs .bs__cell.is-dark {
+  background: linear-gradient(160deg, #4b4e53, #3d4045);
 }
 
 .bs .bs__cell:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
+  filter: brightness(1.07);
 }
 
 .bs .bs__cell:disabled {
@@ -930,22 +974,30 @@
 }
 
 .bs .bs__cell.is-ship {
-  background: rgba(120, 190, 255, 0.45);
-  border-color: rgba(120, 190, 255, 0.6);
+  background: linear-gradient(160deg, #fbfcff, #d8dee8);
+  box-shadow:
+    inset 0 0 0 2px rgba(22, 32, 46, 0.55),
+    inset 0 -2px 4px rgba(22, 32, 46, 0.2);
 }
 
 .bs .bs__cell.is-hit {
-  background: radial-gradient(circle, #ff6a52, #a32416);
-  border-color: rgba(255, 106, 82, 0.7);
+  background: linear-gradient(160deg, #b4453f, #8d2f2a);
+  box-shadow: inset 0 0 0 2px rgba(255, 226, 220, 0.55);
 }
 
 .bs .bs__cell.is-miss::after {
   content: '';
   display: block;
-  width: 34%;
+  width: 26%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.52);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.28);
+}
+
+.bs .bs__cell.is-miss.is-light::after {
+  background: rgba(22, 32, 46, 0.5);
+  box-shadow: none;
 }
 
 .bs .bs__note {
@@ -964,26 +1016,57 @@
   color: #ffb3a3;
 }
 
+.bs .bs__boards {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.bs .bs__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bs .bs__panel .bs__board {
+  width: min(300px, 84vw);
+}
+
+.bs .bs__label {
+  margin: 0;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.48);
+}
+
 /* Minesweeper */
 
 .mine .mine__board {
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
-  gap: 2px;
-  width: min(360px, 84vw);
-  padding: 8px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(8, 14, 24, 0.82);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
+  width: min(380px, 86vw);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #35383c;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: chess-board-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .mine .mine__cell {
   aspect-ratio: 1;
   padding: 0;
   border: 0;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0;
   color: #ffffff;
   font-family: inherit;
   font-size: 12px;
@@ -991,24 +1074,44 @@
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: background-color 0.12s ease;
+  transition: background-color 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
+}
+
+.mine .mine__cell.is-light {
+  background: linear-gradient(160deg, #74777c, #62656a);
+}
+
+.mine .mine__cell.is-dark {
+  background: linear-gradient(160deg, #4b4e53, #3d4045);
 }
 
 .mine .mine__cell:hover:not(.is-open) {
-  background: rgba(255, 255, 255, 0.17);
+  filter: brightness(1.07);
 }
 
 .mine .mine__cell.is-open {
-  background: rgba(255, 255, 255, 0.035);
   cursor: default;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.32);
+}
+
+.mine .mine__cell.is-open.is-light {
+  background: linear-gradient(160deg, #5c6066, #52565c);
+}
+
+.mine .mine__cell.is-open.is-dark {
+  background: linear-gradient(160deg, #3d4045, #36393e);
 }
 
 .mine .mine__cell.is-mine {
-  background: #b3271b;
+  background: linear-gradient(160deg, #b4453f, #8d2f2a);
 }
 
-.mine .mine__cell.is-flag {
-  color: #ffc98a;
+.mine .mine__cell.is-flag.is-light {
+  color: #6b4f12;
+}
+
+.mine .mine__cell.is-flag.is-dark {
+  color: #ffd479;
 }
 
 .mine .mine__cell.near-1 { color: #7fb3ff; }
@@ -1031,41 +1134,60 @@
 .wordle .wordle__grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
   width: min(320px, 78vw);
+  aspect-ratio: 5 / 6;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #35383c;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: chess-board-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .wordle .wordle__tile {
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
+  border: 0;
+  border-radius: 0;
   color: #ffffff;
   font-size: clamp(16px, 3.6vw, 20px);
   font-weight: 600;
   text-transform: uppercase;
   user-select: none;
+  transition: background-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+}
+
+.wordle .wordle__tile.is-light {
+  background: linear-gradient(160deg, #74777c, #62656a);
+}
+
+.wordle .wordle__tile.is-dark {
+  background: linear-gradient(160deg, #4b4e53, #3d4045);
 }
 
 .wordle .wordle__tile.is-filled {
-  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.34);
 }
 
 .wordle .wordle__tile.is-hit {
-  background: #3f7d5a;
-  border-color: #3f7d5a;
+  background: linear-gradient(160deg, #fbfcff, #d9dfe9);
+  box-shadow: inset 0 0 0 2px #16202e;
+  color: #16202e;
 }
 
 .wordle .wordle__tile.is-near {
-  background: #a5842f;
-  border-color: #a5842f;
+  background: linear-gradient(160deg, #e9c877, #c19a34);
+  box-shadow: inset 0 0 0 2px rgba(72, 52, 10, 0.55);
+  color: #2b2006;
 }
 
 .wordle .wordle__tile.is-miss {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(160deg, #2f3237, #25282c);
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .wordle .wordle__message {
@@ -1091,37 +1213,56 @@
   min-width: 26px;
   height: 36px;
   padding: 0 7px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.12);
+  border: 0;
+  border-radius: 4px;
   color: #ffffff;
   font-family: inherit;
   font-size: 11px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.12s ease;
+  transition: background-color 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
+}
+
+.wordle .wordle__key.is-light {
+  background: linear-gradient(160deg, #74777c, #62656a);
+}
+
+.wordle .wordle__key.is-dark {
+  background: linear-gradient(160deg, #4b4e53, #3d4045);
 }
 
 .wordle .wordle__key:hover {
-  background: rgba(255, 255, 255, 0.2);
+  filter: brightness(1.1);
 }
 
 .wordle .wordle__key.is-enter {
   min-width: 46px;
   font-size: 10px;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 .wordle .wordle__key.is-hit {
-  background: #3f7d5a;
-  border-color: #3f7d5a;
+  background: linear-gradient(160deg, #fbfcff, #d9dfe9);
+  box-shadow: inset 0 0 0 2px #16202e;
+  color: #16202e;
 }
 
 .wordle .wordle__key.is-near {
-  background: #a5842f;
-  border-color: #a5842f;
+  background: linear-gradient(160deg, #e9c877, #c19a34);
+  color: #2b2006;
 }
 
 .wordle .wordle__key.is-miss {
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.4);
+  background: linear-gradient(160deg, #2f3237, #25282c);
+  color: rgba(255, 255, 255, 0.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c4 .c4__board,
+  .bs .bs__board,
+  .mine .mine__board,
+  .wordle .wordle__grid {
+    animation: none !important;
+  }
 }

@@ -6,6 +6,8 @@
 //
 // PLU_API overrides the base URL (default http://127.0.0.1:8787).
 
+import { SHIPS } from '../../src/lib/playables/battleship.ts';
+
 const BASE = (process.env.PLU_API || 'http://127.0.0.1:8787').replace(/\/$/, '');
 const WS_BASE = BASE.replace(/^http/, 'ws');
 
@@ -291,11 +293,102 @@ async function connect4Room() {
   yellow.client.close();
 }
 
+async function battleshipRoom() {
+  console.log('\nbattleship\n');
+
+  // Fixed layouts so the test knows which squares hold ships.
+  const fleetA = [
+    { cells: [5, 6, 7, 8, 9] },
+    { cells: [15, 16, 17, 18] },
+    { cells: [25, 26, 27] },
+    { cells: [35, 36, 37] },
+    { cells: [45, 46] },
+  ];
+  const fleetB = [
+    { cells: [0, 1, 2, 3, 4] },
+    { cells: [10, 11, 12, 13] },
+    { cells: [20, 21, 22] },
+    { cells: [30, 31, 32] },
+    { cells: [40, 41] },
+  ];
+
+  const { res, body } = await createRoom('dev:lena', 'battleship');
+  check(res.status === 201, 'battleship room is created', { status: res.status, body });
+  check(body.game === 'battleship', 'create echoes the game', body.game);
+  const code = body.code;
+
+  const alpha = await Client.open('battleship', code, 'dev:lena');
+  check(alpha.seat === 0, 'first player takes seat 0', alpha.seat);
+  check(alpha.room.state.phase === 'place', 'rooms open in placement', alpha.room.state.phase);
+  check(alpha.room.seats[0].color === 'a' && alpha.room.seats[1].color === 'b', 'seats carry their colours', alpha.room.seats);
+
+  const bravo = await Client.open('battleship', code, 'dev:mark');
+  check(bravo.seat === 1, 'second player takes seat 1', bravo.seat);
+
+  alpha.client.send({ type: 'move', fleet: fleetA });
+  const placedA = await bravo.client.next((m) => m.type === 'state' && m.room.plies === 1);
+  check(placedA.room.state.fleets[0].length === 0, 'seat b cannot see seat a\'s fleet', placedA.room.state.fleets[0].length);
+  check(placedA.last.from === -1 && placedA.last.to === -1, 'the placement echo carries no square', placedA.last);
+
+  const ownA = await alpha.client.next((m) => m.type === 'state' && m.room.plies === 1);
+  check(ownA.room.state.fleets[0].length === SHIPS.length, 'seat a keeps its own fleet', ownA.room.state.fleets[0].length);
+
+  alpha.client.send({ type: 'move', ready: true });
+  const readyA = await alpha.client.next((m) => m.type === 'state' && m.room.state.ready[0] === true);
+  check(readyA.room.state.phase === 'place', 'one ready fleet keeps the room in placement', readyA.room.state.phase);
+
+  // Plies so far: 1 = a's fleet, 2 = a's ready, 3 = b's fleet, 4 = b's ready.
+  bravo.client.send({ type: 'move', fleet: fleetB });
+  await bravo.client.next((m) => m.type === 'state' && m.room.plies === 3);
+  bravo.client.send({ type: 'move', ready: true });
+
+  const battle = await alpha.client.next((m) => m.type === 'state' && m.room.state.phase === 'battle');
+  check(battle.room.state.phase === 'battle', 'both ready fleets start the battle', battle.room.state.phase);
+  check(battle.room.state.turn === 'a', 'seat a fires first', battle.room.state.turn);
+  check(battle.room.state.fleets[1].length === 0, 'seat a still cannot see the enemy fleet', battle.room.state.fleets[1].length);
+
+  alpha.client.send({ type: 'move', cell: 0 });
+  const shot = await bravo.client.next((m) => m.type === 'state' && m.last?.seat === 0 && m.last?.fired === true);
+  check(shot.last.fired === true && shot.last.hit === true, 'a hit is echoed', shot.last);
+  check(shot.room.state.shots[0].length === 1, 'the shot is recorded', shot.room.state.shots);
+  check(shot.room.state.turn === 'b', 'the turn passes to seat b', shot.room.state.turn);
+
+  alpha.client.send({ type: 'move', cell: 1 });
+  const wrongTurn = await alpha.client.next((m) => m.type === 'error');
+  check(wrongTurn.code === 'not-your-turn', 'firing out of turn is rejected', wrongTurn);
+
+  bravo.client.send({ type: 'move', cell: 99 });
+  const miss = await alpha.client.next((m) => m.type === 'state' && m.last?.seat === 1 && m.last?.fired === true);
+  check(miss.last.hit === false, 'a miss is echoed', miss.last);
+
+  bravo.client.send({ type: 'move', cell: 99 });
+  const repeat = await bravo.client.next((m) => m.type === 'error');
+  check(repeat.code === 'illegal-move' || repeat.code === 'not-your-turn', 'repeat shots are rejected', repeat);
+
+  const snapshot = await fetch(`${BASE}/rooms/battleship/${code}`, { headers: { Authorization: 'Bearer dev:lena' } });
+  const snapshotBody = await snapshot.json();
+  check(snapshot.status === 200 && snapshotBody.game === 'battleship', 'GET /rooms/battleship/:code works', snapshot.status);
+  check(
+    snapshotBody.state.fleets.every((fleet) => fleet.length === 0),
+    'the read-only snapshot hides both fleets',
+    snapshotBody.state.fleets,
+  );
+
+  const spectator = await Client.open('battleship', code, 'dev:nina');
+  check(spectator.seat === null, 'third player spectates', spectator.seat);
+  check(spectator.room.state.fleets.every((fleet) => fleet.length === 0), 'spectators see no fleet', spectator.room.state.fleets);
+  spectator.client.close();
+
+  alpha.client.close();
+  bravo.client.close();
+}
+
 try {
   console.log(`testing ${BASE}\n`);
   await chessRoom();
   await checkersRoom();
   await connect4Room();
+  await battleshipRoom();
 } catch (error) {
   check(false, error.message, error.stack);
 }

@@ -70,7 +70,7 @@ export default function Connect4Game() {
         setBusy(false)
         setSeat(assigned)
         setRoom(snapshot)
-        if (assigned === null) setNotice('This room is full — you are watching as a spectator.')
+        if (assigned === null) setNotice('This room is full. You are watching as a spectator.')
       },
       onSnapshot: (snapshot, echo) => {
         setRoom(snapshot)
@@ -141,12 +141,12 @@ export default function Connect4Game() {
     setLast(null)
   }
 
-  const side = board.turn === 'r' ? 'Red' : 'Yellow'
+  const side = board.turn === 'r' ? 'White' : 'Black'
   let label: string
   if (board.winner) {
-    label = `${board.winner === 'r' ? 'Red' : 'Yellow'} wins`
+    label = `${board.winner === 'r' ? 'White' : 'Black'} wins`
   } else if (board.draw) {
-    label = 'Draw — the board is full'
+    label = 'Draw · the board is full'
   } else if (online && room) {
     if (myColor === null) label = `${side} to move · spectating`
     else if (board.turn === myColor) label = 'Your move'
@@ -213,7 +213,7 @@ export default function Connect4Game() {
       {online && room ? (
         <div className="c4__room">
           <span className="c4__code">{room.code}</span>
-          <span>{myColor ? `You are ${myColor === 'r' ? 'Red' : 'Yellow'}` : 'Spectating'}</span>
+          <span>{myColor ? `You are ${myColor === 'r' ? 'White' : 'Black'}` : 'Spectating'}</span>
           <span>
             {opponent?.name ? `${opponent.name} · ${opponent.online ? 'online' : 'away'}` : 'Waiting for an opponent'}
           </span>
@@ -233,8 +233,11 @@ export default function Connect4Game() {
               <button
                 key={cell}
                 type="button"
-                className={`c4__cell${inLine ? ' is-win' : ''}${last && last.cell === cell ? ' is-last' : ''}`}
+                className={`c4__cell ${
+                  (Math.floor(cell / COLS) + (cell % COLS)) % 2 === 0 ? 'is-light' : 'is-dark'
+                }${inLine ? ' is-win' : ''}${last && last.cell === cell ? ' is-last' : ''}`}
                 aria-label={`Column ${(cell % COLS) + 1}, row ${ROWS - Math.floor(cell / COLS)}`}
+                style={{ gridRow: Math.floor(cell / COLS) + 1, gridColumn: (cell % COLS) + 1 }}
                 onClick={() => drop(cell % COLS)}
               />
             )

@@ -209,7 +209,12 @@ export default function WordleGame() {
             const letter = word[col] ?? ''
             const mark = guess ? guess.marks[col] : ''
             return (
-              <span key={`${row}-${col}`} className={`wordle__tile${mark ? ` is-${mark}` : ''}${letter ? ' is-filled' : ''}`}>
+              <span
+                key={`${row}-${col}`}
+                className={`wordle__tile ${(row + col) % 2 === 0 ? 'is-light' : 'is-dark'}${mark ? ` is-${mark}` : ''}${
+                  letter ? ' is-filled' : ''
+                }`}
+              >
                 {letter.toUpperCase()}
               </span>
             )
@@ -227,11 +232,13 @@ export default function WordleGame() {
                 Enter
               </button>
             )}
-            {row.split('').map((letter) => (
+            {row.split('').map((letter, keyIndex) => (
               <button
                 key={letter}
                 type="button"
-                className={`wordle__key${letters[letter] ? ` is-${letters[letter]}` : ''}`}
+                className={`wordle__key ${(index + keyIndex) % 2 === 0 ? 'is-light' : 'is-dark'}${
+                  letters[letter] ? ` is-${letters[letter]}` : ''
+                }`}
                 onClick={() => press(letter)}
               >
                 {letter.toUpperCase()}

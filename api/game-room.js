@@ -17,6 +17,18 @@ import {
   legalMoves as connect4Moves,
   statusOf as connect4Status,
 } from '../src/lib/playables/connect4.ts';
+import {
+  applyMove as battleshipApply,
+  canAct as battleshipCanAct,
+  canFire,
+  initialGame as battleshipInitial,
+  placeShip,
+  SHIPS,
+  statusOf as battleshipStatus,
+  sunkShips,
+  validateFleet,
+  view as battleshipView,
+} from '../src/lib/playables/battleship.ts';
 import { playerFromToken } from './lib/player.js';
 
 // One Durable Object per room code: the authoritative position, the two seats
@@ -30,7 +42,7 @@ const PROMOTIONS = ['q', 'r', 'b', 'n'];
 // Both games expose the same handful of operations, so the room code stays one
 // code path: the client sends from/to and the server re-derives the actual move
 // from its own engine, which is what makes captures and chains trustworthy.
-const GAMES = {
+export const GAMES = {
   chess: {
     colors: ['w', 'b'],
     initial: chessInitial,
@@ -96,6 +108,80 @@ const GAMES = {
     },
     echo: ({ move, to }) => ({ captured: null, col: move.col, cell: to }),
   },
+  battleship: {
+    colors: ['a', 'b'],
+    initial: battleshipInitial,
+    moves: () => [],
+    status: (state) => battleshipStatus(state),
+    over: (status) => status === 'won',
+    apply: (state, move) => battleshipApply(state, move),
+    turn: (state) => state.turn,
+    // Setup is not turn-based: both seats place at once until their fleet is set.
+    canAct: (state, color) => battleshipCanAct(state, color),
+    parse: (state, _moves, msg, seat) => {
+      if (state.phase === 'place') {
+        if (msg.clear === true) return { move: { kind: 'clear', seat }, from: 0, to: 0 };
+        if (msg.ready === true) {
+          if (state.fleets[seat].length !== SHIPS.length) {
+            return { error: 'fleet-incomplete', message: 'Place all five ships first' };
+          }
+          return { move: { kind: 'ready', seat }, from: 0, to: 0 };
+        }
+        if (Array.isArray(msg.fleet)) {
+          const fleet = validateFleet(msg.fleet);
+          if (!fleet) return { error: 'bad-fleet', message: 'That fleet cannot be placed' };
+          const cells = fleet.flatMap((ship) => ship.cells);
+          return {
+            move: { kind: 'fleet', seat, fleet },
+            from: Math.min(...cells),
+            to: Math.max(...cells),
+          };
+        }
+        const start = Number(msg.start);
+        const horizontal = msg.horizontal !== false;
+        const next = placeShip(state, seat, start, horizontal);
+        if (!next) return null;
+        const placed = next.fleets[seat][next.fleets[seat].length - 1];
+        return {
+          move: { kind: 'place', seat, start, horizontal },
+          from: start,
+          to: placed.cells[placed.cells.length - 1],
+        };
+      }
+      const cell = Number(msg.cell);
+      if (!canFire(state, seat, cell)) return null;
+      return { move: { kind: 'fire', seat, cell }, from: cell, to: cell };
+    },
+    echo: ({ state, move }) => {
+      if (move.kind === 'fire') {
+        const shots = state.shots[move.seat];
+        const shot = shots[shots.length - 1];
+        const target = state.fleets[move.seat === 0 ? 1 : 0];
+        const sunk =
+          shot && shot.hit
+            ? sunkShips(target, shots).find((ship) => ship.cells.includes(move.cell))
+            : null;
+        return {
+          from: move.cell,
+          to: move.cell,
+          fired: true,
+          hit: Boolean(shot && shot.hit),
+          sunk: sunk ? sunk.name : null,
+          winner: state.winner,
+        };
+      }
+      // Placements stay private: the echo carries no square or ship details.
+      return {
+        from: -1,
+        to: -1,
+        placed: move.kind === 'place' || move.kind === 'fleet',
+        ready: move.kind === 'ready',
+        cleared: move.kind === 'clear',
+      };
+    },
+    // Each seat only receives its own fleet; spectators receive neither.
+    view: (state, color) => battleshipView(state, color),
+  },
 };
 
 export class GameRoom {
@@ -143,14 +229,16 @@ export class GameRoom {
 
     const seat = this.#seatOf(ws);
     if (seat === null) return this.#error(ws, 'unauthenticated', 'Send a hello message first');
-    if (msg.type === 'resync') return this.#send(ws, { type: 'state', room: this.#snapshot(), seat });
+    if (msg.type === 'resync') {
+      return this.#send(ws, { type: 'state', room: this.#snapshot(this.#colorOf(ws)), seat });
+    }
     if (msg.type === 'move') return this.#move(ws, seat, msg);
 
     return this.#error(ws, 'bad-type', `Unknown message type: ${msg.type}`);
   }
 
   webSocketClose(ws) {
-    this.#broadcast({ type: 'state', room: this.#snapshot() }, ws);
+    this.#broadcastState(ws);
   }
 
   webSocketError(ws) {
@@ -220,11 +308,12 @@ export class GameRoom {
     if (!player) return this.#error(ws, 'unauthorized', 'Sign-in required');
 
     const seat = this.#assignSeat(player);
-    ws.serializeAttachment({ seat, uid: player.uid, name: player.name });
+    const color = seat === null ? null : GAMES[this.game].colors[seat] ?? null;
+    ws.serializeAttachment({ seat, color, uid: player.uid, name: player.name });
 
-    this.#send(ws, { type: 'welcome', seat, room: this.#snapshot() });
+    this.#send(ws, { type: 'welcome', seat, room: this.#snapshot(color) });
     // The newcomer already has the room from its welcome, so only tell the others.
-    this.#broadcast({ type: 'state', room: this.#snapshot() }, ws);
+    this.#broadcastState(ws);
   }
 
   #assignSeat(player) {
@@ -253,18 +342,22 @@ export class GameRoom {
     if (game.over(status)) {
       return this.#error(ws, 'game-over', `Game is over (${status})`);
     }
-    if (game.turn(this.state) !== game.colors[seat]) {
+    if (game.canAct) {
+      if (!game.canAct(this.state, game.colors[seat])) {
+        return this.#error(ws, 'not-your-turn', 'You cannot move right now');
+      }
+    } else if (game.turn(this.state) !== game.colors[seat]) {
       return this.#error(ws, 'not-your-turn', 'It is not your turn');
     }
 
     // Re-derive the move from the engine so the client cannot invent a capture,
-    // jumping chain, crowning or a drop into a full column.
-    const parsed = game.parse(this.state, moves, msg);
+    // jumping chain, crowning, a drop into a full column or a revealed fleet.
+    const parsed = game.parse(this.state, moves, msg, seat);
     if (!parsed) return this.#error(ws, 'illegal-move', 'That move is not legal');
-    if (parsed.error) return this.#error(ws, parsed.error, 'from/to must be 0-63');
+    if (parsed.error) return this.#error(ws, parsed.error, parsed.message || 'That move is not legal');
 
     const { move, from, to } = parsed;
-    const before = this.state.board[from];
+    const before = Array.isArray(this.state.board) ? this.state.board[from] : undefined;
 
     this.state = game.apply(this.state, move);
     this.ply += 1;
@@ -282,20 +375,16 @@ export class GameRoom {
       Date.now()
     );
 
-    this.#broadcast({
-      type: 'state',
-      room: this.#snapshot(),
-      last: {
-        from,
-        to,
-        seat,
-        ply: this.ply,
-        ...game.echo({ state: this.state, move, seat, to, before, colors: game.colors }),
-      },
+    this.#broadcastState(null, {
+      from,
+      to,
+      seat,
+      ply: this.ply,
+      ...game.echo({ state: this.state, move, seat, to, before, colors: game.colors }),
     });
   }
 
-  #snapshot() {
+  #snapshot(color = null) {
     if (!this.state) {
       return { code: this.code, game: this.game, state: null, status: 'playing', plies: 0, seats: [] };
     }
@@ -312,7 +401,8 @@ export class GameRoom {
     return {
       code: this.code,
       game: this.game,
-      state: this.state,
+      // Games with hidden information hand each socket its own view.
+      state: game.view ? game.view(this.state, color) : this.state,
       status: game.status(this.state, moves),
       plies: this.ply,
       seats: SEATS.map((seat) => ({
@@ -329,6 +419,11 @@ export class GameRoom {
     return SEATS.includes(seat) ? seat : null;
   }
 
+  #colorOf(ws) {
+    const color = ws.deserializeAttachment()?.color;
+    return GAMES[this.game].colors.includes(color) ? color : null;
+  }
+
   #send(ws, payload) {
     try {
       ws.send(JSON.stringify(payload));
@@ -339,13 +434,15 @@ export class GameRoom {
     this.#send(ws, { type: 'error', code, message });
   }
 
-  #broadcast(payload, skip) {
-    const text = JSON.stringify(payload);
+  /** Sends each socket its own snapshot: hidden-information games differ per seat. */
+  #broadcastState(skip, last) {
     for (const ws of this.ctx.getWebSockets()) {
       if (ws === skip) continue;
-      try {
-        ws.send(text);
-      } catch (_) {}
+      this.#send(ws, {
+        type: 'state',
+        room: this.#snapshot(this.#colorOf(ws)),
+        ...(last ? { last } : {}),
+      });
     }
   }
 

@@ -123,7 +123,7 @@ export default function MinesweeperGame() {
     status === 'won'
       ? `Cleared in ${seconds}s`
       : status === 'lost'
-        ? 'Boom — try again'
+        ? 'Boom · try again'
         : `${MINES - flags} mines left · ${seconds}s`
 
   return (
@@ -134,6 +134,7 @@ export default function MinesweeperGame() {
         {cells.map((cell, sq) => {
           const classes = [
             'mine__cell',
+            (Math.floor(sq / SIZE) + (sq % SIZE)) % 2 === 0 ? 'is-light' : 'is-dark',
             cell.open ? 'is-open' : '',
             cell.open && cell.mine ? 'is-mine' : '',
             cell.flag ? 'is-flag' : '',

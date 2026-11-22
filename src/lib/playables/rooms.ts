@@ -6,11 +6,11 @@ const API = (
   (import.meta.env.VITE_ROOMS_API as string | undefined) || 'https://api.plutoniumnet.work'
 ).replace(/\/+$/, '')
 
-export type RoomGame = 'chess' | 'checkers' | 'connect4'
+export type RoomGame = 'chess' | 'checkers' | 'connect4' | 'battleship'
 
 export type RoomSeat = {
   seat: number
-  /** 'w'/'b' for chess, 'r'/'b' for checkers. */
+  /** 'w'/'b' for chess, 'r'/'b' for checkers, 'a'/'b' for battleship. */
   color: string
   name: string | null
   online: boolean
@@ -37,6 +37,14 @@ export type MoveEcho = {
   /** Connect 4: the column played and the cell the disc landed on. */
   col?: number
   cell?: number
+  /** Battleship: a shot's result, or a private placement notice. */
+  fired?: boolean
+  hit?: boolean
+  sunk?: string | null
+  placed?: boolean
+  ready?: boolean
+  cleared?: boolean
+  winner?: number | null
 }
 
 export async function createRoom(idToken: string, game: RoomGame = 'chess'): Promise<string> {
@@ -66,7 +74,19 @@ export type RoomHandlers<S = ChessState> = {
   onClosed: () => void
 }
 
-export type RoomMove = { from?: number; to?: number; promotion?: string; col?: number }
+export type RoomMove = {
+  from?: number
+  to?: number
+  promotion?: string
+  col?: number
+  /** Battleship: setup moves and shots. */
+  start?: number
+  horizontal?: boolean
+  fleet?: unknown
+  ready?: boolean
+  clear?: boolean
+  cell?: number
+}
 
 export type RoomLink = {
   move: (payload: RoomMove) => void

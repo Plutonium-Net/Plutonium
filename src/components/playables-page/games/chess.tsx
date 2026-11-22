@@ -195,7 +195,7 @@ export default function ChessGame() {
         setBusy(false)
         setSeat(assigned)
         setRoom(snapshot)
-        if (assigned === null) setNotice('This room is full — you are watching as a spectator.')
+        if (assigned === null) setNotice('This room is full. You are watching as a spectator.')
       },
       onSnapshot: (snapshot, echo) => {
         setRoom(snapshot)
@@ -331,9 +331,9 @@ export default function ChessGame() {
   if (status === 'checkmate') {
     label = `${board.turn === 'w' ? 'Black' : 'White'} wins by checkmate`
   } else if (status === 'stalemate') {
-    label = 'Draw — stalemate'
+    label = 'Draw · stalemate'
   } else if (status === 'draw') {
-    label = `Draw — ${
+    label = `Draw · ${
       reason === 'fifty-move' ? 'fifty-move rule' : reason === 'threefold' ? 'threefold repetition' : 'insufficient material'
     }`
   } else if (online && room) {

@@ -8,7 +8,7 @@ import { checkRateLimit } from '../lib/ratelimit.js';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_LENGTH = 5;
 const CODE_RE = /^[A-HJ-NP-Z2-9]{5}$/;
-const GAMES = ['chess', 'checkers', 'connect4'];
+const GAMES = ['chess', 'checkers', 'connect4', 'battleship'];
 const MAX_ROOMS = 20;
 const WINDOW_SECS = 3600;
 const INTERNAL = 'https://room.internal';
