@@ -163,14 +163,14 @@ server:  V = scrypt(K, salt = id_bytes, N = 2^15, r = 8, p = 3, maxmem = 64 MiB,
 
 Enforced on the client for feedback and re-enforced on the server, which is where it counts.
 
-- 12–128 characters, counted as Unicode code points after normalization.
+- 3–128 characters, counted as Unicode code points after normalization.
 - Rejected: equal to or containing the id; a single repeated character; a monotonic run;
   any of the 1,000 most common passwords (bundled list, checked both sides).
 - No forced composition classes. They measurably produce worse keys.
 - NFKC-normalize once, then UTF-8 encode. Same rule as everywhere else in this document.
 - A strength hint while typing, plus a "share this password over a different channel than
   the id if you can" hint that is advice, not a rule.
-- Users will reuse passwords across transfers. The blocklist and the 12-character floor are
+- Users will reuse passwords across transfers. The blocklist and the 3-character floor are
   the only defenses, and §6.7 is written on that assumption.
 
 ### 6.5 Verification
@@ -226,22 +226,22 @@ protect against the server itself reading the stream in v1 (§17).
 
 ## 7. Components
 
-A separate tree deployed on its own: `drop-server/`. The web client stays in the shell
-under `src/`. Everything the server stores lives in process memory.
+A separate tree deployed on its own, in its own repository at `../ptransfer` (a sibling of
+this project). The web client stays in the shell under `src/`. Everything the server stores lives in process memory.
 
 | Unit | Job | Depends on |
 | --- | --- | --- |
-| `drop-server/src/http.js` | Routing, CORS, Origin allowlist, `/status`, `/healthz` | node:http |
-| `drop-server/src/auth.js` | Firebase ID token verification for upload, ported from `api/lib/token.js` | node:crypto |
-| `drop-server/src/sessions.js` | In-memory session registry, id issue, verifier, attempts, TTL, tokens | node:crypto |
-| `drop-server/src/queue.js` | The slot, the FIFO, positions, ETA | nothing |
-| `drop-server/src/room.js` | Seats, mutual confirm, frame pump, acks, resume, teardown | frames |
-| `drop-server/src/frames.js` | Binary header encode/decode, CRC32C | nothing |
-| `src/lib/drop/password.ts` | Policy, NFKC, PBKDF2 in a worker | WebCrypto |
-| `src/lib/drop/servers.ts` | Server list and `/status` probing | fetch |
-| `src/lib/drop/sender.ts` | Read by offset, chunk, window, retransmit | password |
-| `src/lib/drop/receiver.ts` | Sink selection, ordered write, ack, resume | password |
-| `src/lib/drop/sink.ts` | `showSaveFilePicker` vs OPFS behind one interface | nothing |
+| `ptransfer/src/http.js` | Routing, CORS, Origin allowlist, `/status`, `/healthz` | node:http |
+| `ptransfer/src/auth.js` | Firebase ID token verification for upload, ported from `api/lib/token.js` | node:crypto |
+| `ptransfer/src/sessions.js` | In-memory session registry, id issue, verifier, attempts, TTL, tokens | node:crypto |
+| `ptransfer/src/queue.js` | The slot, the FIFO, positions, ETA | nothing |
+| `ptransfer/src/room.js` | Seats, mutual confirm, frame pump, acks, resume, teardown | frames |
+| `ptransfer/src/frames.js` | Binary header encode/decode, CRC32C | nothing |
+| `src/lib/ptransfer/password.ts` | Policy, NFKC, PBKDF2 in a worker | WebCrypto |
+| `src/lib/ptransfer/servers.ts` | Server list and `/status` probing | fetch |
+| `src/lib/ptransfer/upload.ts` | Read by offset, chunk, window, retransmit | password |
+| `src/lib/ptransfer/download.ts` | Sink selection, ordered write, ack, resume | password |
+| `src/lib/ptransfer/sink.ts` | `showSaveFilePicker` vs OPFS behind one interface | nothing |
 | `src/apps/drop/*` | Upload and download screens, queue position, two bars | all of the above |
 
 `sessions.js` knows nothing about bytes. `queue.js` knows nothing about sockets.
@@ -543,7 +543,7 @@ that point:
 
 ## 18. Risks
 
-1. Password reuse is endemic. A 12-character floor and a blocklist are weak defenses; the
+1. Password reuse is endemic. A 3-character floor and a blocklist are weak defenses; the
    five-attempt kill and the uploader's confirmation are the real ones.
 2. An id is enumerable in principle at 30 bits. Attempt caps and per-IP throttles make
    enumeration useless in practice, not impossible in theory.

@@ -55,6 +55,18 @@ const ITEMS: AppItem[] = [
     ),
   },
   {
+    id: 'playables',
+    label: 'Playables',
+    words: ['PLAYABLES'],
+    href: 'pluto://playables',
+    icon: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="4.5" />
+        <path d="M8.5 8.5h.01M15.5 15.5h.01M15.5 8.5h.01M8.5 15.5h.01" />
+      </>
+    ),
+  },
+  {
     id: 'media',
     label: 'Movies, TV and anime',
     words: ['MOVIES, TV, ANIME'],
@@ -95,14 +107,15 @@ const ITEMS: AppItem[] = [
     ),
   },
   {
-    id: 'playables',
-    label: 'Playables',
-    words: ['PLAYABLES'],
-    href: 'pluto://playables',
+    id: 'ptransfer',
+    label: 'pTransfer',
+    words: ['PTRANSFER'],
+    href: 'pluto://ptransfer',
     icon: (
       <>
-        <rect x="3" y="3" width="18" height="18" rx="4.5" />
-        <path d="M8.5 8.5h.01M15.5 15.5h.01M15.5 8.5h.01M8.5 15.5h.01" />
+        <path d="M17 3v18" />
+        <path d="m13 17 4 4 4-4" />
+        <path d="M7 21V3m-4 4 4-4 4 4" />
       </>
     ),
   },

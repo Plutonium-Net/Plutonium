@@ -5,6 +5,9 @@ const SEARCH_URL = 'https://www.duckduckgo.com/search?q='
 export function normalizeInput(raw: string): NormalizedInput | null {
   const input = raw.trim()
   if (!input) return null
+  // A shell page is not a web address. Never hand one to the proxy or the
+  // search engine, even when the page does not exist.
+  if (/^pluto:/i.test(input)) return null
 
   if (/^https?:\/\//i.test(input)) return { url: input, type: 'web' }
   if (/^about:/i.test(input)) return { url: input, type: 'web' }

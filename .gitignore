@@ -5,6 +5,10 @@ dist-download/
 dist-download-page/
 dist-cdn/
 
+# Local Drop server and dev-server logs
+.drop-server.log
+.dev-server-5180.log
+
 # Local wrangler dev state (Durable Object / KV data)
 api/.wrangler/
 

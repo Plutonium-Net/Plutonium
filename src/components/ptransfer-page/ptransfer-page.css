@@ -1,0 +1,655 @@
+@font-face {
+  font-family: 'Plutonium';
+  src: url('../../assets/fonts/plutonium.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.ptransfer-page {
+  position: relative;
+  z-index: 8;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 8px;
+  overflow: hidden;
+}
+
+.ptransfer-page .ptransfer-page__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 64px;
+  scrollbar-width: thin;
+}
+
+.ptransfer-page .ptransfer-page__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 10px;
+}
+
+.ptransfer-page .ptransfer-page__title {
+  margin: 0;
+  font-family: 'Plutonium', sans-serif;
+  font-size: clamp(44px, 7.4vw, 92px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.86);
+  text-align: center;
+  user-select: none;
+  animation: ptransfer-title-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes ptransfer-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.ptransfer-page .ptransfer-page__tabs-shell {
+  height: 34px;
+  width: 100%;
+}
+
+.ptransfer-page .ptransfer-page__tabs-glass {
+  width: 100%;
+  height: 100%;
+}
+
+.ptransfer-page .ptransfer-page__tabs-glass .glass-surface__content {
+  padding: 3px;
+}
+
+.ptransfer-page .ptransfer-page__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+  width: 100%;
+}
+
+.ptransfer-page .ptransfer-page__tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  height: 100%;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: inherit;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.ptransfer-page .ptransfer-page__tab:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ptransfer-page .ptransfer-page__tab.is-active {
+  color: #ffffff;
+}
+
+.ptransfer-page .ptransfer-page__meta {
+  /* The display face has long descenders that line-height 0.95 clips. */
+  margin: 10px 0 0;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+  text-align: center;
+}
+
+.ptransfer-page .ptransfer-page__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(560px, 92vw);
+  margin: 0 auto;
+  padding-top: 6px;
+}
+
+/* The panel is a real glass surface; its content slot carries the layout. */
+.ptransfer-page .ptransfer-page__panel {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  animation: ptransfer-panel-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ptransfer-page .ptransfer-page__panel .glass-surface__content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 16px;
+  padding: 22px;
+}
+
+@keyframes ptransfer-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ptransfer-page .ptransfer-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ptransfer-page .ptransfer-page__label {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.ptransfer-page .ptransfer-page__hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.32);
+}
+
+/* Every control is clear: the glass behind it is its own GlassSurface. */
+.ptransfer-page .ptransfer-page__input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.ptransfer-page .ptransfer-page__server {
+  position: relative;
+}
+
+.ptransfer-page .ptransfer-page__server-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ptransfer-page .ptransfer-page__server-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ptransfer-page .ptransfer-page__server-state {
+  flex: 0 0 auto;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.ptransfer-page .ptransfer-page__server-state.is-online {
+  color: #9ef0b4;
+}
+
+.ptransfer-page .ptransfer-page__server-btn svg {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.42);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Portalled out of the panel, so these are not scoped to .ptransfer-page. */
+.ptransfer-menu {
+  position: fixed;
+  z-index: 90;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Opaque behind the glass: a menu floating over the form has to stay
+     readable even where the refraction cannot blur anything. */
+  background: rgba(9, 9, 13, 0.92);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.6);
+  animation: ptransfer-menu-in 0.14s ease both;
+}
+
+@keyframes ptransfer-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ptransfer-menu .ptransfer-menu__glass {
+  width: 100%;
+  border-radius: inherit;
+}
+
+.ptransfer-menu .ptransfer-menu__glass .glass-surface__content {
+  padding: 4px;
+  height: auto;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.ptransfer-menu .ptransfer-menu__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.ptransfer-menu .ptransfer-menu__option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 10px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: rgba(255, 255, 255, 0.86);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.14s ease;
+}
+
+.ptransfer-menu .ptransfer-menu__option:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.ptransfer-menu .ptransfer-menu__option.is-active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ptransfer-menu .ptransfer-menu__name {
+  font-size: 12px;
+}
+
+.ptransfer-menu .ptransfer-menu__state {
+  grid-column: 2;
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.34);
+  align-self: center;
+}
+
+.ptransfer-menu .ptransfer-menu__state.is-online {
+  color: #9ef0b4;
+}
+
+.ptransfer-menu .ptransfer-menu__host {
+  grid-column: 1 / -1;
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ptransfer-page .ptransfer-page__input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.ptransfer-page .ptransfer-page__input.is-code {
+  height: 62px;
+  text-align: center;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 28px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding-left: calc(14px + 0.1em);
+}
+
+.ptransfer-page .ptransfer-page__file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+  backdrop-filter: blur(10px) saturate(1.15);
+}
+
+.ptransfer-page .ptransfer-page__file-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ptransfer-page .ptransfer-page__file-name {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.88);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ptransfer-page .ptransfer-page__file-size {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.ptransfer-page .ptransfer-page__picker {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.ptransfer-page .ptransfer-page__picker:hover {
+  color: #fff;
+}
+
+.ptransfer-page .ptransfer-page__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ptransfer-page .ptransfer-page__primary,
+.ptransfer-page .ptransfer-page__ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.ptransfer-page .ptransfer-page__primary {
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+}
+
+.ptransfer-page .ptransfer-page__primary:disabled {
+  color: rgba(255, 255, 255, 0.45);
+  text-shadow: none;
+  cursor: not-allowed;
+}
+
+.ptransfer-page .ptransfer-page__ghost {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.ptransfer-page .ptransfer-page__ghost:hover:not(:disabled) {
+  color: #fff;
+}
+
+.ptransfer-page .ptransfer-page__ghost:disabled {
+  color: rgba(255, 255, 255, 0.32);
+  cursor: not-allowed;
+}
+
+/* Glass on glass: a surface of its own behind each control. */
+.ptransfer-glass {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+}
+
+.ptransfer-glass.is-pill {
+  display: inline-flex;
+  width: auto;
+  border-radius: 999px;
+}
+
+.ptransfer-glass .ptransfer-glass__surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.ptransfer-glass .glass-surface__content {
+  padding: 0;
+  height: auto;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.ptransfer-glass .ptransfer-glass__slot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+}
+
+.ptransfer-glass.is-pill .ptransfer-glass__slot {
+  width: auto;
+}
+
+.ptransfer-glass.is-dim {
+  opacity: 0.45;
+}
+
+.ptransfer-glass:focus-within {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+}
+
+.ptransfer-glass.is-bright:focus-within {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+}
+
+.ptransfer-page .ptransfer-page__ticket {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 14px 14px;
+  margin: 0 -4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
+  text-align: center;
+}
+
+.ptransfer-page .ptransfer-page__code {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(34px, 5vw, 50px);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.9);
+  padding-left: 0.14em;
+  text-shadow: 0 1px 12px rgba(255, 255, 255, 0.16);
+  user-select: all;
+}
+
+.ptransfer-page .ptransfer-page__ticket-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ptransfer-page .ptransfer-page__chip {
+  padding: 5px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+  backdrop-filter: blur(10px) saturate(1.15);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ptransfer-page .ptransfer-page__ask {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+  text-align: center;
+}
+
+.ptransfer-page .ptransfer-page__ask-title {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ptransfer-page .ptransfer-page__ask-copy {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.42);
+  max-width: 34ch;
+}
+
+.ptransfer-page .ptransfer-page__status {
+  margin: 0;
+  font-size: 11.5px;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+}
+
+.ptransfer-page .ptransfer-page__status.is-error {
+  color: #ff9db4;
+}
+
+.ptransfer-page .ptransfer-page__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ptransfer-page .ptransfer-page__bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ptransfer-page .ptransfer-page__bar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.ptransfer-page .ptransfer-page__bar {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.ptransfer-page .ptransfer-page__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.45);
+  transition: width 0.18s ease;
+}
+
+.ptransfer-page .ptransfer-page__bar-fill.is-sent {
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: none;
+}
+
+.ptransfer-page .ptransfer-page__note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .ptransfer-page .ptransfer-page__panel .glass-surface__content {
+    padding: 18px;
+  }
+
+  .ptransfer-page .ptransfer-page__body {
+    width: 94vw;
+  }
+}

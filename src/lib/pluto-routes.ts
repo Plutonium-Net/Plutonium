@@ -6,6 +6,7 @@ const PLUTO_PAGES: Record<string, string> = {
   vms: 'VMs',
   media: 'Media',
   'cloud-gaming': 'Cloud Gaming',
+  ptransfer: 'pTransfer',
 }
 
 export type PlutoRoute = {
@@ -22,7 +23,7 @@ export function resolveUrl(input: string): PlutoRoute | null {
   if (!match) return null
 
   const id = match[1].replace(/\/+$/, '').toLowerCase()
-  const title = PLUTO_PAGES[id]
+  const title = !id ? null : (PLUTO_PAGES[id] ?? id.charAt(0).toUpperCase() + id.slice(1))
   if (!title) return null
 
   const query = (raw.match(/\?([^#]*)/) || [, ''])[1] || ''

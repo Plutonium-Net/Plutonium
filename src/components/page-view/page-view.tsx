@@ -1,6 +1,7 @@
 import AiPage from '@/components/ai-page/ai-page'
 import AppsPage from '@/components/apps-page/apps-page'
 import CloudGamingPage from '@/components/cloud-gaming-page/cloud-gaming-page'
+import PTransferPage from '@/components/ptransfer-page/ptransfer-page'
 import GamesPage from '@/components/games-page/games-page'
 import MediaPage from '@/components/media-page/media-page'
 import PlayablesPage from '@/components/playables-page/playables-page'
@@ -35,6 +36,10 @@ export default function PageView({ page }: { page: PlutoRoute }) {
 
   if (page.id === 'ai') {
     return <AiPage />
+  }
+
+  if (page.id === 'ptransfer') {
+    return <PTransferPage />
   }
 
   return (
