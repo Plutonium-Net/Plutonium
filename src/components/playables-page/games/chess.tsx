@@ -62,13 +62,17 @@ type LastMove = { from: number; to: number; ply: number; captured: number | null
 
 type Slide = { x: number; y: number }
 
-function Burst({ square }: { square: number }) {
+// Overlays are positioned by percentage, so they have to be placed in display
+// space rather than board space once the board is turned around for Black.
+function squareOffset(square: number, flipped: boolean) {
+  const file = flipped ? 7 - fileOf(square) : fileOf(square)
+  const rank = flipped ? 7 - rankOf(square) : rankOf(square)
+  return { left: `${file * 12.5}%`, top: `${rank * 12.5}%` }
+}
+
+function Burst({ square, flipped }: { square: number; flipped: boolean }) {
   return (
-    <span
-      className="chess__burst"
-      style={{ left: `${fileOf(square) * 12.5}%`, top: `${rankOf(square) * 12.5}%` }}
-      aria-hidden="true"
-    >
+    <span className="chess__burst" style={squareOffset(square, flipped)} aria-hidden="true">
       <span className="chess__flash" />
       {SPARKS.map((angle) => (
         <span
@@ -81,13 +85,9 @@ function Burst({ square }: { square: number }) {
   )
 }
 /** Gold burst for a pawn that made it to the far rank. */
-function Crown({ square }: { square: number }) {
+function Crown({ square, flipped }: { square: number; flipped: boolean }) {
   return (
-    <span
-      className="chess__crown"
-      style={{ left: `${fileOf(square) * 12.5}%`, top: `${rankOf(square) * 12.5}%` }}
-      aria-hidden="true"
-    >
+    <span className="chess__crown" style={squareOffset(square, flipped)} aria-hidden="true">
       {SPARKS.map((angle) => (
         <span key={angle} className="chess__ray" style={{ '--angle': `${angle}deg` } as CSSProperties} />
       ))}
@@ -134,6 +134,11 @@ export default function ChessGame() {
   const myColor: Color | null = seat === 0 ? 'w' : seat === 1 ? 'b' : null
   const myTurn = !online || (myColor !== null && board.turn === myColor)
 
+  // Online Black plays from the near side, so the board is turned 180°: squares
+  // render in reverse order, the rank and file rails read the other way, and
+  // slides travel in the opposite direction. Spectators keep White at the bottom.
+  const flipped = online && myColor === 'b'
+
   const targets = useMemo(
     () => (selected === null ? [] : moves.filter((move) => move.from === selected)),
     [moves, selected],
@@ -144,9 +149,10 @@ export default function ChessGame() {
     const offsets = new Map<number, Slide>()
     if (!last) return offsets
 
+    const dir = flipped ? -1 : 1
     offsets.set(last.to, {
-      x: fileOf(last.from) - fileOf(last.to),
-      y: rankOf(last.from) - rankOf(last.to),
+      x: (fileOf(last.from) - fileOf(last.to)) * dir,
+      y: (rankOf(last.from) - rankOf(last.to)) * dir,
     })
 
     // Castling moves two pieces; the rook slides as well.
@@ -155,11 +161,11 @@ export default function ChessGame() {
       const kingSide = fileOf(last.to) > fileOf(last.from)
       const rookTo = kingSide ? last.to - 1 : last.to + 1
       const rookFrom = kingSide ? last.from + 3 : last.from - 4
-      offsets.set(rookTo, { x: fileOf(rookFrom) - fileOf(rookTo), y: 0 })
+      offsets.set(rookTo, { x: (fileOf(rookFrom) - fileOf(rookTo)) * dir, y: 0 })
     }
 
     return offsets
-  }, [last, board])
+  }, [last, board, flipped])
 
   const checking = inCheck(board)
   const kingSquare = checking
@@ -416,13 +422,14 @@ export default function ChessGame() {
 
       <div className="chess__frame">
         <div className="chess__ranks" aria-hidden="true">
-          {RANKS.map((rank) => (
+          {(flipped ? [...RANKS].reverse() : RANKS).map((rank) => (
             <span key={rank}>{rank}</span>
           ))}
         </div>
 
         <div className={`chess__board${finished ? ' is-finished' : ''}`} role="grid" aria-label="Chess board">
-        {Array.from({ length: 64 }, (_, sq) => {
+        {Array.from({ length: 64 }, (_, index) => {
+          const sq = flipped ? 63 - index : index
           const rank = rankOf(sq)
           const file = fileOf(sq)
           const piece = board.board[sq]
@@ -475,12 +482,16 @@ export default function ChessGame() {
             </button>
           )
         })}
-          {last && last.captured !== null && <Burst key={last.ply} square={last.captured} />}
-          {last && last.promotion !== null && <Crown key={`crown-${last.ply}`} square={last.to} />}
+          {last && last.captured !== null && (
+            <Burst key={last.ply} square={last.captured} flipped={flipped} />
+          )}
+          {last && last.promotion !== null && (
+            <Crown key={`crown-${last.ply}`} square={last.to} flipped={flipped} />
+          )}
         </div>
 
         <div className="chess__files" aria-hidden="true">
-          {FILES.map((file) => (
+          {(flipped ? [...FILES].reverse() : FILES).map((file) => (
             <span key={file}>{file}</span>
           ))}
         </div>

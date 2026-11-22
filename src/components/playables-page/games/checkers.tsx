@@ -80,13 +80,17 @@ function Piece({
   )
 }
 
-function Burst({ square }: { square: number }) {
+// Overlays are positioned by percentage, so they have to be placed in display
+// space rather than board space once the board is turned around for Black.
+function squareOffset(square: number, flipped: boolean) {
+  const col = flipped ? 7 - colOf(square) : colOf(square)
+  const row = flipped ? 7 - rowOf(square) : rowOf(square)
+  return { left: `${col * 12.5}%`, top: `${row * 12.5}%` }
+}
+
+function Burst({ square, flipped }: { square: number; flipped: boolean }) {
   return (
-    <span
-      className="checkers__burst"
-      style={{ left: `${colOf(square) * 12.5}%`, top: `${rowOf(square) * 12.5}%` }}
-      aria-hidden="true"
-    >
+    <span className="checkers__burst" style={squareOffset(square, flipped)} aria-hidden="true">
       <span className="checkers__flash" />
       {SPARKS.map((angle) => (
         <span key={angle} className="checkers__spark" style={{ '--angle': `${angle}deg` } as CSSProperties} />
@@ -95,13 +99,9 @@ function Burst({ square }: { square: number }) {
   )
 }
 
-function Crown({ square }: { square: number }) {
+function Crown({ square, flipped }: { square: number; flipped: boolean }) {
   return (
-    <span
-      className="checkers__crown"
-      style={{ left: `${colOf(square) * 12.5}%`, top: `${rowOf(square) * 12.5}%` }}
-      aria-hidden="true"
-    >
+    <span className="checkers__crown" style={squareOffset(square, flipped)} aria-hidden="true">
       {SPARKS.map((angle) => (
         <span key={angle} className="checkers__ray" style={{ '--angle': `${angle}deg` } as CSSProperties} />
       ))}
@@ -141,6 +141,11 @@ export default function CheckersGame() {
   const myColor: CheckersColor | null = seat === 0 ? 'r' : seat === 1 ? 'b' : null
   const myTurn = !online || (myColor !== null && board.turn === myColor)
 
+  // Seat 1 is Black, who plays from the far side, so the board is turned 180°:
+  // squares render in reverse order and slides travel the opposite way.
+  // Spectators keep Red at the bottom.
+  const flipped = online && myColor === 'b'
+
   const targets = useMemo(
     () => (selected === null ? [] : moves.filter((move) => move.from === selected)),
     [moves, selected],
@@ -149,9 +154,13 @@ export default function CheckersGame() {
   const slides = useMemo(() => {
     const offsets = new Map<number, Slide>()
     if (!last) return offsets
-    offsets.set(last.to, { x: colOf(last.from) - colOf(last.to), y: rowOf(last.from) - rowOf(last.to) })
+    const dir = flipped ? -1 : 1
+    offsets.set(last.to, {
+      x: (colOf(last.from) - colOf(last.to)) * dir,
+      y: (rowOf(last.from) - rowOf(last.to)) * dir,
+    })
     return offsets
-  }, [last])
+  }, [last, flipped])
 
   const opponent = room ? room.seats.find((entry) => entry.seat !== seat) : undefined
 
@@ -372,7 +381,8 @@ export default function CheckersGame() {
       <p className={`ply-game__status${finished ? ' is-done' : ''}`}>{label}</p>
 
       <div className="checkers__board" role="grid" aria-label="Checkers board">
-        {Array.from({ length: 64 }, (_, sq) => {
+        {Array.from({ length: 64 }, (_, index) => {
+          const sq = flipped ? 63 - index : index
           const row = rowOf(sq)
           const col = colOf(sq)
           const playable = (row + col) % 2 === 1
@@ -415,8 +425,12 @@ export default function CheckersGame() {
             </button>
           )
         })}
-        {last && last.captured !== null && <Burst key={last.ply} square={last.captured} />}
-        {last && last.kinged && <Crown key={`crown-${last.ply}`} square={last.to} />}
+        {last && last.captured !== null && (
+          <Burst key={last.ply} square={last.captured} flipped={flipped} />
+        )}
+        {last && last.kinged && (
+          <Crown key={`crown-${last.ply}`} square={last.to} flipped={flipped} />
+        )}
       </div>
 
       {notice ? <p className="checkers__note">{notice}</p> : null}
