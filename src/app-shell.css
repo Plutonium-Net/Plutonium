@@ -28,6 +28,13 @@
   z-index: 2;
 }
 
+/* The blur ramp lives inside the tab-bar stacking context (z-index 10),
+   so the address bar needs its own layer above it. */
+.app-shell .address-bar {
+  position: relative;
+  z-index: 11;
+}
+
 .app-shell .app-shell__stage {
   position: relative;
   flex: 1 1 auto;
