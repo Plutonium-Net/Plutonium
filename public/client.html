@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Plutonium</title>
-    <meta name="theme-color" content="#e8175d" />
+    <meta name="theme-color" content="#000000" />
     <meta
       name="description"
       content="Plutonium Network: a full browser-style web platform with built-in browsing, games, streaming, VMs and the Stelena AI assistant."
@@ -28,7 +28,7 @@
       }
       body {
         margin: 0;
-        background: #08080a;
+        background: #000;
         color: #f4f4f5;
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
       }
@@ -45,7 +45,7 @@
         justify-content: center;
         gap: 18px;
         padding: 32px;
-        background: radial-gradient(circle at 50% 40%, #1a0a12 0%, #08080a 65%);
+        background: radial-gradient(circle at 50% 40%, #1a1a1a 0%, #000 65%);
         transition: opacity 320ms ease;
       }
       #plu-boot.plu-boot--done {
@@ -56,21 +56,18 @@
         font-size: 13px;
         letter-spacing: 0.42em;
         text-transform: uppercase;
-        color: #e8175d;
+        color: #ffffff;
       }
       .plu-spinner {
         width: 22px;
         height: 22px;
-        border: 2px solid #3f3f46;
-        border-top-color: #e8175d;
+        border: 2px solid #2f2f2f;
+        border-top-color: #ffffff;
         border-radius: 50%;
         animation: plu-spin 800ms linear infinite;
       }
       #plu-boot.plu-boot--error .plu-spinner {
         display: none;
-      }
-      #plu-boot.plu-boot--error .plu-boot__mark {
-        color: #f43f5e;
       }
       #plu-status,
       .plu-boot__detail {
