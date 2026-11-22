@@ -5,6 +5,7 @@ const PLUTO_PAGES: Record<string, string> = {
   ai: 'AI',
   vms: 'VMs',
   media: 'Media',
+  'cloud-gaming': 'Cloud Gaming',
 }
 
 export type PlutoRoute = {

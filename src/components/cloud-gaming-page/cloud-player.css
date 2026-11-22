@@ -1,0 +1,345 @@
+.cg-modal .cg-modal__play {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 16px;
+  padding: 10px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.cg-modal .cg-modal__play:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
+}
+
+.cg-modal .cg-modal__play svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+.cg-player {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: #050507;
+}
+
+.cg-player .cg-player__shell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050507;
+}
+
+.cg-player .cg-player__shell:fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+
+.cg-player .cg-player__video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.cg-player .cg-player__status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 45%, rgba(24, 24, 32, 0.9) 0%, rgba(5, 5, 7, 0.98) 72%);
+}
+
+.cg-player .cg-player__waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.cg-player .cg-player__spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.06));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  animation: cg-player-spin 0.9s linear infinite;
+}
+
+@keyframes cg-player-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cg-player .cg-player__phase {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.cg-player .cg-player__hint {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.cg-player .cg-player__card {
+  position: relative;
+  isolation: isolate;
+  width: min(460px, 92vw);
+  border-radius: 18px;
+}
+
+.cg-player .cg-player__card-glass {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cg-player .cg-player__card-inner {
+  position: relative;
+  z-index: 1;
+  padding: 26px 24px;
+  text-align: center;
+}
+
+.cg-player .cg-player__heading {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cg-player .cg-player__detail {
+  margin: 10px 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+  overflow-wrap: anywhere;
+}
+
+.cg-player .cg-player__buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.cg-player .cg-player__glass-button,
+.cg-player .cg-player__glass-icon {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+}
+
+.cg-player .cg-player__glass-button__glass,
+.cg-player .cg-player__glass-icon__glass {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: filter 0.16s ease;
+}
+
+.cg-player .cg-player__glass-button:hover .cg-player__glass-button__glass,
+.cg-player .cg-player__glass-button:focus-within .cg-player__glass-button__glass,
+.cg-player .cg-player__glass-icon:hover .cg-player__glass-icon__glass,
+.cg-player .cg-player__glass-icon:focus-within .cg-player__glass-icon__glass {
+  filter: brightness(1.18);
+}
+
+.cg-player .cg-player__button {
+  position: relative;
+  z-index: 1;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: rgba(255, 255, 255, 0.84);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.cg-player .cg-player__button:hover {
+  color: #fff;
+}
+
+.cg-player .cg-player__glass-button.is-primary .cg-player__button {
+  color: #fff;
+}
+
+.cg-player .cg-player__bar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  isolation: isolate;
+  border-radius: 14px;
+  opacity: 0.72;
+  transition: opacity 0.2s ease;
+}
+
+.cg-player .cg-player__bar-glass {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cg-player .cg-player__shell:hover .cg-player__bar,
+.cg-player .cg-player__bar:focus-within {
+  opacity: 1;
+}
+
+.cg-player .cg-player__bar-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 9px 10px 9px 14px;
+}
+
+.cg-player .cg-player__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cg-player .cg-player__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.cg-player .cg-player__dot.is-live {
+  background: #7ec986;
+  box-shadow: 0 0 10px rgba(126, 201, 134, 0.6);
+}
+
+.cg-player .cg-player__dot.is-waiting {
+  background: #d8c07a;
+}
+
+.cg-player .cg-player__dot.is-down {
+  background: #e2685f;
+}
+
+.cg-player .cg-player__tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cg-player .cg-player__icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.cg-player .cg-player__icon:hover {
+  color: #fff;
+}
+
+.cg-player .cg-player__icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cg-player .cg-player__end {
+  position: relative;
+  z-index: 1;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: rgba(255, 255, 255, 0.86);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.cg-player .cg-player__end:hover {
+  color: #fff;
+}
+
+.cg-player .cg-player__glass-button.is-end:hover .cg-player__glass-button__glass {
+  filter: brightness(1.2) saturate(1.3) sepia(0.25) hue-rotate(-24deg);
+}
+
+@media (max-width: 560px) {
+  .cg-player .cg-player__bar {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+  }
+
+  .cg-player .cg-player__bar-inner {
+    padding: 7px 8px 7px 11px;
+  }
+
+  .cg-player .cg-player__title {
+    font-size: 11.5px;
+  }
+
+  .cg-player .cg-player__end {
+    padding: 8px 10px;
+  }
+}

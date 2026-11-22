@@ -43,6 +43,18 @@ const ITEMS: AppItem[] = [
     ),
   },
   {
+    id: 'cloud-gaming',
+    label: 'Cloud gaming',
+    words: ['CLOUD GAMING'],
+    href: 'pluto://cloud-gaming',
+    icon: (
+      <>
+        <path d="M7 18a4.5 4.5 0 0 1-.45-8.97A6 6 0 0 1 18.2 9.4 3.8 3.8 0 0 1 17.5 18" />
+        <path d="M10.4 11.6 14.8 13.8 10.4 16z" />
+      </>
+    ),
+  },
+  {
     id: 'media',
     label: 'Movies, TV and anime',
     words: ['MOVIES, TV, ANIME'],

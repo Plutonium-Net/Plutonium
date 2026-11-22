@@ -20,6 +20,7 @@ const PLUTO_APPS = [
   { id: 'media', title: 'Media', sub: 'Movies, TV and anime' },
   { id: 'vms', title: 'VMs', sub: 'Remote virtual machines' },
   { id: 'apps', title: 'Apps', sub: 'Launch web apps through a server' },
+  { id: 'cloud-gaming', title: 'Cloud Gaming', sub: 'Stream games from the CGAPI regions' },
 ]
 
 const COMMANDS = [
