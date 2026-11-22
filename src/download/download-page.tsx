@@ -7,12 +7,14 @@ import { BEAM_PROPS } from '@/lib/beam'
 import CopyCheck from './copy-check'
 import './download-page.css'
 
+const CLIENT_SIZE = typeof __PLU_CLIENT_SIZE__ === 'string' ? __PLU_CLIENT_SIZE__ : ''
 const SIZE = typeof __PLU_SIZE__ === 'string' ? __PLU_SIZE__ : ''
 const SVG_SIZE = typeof __PLU_SVG_SIZE__ === 'string' ? __PLU_SVG_SIZE__ : ''
 const XHTML_SIZE = typeof __PLU_XHTML_SIZE__ === 'string' ? __PLU_XHTML_SIZE__ : ''
 
 const FILES = [
-  { file: 'plutonium.html', label: 'HTML', size: SIZE, primary: true },
+  { file: 'client.html', label: 'Client', size: CLIENT_SIZE, primary: true },
+  { file: 'plutonium.html', label: 'HTML', size: SIZE },
   { file: 'plutonium.svg', label: 'SVG', size: SVG_SIZE },
   { file: 'plutonium.xhtml', label: 'XHTML', size: XHTML_SIZE },
 ]
@@ -88,11 +90,12 @@ export default function DownloadPage() {
           ))}
 
           <p className="download-page__lede">
-            The shell, the game library, media, Stelena AI, the app catalog and the Compaxy browser, in
-            a single file. Keep it on disk and open it with a double-click.
+            The client is a few kilobytes: it loads the shell, the game library, media, Stelena AI, the
+            app catalog and the Compaxy browser from the CDN, so it always runs the latest build. The
+            HTML, SVG and XHTML files have all of it inlined — save one of those to run offline.
           </p>
 
-          <a className="download-page__ghost" href="./plutonium.html">
+          <a className="download-page__ghost" href="./client.html">
             Open in browser
           </a>
 

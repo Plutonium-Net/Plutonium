@@ -12,8 +12,9 @@ const SVG_COMMIT = /&lt;meta name=&quot;plutonium-commit&quot; content=&quot;([^
 const SVG_BUILT = /&lt;meta name=&quot;plutonium-built&quot; content=&quot;([^&"]+)&quot;/
 const IS_PLUTONIUM = /<title>\s*Plutonium/i
 const IS_THIS_PAGE = /<title>\s*Plutonium\s+single file/i
+const IS_CLIENT = /<meta\s+name=["']plutonium-cdn["']/i
 
-type Verdict = 'same' | 'behind' | 'newer' | 'unknown' | 'unstamped' | 'invalid' | 'page'
+type Verdict = 'same' | 'behind' | 'newer' | 'unknown' | 'unstamped' | 'invalid' | 'page' | 'client'
 
 type Result = {
   name: string
@@ -63,6 +64,7 @@ async function inspect(file: File): Promise<Result> {
 
   if (!commit) {
     if (IS_THIS_PAGE.test(head)) result.verdict = 'page'
+    else if (IS_CLIENT.test(head)) result.verdict = 'client'
     else result.verdict = IS_PLUTONIUM.test(head) ? 'unstamped' : 'invalid'
     return result
   }
@@ -96,7 +98,9 @@ function verdictText(result: Result) {
     case 'invalid':
       return "That doesn't look like a Plutonium single file."
     case 'page':
-      return 'That is the download page itself. Choose the plutonium.html file you saved.'
+      return 'That is the download page itself. Choose the client or the plutonium.html file you saved.'
+    case 'client':
+      return 'That is the client: it carries no build of its own and always loads the latest one.'
     default:
       return `Not in this build's history: another branch, or older than the last ${DEPTH} builds.`
   }

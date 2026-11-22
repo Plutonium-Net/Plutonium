@@ -7,6 +7,10 @@ Plutonium ships two ways from one build.
 | `plutonium.html` / `.svg` / `.xhtml` (`dist-download`) | `npm run build:pages download` | re-download the file; fully offline |
 | The client at `/client.html` (`public/client.html`) | `npm run publish:single` | loads the latest published build from jsDelivr |
 
+The download page (`dist-download`, served at `lite.plutoniumnet.work`) offers the client
+first and the inlined HTML/SVG/XHTML as the offline option; `npm run build:pages download`
+copies `public/client.html` into `dist-download/client.html` for that.
+
 `public/client.html` is stable: it reads `owner/repo@branch` from its
 `plutonium-cdn` meta tag (default `Plutonium-Net/SingleFile-SRC@main`), fetches
 `payload.json`, then loads `app.css` and `app.js` from

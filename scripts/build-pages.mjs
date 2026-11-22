@@ -28,10 +28,17 @@ if (target === 'site') {
 async function download() {
   await build({ root: ROOT, configFile: join(ROOT, 'vite.config.single.js') })
   const html = readFileSync(join(SINGLE_DIR, 'index.html'), 'utf8')
+  const client = readFileSync(join(ROOT, 'public/client.html'), 'utf8')
   const svg = toSvg(html)
   const xhtml = toXhtml(html)
 
-  const sizes = { html: formatSize(html), svg: formatSize(svg), xhtml: formatSize(xhtml) }
+  const sizes = {
+    client: formatSize(client),
+    html: formatSize(html),
+    svg: formatSize(svg),
+    xhtml: formatSize(xhtml),
+  }
+  process.env.PLU_CLIENT_SIZE = sizes.client
   process.env.PLU_SIZE = sizes.html
   process.env.PLU_SVG_SIZE = sizes.svg
   process.env.PLU_XHTML_SIZE = sizes.xhtml
@@ -49,7 +56,9 @@ function git(args, fallback = '') {
 }
 
 function formatSize(contents) {
-  return `${(Buffer.byteLength(contents, 'utf8') / 1048576).toFixed(1)} MB`
+  const bytes = Buffer.byteLength(contents, 'utf8')
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1048576).toFixed(1)} MB`
 }
 
 function escapeForAttribute(html) {
@@ -102,8 +111,9 @@ function assemble(html, svg, xhtml, sizes) {
   for (const [name, contents] of Object.entries(files)) writeFileSync(join(DOWNLOAD_DIR, name), contents)
 
   copyFileSync(join(ROOT, 'public/icon-white.png'), join(DOWNLOAD_DIR, 'icon-white.png'))
+  copyFileSync(join(ROOT, 'public/client.html'), join(DOWNLOAD_DIR, 'client.html'))
 
-  const headers = ['/index.html', ...Object.keys(files).map((name) => `/${name}`)]
+  const headers = ['/index.html', '/client.html', ...Object.keys(files).map((name) => `/${name}`)]
   writeFileSync(
     join(DOWNLOAD_DIR, '_headers'),
     headers.map((path) => `${path}\n  Cache-Control: no-cache`).join('\n\n') + '\n',
@@ -111,6 +121,6 @@ function assemble(html, svg, xhtml, sizes) {
 
   const sha = process.env.CF_PAGES_COMMIT_SHA || git(['rev-parse', 'HEAD'], 'unknown')
   console.log(
-    `[pages] download page ready: dist-download (commit ${sha.slice(0, 7)}, html ${sizes.html}, svg ${sizes.svg}, xhtml ${sizes.xhtml})`,
+    `[pages] download page ready: dist-download (commit ${sha.slice(0, 7)}, client ${sizes.client}, html ${sizes.html}, svg ${sizes.svg}, xhtml ${sizes.xhtml})`,
   )
 }
