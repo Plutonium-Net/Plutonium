@@ -14,7 +14,6 @@ export default defineConfig({
   define: {
     __PLU_COMMIT__: JSON.stringify(commitSha()),
     __PLU_HISTORY__: JSON.stringify(history()),
-    __PLU_CLIENT_SIZE__: JSON.stringify(process.env.PLU_CLIENT_SIZE || ''),
     __PLU_SIZE__: JSON.stringify(process.env.PLU_SIZE || ''),
     __PLU_SVG_SIZE__: JSON.stringify(process.env.PLU_SVG_SIZE || ''),
     __PLU_XHTML_SIZE__: JSON.stringify(process.env.PLU_XHTML_SIZE || ''),

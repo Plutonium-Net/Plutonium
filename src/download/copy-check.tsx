@@ -98,9 +98,9 @@ function verdictText(result: Result) {
     case 'invalid':
       return "That doesn't look like a Plutonium single file."
     case 'page':
-      return 'That is the download page itself. Choose the client or the plutonium.html file you saved.'
+      return 'That is the download page itself. Choose the plutonium.html file you saved.'
     case 'client':
-      return 'That is the client: it carries no build of its own and always loads the latest one.'
+      return 'That is the lite client: it carries no build of its own and always loads the latest one.'
     default:
       return `Not in this build's history: another branch, or older than the last ${DEPTH} builds.`
   }

@@ -4,12 +4,14 @@ Plutonium ships two ways from one build.
 
 | Artifact | Built by | Updates |
 | --- | --- | --- |
-| `plutonium.html` / `.svg` / `.xhtml` (`dist-download`) | `npm run build:pages download` | re-download the file; fully offline |
+| `plutonium.html` / `.svg` / `.xhtml` (`dist-download`) | `npm run build:pages download` | thin wrappers around the client; always the latest build |
 | The client at `/client.html` (`public/client.html`) | `npm run publish:single` | loads the latest published build from jsDelivr |
 
-The download page (`dist-download`, served at `lite.plutoniumnet.work`) offers the client
-first and the inlined HTML/SVG/XHTML as the offline option; `npm run build:pages download`
-copies `public/client.html` into `dist-download/client.html` for that.
+The lite downloads (`dist-download`, served at `lite.plutoniumnet.work`) are wrappers, not
+builds: `plutonium.html` is `public/client.html` verbatim, `.svg` and `.xhtml` carry it in an
+iframe. All three are a few KB and load the published build from jsDelivr, so they never go
+stale — and they need a network connection. `npm run build:single` still produces the fully
+self-contained 13 MB `dist-single/index.html` when an offline copy is wanted.
 
 `public/client.html` is stable: it reads `owner/repo@branch` from its
 `plutonium-cdn` meta tag (default `Plutonium-Net/SingleFile-SRC@main`), fetches

@@ -7,7 +7,6 @@ import { fileURLToPath, URL } from 'node:url'
 import { build } from 'vite'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
-const SINGLE_DIR = join(ROOT, 'dist-single')
 const PAGE_DIR = join(ROOT, 'dist-download-page')
 const DOWNLOAD_DIR = join(ROOT, 'dist-download')
 
@@ -25,20 +24,16 @@ if (target === 'site') {
   await download()
 }
 
+// The lite artifacts are wrappers: plutonium.html is the client itself and the
+// SVG/XHTML variants carry it in an iframe, so all three load the published
+// build from jsDelivr instead of inlining it. `npm run build:single` still
+// produces the fully self-contained HTML when one is needed.
 async function download() {
-  await build({ root: ROOT, configFile: join(ROOT, 'vite.config.single.js') })
-  const html = readFileSync(join(SINGLE_DIR, 'index.html'), 'utf8')
-  const client = readFileSync(join(ROOT, 'public/client.html'), 'utf8')
+  const html = readFileSync(join(ROOT, 'public/client.html'), 'utf8')
   const svg = toSvg(html)
   const xhtml = toXhtml(html)
 
-  const sizes = {
-    client: formatSize(client),
-    html: formatSize(html),
-    svg: formatSize(svg),
-    xhtml: formatSize(xhtml),
-  }
-  process.env.PLU_CLIENT_SIZE = sizes.client
+  const sizes = { html: formatSize(html), svg: formatSize(svg), xhtml: formatSize(xhtml) }
   process.env.PLU_SIZE = sizes.html
   process.env.PLU_SVG_SIZE = sizes.svg
   process.env.PLU_XHTML_SIZE = sizes.xhtml
@@ -79,7 +74,7 @@ function toSvg(html) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
   <title>Plutonium</title>
-  <desc>The whole app in one file that happens to be an SVG: the page rides in an iframe's srcdoc.</desc>
+  <desc>The lite client in a file that happens to be an SVG: the page rides in an iframe's srcdoc and loads the latest build from jsDelivr.</desc>
   <foreignObject x="0" y="0" width="100%" height="100%">
     ${frame(escapeForAttribute(html))}
   </foreignObject>
@@ -111,9 +106,8 @@ function assemble(html, svg, xhtml, sizes) {
   for (const [name, contents] of Object.entries(files)) writeFileSync(join(DOWNLOAD_DIR, name), contents)
 
   copyFileSync(join(ROOT, 'public/icon-white.png'), join(DOWNLOAD_DIR, 'icon-white.png'))
-  copyFileSync(join(ROOT, 'public/client.html'), join(DOWNLOAD_DIR, 'client.html'))
 
-  const headers = ['/index.html', '/client.html', ...Object.keys(files).map((name) => `/${name}`)]
+  const headers = ['/index.html', ...Object.keys(files).map((name) => `/${name}`)]
   writeFileSync(
     join(DOWNLOAD_DIR, '_headers'),
     headers.map((path) => `${path}\n  Cache-Control: no-cache`).join('\n\n') + '\n',
@@ -121,6 +115,6 @@ function assemble(html, svg, xhtml, sizes) {
 
   const sha = process.env.CF_PAGES_COMMIT_SHA || git(['rev-parse', 'HEAD'], 'unknown')
   console.log(
-    `[pages] download page ready: dist-download (commit ${sha.slice(0, 7)}, client ${sizes.client}, html ${sizes.html}, svg ${sizes.svg}, xhtml ${sizes.xhtml})`,
+    `[pages] lite page ready: dist-download (commit ${sha.slice(0, 7)}, html ${sizes.html}, svg ${sizes.svg}, xhtml ${sizes.xhtml})`,
   )
 }
