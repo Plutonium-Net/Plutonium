@@ -58,6 +58,21 @@ export function catalogPayload(publicDir, images) {
   return { apps, servers, art }
 }
 
+export function inlineImageRefs(code, images) {
+  let next = code
+  for (const [url, uri] of Object.entries(images)) {
+    const quoted = JSON.stringify(uri)
+    next = next
+      .split(`"${url}"`)
+      .join(quoted)
+      .split(`'${url}'`)
+      .join(quoted)
+      .split('`' + url + '`')
+      .join('`' + uri + '`')
+  }
+  return next
+}
+
 export function singleFile({
   images = {},
   payload = null,
@@ -65,20 +80,7 @@ export function singleFile({
   meta = null,
   inlineFavicon = false,
 } = {}) {
-  function inlineImages(code) {
-    let next = code
-    for (const [url, uri] of Object.entries(images)) {
-      const quoted = JSON.stringify(uri)
-      next = next
-        .split(`"${url}"`)
-        .join(quoted)
-        .split(`'${url}'`)
-        .join(quoted)
-        .split('`' + url + '`')
-        .join('`' + uri + '`')
-    }
-    return next
-  }
+  const inlineImages = (code) => inlineImageRefs(code, images)
 
   return {
     name: 'plutonium-single-file',

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Plutonium</title>
+    <meta name="theme-color" content="#e8175d" />
+    <meta
+      name="description"
+      content="Plutonium Network: a full browser-style web platform with built-in browsing, games, streaming, VMs and the Stelena AI assistant."
+    />
+    <!--
+      Where this client loads its build from: <owner>/<repo>@<branch>.
+      This file does not change between releases. `npm run publish:single` writes
+      app.js, app.css and payload.json to that repo and purges their jsDelivr copies.
+    -->
+    <meta name="plutonium-cdn" content="Plutonium-Net/SingleFile-SRC@main" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: #08080a;
+        color: #f4f4f5;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      #root {
+        min-height: 100%;
+      }
+      #plu-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        padding: 32px;
+        background: radial-gradient(circle at 50% 40%, #1a0a12 0%, #08080a 65%);
+        transition: opacity 320ms ease;
+      }
+      #plu-boot.plu-boot--done {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .plu-boot__mark {
+        font-size: 13px;
+        letter-spacing: 0.42em;
+        text-transform: uppercase;
+        color: #e8175d;
+      }
+      .plu-spinner {
+        width: 22px;
+        height: 22px;
+        border: 2px solid #3f3f46;
+        border-top-color: #e8175d;
+        border-radius: 50%;
+        animation: plu-spin 800ms linear infinite;
+      }
+      #plu-boot.plu-boot--error .plu-spinner {
+        display: none;
+      }
+      #plu-boot.plu-boot--error .plu-boot__mark {
+        color: #f43f5e;
+      }
+      #plu-status,
+      .plu-boot__detail {
+        margin: 0;
+        max-width: 30rem;
+        text-align: center;
+        line-height: 1.6;
+      }
+      #plu-status {
+        font-size: 13px;
+        color: #d4d4d8;
+      }
+      .plu-boot__detail {
+        font-size: 12px;
+        color: #71717a;
+        word-break: break-word;
+      }
+      @keyframes plu-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .plu-spinner {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <div id="plu-boot" role="status" aria-live="polite">
+      <div class="plu-boot__mark">Plutonium</div>
+      <div class="plu-spinner" aria-hidden="true"></div>
+      <p id="plu-status">Loading the latest build…</p>
+    </div>
+
+    <noscript>
+      <p style="padding: 2rem; text-align: center">Plutonium needs JavaScript enabled.</p>
+    </noscript>
+
+    <script>
+      ;(() => {
+        const BOOT_TIMEOUT = 60000
+        const FALLBACK = 'Plutonium-Net/SingleFile-SRC@main'
+        const boot = document.getElementById('plu-boot')
+        const status = document.getElementById('plu-status')
+        const params = new URLSearchParams(location.search)
+        const source =
+          params.get('source') ||
+          document.querySelector('meta[name="plutonium-cdn"]')?.content ||
+          FALLBACK
+        const [repo, ref = 'main'] = String(source).split('@')
+        const base = String(
+          params.get('base') || `https://cdn.jsdelivr.net/gh/${repo}@${ref}/`,
+        ).replace(/\/+$/, '/')
+
+        let timer = 0
+        let failed = false
+
+        const dismiss = () => {
+          clearTimeout(timer)
+          boot.classList.add('plu-boot--done')
+          setTimeout(() => boot.remove(), 400)
+        }
+
+        const fail = (message, detail) => {
+          if (failed) return
+          failed = true
+          clearTimeout(timer)
+          boot.classList.add('plu-boot--error')
+          status.textContent = message
+          if (detail) {
+            const note = document.createElement('p')
+            note.className = 'plu-boot__detail'
+            note.textContent = detail
+            status.after(note)
+          }
+        }
+
+        if (!/^(https?:\/\/|\/)/.test(base)) {
+          fail('Bad CDN address', `Expected an https URL or a path, got "${base}".`)
+          return
+        }
+
+        timer = setTimeout(() => {
+          fail(
+            'This is taking longer than expected',
+            `Still waiting for ${base}app.js. Check the connection, then reload.`,
+          )
+        }, BOOT_TIMEOUT)
+
+        const styles = document.createElement('link')
+        styles.rel = 'stylesheet'
+        styles.href = `${base}app.css`
+        document.head.appendChild(styles)
+
+        // __PLU_EMBED__ must exist before the module is evaluated: it supplies the
+        // app catalog and switches the engine list to the embedded-capable entries.
+        fetch(`${base}payload.json`, { cache: 'no-cache' })
+          .then((response) => (response.ok ? response.json() : undefined))
+          .catch(() => undefined)
+          .then((payload) => {
+            if (payload) window.__PLU_EMBED__ = payload
+            else console.warn('[client] payload.json unavailable; the app will fall back to network data')
+
+            const app = document.createElement('script')
+            app.type = 'module'
+            app.src = `${base}app.js`
+            app.onload = dismiss
+            app.onerror = () =>
+              fail('Could not load Plutonium', `${base}app.js did not load. If this repo is new, publish a build first.`)
+            document.body.appendChild(app)
+          })
+      })()
+    </script>
+  </body>
+</html>

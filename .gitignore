@@ -3,6 +3,7 @@ dist/
 dist-single/
 dist-download/
 dist-download-page/
+dist-cdn/
 
 # Local wrangler dev state (Durable Object / KV data)
 api/.wrangler/

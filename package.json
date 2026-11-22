@@ -8,6 +8,8 @@
     "build": "vite build",
     "build:single": "vite build --config vite.config.single.js",
     "build:pages": "node scripts/build-pages.mjs",
+    "build:cdn": "vite build --config vite.config.cdn.js",
+    "publish:single": "node scripts/publish-single.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
