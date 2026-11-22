@@ -215,10 +215,7 @@ async function publish(token, files) {
 
   const blobs = []
   for (const file of files) {
-    const blob = await api(token, 'POST', `${repoPath}/git/blobs`, {
-      content: file.content.toString('base64'),
-      encoding: 'base64',
-    })
+    const blob = await createBlob(token, repoPath, file)
     blobs.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha })
   }
 
@@ -239,6 +236,36 @@ async function publish(token, files) {
   }
 
   return commit.sha
+}
+
+// The Git data API rejects blob creation with "409 Git Repository is empty"
+// until the repo has one commit, so seed a throwaway commit through the contents
+// API. The parentless publish commit below then replaces it entirely.
+async function createBlob(token, repoPath, file) {
+  const body = { content: file.content.toString('base64'), encoding: 'base64' }
+  try {
+    return await api(token, 'POST', `${repoPath}/git/blobs`, body)
+  } catch (error) {
+    if (error.status !== 409) throw error
+    await seed(token, repoPath)
+    return api(token, 'POST', `${repoPath}/git/blobs`, body)
+  }
+}
+
+async function seed(token, repoPath) {
+  console.log(`[publish] ${REPO} has no commits yet; seeding one so the Git data API accepts the build`)
+  const readme = [
+    '# SingleFile-SRC',
+    '',
+    'Generated build output for the Plutonium single-file client.',
+    'Published by `npm run publish:single` from the Plutonium repo; do not edit by hand.',
+    '',
+  ].join('\n')
+
+  await api(token, 'PUT', `${repoPath}/contents/README.md`, {
+    message: 'Initialize repository',
+    content: Buffer.from(readme).toString('base64'),
+  })
 }
 
 async function purge(files) {
