@@ -69,7 +69,7 @@ const ITEMS: AppItem[] = [
   {
     id: 'media',
     label: 'Movies, TV and anime',
-    words: ['MOVIES, TV, ANIME'],
+    words: ['MOVIES, TELEVISION, ANIME'],
     href: 'pluto://media',
     icon: (
       <>
