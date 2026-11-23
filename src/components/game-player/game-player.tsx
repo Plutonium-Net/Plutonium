@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ClipButton from '@/components/clip-button/clip-button'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import { createSaveBridge, type SaveBridge, type SaveState } from '@/lib/game-saves'
 import { gameUrl, imageUrl, type Game } from '@/lib/games'
@@ -162,6 +163,13 @@ export default function GamePlayer({
                   <path d="M4 4.5V10h5.5" />
                 </svg>
               </button>
+              <ClipButton
+                variant="bare"
+                className="game-player__btn"
+                target={() => frameRef.current}
+                label={() => game.name}
+                source="game"
+              />
               <button type="button" className="game-player__btn" onClick={fullscreen} title="Fullscreen">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5" />

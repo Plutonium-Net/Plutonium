@@ -9,6 +9,8 @@
     "build:single": "vite build --config vite.config.single.js",
     "build:pages": "node scripts/build-pages.mjs",
     "build:cdn": "vite build --config vite.config.cdn.js",
+    "build:icons": "node scripts/make-extension-icons.mjs",
+    "pack:extension": "node scripts/make-extension-icons.mjs && node scripts/pack-extension.mjs",
     "publish:single": "node scripts/publish-single.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"

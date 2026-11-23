@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react'
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from 'react'
 import { BorderBeam } from 'border-beam'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import TabFavicon from '@/components/tab-favicon/tab-favicon'
@@ -16,6 +16,7 @@ type ChromeTabsProps = {
   onClose: (id: string) => void
   onReorder: (from: number, to: number) => void
   addCentered?: boolean
+  trailing?: ReactNode
 }
 
 type DragState = {
@@ -38,6 +39,7 @@ export default function ChromeTabs({
   onClose,
   onReorder,
   addCentered = false,
+  trailing,
 }: ChromeTabsProps) {
   const contentRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -248,6 +250,7 @@ export default function ChromeTabs({
         {!addCentered && newTabButton}
       </div>
       {addCentered && <div className="chrome-tabs-add-dock">{newTabButton}</div>}
+      {trailing && <div className="chrome-tabs-actions">{trailing}</div>}
     </div>
   )
 }

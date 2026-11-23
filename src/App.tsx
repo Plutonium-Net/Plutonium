@@ -3,6 +3,8 @@ import AccountCenter from '@/components/account-center/account-center'
 import AddressBar from '@/components/address-bar/address-bar'
 import Background from '@/components/backgrounds/backgrounds'
 import ChromeTabs from '@/components/chrome-tabs/chrome-tabs'
+import ClipButton, { useClipAvailability } from '@/components/clip-button/clip-button'
+import ClipToaster from '@/components/clip-button/clip-toaster'
 import Clock from '@/components/clock/clock'
 import CustomizePanel from '@/components/customize-panel/customize-panel'
 import DesktopGate from '@/components/desktop-gate/desktop-gate'
@@ -79,9 +81,19 @@ export default function App() {
     job?.resolve(job.accepted)
   }, [])
 
+  useEffect(() => {
+    function onNavigate(event: Event) {
+      const detail = (event as CustomEvent<string>).detail
+      if (typeof detail === 'string' && detail) void navigate(detail)
+    }
+    window.addEventListener('plu:navigate', onNavigate)
+    return () => window.removeEventListener('plu:navigate', onNavigate)
+  }, [navigate])
+
   const activeTab = tabs.find((tab) => tab.id === activeId)
   const page = activeTab ? resolveUrl(activeTab.url) : null
   const onWeb = !!activeTab && isWebUrl(activeTab.url)
+  const clipReady = useClipAvailability() === 'ready'
   const family = familyFor(net.engine)
   const home = !onWeb && !page
 
@@ -144,6 +156,16 @@ export default function App() {
             onClose={closeTab}
             onReorder={moveTab}
             addCentered={home}
+            trailing={
+              onWeb && clipReady ? (
+                <ClipButton
+                  variant="pill"
+                  target={() => document.getElementById('page-frame')}
+                  label={() => activeTab?.title || 'Proxied page'}
+                  source="tab"
+                />
+              ) : null
+            }
           />
           <div className="app-shell__tabs-blur">
             {/* Ramp hugs the top of the viewport and eases downward behind the tab bar. */}
@@ -257,6 +279,7 @@ export default function App() {
       <AccountCenter showTrigger={home} />
       <DesktopGate />
       <TransferOverlay />
+      <ClipToaster />
       {wave && (
         <DistortionWave
           origin={wave.origin}

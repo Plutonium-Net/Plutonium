@@ -79,6 +79,18 @@ const ITEMS: AppItem[] = [
     ),
   },
   {
+    id: 'clips',
+    label: 'Clips',
+    words: ['CLIPS'],
+    href: 'pluto://clips',
+    icon: (
+      <>
+        <rect x="3" y="4.5" width="18" height="15" rx="3" />
+        <path d="M7.5 4.5v15M16.5 4.5v15M3 9.5h4.5M3 14.5h4.5M16.5 9.5H21M16.5 14.5H21" />
+      </>
+    ),
+  },
+  {
     id: 'vms',
     label: 'Virtual machines',
     words: ['VIRTUAL MACHINES'],

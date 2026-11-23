@@ -7,6 +7,7 @@ const PLUTO_PAGES: Record<string, string> = {
   media: 'Media',
   'cloud-gaming': 'Cloud Gaming',
   ptransfer: 'pTransfer',
+  clips: 'Clips',
 }
 
 export type PlutoRoute = {

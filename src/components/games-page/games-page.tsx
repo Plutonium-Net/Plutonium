@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BorderBeam } from 'border-beam'
+import ClipButton from '@/components/clip-button/clip-button'
 import GamePlayer from '@/components/game-player/game-player'
 import GlassHighlight from '@/components/glass-highlight/glass-highlight'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
@@ -403,6 +404,12 @@ function LuminPlayer({
           All games
         </button>
         <span className="games-page__now">{game.name}</span>
+        <ClipButton
+          variant="pill"
+          target={() => frameRef.current}
+          label={() => game.name}
+          source="game"
+        />
         <button type="button" className="games-page__action games-page__full" onClick={fullscreen}>
           Fullscreen
         </button>

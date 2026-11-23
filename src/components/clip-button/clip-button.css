@@ -1,0 +1,283 @@
+.clip-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+}
+
+.clip-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.clip-button__icon {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  flex: 0 0 auto;
+}
+
+/* Icon-only variant for the game dock, which styles the button itself. */
+.clip-button--bare {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 9px;
+}
+
+.clip-button--bare.is-rec {
+  color: #ff7b74;
+  background: rgba(255, 90, 80, 0.16);
+}
+
+.clip-button--bare.is-rec .clip-button__icon {
+  animation: clip-button-pulse 1.15s ease-in-out infinite;
+}
+
+.clip-button--bare .clip-button__time {
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Pill variant for the tab strip and the Lumin bar. */
+.clip-button--pill {
+  height: 28px;
+  padding: 0 11px 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 11px;
+}
+
+.clip-button--pill:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.clip-button--pill.is-rec {
+  border-color: rgba(255, 90, 80, 0.45);
+  background: rgba(255, 70, 60, 0.16);
+  color: #ffb3ad;
+}
+
+.clip-button__text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.clip-button__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.clip-button--pill.is-rec .clip-button__dot {
+  background: #ff5a50;
+  opacity: 1;
+  animation: clip-button-pulse 1.15s ease-in-out infinite;
+}
+
+@keyframes clip-button-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.42;
+  }
+}
+
+/* Turns the tab strip into a row that can hold the clip control. */
+.chrome-tabs .chrome-tabs-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding-left: 8px;
+  padding-bottom: 4px;
+}
+
+.clip-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(560px, 92vw);
+  padding: 10px 12px 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(10, 12, 20, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+  transform: translateX(-50%);
+  animation: clip-toast-in 0.2s ease both;
+}
+
+.clip-toast.is-error {
+  border-color: rgba(255, 110, 100, 0.35);
+  color: #ffb6b0;
+}
+
+.clip-toast button {
+  flex: 0 0 auto;
+  padding: 6px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.clip-toast button:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+@keyframes clip-install-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes clip-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Install warning on the Clips page. */
+.clip-install {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 0 18px;
+  overflow-wrap: anywhere;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 186, 92, 0.28);
+  border-radius: 16px;
+  background: rgba(255, 176, 70, 0.07);
+  animation: clip-install-in 0.2s ease both;
+}
+
+.clip-install__body {
+  flex: 1 1 260px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.clip-install h2 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffd7a1;
+}
+
+.clip-install p {
+  margin: 0 0 10px;
+  max-width: min(620px, 100%);
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.clip-install strong {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.clip-install ol {
+  margin: 0;
+  max-width: 100%;
+  padding-left: 18px;
+  font-size: 11.5px;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.clip-install code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.clip-install > button {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 186, 92, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 186, 92, 0.12);
+  color: #ffd7a1;
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.clip-install > button:hover {
+  background: rgba(255, 186, 92, 0.2);
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  .clip-install {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .clip-install > button {
+    align-self: flex-start;
+  }
+
+  .clip-button--pill .clip-button__text {
+    font-size: 10.5px;
+  }
+}
