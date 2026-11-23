@@ -17,7 +17,15 @@ export default function ClipExtensionNotice() {
         </p>
         <ol>
           <li>
-            Install <strong>Plutonium Clip</strong> from the Chrome Web Store.
+            Install{' '}
+            <a
+              href="https://chromewebstore.google.com/detail/okopoldhmhhnhpddpldagcijagolbfni"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <strong>Plutonium Clip</strong>
+            </a>{' '}
+            from the Chrome Web Store.
           </li>
           <li>
             Reload Plutonium so the recorder can attach to this page. If you would rather keep it open, click the
@@ -30,9 +38,19 @@ export default function ClipExtensionNotice() {
           Plutonium Clip toolbar icon once. That click records too.
         </p>
       </div>
-      <button type="button" onClick={() => window.location.reload()}>
-        Reload Plutonium
-      </button>
+      <div className="clip-install__actions">
+        <a
+          className="clip-install__install"
+          href="https://chromewebstore.google.com/detail/okopoldhmhhnhpddpldagcijagolbfni"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Install Plutonium Clip
+        </a>
+        <button type="button" onClick={() => window.location.reload()}>
+          Reload Plutonium
+        </button>
+      </div>
     </div>
   )
 }

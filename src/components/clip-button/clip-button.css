@@ -317,6 +317,24 @@
   color: rgba(255, 255, 255, 0.56);
 }
 
+.clip-install a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+}
+
+.clip-install a:hover {
+  color: #ffffff;
+  text-decoration-color: rgba(255, 255, 255, 0.7);
+}
+
+.clip-install a:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+}
+
 .clip-install code {
   padding: 1px 5px;
   border-radius: 5px;
@@ -326,9 +344,16 @@
   color: rgba(255, 255, 255, 0.82);
 }
 
-.clip-install > button {
+.clip-install__actions {
+  display: flex;
   flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 8px;
   align-self: center;
+}
+
+.clip-install__actions > a,
+.clip-install__actions > button {
   padding: 8px 15px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px;
@@ -337,6 +362,7 @@
   font: inherit;
   font-size: 11.5px;
   font-weight: 700;
+  text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
   transition:
@@ -345,15 +371,11 @@
     color 0.16s ease;
 }
 
-.clip-install > button:hover {
+.clip-install__actions > a:hover,
+.clip-install__actions > button:hover {
   border-color: rgba(255, 255, 255, 0.32);
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
-}
-
-.clip-install > button:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.55);
-  outline-offset: 2px;
 }
 
 @media (max-width: 720px) {
@@ -362,7 +384,7 @@
     align-items: stretch;
   }
 
-  .clip-install > button {
+  .clip-install__actions {
     align-self: flex-start;
   }
 
