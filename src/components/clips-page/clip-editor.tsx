@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import GlassSurface from '@/components/glass-surface/GlassSurface'
 import { addClip, deleteClip, getClipBlob, updateClip, type ClipMeta } from '@/lib/clips/db'
 import { formatBytes, formatDate, formatDuration, formatPrecise } from '@/lib/clips/format'
 import { downloadClip, makeThumbnail, trimClip } from '@/lib/clips/media'
@@ -157,6 +158,16 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
       }}
     >
       <div className="clip-studio__shell">
+        <GlassSurface
+          className="clip-studio__glass"
+          width="100%"
+          height="100%"
+          borderRadius={20}
+          backgroundOpacity={0.18}
+          saturation={1.25}
+          displace={0.5}
+        />
+
         <header className="clip-studio__head">
           <input
             className="clip-studio__title"

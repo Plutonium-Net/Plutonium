@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react'
+import GlassSurface from '@/components/glass-surface/GlassSurface'
 import {
   dismissClipNotice,
   getClipNotice,
@@ -19,7 +20,16 @@ export default function ClipToaster() {
 
   return (
     <div className={`clip-toast${notice.tone === 'error' ? ' is-error' : ''}`} role="status" aria-live="polite">
-      <span>{notice.text}</span>
+      <GlassSurface
+        className="clip-toast__glass"
+        width="100%"
+        height="100%"
+        borderRadius={14}
+        backgroundOpacity={0.16}
+        saturation={1.3}
+        displace={0.35}
+      />
+      <span className="clip-toast__text">{notice.text}</span>
       {notice.studio && (
         <button
           type="button"

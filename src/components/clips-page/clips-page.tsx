@@ -210,7 +210,16 @@ export default function ClipsPage() {
 
       {notice && (
         <div className="clips-page__toast" role="status" aria-live="polite">
-          {notice}
+          <GlassSurface
+            className="clips-page__toast-glass"
+            width="100%"
+            height="100%"
+            borderRadius={999}
+            backgroundOpacity={0.16}
+            saturation={1.3}
+            displace={0.35}
+          />
+          <span className="clips-page__toast-text">{notice}</span>
         </div>
       )}
     </div>

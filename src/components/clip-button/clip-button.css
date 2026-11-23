@@ -130,21 +130,34 @@
   gap: 12px;
   max-width: min(560px, 92vw);
   padding: 10px 12px 10px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
-  background: rgba(10, 12, 20, 0.92);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
   font-size: 11.5px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.86);
   transform: translateX(-50%);
   animation: clip-toast-in 0.2s ease both;
 }
 
+/* The toast body is a real glass surface, matching the clip studio. */
+.clip-toast__glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.clip-toast__text,
+.clip-toast button {
+  position: relative;
+  z-index: 1;
+}
+
 .clip-toast.is-error {
-  border-color: rgba(255, 110, 100, 0.35);
   color: #ffb6b0;
+  box-shadow:
+    0 0 0 1px rgba(255, 110, 100, 0.32),
+    0 14px 32px -18px rgba(255, 70, 60, 0.55);
 }
 
 .clip-toast button {
