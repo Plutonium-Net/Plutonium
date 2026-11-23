@@ -141,6 +141,32 @@ export async function probeClipExtension(): Promise<boolean> {
 const MISSING_EXTENSION =
   'The clip recorder is not reachable. Install Plutonium Clip from the Chrome Web Store and reload Plutonium — it works on any site that hosts Plutonium.'
 
+// Chrome's own wording for "the extension this page was talking to is gone".
+// It appears whenever Plutonium Clip is reloaded, updated or removed while the
+// Plutonium tab stays open, and it is never something the user can act on.
+const BRIDGE_LOST =
+  'Plutonium Clip was reloaded, so its connection to this tab went stale. Reload Plutonium to reconnect — clips you already saved are safe.'
+
+const LOST_PATTERN =
+  /context invalidated|extension context|receiving end does not exist|message (port|channel) closed/i
+
+function recorderErrorText(error?: string) {
+  if (!error) return BRIDGE_LOST
+  return LOST_PATTERN.test(error) ? BRIDGE_LOST : error
+}
+
+// The bridge is a content script, and Chrome tears those down with the extension
+// instance that injected them. Forget the handshake so the UI drops back to the
+// install notice and the next probe can pick up a fresh bridge.
+function loseBridge() {
+  // Settle any handshake still in flight first, so its timeout cannot clear the
+  // next one.
+  resolveHello?.(false)
+  bridgeReady = false
+  helloRequest = null
+  setAvailability('missing')
+}
+
 /* ------------------------------------------------------------------ *
  * Bridge
  * ------------------------------------------------------------------ */
@@ -226,6 +252,12 @@ function handleMessage(event: MessageEvent) {
     bridgeReady = true
     setAvailability('ready')
     resolveHello?.(true)
+    return
+  }
+  if (type === 'lost') {
+    loseBridge()
+    pendingStart?.({ ok: false, error: BRIDGE_LOST })
+    pendingStop?.({ error: BRIDGE_LOST })
     return
   }
   if (type === 'started') {
@@ -349,8 +381,10 @@ export async function startClipCapture(target: ClipTarget = currentTarget()): Pr
   })
 
   if (!started.ok) {
+    const text = recorderErrorText(started.error)
+    if (text === BRIDGE_LOST) loseBridge()
     setState({ status: 'idle', label: '', startedAt: 0 })
-    pushClipNotice(started.error || 'Recording could not start.', 'error')
+    pushClipNotice(text, 'error')
     return false
   }
 
@@ -382,9 +416,11 @@ export async function stopClipCapture(): Promise<boolean> {
   session = null
 
   if ('error' in result) {
+    const text = recorderErrorText(result.error)
+    if (text === BRIDGE_LOST) loseBridge()
     chunkParts = []
     setState({ status: 'idle', label: '', startedAt: 0 })
-    pushClipNotice(result.error, 'error')
+    pushClipNotice(text, 'error')
     return false
   }
 

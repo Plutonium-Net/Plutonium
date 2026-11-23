@@ -32,18 +32,43 @@ if (!globalThis.__plutoniumClipBridge) {
     }
   }
 
+  // After the extension is reloaded, updated or removed, this script keeps
+  // running but its Chrome APIs are dead: every call throws "Extension context
+  // invalidated". Say so on the page's channel instead of leaking that error, so
+  // Plutonium can ask for a reload rather than offering a clip button that fails.
+  function alive() {
+    try {
+      return Boolean(chrome && chrome.runtime && chrome.runtime.id)
+    } catch {
+      return false
+    }
+  }
+
   function tell(type, data) {
+    if (!alive()) {
+      toPage({ type: 'lost' })
+      return
+    }
     chrome.runtime.sendMessage({ scope: SCOPE, type, ...data }).catch(() => {})
   }
 
   // Starting and stopping both need an answer: the extension can refuse to
   // capture the tab, and the save can fail.
   async function request(kind, data) {
+    if (!alive()) {
+      toPage({ type: 'lost' })
+      return
+    }
+
     let reply
     try {
       reply = await chrome.runtime.sendMessage({ scope: SCOPE, type: kind, ...data })
     } catch (error) {
       const text = messageOf(error)
+      if (/context invalidated|extension context|receiving end does not exist/i.test(text)) {
+        toPage({ type: 'lost' })
+        return
+      }
       toPage(kind === 'start' ? { type: 'failed', error: text } : { type: 'error', message: text })
       return
     }
@@ -64,7 +89,9 @@ if (!globalThis.__plutoniumClipBridge) {
     if (!data || data.channel !== CHANNEL || data.dir !== 'page') return
 
     if (data.type === 'hello') {
-      toPage({ type: 'ready' })
+      // Never answer "ready" from a dead context: the page would keep a clip
+      // button that cannot record.
+      toPage(alive() ? { type: 'ready' } : { type: 'lost' })
       return
     }
     if (data.type === 'start') {

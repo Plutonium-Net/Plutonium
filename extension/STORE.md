@@ -8,7 +8,7 @@ Everything the dashboard asks for, filled in and ready to paste.
 npm run pack:extension
 ```
 
-Produces `dist/store/plutonium-clip-1.4.0.zip` containing `manifest.json` at the
+Produces `dist/store/plutonium-clip-<version>.zip` containing `manifest.json` at the
 root plus only runtime files (icons included). Upload that zip. Bump `version`
 in `manifest.json` for every later upload; the store rejects a reused version.
 

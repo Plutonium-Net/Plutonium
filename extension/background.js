@@ -9,6 +9,14 @@
 const SCOPE = 'plu-clip'
 const OFFSCREEN_URL = 'offscreen.html'
 const SESSION_KEY = 'clipTabId'
+// How long the offscreen document may take to start listening, and how long the
+// recorder may take to open the tab's stream before we call it a failure.
+const RECORDER_READY_TIMEOUT = 4000
+const BEGIN_TIMEOUT = 12000
+
+const NO_RECORDER = 'The clip recorder did not load. Turn Plutonium Clip off and on again at chrome://extensions, then reload Plutonium.'
+const RECORDER_SILENT = 'The clip recorder did not answer. Reload Plutonium and try again.'
+const RECORDER_HUNG = 'Chrome did not hand over the tab stream. Reload Plutonium and try again.'
 
 let creatingOffscreen = null
 
@@ -93,6 +101,50 @@ function recorder(payload) {
   )
 }
 
+// An offscreen document exists a moment before its script starts listening, so a
+// message sent straight after createDocument can land with no receiving end at
+// all and come back empty. Ping until the recorder answers instead of racing it.
+async function waitForRecorder(timeout) {
+  const deadline = Date.now() + timeout
+  for (;;) {
+    const reply = await recorder({ type: 'ping' })
+    if (reply && reply.ok) return true
+    if (Date.now() >= deadline) return false
+    await new Promise((resolve) => setTimeout(resolve, 80))
+  }
+}
+
+async function ensureRecorder() {
+  // A document that is already up answers immediately; only pay the startup wait
+  // when it has to be created (or is still warming up).
+  if ((await hasOffscreen()) && (await waitForRecorder(600))) return true
+  await ensureOffscreen()
+  return waitForRecorder(RECORDER_READY_TIMEOUT)
+}
+
+function beginInRecorder(message, streamId) {
+  return new Promise((resolve) => {
+    let settled = false
+    const timer = setTimeout(() => finish({ ok: false, error: RECORDER_HUNG }), BEGIN_TIMEOUT)
+
+    function finish(value) {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(value)
+    }
+
+    recorder({
+      type: 'begin',
+      streamId,
+      rect: message.rect,
+      viewport: message.viewport,
+    })
+      .then((reply) => finish(reply && typeof reply === 'object' ? reply : { ok: false, error: RECORDER_SILENT }))
+      .catch((error) => finish({ ok: false, error: messageOf(error) }))
+  })
+}
+
 async function forwardToPage(message) {
   const tabId = await recordingTab()
   if (tabId == null) return
@@ -109,27 +161,29 @@ async function handleStart(tabId, message) {
     return { ok: false, error: 'A clip is already recording. Stop it first.' }
   }
 
-  await ensureOffscreen()
+  if (!(await ensureRecorder())) {
+    console.warn('[plu-clip] the offscreen recorder never answered')
+    return { ok: false, error: NO_RECORDER }
+  }
 
   let streamId
   try {
     streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId })
   } catch (error) {
-    return { ok: false, error: captureErrorText(error) }
+    const text = captureErrorText(error)
+    console.warn('[plu-clip] tab capture refused:', messageOf(error))
+    return { ok: false, error: text }
   }
 
   await rememberTab(tabId)
 
-  const reply = await recorder({
-    type: 'begin',
-    streamId,
-    rect: message.rect,
-    viewport: message.viewport,
-  })
+  const reply = await beginInRecorder(message, streamId)
 
   if (!reply || !reply.ok) {
     await forgetTab()
-    return { ok: false, error: reply?.error || 'The recorder did not start.' }
+    const text = reply?.error || RECORDER_SILENT
+    console.warn('[plu-clip] recording did not start:', text)
+    return { ok: false, error: text }
   }
 
   return { ok: true, width: reply.width, height: reply.height }
@@ -137,7 +191,8 @@ async function handleStart(tabId, message) {
 
 async function handleStop() {
   const reply = await recorder({ type: 'stop' })
-  return reply && typeof reply === 'object' ? reply : { ok: true }
+  if (reply && typeof reply === 'object') return reply
+  return { ok: false, error: 'The recorder is no longer running. Try another clip.' }
 }
 
 async function handleCancel() {

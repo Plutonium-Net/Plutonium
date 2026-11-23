@@ -6,9 +6,13 @@
 // runs MediaRecorder on it, then sends the finished WebM back in base64 pieces.
 
 const SCOPE = 'plu-clip'
-const FPS = 30
+// 45 fps keeps game motion readable without asking the encoder for twice the
+// frames of 60. The canvas stream and the recorder both honour it; if the tab
+// paints slower than this, the capture simply repeats the newest frame.
+const FPS = 45
 const MAX_WIDTH = 1920
 const PIECE_BYTES = 384 * 1024 // divisible by 3, so every base64 piece decodes alone
+const STREAM_TIMEOUT = 8000
 
 let session = null
 
@@ -16,6 +20,24 @@ function messageOf(error) {
   if (!error) return 'Unknown error'
   if (typeof error === 'string') return error
   return error.message || String(error)
+}
+
+// getUserMedia can sit forever when Chrome accepts the stream id but never
+// delivers frames; a stuck promise would leave the page saying nothing at all.
+function withTimeout(promise, ms, message) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (error) => {
+        clearTimeout(timer)
+        reject(error)
+      },
+    )
+  })
 }
 
 function pickMime() {
@@ -100,6 +122,9 @@ function send(message) {
 function draw(active) {
   if (!active || active.stopped) return
   try {
+    // Re-draw every tick even when the source has not changed: the canvas only
+    // emits a frame when it is modified, so a steady draw is what gives the
+    // recording a constant frame rate.
     active.context.drawImage(
       active.video,
       active.crop.sx,
@@ -111,7 +136,6 @@ function draw(active) {
       active.width,
       active.height,
     )
-    active.lastDraw = Date.now()
   } catch {
     // A frame may be unavailable while the stream is starting up.
   }
@@ -123,18 +147,26 @@ async function begin({ streamId, rect, viewport }) {
 
   let stream
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        mandatory: {
-          chromeMediaSource: 'tab',
-          chromeMediaSourceId: streamId,
-          maxFrameRate: FPS,
+    if (!navigator.mediaDevices?.getUserMedia) {
+      return { ok: false, error: 'This browser cannot record tab video.' }
+    }
+    stream = await withTimeout(
+      navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          mandatory: {
+            chromeMediaSource: 'tab',
+            chromeMediaSourceId: streamId,
+            maxFrameRate: FPS,
+          },
         },
-      },
-    })
+      }),
+      STREAM_TIMEOUT,
+      'Chrome did not hand over the tab stream. Reload Plutonium and try again.',
+    )
   } catch (error) {
-    return { ok: false, error: `Chrome refused the capture: ${messageOf(error)}` }
+    const text = messageOf(error)
+    return { ok: false, error: /^Chrome did not/.test(text) ? text : `Chrome refused the capture: ${text}` }
   }
 
   const video = document.getElementById('source')
@@ -157,7 +189,7 @@ async function begin({ streamId, rect, viewport }) {
 
   canvas.width = crop.width
   canvas.height = crop.height
-  const context = canvas.getContext('2d', { alpha: false, desynchronized: true })
+  const context = canvas.getContext('2d', { alpha: false })
   if (!context) {
     stream.getTracks().forEach((track) => track.stop())
     return { ok: false, error: 'The recorder could not create a canvas.' }
@@ -167,7 +199,7 @@ async function begin({ streamId, rect, viewport }) {
 
   const out = canvas.captureStream(FPS)
   const mime = pickMime()
-  const bitrate = Math.min(12_000_000, Math.max(2_500_000, Math.round(crop.width * crop.height * FPS * 0.09)))
+  const bitrate = Math.min(12_000_000, Math.max(3_000_000, Math.round(crop.width * crop.height * FPS * 0.1)))
 
   let recorder
   try {
@@ -187,39 +219,42 @@ async function begin({ streamId, rect, viewport }) {
     chunks: [],
     crop,
     startedAt: Date.now(),
-    lastDraw: 0,
     width: crop.width,
     height: crop.height,
     stopped: false,
-    frameHandle: null,
     pumpTimer: null,
-    guardTimer: null,
   }
-  session = recording
-
   recorder.ondataavailable = (event) => {
     if (event.data && event.data.size) recording.chunks.push(event.data)
   }
-  recorder.start(500)
+  try {
+    recorder.start(500)
+  } catch (error) {
+    stream.getTracks().forEach((track) => track.stop())
+    video.srcObject = null
+    return { ok: false, error: `This browser cannot record: ${messageOf(error)}` }
+  }
+  session = recording
 
-  // requestVideoFrameCallback is driven by the media pipeline, so it keeps
-  // producing frames even though this document is never visible. The guard
-  // timer covers browsers that starve it.
+  // An offscreen document is never composited, so frame callbacks tied to
+  // painting (requestVideoFrameCallback) stall or arrive in bursts and the clip
+  // comes out as a slideshow. Drive the canvas from a clock instead: one draw
+  // per tick keeps the capture stream fed at a steady FPS no matter what the
+  // document is doing.
+  const step = 1000 / FPS
+  let next = performance.now()
   const pump = () => {
     if (recording.stopped) return
     draw(recording)
-    if (typeof recording.video.requestVideoFrameCallback === 'function') {
-      recording.frameHandle = recording.video.requestVideoFrameCallback(pump)
-    } else {
-      recording.pumpTimer = setTimeout(pump, Math.round(1000 / FPS))
-    }
+    // A stalled video element would freeze the clip, so nudge it back to life.
+    if (recording.video.paused) recording.video.play().catch(() => {})
+    next += step
+    const now = performance.now()
+    // Fell behind (a heavy encode): resync instead of firing a burst of frames.
+    if (next < now - step) next = now
+    recording.pumpTimer = setTimeout(pump, Math.max(0, next - now))
   }
   pump()
-
-  recording.guardTimer = setInterval(() => {
-    if (recording.stopped) return
-    if (Date.now() - recording.lastDraw > 250) draw(recording)
-  }, 120)
 
   return { ok: true, width: crop.width, height: crop.height }
 }
@@ -230,15 +265,7 @@ async function stop() {
 
   active.stopped = true
 
-  if (active.guardTimer) clearInterval(active.guardTimer)
   if (active.pumpTimer) clearTimeout(active.pumpTimer)
-  try {
-    if (active.frameHandle != null && typeof active.video.cancelVideoFrameCallback === 'function') {
-      active.video.cancelVideoFrameCallback(active.frameHandle)
-    }
-  } catch {
-    // Already gone.
-  }
 
   const duration = Date.now() - active.startedAt
   let blob = null
@@ -293,7 +320,6 @@ function cancel() {
   session = null
   if (!active) return
   active.stopped = true
-  if (active.guardTimer) clearInterval(active.guardTimer)
   if (active.pumpTimer) clearTimeout(active.pumpTimer)
   try {
     if (active.recorder.state !== 'inactive') active.recorder.stop()
@@ -312,6 +338,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Only messages the service worker addressed to this document count; the page
   // and the worker use the same channel name.
   if (!message || message.scope !== SCOPE || message.to !== 'recorder') return
+
+  if (message.type === 'ping') {
+    sendResponse({ ok: true, recording: Boolean(session) })
+    return
+  }
 
   if (message.type === 'begin') {
     begin(message)

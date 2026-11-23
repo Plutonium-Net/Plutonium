@@ -47,7 +47,8 @@ function captureStreamOf(video: HTMLVideoElement): MediaStream {
   const element = video as CapturableVideo
   const capture = element.captureStream ?? element.mozCaptureStream
   if (!capture) throw new Error('This browser cannot trim clips.')
-  return capture.call(element, 30)
+  // Match the recorder so trimming does not quietly halve the clip's smoothness.
+  return capture.call(element, 45)
 }
 
 function waitForTime(video: HTMLVideoElement, time: number, timeout: number): Promise<void> {

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Plutonium Clip",
   "short_name": "Pluto Clip",
-  "version": "1.4.0",
+  "version": "1.4.4",
   "description": "Records the Plutonium game or proxied tab while you play. Press clip to start, press again to stop. No screen picker.",
   "minimum_chrome_version": "116",
   "homepage_url": "https://plutoniumnet.work",
