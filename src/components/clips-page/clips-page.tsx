@@ -63,7 +63,7 @@ export default function ClipsPage() {
             <h1 className="clips-page__title">Clips</h1>
             <p className="clips-page__sub">
               Press clip in a game or on a proxied tab to start recording, press it again to stop and save. Trim,
-              favorite and download what you save — everything stays in this browser and is never uploaded.
+              favorite and download what you save - everything stays in this browser and is never uploaded.
             </p>
           </header>
 
@@ -74,9 +74,9 @@ export default function ClipsPage() {
             width="100%"
             height="auto"
             borderRadius={20}
-            backgroundOpacity={0.1}
+            backgroundOpacity={0.06}
             saturation={1.25}
-            displace={0.5}
+            displace={0.7}
           >
             <div className="clips-page__panel-body">
               <div className="clips-page__bar">

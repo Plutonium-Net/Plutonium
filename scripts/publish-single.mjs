@@ -57,7 +57,7 @@ async function main() {
   for (const file of files) console.log(`[publish]   ${file.path.padEnd(28)} ${format(file.bytes)}`)
 
   if (DRY_RUN) {
-    console.log(`[publish] dry run: ${files.length} file(s), ${format(total)} total — nothing pushed, nothing purged`)
+    console.log(`[publish] dry run: ${files.length} file(s), ${format(total)} total - nothing pushed, nothing purged`)
     return
   }
 

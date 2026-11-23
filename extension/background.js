@@ -84,7 +84,7 @@ async function recordingTab() {
 function captureErrorText(error) {
   const text = messageOf(error)
   if (/invoke|activeTab|not.*granted|permission|denied|user gesture/i.test(text)) {
-    return 'Chrome only allows tab capture right after the extension is invoked. Click the Plutonium Clip icon in the toolbar once — that starts a clip — then press clip again.'
+    return 'Chrome only allows tab capture right after the extension is invoked. Click the Plutonium Clip icon in the toolbar once (that starts a clip), then press clip again.'
   }
   if (/cannot|can't|restricted|chrome:|not allowed/i.test(text)) {
     return 'Chrome will not record this tab. Open the game or proxied page in Plutonium and try again.'

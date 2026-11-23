@@ -139,13 +139,13 @@ export async function probeClipExtension(): Promise<boolean> {
 }
 
 const MISSING_EXTENSION =
-  'The clip recorder is not reachable. Install Plutonium Clip from the Chrome Web Store and reload Plutonium — it works on any site that hosts Plutonium.'
+  'The clip recorder is not reachable. Install Plutonium Clip from the Chrome Web Store and reload Plutonium - it works on any site that hosts Plutonium.'
 
 // Chrome's own wording for "the extension this page was talking to is gone".
 // It appears whenever Plutonium Clip is reloaded, updated or removed while the
 // Plutonium tab stays open, and it is never something the user can act on.
 const BRIDGE_LOST =
-  'Plutonium Clip was reloaded, so its connection to this tab went stale. Reload Plutonium to reconnect — clips you already saved are safe.'
+  'Plutonium Clip was reloaded, so its connection to this tab went stale. Reload Plutonium to reconnect - clips you already saved are safe.'
 
 const LOST_PATTERN =
   /context invalidated|extension context|receiving end does not exist|message (port|channel) closed/i

@@ -10,7 +10,7 @@ Plutonium ships two ways from one build.
 The lite downloads (`dist-download`, served at `lite.plutoniumnet.work`) are wrappers, not
 builds: `plutonium.html` is `public/client.html` verbatim, `.svg` and `.xhtml` carry it in an
 iframe. All three are a few KB and load the published build from jsDelivr, so they never go
-stale — and they need a network connection. `npm run build:single` still produces the fully
+stale - and they need a network connection. `npm run build:single` still produces the fully
 self-contained 13 MB `dist-single/index.html` when an offline copy is wanted.
 
 `public/client.html` is stable: it reads `owner/repo@branch` from its
@@ -32,11 +32,11 @@ Test overrides on the client: `client.html?source=<owner>/<repo>@<ref>` and
 
 ## Environment
 
-- `PLU_GITHUB_APP_ID` — the App's numeric ID
-- `PLU_GITHUB_APP_PRIVATE_KEY_BASE64` — the downloaded `.pem`, base64 encoded
+- `PLU_GITHUB_APP_ID` - the App's numeric ID
+- `PLU_GITHUB_APP_PRIVATE_KEY_BASE64` - the downloaded `.pem`, base64 encoded
   (`base64 -w0 app.pem`, macOS: `base64 -i app.pem`)
-- `PLU_CDN_REPO` — default `Plutonium-Net/SingleFile-SRC`
-- `PLU_CDN_BRANCH` — default `main`
+- `PLU_CDN_REPO` - default `Plutonium-Net/SingleFile-SRC`
+- `PLU_CDN_BRANCH` - default `main`
 
 No personal access token is used. The script signs a JWT, exchanges it for a
 one-hour installation token, and never prints either.

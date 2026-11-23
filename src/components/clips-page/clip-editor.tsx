@@ -158,16 +158,6 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
       }}
     >
       <div className="clip-studio__shell">
-        <GlassSurface
-          className="clip-studio__glass"
-          width="100%"
-          height="100%"
-          borderRadius={22}
-          backgroundOpacity={0.18}
-          saturation={1.25}
-          displace={0.5}
-        />
-
         <header className="clip-studio__head">
           <div className="clip-studio__heading">
             <span className="clip-studio__eyebrow">Clip studio</span>
@@ -231,7 +221,7 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
               </div>
               <div className="clip-studio__fact">
                 <dt>Resolution</dt>
-                <dd>{clip.width && clip.height ? `${clip.width}×${clip.height}` : '—'}</dd>
+                <dd>{clip.width && clip.height ? `${clip.width}×${clip.height}` : '-'}</dd>
               </div>
               <div className="clip-studio__fact">
                 <dt>Size</dt>
@@ -246,6 +236,16 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
 
           <aside className="clip-studio__panel">
             <section className="clip-studio__card">
+              <GlassSurface
+                className="clip-studio__card-glass"
+                width="100%"
+                height="100%"
+                borderRadius={14}
+                backgroundOpacity={0.08}
+                saturation={1.15}
+                displace={0.6}
+              />
+
               <div className="clip-studio__card-head">
                 <h2 className="clip-studio__section-title">Trim</h2>
                 <span className="clip-studio__selection">
@@ -333,7 +333,7 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
             </section>
 
             <p className={`clip-studio__note${failed ? ' is-error' : ''}`}>
-              {message || 'Trims are saved as a new clip. Nothing is uploaded — clips live in this browser.'}
+              {message || 'Trims are saved as a new clip. Nothing is uploaded - clips live in this browser.'}
             </p>
           </aside>
         </div>

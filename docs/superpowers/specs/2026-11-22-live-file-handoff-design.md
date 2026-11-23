@@ -1,4 +1,4 @@
-# Plutonium Drop — live file handoff
+# Plutonium Drop - live file handoff
 
 Date: 2026-11-22
 Status: design approved, spec revised for id + password sessions
@@ -32,7 +32,7 @@ with `api/`.
 2. **Three fields, no link.** Server, id, password. Nothing in a URL, nothing to expire,
    nothing to paste into a browser bar that a chat client will unfurl.
 3. **The password gets you to the door; the sender opens it.** A correct password is not
-   enough to receive a file — the uploader confirms the join, and the downloader confirms
+   enough to receive a file - the uploader confirms the join, and the downloader confirms
    the destination. Both ends say yes or nothing moves.
 4. **One transfer per server, with a real queue.** You pick the server, so you can pick a
    short line.
@@ -40,7 +40,7 @@ with `api/`.
    wrote it). Most tools show only the first, which is why they feel dishonest.
 6. **Resume is nearly free.** The sender reads from the file by offset, so reconnecting
    resumes at a sequence number rather than a byte count it has to guess.
-7. **Phase 2: the relay can't read it** — and this model makes that easier, not harder
+7. **Phase 2: the relay can't read it** - and this model makes that easier, not harder
    (§17).
 
 ## 3. Non-goals for v1
@@ -48,7 +48,7 @@ with `api/`.
 Accounts for receivers, contacts or address books, sending to someone who is offline,
 multiple files inside one session (the client may queue files across sessions), folders,
 fan-out to several receivers, permanent links, a native or CLI client, WebRTC, any storage
-of file bytes — no S3, no disk spool — server-side previews, resumable-forever downloads,
+of file bytes - no S3, no disk spool - server-side previews, resumable-forever downloads,
 sessions that survive a restart, a queue that survives a restart.
 
 ## 4. Locked decisions
@@ -114,15 +114,15 @@ verifications and asserts throughput does not drop more than 10%.
 ## 6. The session password
 
 There is no standing credential to harden anymore, which removes most of the old key
-machinery — and moves the whole problem into a five-minute window, where it is easier to
+machinery - and moves the whole problem into a five-minute window, where it is easier to
 reason about.
 
 ### 6.1 Two roles, one secret
 
-- **Uploader** — signed in with the existing Plutonium account. Creates the session, picks
+- **Uploader** - signed in with the existing Plutonium account. Creates the session, picks
   the file, chooses the password, and is the only party who can confirm a join. Sign-in
   gives rate limiting a real uid and attributes abuse to an account.
-- **Downloader** — no account. Knows three things: server, id, password. That is the whole
+- **Downloader** - no account. Knows three things: server, id, password. That is the whole
   credential, and it expires when the session does.
 
 The uploader's socket *is* the session (§6.7): if their tab closes, the id stops existing.
@@ -152,7 +152,7 @@ server:  V = scrypt(K, salt = id_bytes, N = 2^15, r = 8, p = 3, maxmem = 64 MiB,
   the door open for phase 2 (§17).
 - **Why the id is the salt.** It is unique per live session and already known to both
   sides, so no extra round trip and no salt-lookup endpoint. Salts need uniqueness, not
-  entropy — the password supplies the guessing cost.
+  entropy - the password supplies the guessing cost.
 - **Why scrypt on the server.** Memory-hard, built into Node, async on the thread pool, no
   native module, ~150 ms and 32 MiB per attempt.
 - **No pepper.** The old design peppered a verifier to survive a database leak. There is no
@@ -180,7 +180,7 @@ Enforced on the client for feedback and re-enforced on the server, which is wher
   compare is padded.
 - **One error for every failure**: unknown id, destroyed session, wrong password and
   over-attempt all return `No such transfer, or the password didn't work.` with HTTP 404.
-  A wrong id and a wrong password must be indistinguishable, in body, status and timing —
+  A wrong id and a wrong password must be indistinguishable, in body, status and timing -
   including running a dummy scrypt for the unknown-id path so the clock does not answer
   the question the body refuses to.
 - Metadata (name, size) is revealed only *after* the password verifies, so an id alone
@@ -220,7 +220,7 @@ attempts and then the session dies; holding a valid password still does not rece
 file, because the uploader must confirm the join; an id alone reveals nothing.
 
 Does not protect: the uploader. Someone who has the password and the id can *ring the
-doorbell*, and it is a human decision whether to open it — a password shared with the
+doorbell*, and it is a human decision whether to open it - a password shared with the
 wrong person is a social problem the design cannot solve, only surface. It also does not
 protect against the server itself reading the stream in v1 (§17).
 
@@ -263,7 +263,7 @@ version does by hand, over ~120 lines whose cache policy is already understood.
 5. Only now can the client derive `K`, because the id is the salt (§6.3): it runs the 600k
    PBKDF2 in a worker and sends `PUT /sessions/:id/verifier { K }`. The server stores `V`
    and the session goes live. This second round trip exists because a server-issued id is
-   worth more than the request it saves — a client-chosen id would let an uploader pick
+   worth more than the request it saves - a client-chosen id would let an uploader pick
    something memorable and help the very guessing §6.6 is trying to stop. A `pending`
    session cannot be claimed and expires in 30 seconds.
 6. The uploader opens `/sessions/:id/upload?token=` and stays on a screen showing the id,
@@ -348,7 +348,7 @@ servers, and adding one adds exactly one transfer.
   immediately on any queue mutation. Both sides see the same numbers: a countdown that
   disagrees between two screens destroys trust in a queue faster than any bug.
 - At the head with the slot free, both sides get a 60-second start window to open their
-  room sockets. If either fails, the session is aborted and the slot passes on — this is
+  room sockets. If either fails, the session is aborted and the slot passes on - this is
   what stops a dead pair from wedging the machine.
 
 ### 9.5 Restart and drain
@@ -392,7 +392,7 @@ called. No queues, no `bufferedAmount` heuristic, no unbounded memory.
 
 The 16-chunk window is therefore a *sender-side* limit bounding work in flight before an
 ack, not a server-side queue. Acks are batched every 8 chunks or 50 ms. An ack means
-*written to the sink*, not *received by the socket* — that is what makes the second
+*written to the sink*, not *received by the socket* - that is what makes the second
 progress bar honest.
 
 Resume: after a reconnect, the receiver sends `resume{from: seq}`; the sender seeks with
@@ -412,8 +412,8 @@ Read from the `File` by offset in 256 KiB slices, keep at most 16 unacked, retra
 chunk whose ack never arrives, never read the file into memory. The source may be
 arbitrarily large; the footprint stays at the window size.
 
-While `waiting`, `claimed`, `joined` or `queued`, the sender holds only the file handle —
-no stream, no buffered chunks — so a waiting session costs a socket and a few hundred
+While `waiting`, `claimed`, `joined` or `queued`, the sender holds only the file handle -
+no stream, no buffered chunks - so a waiting session costs a socket and a few hundred
 bytes.
 
 The uploader's tab must stay open for the duration, including the wait. The UI says so
@@ -479,7 +479,7 @@ nothing needs to: the client picks a server and both parties meet on it.
   measuredBytesPerSec, version }`. This is what lets the picker show real queue depths, and
   it must stay free of anything sensitive.
 - Env per server: `DROP_ORIGINS`, `FIREBASE_PROJECT_ID`, `PORT`. No database path, no
-  key pepper, no cluster secret, no ticket secret — those all retired with §6.7, and
+  key pepper, no cluster secret, no ticket secret - those all retired with §6.7, and
   session tokens are random 32-byte values rather than signed ones.
 - **Origin allowlist on upgrade.** Cross-site WebSocket hijacking is real: browsers send
   cookies and any page can open a socket to your endpoint. `Origin` is checked against
@@ -528,7 +528,7 @@ worth stating precisely.
 
 Both parties deliberately share one secret, so there is already an out-of-band channel: the
 password itself. That removes the fingerprint ceremony the earlier design needed. But it
-does not make the naive version safe — the server receives `K` in §6.3, so anything derived
+does not make the naive version safe - the server receives `K` in §6.3, so anything derived
 from `K` is not secret from the server, and a malicious relay could sit in the middle.
 
 The correct construction is a **PAKE (SPAKE2)**: the client proves knowledge of the password
@@ -538,7 +538,7 @@ that point:
 - The verifier replaces `scrypt(K)` in §6.3, and `K` never crosses the wire at all.
 - Each chunk is sealed with an AEAD key derived per chunk from a counter, so the relay
   moves opaque bytes.
-- No fingerprint is needed, because the password was the out-of-band secret all along —
+- No fingerprint is needed, because the password was the out-of-band secret all along -
   which is exactly why this model is better for E2E than a published public key.
 
 ## 18. Risks
@@ -562,7 +562,7 @@ that point:
 ## 19. Build order
 
 1. `frames.js` + pure window/ack logic, with tests. No networking.
-2. `queue.js` with the slot invariant, FIFO, positions, ETA and caps — pure, with tests,
+2. `queue.js` with the slot invariant, FIFO, positions, ETA and caps - pure, with tests,
    before any socket exists.
 3. `sessions.js`: id issue, PBKDF2/scrypt verification, attempts, TTL, tokens.
 4. `room.js` pump over a local Node process, two headless clients, one file.

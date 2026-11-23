@@ -1,5 +1,5 @@
 // Builds the Chrome Web Store upload: a zip whose root contains manifest.json.
-// Runtime files only — notes, listing copy and scripts stay out of the package.
+// Runtime files only - notes, listing copy and scripts stay out of the package.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'

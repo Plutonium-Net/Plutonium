@@ -8,8 +8,11 @@ export default function ClipExtensionNotice() {
 
   return (
     <div className="clip-install" role="status">
+      <span className="clip-install__mark" aria-hidden="true">
+        <img src="/icon-white.png" alt="" />
+      </span>
       <div className="clip-install__body">
-        <h2>Clip recording is off — Plutonium Clip is not installed in this browser</h2>
+        <h2>Clip recording is off. Plutonium Clip is not installed in this browser</h2>
         <p>
           Chrome only lets an extension capture a tab without the screen-share picker, so the clip buttons stay hidden
           until <strong>Plutonium Clip</strong> is installed. It works on every site that hosts Plutonium, including
@@ -27,7 +30,7 @@ export default function ClipExtensionNotice() {
         </ol>
         <p>
           Chrome only permits tab capture straight after the extension is invoked, so if clip does nothing, click the
-          Plutonium Clip toolbar icon once — that click records too.
+          Plutonium Clip toolbar icon once. That click records too.
         </p>
       </div>
       <button type="button" onClick={() => window.location.reload()}>

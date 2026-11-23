@@ -14,16 +14,16 @@ in `manifest.json` for every later upload; the store rejects a reused version.
 
 ## Listing
 
-**Name** — Plutonium Clip
+**Name**: Plutonium Clip
 
-**Short description (≤132)** — Records only the Plutonium game or proxied tab.
-No screen picker, no uploads — clips stay in your browser.
+**Short description (≤132)**: Records only the Plutonium game or proxied tab.
+No screen picker, no uploads, clips stay in your browser.
 
-**Category** — Tools (alternate: Productivity)
+**Category**: Tools (alternate: Productivity)
 
-**Language** — English
+**Language**: English
 
-**Homepage** — https://plutoniumnet.work
+**Homepage**: https://plutoniumnet.work
 
 **Detailed description**
 
@@ -32,7 +32,7 @@ No screen picker, no uploads — clips stay in your browser.
 >
 > Open a game or browse through Plutonium's proxy and press the clip control in
 > the game dock, the Lumin player bar or the tab bar. Recording starts, cropped to
-> the game or page rectangle, and the next press stops it and saves the clip — no
+> the game or page rectangle, and the next press stops it and saves the clip with no
 > desktop, no other tabs, no address bar.
 >
 > - Press clip to start, press it again to stop and save
@@ -50,31 +50,31 @@ No screen picker, no uploads — clips stay in your browser.
 > Requires the Plutonium web app, which supplies the record controls inside the
 > page.
 
-**Single purpose statement** — Records the Plutonium game or proxied page area
+**Single purpose statement**: Records the Plutonium game or proxied page area
 into a local clip file on request.
 
 ## Permission justifications
 
-- **tabCapture** — the recorder's entire function: capture the current Plutonium
+- **tabCapture**: the recorder's entire function, capturing the current Plutonium
   tab's frames. Chrome shows a screen-share picker for `getDisplayMedia`, which
   this extension exists to avoid.
-- **offscreen** — the recorder must run in a document that is not the visible
+- **offscreen**: the recorder must run in a document that is not the visible
   page, so it can call `getUserMedia` on the tabCapture stream id, crop the
   frames and run `MediaRecorder`.
-- **storage** — writes one tab id to `chrome.storage.session` so a finished clip
+- **storage**: writes one tab id to `chrome.storage.session` so a finished clip
   can be relayed back to the right page; cleared when the tab stops recording.
 - **No audio is recorded.** The recorder opens the tab stream video-only, so the
   game keeps its sound and nothing from the microphone or the tab is ever
   captured as audio.
-- **activeTab** — grants capture for the tab the user invokes the extension on,
+- **activeTab**: grants capture for the tab the user invokes the extension on,
   which is also the toolbar-icon fallback path.
-- **Host permission for `http://*/*` and `https://*/*`** — Plutonium is
+- **Host permission for `http://*/*` and `https://*/*`**: Plutonium is
   self-hosted by its users, so a deployment can live on any domain
   (plutoniumnet.work, a school or club host, a copied fork, a renamed origin).
   The bridge script therefore has to load on any site. It is passive: it waits
   on a private `postMessage` channel and answers only if the page is Plutonium,
   reads no page content, stores nothing and makes no network requests.
-- **scripting** — adds the same bridge to a tab that was already open when the
+- **scripting**: adds the same bridge to a tab that was already open when the
   extension was installed, instead of forcing a reload.
 
 ### Reviewer note (paste in "Notes for the reviewer")
@@ -93,29 +93,29 @@ into a local clip file on request.
 ## Data usage answers (Privacy practices tab)
 
 - Does the item collect user data? **No.**
-- Personally identifiable information — no
-- Health information — no
-- Financial and payment information — no
-- Authentication information — no
-- Personal communications — no
-- Location — no
-- Web history — no
-- User activity — no
-- Website content — no. Frames are processed in memory and handed to the
+- Personally identifiable information: no
+- Health information: no
+- Financial and payment information: no
+- Authentication information: no
+- Personal communications: no
+- Location: no
+- Web history: no
+- User activity: no
+- Website content: no. Frames are processed in memory and handed to the
   Plutonium page for local storage; nothing is transmitted.
-- Remote code — **no**, all scripts ship in the package.
+- Remote code: **no**. All scripts ship in the package.
 
 Privacy policy URL: host `extension/PRIVACY.md` publicly (for example
 `https://plutoniumnet.work/clip/privacy`) and paste that URL.
 
 ## Assets checklist
 
-- Icon 128×128 — already generated into `icons/icon128.png`.
+- Icon 128×128: already generated into `icons/icon128.png`.
 - Screenshots: at least one, 1280×800 or 640×400 PNG/JPEG. Take them from the
   real app with the extension installed: a game with the clip control recording,
   the "Clip saved" toast, and the Clips studio with a clip open. Do not mock
   these up.
-- Small promo tile 440×280 — optional.
+- Small promo tile 440×280 (optional).
 
 ## Pre-submit checks
 

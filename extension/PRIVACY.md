@@ -1,4 +1,4 @@
-# Plutonium Clip — Privacy Policy
+# Plutonium Clip Privacy Policy
 
 Last updated: 23 November 2026
 
@@ -31,21 +31,21 @@ not send anything anywhere.
 ## Storage
 
 Clips live in the Plutonium page's IndexedDB (`plutonium-clips`). The extension
-stores one number in `chrome.storage.session` — the id of the tab being
-recorded — and clears it when the clip finishes or the tab closes. Uninstalling
+stores one number in `chrome.storage.session` (the id of the tab being
+recorded) and clears it when the clip finishes or the tab closes. Uninstalling
 the extension removes that value. Deleting clips in the Clips studio (or
 clearing site data for Plutonium) removes the recordings.
 
 ## Permissions
 
-- `tabCapture` — capture frames of the current tab without Chrome's screen-share
+- `tabCapture`: capture frames of the current tab without Chrome's screen-share
   picker.
-- `offscreen` — run the recorder document that crops and encodes the frames.
-- `storage` — remember which tab is recording for the length of one clip.
-- `activeTab` — grant capture for the tab you invoke the extension on.
-- `scripting` — adds the same page bridge to a tab that was already open when
+- `offscreen`: run the recorder document that crops and encodes the frames.
+- `storage`: remember which tab is recording for the length of one clip.
+- `activeTab`: grant capture for the tab you invoke the extension on.
+- `scripting`: adds the same page bridge to a tab that was already open when
   the extension was installed, so it does not need a reload.
-- Host access to every website — Plutonium can be hosted on any domain, so the
+- Host access to every website, Plutonium can be hosted on any domain, so the
   bridge script has to be able to load on any domain. It only speaks a private
   channel and does nothing at all on a page that is not Plutonium: no page
   content is read, stored or sent elsewhere, and it makes no network requests.

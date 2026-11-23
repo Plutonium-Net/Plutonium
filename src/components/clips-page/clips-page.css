@@ -406,7 +406,7 @@
 }
 
 .clips-page .clip-card__fav.is-on {
-  color: #ffd479;
+  color: #fff;
 }
 
 .clips-page .clip-card__fav svg {
@@ -525,9 +525,9 @@
   display: grid;
   place-items: center;
   padding: 28px;
-  background: rgba(3, 4, 8, 0.66);
-  backdrop-filter: blur(20px) saturate(1.1);
-  -webkit-backdrop-filter: blur(20px) saturate(1.1);
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
   animation: clip-fade 0.16s ease both;
 }
 
@@ -539,21 +539,13 @@
   width: min(1080px, 96vw);
   max-height: 90vh;
   overflow: hidden;
+  background: #000;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 22px;
   box-shadow:
     0 50px 120px -50px rgba(0, 0, 0, 0.9),
     0 0 0 1px rgba(0, 0, 0, 0.22);
   animation: clip-rise 0.18s ease both;
-}
-
-/* The studio popup is glass, so it reads as the same material as the board. */
-.clip-studio .clip-studio__glass {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  pointer-events: none;
 }
 
 .clip-studio .clip-studio__head,
@@ -674,9 +666,9 @@
 }
 
 .clip-studio .clip-studio__icon-btn.is-on {
-  border-color: rgba(255, 208, 110, 0.34);
-  background: rgba(255, 200, 90, 0.12);
-  color: #ffd479;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
 }
 
 .clip-studio .clip-studio__icon-btn.is-on svg {
@@ -770,17 +762,32 @@
   padding: 16px;
   overflow-y: auto;
   border-left: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(9, 10, 16, 0.3);
 }
 
 .clip-studio .clip-studio__card {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: hidden;
   padding: 14px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Glass sits on the card itself, so the black editor keeps the app's material. */
+.clip-studio .clip-studio__card-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.clip-studio .clip-studio__card > *:not(.clip-studio__card-glass) {
+  position: relative;
+  z-index: 1;
 }
 
 .clip-studio .clip-studio__card-head {

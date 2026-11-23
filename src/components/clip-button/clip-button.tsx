@@ -100,7 +100,11 @@ export default function ClipButton({ target, label, source, variant = 'pill', cl
     >
       <svg viewBox="0 0 24 24" aria-hidden="true" className="clip-button__icon">
         <circle cx="12" cy="12" r="8" />
-        <circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none" />
+        {recording ? (
+          <rect x="8.7" y="8.7" width="6.6" height="6.6" rx="1.5" fill="currentColor" stroke="none" />
+        ) : (
+          <circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none" />
+        )}
       </svg>
       {variant === 'pill' ? (
         <span className="clip-button__text">

@@ -83,7 +83,7 @@ async function pickerSink(meta: SinkMeta): Promise<Sink> {
 }
 
 // Firefox and Safari have no picker, but they do have OPFS with a synchronous
-// access handle — in a worker only. That is the disk-backed path for them.
+// access handle - in a worker only. That is the disk-backed path for them.
 const OPFS_WORKER = `
 let access = null;
 self.onmessage = async (event) => {

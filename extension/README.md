@@ -1,7 +1,7 @@
 # Plutonium Clip extension
 
-Records **only** the region Plutonium asks for — the game iframe or the proxied
-page — with `tabCapture`. Chrome's screen-share picker never opens, because the
+Records **only** the region Plutonium asks for (the game iframe or the proxied
+page) with `tabCapture`. Chrome's screen-share picker never opens, because the
 extension captures the tab it is already attached to and crops the frames it
 receives.
 
@@ -33,14 +33,14 @@ extension then records the same target the page would have used.
 
 After reloading or updating the extension, reload Plutonium too. A tab that was
 already open keeps the content script of the old extension instance, which Chrome
-reports as “Extension context invalidated” — the page now says so and asks for
+reports as “Extension context invalidated”. The page now says so and asks for
 the reload, and clicking the toolbar icon also re-attaches the bridge.
 
 ## Permissions
 
-- `tabCapture` — capture the tab's own frames.
-- `offscreen` — run the recorder document.
-- `storage` — remember which tab is mid-recording.
+- `tabCapture`: capture the tab's own frames.
+- `offscreen`: run the recorder document.
+- `storage`: remember which tab is mid-recording.
 - Host access (`http://*/*`, `https://*/*`) so the bridge runs on any site that
   hosts Plutonium, including self-hosted and renamed deployments. Nothing is read
   from a page that does not speak the `plutonium-clip` channel.
