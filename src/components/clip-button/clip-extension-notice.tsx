@@ -8,9 +8,6 @@ export default function ClipExtensionNotice() {
 
   return (
     <div className="clip-install" role="status">
-      <span className="clip-install__mark" aria-hidden="true">
-        <img src="/icon-white.png" alt="" />
-      </span>
       <div className="clip-install__body">
         <h2>Clip recording is off. Plutonium Clip is not installed in this browser</h2>
         <p>
