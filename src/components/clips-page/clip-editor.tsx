@@ -162,74 +162,97 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
           className="clip-studio__glass"
           width="100%"
           height="100%"
-          borderRadius={20}
+          borderRadius={22}
           backgroundOpacity={0.18}
           saturation={1.25}
           displace={0.5}
         />
 
         <header className="clip-studio__head">
-          <input
-            className="clip-studio__title"
-            value={title}
-            maxLength={90}
-            aria-label="Clip title"
-            spellCheck={false}
-            onChange={(event) => setTitle(event.target.value)}
-            onBlur={() => void commitTitle()}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') event.currentTarget.blur()
-            }}
-          />
-          <span className="clip-studio__local">On this device</span>
-          <button type="button" className="clip-studio__close" onClick={onClose} aria-label="Close studio">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
+          <div className="clip-studio__heading">
+            <span className="clip-studio__eyebrow">Clip studio</span>
+            <input
+              className="clip-studio__title"
+              value={title}
+              maxLength={90}
+              aria-label="Clip title"
+              spellCheck={false}
+              onChange={(event) => setTitle(event.target.value)}
+              onBlur={() => void commitTitle()}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') event.currentTarget.blur()
+              }}
+            />
+          </div>
+
+          <div className="clip-studio__head-actions">
+            <button
+              type="button"
+              className={`clip-studio__icon-btn${clip.favorite ? ' is-on' : ''}`}
+              onClick={() => void toggleFavorite()}
+              aria-pressed={clip.favorite}
+              aria-label={clip.favorite ? 'Remove from favorites' : 'Add to favorites'}
+              title={clip.favorite ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" />
+              </svg>
+            </button>
+            <span className="clip-studio__local">On this device</span>
+            <button type="button" className="clip-studio__icon-btn clip-studio__close" onClick={onClose} aria-label="Close studio">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />
+              </svg>
+            </button>
+          </div>
         </header>
 
         <div className="clip-studio__body">
-          <div className="clip-studio__stage">
-            {blobUrl ? (
-              <video
-                ref={videoRef}
-                className="clip-studio__video"
-                src={blobUrl}
-                controls
-                playsInline
-                onTimeUpdate={handleTimeUpdate}
-              />
-            ) : (
-              <span className="clip-studio__loading">{failed ? 'This clip is unavailable.' : 'Loading clip…'}</span>
-            )}
+          <div className="clip-studio__viewer">
+            <div className="clip-studio__stage">
+              {blobUrl ? (
+                <video
+                  ref={videoRef}
+                  className="clip-studio__video"
+                  src={blobUrl}
+                  controls
+                  playsInline
+                  onTimeUpdate={handleTimeUpdate}
+                />
+              ) : (
+                <span className="clip-studio__loading">{failed ? 'This clip is unavailable.' : 'Loading clip…'}</span>
+              )}
+            </div>
+
+            <dl className="clip-studio__facts">
+              <div className="clip-studio__fact">
+                <dt>Duration</dt>
+                <dd>{formatDuration(clip.duration)}</dd>
+              </div>
+              <div className="clip-studio__fact">
+                <dt>Resolution</dt>
+                <dd>{clip.width && clip.height ? `${clip.width}×${clip.height}` : '—'}</dd>
+              </div>
+              <div className="clip-studio__fact">
+                <dt>Size</dt>
+                <dd>{formatBytes(clip.size)}</dd>
+              </div>
+              <div className="clip-studio__fact">
+                <dt>Recorded</dt>
+                <dd>{formatDate(clip.createdAt)}</dd>
+              </div>
+            </dl>
           </div>
 
           <aside className="clip-studio__panel">
-            <section>
-              <h2 className="clip-studio__section-title">Details</h2>
-              <dl className="clip-studio__facts">
-                <div className="clip-studio__fact">
-                  <dt>Duration</dt>
-                  <dd>{formatDuration(clip.duration)}</dd>
-                </div>
-                <div className="clip-studio__fact">
-                  <dt>Resolution</dt>
-                  <dd>{clip.width && clip.height ? `${clip.width}×${clip.height}` : '—'}</dd>
-                </div>
-                <div className="clip-studio__fact">
-                  <dt>Size</dt>
-                  <dd>{formatBytes(clip.size)}</dd>
-                </div>
-                <div className="clip-studio__fact">
-                  <dt>Recorded</dt>
-                  <dd>{formatDate(clip.createdAt)}</dd>
-                </div>
-              </dl>
-            </section>
+            <section className="clip-studio__card">
+              <div className="clip-studio__card-head">
+                <h2 className="clip-studio__section-title">Trim</h2>
+                <span className="clip-studio__selection">
+                  {exporting ? `Saving ${Math.round(progress * 100)}%` : `${formatPrecise(selectionSec)} selected`}
+                </span>
+              </div>
 
-            <section className="clip-studio__trim">
-              <h2 className="clip-studio__section-title">Trim</h2>
               <div className="clip-studio__range">
                 <label htmlFor="clip-trim-start">
                   Start <output htmlFor="clip-trim-start">{formatPrecise(start)}</output>
@@ -244,6 +267,7 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
                   onChange={(event) => setStart(Math.min(Number(event.target.value), end - 0.5))}
                 />
               </div>
+
               <div className="clip-studio__range">
                 <label htmlFor="clip-trim-end">
                   End <output htmlFor="clip-trim-end">{formatPrecise(end)}</output>
@@ -258,15 +282,13 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
                   onChange={(event) => setEnd(Math.max(Number(event.target.value), start + 0.5))}
                 />
               </div>
-              <p className="clip-studio__selection">
-                Selection · {formatPrecise(selectionSec)}
-                {exporting ? ` · saving ${Math.round(progress * 100)}%` : ''}
-              </p>
+
               {exporting && (
                 <div className="clip-studio__progress" role="progressbar" aria-valuenow={Math.round(progress * 100)}>
                   <span style={{ width: `${Math.round(progress * 100)}%` }} />
                 </div>
               )}
+
               <div className="clip-studio__buttons">
                 <button
                   type="button"
@@ -274,7 +296,10 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
                   onClick={previewSelection}
                   disabled={!blobUrl || exporting}
                 >
-                  Preview selection
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8.5 5.9v12.2l9.5-6.1z" />
+                  </svg>
+                  Preview
                 </button>
                 <button
                   type="button"
@@ -287,7 +312,7 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
               </div>
             </section>
 
-            <section className="clip-studio__buttons">
+            <section className="clip-studio__actions">
               <button
                 type="button"
                 className="clip-studio__btn"
@@ -298,12 +323,6 @@ export default function ClipEditor({ clip, onClose, onChanged }: ClipEditorProps
                   <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14" />
                 </svg>
                 Download
-              </button>
-              <button type="button" className="clip-studio__btn" onClick={() => void toggleFavorite()}>
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 4.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 10.2l5.4-.8z" />
-                </svg>
-                {clip.favorite ? 'Favorited' : 'Favorite'}
               </button>
               <button type="button" className="clip-studio__btn clip-studio__btn--danger" onClick={() => void remove()}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
