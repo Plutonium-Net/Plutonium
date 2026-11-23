@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import GlassSurface from '@/components/glass-surface/GlassSurface'
 import { listClips, subscribeClips, updateClip, type ClipMeta } from '@/lib/clips/db'
 import { formatBytes, formatDate, formatDuration } from '@/lib/clips/format'
 import ClipExtensionNotice from '@/components/clip-button/clip-extension-notice'
@@ -59,120 +60,147 @@ export default function ClipsPage() {
       <div className="clips-page__scroll">
         <div className="clips-page__inner">
           <header className="clips-page__head">
-            <div>
-              <span className="clips-page__kicker">Plutonium Studio</span>
-              <h1 className="clips-page__title">Clips</h1>
-              <p className="clips-page__sub">
-                Press clip in a game or on a proxied tab to start recording, press it again to stop and save. Trim,
-                favorite and download what you save — everything stays in this browser and is never uploaded.
-              </p>
-            </div>
+            <h1 className="clips-page__title">Clips</h1>
+            <p className="clips-page__sub">
+              Press clip in a game or on a proxied tab to start recording, press it again to stop and save. Trim,
+              favorite and download what you save — everything stays in this browser and is never uploaded.
+            </p>
           </header>
 
           <ClipExtensionNotice />
 
-          <div className="clips-page__bar">
-            <span className="clips-page__count">
-              {clips.length} clip{clips.length === 1 ? '' : 's'} · {formatBytes(totalBytes)}
-            </span>
-            <span className="clips-page__grow" />
-            <label className="clips-page__search">
-              <svg viewBox="0 0 20 20" aria-hidden="true">
-                <circle cx="9" cy="9" r="6" />
-                <path d="m13.4 13.4 3.6 3.6" />
-              </svg>
-              <input
-                type="search"
-                value={query}
-                placeholder="Search clips"
-                aria-label="Search clips"
-                autoComplete="off"
-                spellCheck={false}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
-            <select
-              className="clips-page__sort"
-              value={sort}
-              aria-label="Sort clips"
-              onChange={(event) => setSort(event.target.value as Sort)}
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="longest">Longest first</option>
-            </select>
-          </div>
+          <GlassSurface
+            className="clips-page__panel"
+            width="100%"
+            height="auto"
+            borderRadius={20}
+            backgroundOpacity={0.1}
+            saturation={1.25}
+            displace={0.5}
+          >
+            <div className="clips-page__panel-body">
+              <div className="clips-page__bar">
+                <span className="clips-page__count">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="2.8" y="4.8" width="18.4" height="14.4" rx="2.8" />
+                    <path d="M7.7 4.8v14.4M16.3 4.8v14.4" />
+                    <path d="M2.8 9.2h4.9M2.8 14.8h4.9M16.3 9.2h4.9M16.3 14.8h4.9" />
+                  </svg>
+                  {clips.length} clip{clips.length === 1 ? '' : 's'} · {formatBytes(totalBytes)}
+                </span>
+                <span className="clips-page__grow" />
+                <label className="clips-page__search">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="10.6" cy="10.6" r="6.4" />
+                    <path d="m15.4 15.4 4.1 4.1" />
+                  </svg>
+                  <input
+                    type="search"
+                    value={query}
+                    placeholder="Search clips"
+                    aria-label="Search clips"
+                    autoComplete="off"
+                    spellCheck={false}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                </label>
+                <span className="clips-page__sortwrap">
+                  <select
+                    className="clips-page__sort"
+                    value={sort}
+                    aria-label="Sort clips"
+                    onChange={(event) => setSort(event.target.value as Sort)}
+                  >
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="longest">Longest first</option>
+                  </select>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />
+                  </svg>
+                </span>
+              </div>
 
-          {status === 'loading' ? (
-            <p className="clips-page__note">Loading clips…</p>
-          ) : status === 'error' ? (
-            <div className="clips-page__empty">
-              <h2>Clip storage is unavailable</h2>
-              <p>Your browser blocked local storage. Clips cannot be read until it is allowed.</p>
-            </div>
-          ) : clips.length === 0 ? (
-            <div className="clips-page__empty">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="3" y="5" width="18" height="14" rx="3" />
-                <path d="M7.5 5v14M16.5 5v14M3 9.5h4.5M3 14.5h4.5M16.5 9.5H21M16.5 14.5H21" />
-              </svg>
-              <h2>No clips yet</h2>
-              <p>Captured clips will land here, ready to trim and download.</p>
-            </div>
-          ) : (
-            <div className="clips-page__grid">
-              {visible.map((clip) => (
-                <article className="clip-card" key={clip.id}>
-                  <button
-                    type="button"
-                    className="clip-card__open"
-                    onClick={() => setSelectedId(clip.id)}
-                    aria-label={`Open ${clip.title}`}
-                  >
-                    <span className="clip-card__thumb">
-                      {clip.thumb ? (
-                        <img src={clip.thumb} alt="" loading="lazy" draggable={false} />
-                      ) : (
-                        <span className="clip-card__thumb-empty" aria-hidden="true">
-                          <svg viewBox="0 0 24 24">
-                            <rect x="3" y="6" width="12.5" height="12" rx="3" />
-                            <path d="m15.5 12.5 5.5-3.3v7.6l-5.5-3.3z" />
-                          </svg>
-                        </span>
-                      )}
-                      <span className="clip-card__play" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                          <path d="M8 5.5l11 6.5-11 6.5z" />
-                        </svg>
-                      </span>
-                      <span className="clip-card__duration">{formatDuration(clip.duration)}</span>
-                    </span>
-                    <span className="clip-card__body">
-                      <span className="clip-card__title">{clip.title}</span>
-                      <span className="clip-card__meta">
-                        {formatDate(clip.createdAt)} · {formatBytes(clip.size)}
-                      </span>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`clip-card__fav${clip.favorite ? ' is-on' : ''}`}
-                    onClick={() => void toggleFavorite(clip)}
-                    aria-label={clip.favorite ? 'Remove from favorites' : 'Favorite clip'}
-                    aria-pressed={clip.favorite}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 4.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 10.2l5.4-.8z" />
+              {status === 'loading' ? (
+                <p className="clips-page__note">Loading clips…</p>
+              ) : status === 'error' ? (
+                <div className="clips-page__empty">
+                  <span className="clips-page__empty-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="8.4" />
+                      <path d="m6.1 17.9 11.8-11.8" />
                     </svg>
-                  </button>
-                </article>
-              ))}
-            </div>
-          )}
+                  </span>
+                  <h2>Clip storage is unavailable</h2>
+                  <p>Your browser blocked local storage. Clips cannot be read until it is allowed.</p>
+                </div>
+              ) : clips.length === 0 ? (
+                <div className="clips-page__empty">
+                  <span className="clips-page__empty-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="8.4" />
+                      <circle className="clips-page__empty-dot" cx="12" cy="12" r="3.2" />
+                    </svg>
+                  </span>
+                  <h2>No clips yet</h2>
+                  <p>Captured clips will land here, ready to trim and download.</p>
+                </div>
+              ) : (
+                <div className="clips-page__grid">
+                  {visible.map((clip) => (
+                    <article className="clip-card" key={clip.id}>
+                      <button
+                        type="button"
+                        className="clip-card__open"
+                        onClick={() => setSelectedId(clip.id)}
+                        aria-label={`Open ${clip.title}`}
+                      >
+                        <span className="clip-card__thumb">
+                          {clip.thumb ? (
+                            <img src={clip.thumb} alt="" loading="lazy" draggable={false} />
+                          ) : (
+                            <span className="clip-card__thumb-empty" aria-hidden="true">
+                              <svg viewBox="0 0 24 24">
+                                <rect x="2.8" y="6.4" width="12.2" height="11.2" rx="3" />
+                                <path d="m15 12.3 5.1-3.1a.7.7 0 0 1 1.1.6v4.4a.7.7 0 0 1-1.1.6L15 12.3z" />
+                              </svg>
+                            </span>
+                          )}
+                          <span className="clip-card__play" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                              <path d="M9.2 6.6a1 1 0 0 1 1.5-.87l7.2 4.5a1.1 1.1 0 0 1 0 1.84l-7.2 4.5a1 1 0 0 1-1.5-.87z" />
+                            </svg>
+                          </span>
+                          <span className="clip-card__duration">{formatDuration(clip.duration)}</span>
+                        </span>
+                        <span className="clip-card__body">
+                          <span className="clip-card__title">{clip.title}</span>
+                          <span className="clip-card__meta">
+                            {formatDate(clip.createdAt)} · {formatBytes(clip.size)}
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`clip-card__fav${clip.favorite ? ' is-on' : ''}`}
+                        onClick={() => void toggleFavorite(clip)}
+                        aria-label={clip.favorite ? 'Remove from favorites' : 'Favorite clip'}
+                        aria-pressed={clip.favorite}
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M12 4.4l2.36 4.83 5.32.77-3.84 3.75.9 5.3L12 16.55l-4.74 2.5.9-5.3L4.32 10l5.32-.77z" />
+                        </svg>
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              )}
 
-          {status === 'ready' && clips.length > 0 && visible.length === 0 && (
-            <p className="clips-page__note">Nothing matches “{query.trim()}”.</p>
-          )}
+              {status === 'ready' && clips.length > 0 && visible.length === 0 && (
+                <p className="clips-page__note">Nothing matches “{query.trim()}”.</p>
+              )}
+            </div>
+          </GlassSurface>
         </div>
       </div>
 

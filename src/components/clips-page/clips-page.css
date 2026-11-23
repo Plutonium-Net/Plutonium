@@ -27,99 +27,172 @@
 }
 
 .clips-page .clips-page__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   width: min(1180px, 92vw);
   margin: 0 auto;
 }
 
 .clips-page .clips-page__head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 34px 4px 26px;
-}
-
-.clips-page .clips-page__kicker {
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.38);
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px 6px;
+  text-align: center;
 }
 
 .clips-page .clips-page__title {
-  margin: 2px 0 0;
+  margin: 8px 0 0;
   font-family: 'Plutonium', sans-serif;
   font-size: clamp(46px, 7vw, 92px);
   font-weight: 400;
   line-height: 0.92;
   letter-spacing: 0.01em;
   color: rgba(255, 255, 255, 0.9);
+  text-align: center;
   user-select: none;
+  animation: clips-title-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes clips-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 .clips-page .clips-page__sub {
-  margin: 10px 0 0;
-  max-width: 470px;
+  margin: 14px auto 0;
+  max-width: 520px;
   font-size: 12.5px;
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.48);
+  text-align: center;
 }
 
 .clips-page .clips-page__note {
   margin: 0;
+  padding: 8px 4px;
   font-size: 11px;
   line-height: 1.55;
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
 }
 
 .clips-page .clips-page__bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 18px;
-  padding: 0 4px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .clips-page .clips-page__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 10.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.36);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.clips-page .clips-page__count svg {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
 }
 
 .clips-page .clips-page__grow {
   flex: 1 1 auto;
 }
 
+/* The clips board is a real glass surface; its content slot carries the layout. */
+.clips-page .clips-page__panel {
+  width: 100%;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  animation: clips-panel-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.clips-page .clips-page__panel .glass-surface__content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.clips-page .clips-page__panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  padding: 18px 18px 22px;
+}
+
+@keyframes clips-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .clips-page .clips-page__search {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 34px;
-  padding: 0 12px;
+  gap: 9px;
+  height: 36px;
+  padding: 0 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(6, 8, 14, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 0.16s ease, background 0.16s ease;
 }
 
 .clips-page .clips-page__search:focus-within {
-  border-color: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(6, 8, 14, 0.48);
 }
 
 .clips-page .clips-page__search svg {
-  width: 13px;
-  height: 13px;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
   fill: none;
-  stroke: rgba(255, 255, 255, 0.4);
+  stroke: rgba(255, 255, 255, 0.42);
   stroke-width: 1.8;
   stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.16s ease;
+}
+
+.clips-page .clips-page__search:focus-within svg {
+  stroke: rgba(255, 255, 255, 0.72);
 }
 
 .clips-page .clips-page__search input {
-  width: 150px;
+  width: 170px;
+  min-width: 0;
   border: 0;
   background: none;
   color: #fff;
@@ -132,21 +205,53 @@
   color: rgba(255, 255, 255, 0.32);
 }
 
+.clips-page .clips-page__sortwrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .clips-page .clips-page__sort {
-  height: 34px;
-  padding: 0 12px;
+  height: 36px;
+  padding: 0 32px 0 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.7);
+  background: rgba(6, 8, 14, 0.34);
+  color: rgba(255, 255, 255, 0.72);
   font: inherit;
   font-size: 11.5px;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+
+.clips-page .clips-page__sort:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.clips-page .clips-page__sort option {
+  background: #0b0d15;
+  color: #fff;
 }
 
 .clips-page .clips-page__sort:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.35);
   outline-offset: 2px;
+}
+
+.clips-page .clips-page__sortwrap > svg {
+  position: absolute;
+  right: 12px;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.42);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 
 .clips-page .clips-page__grid {
@@ -161,17 +266,16 @@
   flex-direction: column;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  background: rgba(12, 14, 22, 0.58);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
 
 .clips-page .clip-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: 0 22px 44px -28px rgba(0, 0, 0, 0.85);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 18px 36px -28px rgba(0, 0, 0, 0.9);
 }
 
 .clips-page .clip-card__open {
@@ -322,21 +426,40 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 62px 20px;
+  gap: 12px;
+  padding: 54px 24px;
   border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.015);
   color: rgba(255, 255, 255, 0.45);
   text-align: center;
 }
 
-.clips-page .clips-page__empty > svg {
-  width: 34px;
-  height: 34px;
+.clips-page .clips-page__empty-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  background: rgba(6, 8, 14, 0.34);
+  color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.02);
+}
+
+.clips-page .clips-page__empty-icon svg {
+  width: 26px;
+  height: 26px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.3;
-  opacity: 0.7;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.clips-page .clips-page__empty-icon .clips-page__empty-dot {
+  fill: currentColor;
+  stroke: none;
 }
 
 .clips-page .clips-page__empty h2 {
@@ -699,6 +822,10 @@
     padding-top: 22px;
   }
 
+  .clips-page .clips-page__panel-body {
+    padding: 14px 14px 18px;
+  }
+
   .clips-page .clips-page__grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
@@ -715,5 +842,13 @@
 
   .clips-page .clips-page__search input {
     width: 110px;
+  }
+
+  .clips-page .clips-page__bar {
+    gap: 8px;
+  }
+
+  .clips-page .clips-page__grow {
+    display: none;
   }
 }
