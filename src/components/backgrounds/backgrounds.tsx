@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from 'react'
+import { usePerformance } from '@/hooks/use-performance'
+import FlatBackground from './flat-background'
 import { DAILY, getBackgroundChoice, subscribeBackground } from './background-store'
 import { BACKGROUNDS, backgroundFor, type BackgroundOption } from './registry'
 
@@ -10,5 +12,7 @@ export function useBackground(): BackgroundOption {
 
 export default function Background() {
   const { Component } = useBackground()
+  const performance = usePerformance()
+  if (performance.enabled && performance.features.flatBackground) return <FlatBackground />
   return <Component />
 }

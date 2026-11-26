@@ -20,6 +20,7 @@ import OnlineCount from '@/components/online-count/online-count'
 import type { LegalSection } from '@/lib/legal'
 import PageFrame from '@/components/page-frame/page-frame'
 import PageView from '@/components/page-view/page-view'
+import PerformancePanel from '@/components/performance-panel/performance-panel'
 import Pins from '@/components/pins/pins'
 import ProxySwitcher from '@/components/proxy-switcher/proxy-switcher'
 import QuickApps from '@/components/quick-apps/quick-apps'
@@ -31,6 +32,7 @@ import SocialLinks from '@/components/social-links/social-links'
 import TransferOverlay from '@/components/transfer-overlay/transfer-overlay'
 import { useAccent } from '@/hooks/use-accent'
 import { useNet } from '@/hooks/use-net'
+import { usePerformance } from '@/hooks/use-performance'
 import { useTabs } from '@/hooks/use-tabs'
 import { familyFor } from '@/lib/net/engines'
 import { ensureConnected } from '@/lib/net/net-store'
@@ -42,7 +44,12 @@ export default function App() {
   const { tabs, activeId, addTab, selectTab, closeTab, moveTab, navigate, back, forward } = useTabs()
   const net = useNet()
   const accent = useAccent()
-  const [panel, setPanel] = useState<'history' | 'info' | 'proxy' | 'region' | 'customize' | null>(null)
+  const performance = usePerformance()
+  const glowCursorOff = performance.enabled && performance.features.glowCursor
+  const topBlurOff = performance.enabled && performance.features.topBlur
+  const [panel, setPanel] = useState<'history' | 'info' | 'proxy' | 'region' | 'customize' | 'performance' | null>(
+    null,
+  )
   const [dialog, setDialog] = useState<'feedback' | 'legal' | null>(null)
   const [legalSection, setLegalSection] = useState<LegalSection>('terms')
   const [reloadToken, setReloadToken] = useState(0)
@@ -110,6 +117,7 @@ export default function App() {
         target.closest('.proxy-panel') ||
         target.closest('.history-panel') ||
         target.closest('.customize-panel') ||
+        target.closest('.performance-panel') ||
         target.closest('.info-panel') ||
         target.closest('.region-menu') ||
         target.closest('.side-menu') ||
@@ -167,20 +175,22 @@ export default function App() {
               ) : null
             }
           />
-          <div className="app-shell__tabs-blur">
-            {/* Ramp hugs the top of the viewport and eases downward behind the tab bar. */}
-            <GradualBlur
-              position="top"
-              height="6rem"
-              strength={3}
-              layers={10}
-              curve="linear"
-              exponential
-              tint="transparent"
-              hoverIntensity={1}
-              autoHide={false}
-            />
-          </div>
+          {!topBlurOff && (
+            <div className="app-shell__tabs-blur">
+              {/* Ramp hugs the top of the viewport and eases downward behind the tab bar. */}
+              <GradualBlur
+                position="top"
+                height="6rem"
+                strength={3}
+                layers={10}
+                curve="linear"
+                exponential
+                tint="transparent"
+                hoverIntensity={1}
+                autoHide={false}
+              />
+            </div>
+          )}
         </div>
 
         {onWeb && activeTab && (
@@ -216,16 +226,18 @@ export default function App() {
 
       {home && (
         <>
-          <GlowCursor
-            color={accent.hex}
+          {!glowCursorOff && (
+            <GlowCursor
+              color={accent.hex}
             intensity={1.3}
             trailWidth={3}
             linger={1.4}
             glow={1.2}
             clickBurst
             theme="dark"
-            style={{ position: 'fixed', inset: 0, zIndex: 4, pointerEvents: 'none' }}
-          />
+              style={{ position: 'fixed', inset: 0, zIndex: 4, pointerEvents: 'none' }}
+            />
+          )}
           <SearchBar onNavigate={searchWithWave} onActiveChange={setSearchActive} />
           <OnlineCount hidden={searchActive} />
           <QuickApps hidden={searchActive} onOpen={(href) => void navigate(href)} />
@@ -240,6 +252,7 @@ export default function App() {
           if (id === 'proxy') return <ProxySwitcher />
           if (id === 'region') return <RegionMenu />
           if (id === 'customize') return <CustomizePanel onClose={() => setPanel(null)} />
+          if (id === 'performance') return <PerformancePanel onClose={() => setPanel(null)} />
           if (id === 'info')
             return (
               <InfoPanel

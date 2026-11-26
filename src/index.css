@@ -5,3 +5,46 @@
   --accent: #ffffff;
   --accent-rgb: 255, 255, 255;
 }
+
+/*
+ * Performance Mode: "Glow effects" off.
+ * Shadows, text blooms and shaped-glass glows are what every glow in the UI is
+ * built from, so one root attribute turns them off everywhere at once. Focus
+ * rings use outlines, so keyboard focus stays visible.
+ */
+[data-perf-glow='off'] *,
+[data-perf-glow='off'] *::before,
+[data-perf-glow='off'] *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+[data-perf-glow='off'] .glass-surface__glow {
+  display: none !important;
+}
+
+/* Coloured drop-shadow halos on the AI and voice avatars. */
+[data-perf-glow='off'] .ai-page .is-logo img,
+[data-perf-glow='off'] .voice-mode__avatar.is-logo img {
+  filter: none !important;
+}
+
+/*
+ * Performance Mode: "UI animations" off.
+ * Runs every keyframe and transition to its end state instantly instead of
+ * removing it, so components that rely on animation-fill or animationend
+ * still settle where they belong.
+ */
+[data-perf-motion='off'] *,
+[data-perf-motion='off'] *::before,
+[data-perf-motion='off'] *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+[data-perf-motion='off'] {
+  scroll-behavior: auto !important;
+}

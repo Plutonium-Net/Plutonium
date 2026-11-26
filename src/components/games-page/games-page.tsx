@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BorderBeam } from 'border-beam'
+import BorderBeam from '@/components/border-beam/border-beam'
 import ClipButton from '@/components/clip-button/clip-button'
 import GamePlayer from '@/components/game-player/game-player'
 import GlassHighlight from '@/components/glass-highlight/glass-highlight'

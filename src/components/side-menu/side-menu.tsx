@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import './side-menu.css'
 
-type PanelId = 'history' | 'info' | 'proxy' | 'region' | 'customize'
+type PanelId = 'history' | 'info' | 'proxy' | 'region' | 'customize' | 'performance'
 
 type MenuItem = {
   id: string
@@ -56,6 +56,17 @@ const ITEMS: MenuItem[] = [
       <>
         <path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" />
         <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" />
+      </>
+    ),
+  },
+  {
+    id: 'performance',
+    label: 'Performance Mode',
+    panel: 'performance',
+    icon: (
+      <>
+        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
       </>
     ),
   },

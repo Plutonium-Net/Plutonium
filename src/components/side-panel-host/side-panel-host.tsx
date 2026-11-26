@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import './side-panel-host.css'
 
-export type SidePanelId = 'history' | 'proxy' | 'region' | 'customize' | 'info'
+export type SidePanelId = 'history' | 'proxy' | 'region' | 'customize' | 'performance' | 'info'
 
 const EXIT_MS = 170
 

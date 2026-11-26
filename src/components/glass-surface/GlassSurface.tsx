@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useId, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { useSimpleGlass } from '@/hooks/use-performance';
 import './GlassSurface.css';
 
 export type GlassSurfaceChannel = 'R' | 'G' | 'B';
@@ -375,6 +376,9 @@ const GlassSurface = ({
   className = '',
   style = {}
 }: GlassSurfaceProps) => {
+  // Performance Mode: render a plain CSS blur instead of the glass renderers.
+  const simpleGlass = useSimpleGlass();
+
   const uniqueId = useId().replace(/:/g, '-');
   const filterId = `glass-filter-${uniqueId}`;
   const redGradId = `red-grad-${uniqueId}`;
@@ -448,6 +452,7 @@ const GlassSurface = ({
   };
 
   useEffect(() => {
+    if (simpleGlass) return;
     updateDisplacementMap();
     [
       { ref: redChannelRef, offset: redOffset },
@@ -478,11 +483,12 @@ const GlassSurface = ({
     blueOffset,
     xChannel,
     yChannel,
-    mixBlendMode
+    mixBlendMode,
+    simpleGlass
   ]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (simpleGlass || !containerRef.current) return;
 
     const resizeObserver = new ResizeObserver(() => {
       const element = containerRef.current;
@@ -494,10 +500,10 @@ const GlassSurface = ({
     return () => {
       resizeObserver.disconnect();
     };
-  }, []);
+  }, [simpleGlass]);
 
   useEffect(() => {
-    if (!shape) return undefined;
+    if (!shape || simpleGlass) return undefined;
     let alive = true;
     const image = new Image();
     image.crossOrigin = 'anonymous';
@@ -508,11 +514,12 @@ const GlassSurface = ({
     return () => {
       alive = false;
     };
-  }, [shape]);
+  }, [shape, simpleGlass]);
 
   const shapeImage = shape && loaded.src === shape ? loaded.image : null;
 
   useEffect(() => {
+    if (simpleGlass) return undefined;
     const element = containerRef.current;
     const w = element?.offsetWidth || 0;
     const h = element?.offsetHeight || 0;
@@ -536,7 +543,7 @@ const GlassSurface = ({
     updateDisplacementMap();
     if (shape && trace) setArt({ src: shape, box: trace.box, line: trace.line, glow: trace.glow });
     else if (shape && loaded.src === shape) setArt({ src: shape, failed: true });
-  }, [shape, loaded, boxSize, borderWidth, blur, opacity, brightness]);
+  }, [shape, loaded, boxSize, borderWidth, blur, opacity, brightness, simpleGlass]);
 
   useEffect(() => {
     setSvgSupported(supportsSVGFilters());
@@ -544,13 +551,14 @@ const GlassSurface = ({
   }, []);
 
   const webgl =
+    !simpleGlass &&
     checked &&
     refraction &&
     Boolean(backdrop) &&
     !webglFailed &&
     (renderer === 'webgl' || (renderer === 'auto' && !svgSupported));
-  const refractive = !webgl && svgSupported && refraction;
-  const frosted = !webgl && !refractive;
+  const refractive = !simpleGlass && !webgl && svgSupported && refraction;
+  const frosted = !simpleGlass && !webgl && !refractive;
 
   useEffect(() => {
     if (!webgl) return undefined;
@@ -793,6 +801,26 @@ const GlassSurface = ({
 
     return div.style.backdropFilter !== '';
   };
+
+  if (simpleGlass) {
+    return (
+      <div
+        ref={containerRef}
+        className={`glass-surface glass-surface--simple ${className}`}
+        style={
+          {
+            ...style,
+            width: typeof width === 'number' ? `${width}px` : width,
+            height: typeof height === 'number' ? `${height}px` : height,
+            borderRadius: `${borderRadius}px`,
+            '--glass-frost': backgroundOpacity
+          } as CSSProperties
+        }
+      >
+        <div className="glass-surface__content">{children}</div>
+      </div>
+    );
+  }
 
   const outline = shape && art?.src === shape && !art.failed ? art : null;
   const maskUrl = outline ? `url("${outline.src.replace(/"/g, '%22').replace(/[\n\r]+/g, ' ')}")` : '';

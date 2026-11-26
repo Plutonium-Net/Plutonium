@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { BorderBeam } from 'border-beam'
+import BorderBeam from '@/components/border-beam/border-beam'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import { BEAM_PROPS } from '@/lib/beam'
 import { play, useMuted } from '@/lib/playables/sound'

@@ -29,6 +29,19 @@
   z-index: 1;
 }
 
+/* Performance Mode: one plain blur, no SVG/WebGL glass. */
+.glass-surface--simple {
+  background: light-dark(
+    hsl(0 0% 100% / calc(0.06 + var(--glass-frost, 0) * 0.35)),
+    hsl(0 0% 100% / calc(0.04 + var(--glass-frost, 0) * 0.3))
+  );
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 0 0 1px light-dark(hsl(0 0% 0% / 0.08), hsl(0 0% 100% / 0.1)),
+    0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
 .glass-surface--svg {
   background: light-dark(hsl(0 0% 100% / var(--glass-frost, 0)), hsl(0 0% 0% / var(--glass-frost, 0)));
   backdrop-filter: var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1));

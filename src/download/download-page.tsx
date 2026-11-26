@@ -1,4 +1,4 @@
-import { BorderBeam } from 'border-beam'
+import BorderBeam from '@/components/border-beam/border-beam'
 import SoftAuroraBackground from '@/components/backgrounds/soft-aurora/soft-aurora-background'
 import Clock from '@/components/clock/clock'
 import GlassSurface from '@/components/glass-surface/GlassSurface'

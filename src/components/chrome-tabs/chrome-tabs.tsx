@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from 'react'
-import { BorderBeam } from 'border-beam'
+import BorderBeam from '@/components/border-beam/border-beam'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import TabFavicon from '@/components/tab-favicon/tab-favicon'
 import { BEAM_PROPS } from '@/lib/beam'

@@ -1,0 +1,204 @@
+.performance-panel {
+  position: fixed;
+  right: 76px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 280px;
+  z-index: 30;
+}
+
+.performance-panel .performance-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 0 6px;
+}
+
+.performance-panel .performance-panel__title {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.performance-panel .performance-panel__close {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease;
+}
+
+.performance-panel .performance-panel__close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.performance-panel .performance-panel__close:focus-visible,
+.performance-panel .performance-panel__master:focus-visible,
+.performance-panel .performance-panel__row:focus-visible {
+  outline: 2px solid rgba(var(--accent-rgb), 0.7);
+  outline-offset: 2px;
+}
+
+.performance-panel .performance-panel__master {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+
+.performance-panel .performance-panel__master:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.performance-panel .performance-panel__master.is-on {
+  background: rgba(var(--accent-rgb), 0.14);
+}
+
+.performance-panel .performance-panel__master-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.performance-panel .performance-panel__master-name {
+  font-size: 14px;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.performance-panel .performance-panel__master.is-on .performance-panel__master-name {
+  color: var(--accent);
+}
+
+.performance-panel .performance-panel__master-hint {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.performance-panel .performance-panel__features {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 10px;
+}
+
+.performance-panel .performance-panel__features.is-locked {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.performance-panel .performance-panel__label {
+  padding: 0 8px 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.performance-panel .performance-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+
+.performance-panel .performance-panel__row:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.performance-panel .performance-panel__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.performance-panel .performance-panel__name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.performance-panel .performance-panel__row.is-active .performance-panel__name {
+  color: var(--accent);
+}
+
+.performance-panel .performance-panel__hint {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.performance-panel .performance-panel__switch {
+  position: relative;
+  flex: none;
+  width: 30px;
+  height: 17px;
+  margin-left: auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  transition: background-color 0.18s ease;
+}
+
+.performance-panel .performance-panel__switch.is-on {
+  background: rgba(var(--accent-rgb), 0.8);
+}
+
+.performance-panel .performance-panel__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: #ffffff;
+  transition: transform 0.18s ease;
+}
+
+.performance-panel .performance-panel__switch.is-on .performance-panel__knob {
+  transform: translateX(13px);
+}
+
+.performance-panel .performance-panel__switch--master {
+  width: 44px;
+  height: 25px;
+}
+
+.performance-panel .performance-panel__switch--master .performance-panel__knob {
+  top: 3px;
+  left: 3px;
+  width: 19px;
+  height: 19px;
+}
+
+.performance-panel .performance-panel__switch--master.is-on .performance-panel__knob {
+  transform: translateX(19px);
+}

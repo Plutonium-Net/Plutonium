@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
-import { BorderBeam } from 'border-beam'
+import BorderBeam from '@/components/border-beam/border-beam'
 import ParticleText from '@/components/particle-text/ParticleText'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import SearchSuggest from '@/components/search-suggest/search-suggest'
 import { useHistory } from '@/hooks/use-history'
+import { usePerformance } from '@/hooks/use-performance'
 import { BEAM_PROPS } from '@/lib/beam'
 import { buildGroups, fetchSuggestions, suggestionRows } from '@/lib/search/smart-search'
 import type { SmartGroup, SmartRow } from '@/lib/search/smart-search'
@@ -18,6 +19,8 @@ export default function SearchBar({
   onActiveChange?: (active: boolean) => void
 }) {
   const history = useHistory()
+  const performance = usePerformance()
+  const titleEffectOff = performance.enabled && performance.features.particleText
   const barRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [value, setValue] = useState('')
@@ -128,30 +131,34 @@ export default function SearchBar({
   return (
     <div className="search-bar" ref={barRef}>
       <div className="search-bar-wordmark">
-        <ParticleText
-          text="Plutonium"
-          particleSize={1.8}
-          density={4}
-          color="currentColor"
-          highlightColor="#ffffff"
-          highlightMode="motion"
-          shape="square"
-          intro="spiral"
-          scatter={320}
-          gatherDuration={1300}
-          stagger={420}
-          clickBurst
-          burstStrength={1}
-          pointerRepel={90}
-          repelRadius={120}
-          idleDrift={0.7}
-          anchorBottom={280}
-          trigger="mount"
-          fontSize="clamp(3rem, 12vw, 8rem)"
-          fontWeight={800}
-          fontFamily="inherit"
-          glow
-        />
+        {titleEffectOff ? (
+          <span className="search-bar-wordmark-static">Plutonium</span>
+        ) : (
+          <ParticleText
+            text="Plutonium"
+            particleSize={1.8}
+            density={4}
+            color="currentColor"
+            highlightColor="#ffffff"
+            highlightMode="motion"
+            shape="square"
+            intro="spiral"
+            scatter={320}
+            gatherDuration={1300}
+            stagger={420}
+            clickBurst
+            burstStrength={1}
+            pointerRepel={90}
+            repelRadius={120}
+            idleDrift={0.7}
+            anchorBottom={280}
+            trigger="mount"
+            fontSize="clamp(3rem, 12vw, 8rem)"
+            fontWeight={800}
+            fontFamily="inherit"
+            glow
+          />
+        )}
       </div>
       <BorderBeam className="search-bar-beam" {...BEAM_PROPS} borderRadius={999} active={focused}>
         <GlassSurface

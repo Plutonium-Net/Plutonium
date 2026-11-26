@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { BorderBeam } from 'border-beam'
+import BorderBeam from '@/components/border-beam/border-beam'
 import GlassSurface from '@/components/glass-surface/GlassSurface'
 import { BEAM_PROPS } from '@/lib/beam'
 import { LIGHT_ART, loadApps, loadServers, artFor, frameUrl, type AppEntry, type AppServer, type AppServers } from '@/lib/apps'
